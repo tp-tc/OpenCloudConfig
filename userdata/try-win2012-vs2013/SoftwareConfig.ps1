@@ -29,6 +29,7 @@ Configuration SoftwareConfig {
   Package RustInstall {
     Name = 'rust-beta-x86_64-pc-windows-msvc'
     Path = 'https://static.rust-lang.org/dist/rust-beta-x86_64-pc-windows-msvc.msi'
+    ProductId = ''
     LogPath = ('{0}\log' -f $env:SystemDrive)
   }
   #Package MozillaBuildInstall {
