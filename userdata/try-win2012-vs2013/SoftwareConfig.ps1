@@ -30,8 +30,8 @@ Configuration SoftwareConfig {
     Name = 'Rust beta 1.7 (MSVC 64-bit)'
     Path = 'https://static.rust-lang.org/dist/rust-beta-x86_64-pc-windows-msvc.msi'
     ProductId = '2B9726D5-BA12-44AF-B083-178CE2E08DD1'
-    Ensure = 'Absent'
-    LogPath = ('{0}\log\rust-beta-x86_64-pc-windows-msvc.msi.log' -f $env:SystemDrive)
+    Ensure = 'Present'
+    LogPath = ('{0}\log\rust-beta-x86_64-pc-windows-msvc.msi.{1}.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMdd-HHmm"))
   }
   #Package MozillaBuildInstall {
   #  Name = MozillaBuild
