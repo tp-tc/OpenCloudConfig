@@ -52,6 +52,27 @@ Configuration SoftwareConfig {
     LogPath = ('{0}\log\{1}.DXSDK_Jun10.exe.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
 
+  Archive PSToolsInstall {
+    Path = 'https://download.sysinternals.com/files/PSTools.zip'
+    Destination = ('{0}\PSTools' -f $env:SystemDrive)
+    Ensure = 'Present'
+  }
+  
+  Archive NssmInstall {
+    Path = 'http://www.nssm.cc/release/nssm-2.24.zip'
+    Destination = ('{0}\' -f $env:SystemDrive)
+    Ensure = 'Present'
+  }
+
+  Package GenericWorkerInstall {
+    Name = 'TaskCluster Generic Worker'
+    Path = 'https://github.com/taskcluster/generic-worker/releases/download/v1.0.11/generic-worker-windows-amd64.exe'
+    ProductId = ''
+    Arguments = ('install --config {0}\\generic-worker\\generic-worker.config' -f $env:SystemDrive)
+    Ensure = 'Present'
+    LogPath = ('{0}\log\{1}.generic-worker-windows-amd64.exe.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+  }
+
   Package RustInstall {
     Name = 'Rust beta 1.7 (MSVC 64-bit)'
     Path = 'https://static.rust-lang.org/dist/rust-beta-x86_64-pc-windows-msvc.msi'
