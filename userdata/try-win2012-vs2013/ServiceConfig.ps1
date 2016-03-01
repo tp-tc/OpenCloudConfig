@@ -1,9 +1,9 @@
 Configuration ServiceConfig {
-  #Service UpdateDisable {
-  #  Name = 'wuauserv'
-  #  State = 'Stopped'
-  #  StartupType = 'Disabled'
-  #}
+  Service UpdateDisable {
+    Name = 'wuauserv'
+    State = 'Stopped'
+    StartupType = 'Disabled'
+  }
   #Service FirewallDisable {
   #  Name = 'WinDefend'
   #  State = 'Stopped'
