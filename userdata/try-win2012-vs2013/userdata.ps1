@@ -9,7 +9,7 @@ function Run-DesiredStateConfig {
   . $target
   $mof = ('{0}\{1}' -f $env:Temp, $config)
   New-Item -ItemType Directory -Force -Path $mof
-  & $config @('-OutputPath', $mof)
+  & ('{0} -OutputPath "{1}"' -f $config, $mof)
   Start-DscConfiguration -Path $mof -Wait -Verbose -Force
 }
 
