@@ -13,10 +13,10 @@ function Run-DesiredStateConfig {
 }
 
 $configs = @(
-  'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/try-win2012-vs2013/resource-config.ps1',
-  'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/try-win2012-vs2013/service-config.ps1',
-  'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/try-win2012-vs2013/feature-config.ps1',
-  'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/try-win2012-vs2013/software-config.ps1'
+  'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/try-win2012-vs2013/ResourceConfig.ps1',
+  'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/try-win2012-vs2013/ServiceConfig.ps1',
+  'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/try-win2012-vs2013/FeatureConfig.ps1',
+  'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/try-win2012-vs2013/SoftwareConfig.ps1'
 )
 foreach ($config in $configs) {
   Run-DesiredStateConfig -url $config
