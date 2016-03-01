@@ -1,15 +1,15 @@
 # SoftwareConfig downloads and installs required software
 Configuration SoftwareConfig {
-  Chocolatey SublimeText3Install {
-    Ensure = 'Present'
-    Package = 'sublimetext3'
-    Version = '3.0.0.3103'
-  }
-  Chocolatey SublimeText3PackageControlInstall {
-    Ensure = 'Present'
-    Package = 'sublimetext3.packagecontrol'
-    Version = '2.0.0.20140915'
-  }
+  #Chocolatey SublimeText3Install {
+  #  Ensure = 'Present'
+  #  Package = 'sublimetext3'
+  #  Version = '3.0.0.3103'
+  #}
+  #Chocolatey SublimeText3PackageControlInstall {
+  #  Ensure = 'Present'
+  #  Package = 'sublimetext3.packagecontrol'
+  #  Version = '2.0.0.20140915'
+  #}
   #Chocolatey VisualStudioCommunity2013Install {
   #  Ensure = 'Present'
   #  Package = 'visualstudiocommunity2013'
@@ -25,6 +25,7 @@ Configuration SoftwareConfig {
   #  Package = 'rust'
   #  Version = '1.6.0'
   #}
+  Import-DscResource -ModuleName PSDesiredStateConfiguration
   Package RustInstall {
     Name = 'rust-beta-x86_64-pc-windows-msvc'
     Path = 'https://static.rust-lang.org/dist/rust-beta-x86_64-pc-windows-msvc.msi'
