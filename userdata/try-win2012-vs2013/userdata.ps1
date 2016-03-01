@@ -8,6 +8,7 @@ function Run-DesiredStateConfig {
   Unblock-File -Path $target
   . $target
   $mof = ('{0}\{1}' -f $env:Temp, $config)
+  New-Item -ItemType Directory -Force -Path $mof
   & $config @('-OutputPath', $mof)
   Start-DscConfiguration -Path $mof -Wait -Verbose -Force
 }
