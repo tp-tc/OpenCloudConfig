@@ -2,11 +2,6 @@
 # ResourceConfig downloads and installs custom Desired State Configuration (DSC) resources which are not included in vanilla Windows installs or AMIs
 Configuration ResourceConfig {
   Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-  File LogFolder {
-    Type = 'Directory'
-    DestinationPath = ('{0}\log' -f $env:SystemDrive)
-    Ensure = "Present"
-  }
   Script ResourceInstall {
     GetScript = {
       @{
