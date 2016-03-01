@@ -11,7 +11,7 @@ function Run-DesiredStateConfig {
   Invoke-Expression "$config -OutputPath $mof"
   Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
 }
-$url = 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/try-win2012-vs2013'
+$url = 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/try-win2012-vs2015'
 foreach ($config in @('ResourceConfig', 'SoftwareConfig', 'ServiceConfig', 'FeatureConfig')) {
   Run-DesiredStateConfig -url ('{0}/{1}.ps1' -f $url, $config)
 }
