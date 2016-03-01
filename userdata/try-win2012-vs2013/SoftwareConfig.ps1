@@ -45,7 +45,7 @@ Configuration SoftwareConfig {
   }
   Script VisualStudio2015SymbolicLink {
     GetScript = { @{ Result = (Test-Path ('{0}\tools\vs2015' -f $env:SystemDrive)) } }
-    SetScript = { New-Item -ItemType SymbolicLink -Name ('{0}\tools\vs2015' -f $env:SystemDrive) -Target ('{0}\Microsoft Visual Studio 14.0' -f ${env:ProgramFiles(x86)}) }
+    SetScript = { New-Item -ItemType SymbolicLink -Path ('{0}\tools' -f $env:SystemDrive) -Name 'vs2015' -Target ('{0}\Microsoft Visual Studio 14.0' -f ${env:ProgramFiles(x86)}) }
     TestScript = { (Test-Path ('{0}\tools\vs2015' -f $env:SystemDrive)) }
   }
 
@@ -64,7 +64,7 @@ Configuration SoftwareConfig {
   }
   Script RustSymbolicLink {
     GetScript = { @{ Result = (Test-Path ('{0}\tools\rust' -f $env:SystemDrive)) } }
-    SetScript = { New-Item -ItemType SymbolicLink -Name ('{0}\tools\rust' -f $env:SystemDrive) -Target ('{0}\Rust beta MSVC 1.7' -f $env:ProgramFiles) }
+    SetScript = { New-Item -ItemType SymbolicLink -Path ('{0}\tools' -f $env:SystemDrive) -Name 'rust' -Target ('{0}\Rust beta MSVC 1.7' -f $env:ProgramFiles) }
     TestScript = { (Test-Path ('{0}\tools\rust' -f $env:SystemDrive)) }
   }
 
