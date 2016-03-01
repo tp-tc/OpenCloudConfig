@@ -34,7 +34,7 @@ Configuration SoftwareConfig {
     LogPath = ('{0}\log\{1}.rust-beta-x86_64-pc-windows-msvc.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
   Package MozillaBuildInstall {
-    Name = MozillaBuild
+    Name = 'MozillaBuild'
     Path = 'http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.1.0.exe'
     ProductId = ''
     Arguments = '/S'
