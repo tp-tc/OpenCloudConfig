@@ -27,15 +27,15 @@ Configuration SoftwareConfig {
     Ensure = 'Present'
   }
 
-  Chocolatey VisualStudioCommunity2013Install {
+  Chocolatey VisualStudio2015CommunityInstall {
     Ensure = 'Present'
-    Package = 'visualstudiocommunity2013'
-    Version = '12.0.21005.1'
+    Package = 'visualstudio2015community'
+    Version = '14.0.24720.01'
   }
-  Script VisualStudio2013SymbolicLink {
-    GetScript = { @{ Result = (Test-Path ('{0}\tools\vs2013' -f $env:SystemDrive)) } }
-    SetScript = { New-Item -ItemType SymbolicLink -Name ('{0}\tools\vs2013' -f $env:SystemDrive) -Target ('{0}\Microsoft Visual Studio 12.0' -f ${env:ProgramFiles(x86)}) }
-    TestScript = { (Test-Path ('{0}\tools\vs2013' -f $env:SystemDrive)) }
+  Script VisualStudio2015SymbolicLink {
+    GetScript = { @{ Result = (Test-Path ('{0}\tools\vs2015' -f $env:SystemDrive)) } }
+    SetScript = { New-Item -ItemType SymbolicLink -Path ('{0}\tools' -f $env:SystemDrive) -Name 'vs2015' -Target ('{0}\Microsoft Visual Studio 14.0' -f ${env:ProgramFiles(x86)}) }
+    TestScript = { (Test-Path ('{0}\tools\vs2015' -f $env:SystemDrive)) }
   }
 
   Chocolatey WindowsSdkInstall {
