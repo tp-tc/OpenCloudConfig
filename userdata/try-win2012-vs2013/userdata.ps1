@@ -12,8 +12,6 @@ function Run-DesiredStateConfig {
   & $config ('-OutputPath "{0}"' -f $mof)
   Start-DscConfiguration -Path $mof -Wait -Verbose -Force
 }
-
-Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 $configs = @(
   'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/try-win2012-vs2013/ResourceConfig.ps1',
   'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/try-win2012-vs2013/ServiceConfig.ps1',
