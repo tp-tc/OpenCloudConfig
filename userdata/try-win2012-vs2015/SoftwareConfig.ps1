@@ -106,7 +106,7 @@ Configuration SoftwareConfig {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\generic-worker\generic-worker.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } } # todo: version check
     SetScript = {
       (New-Object Net.WebClient).DownloadFile('https://github.com/taskcluster/generic-worker/releases/download/v1.0.11/generic-worker-windows-amd64.exe', ('{0}\generic-worker\generic-worker.exe' -f $env:SystemDrive))
-      Unblock-File -Path ('{0}\generic-worker.exe' -f $env:Temp)
+      Unblock-File -Path ('{0}\generic-worker\generic-worker.exe' -f $env:SystemDrive)
     }
     TestScript = { if (Test-Path -Path ('{0}\generic-worker\generic-worker.exe' -f $env:Temp) -ErrorAction SilentlyContinue) { $true } else { $false } } # todo: version check
   }
