@@ -33,13 +33,13 @@ Configuration SoftwareConfig {
     Version = '14.0.24720.01'
   }
   Script VisualStudio2015SymbolicLink {
-    GetScript = { @{ Result = (Test-Path ('{0}\tools\vs2015' -f $env:SystemDrive)) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\tools\vs2015' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = { New-Item -ItemType SymbolicLink -Path ('{0}\tools' -f $env:SystemDrive) -Name 'vs2015' -Target ('{0}\Microsoft Visual Studio 14.0' -f ${env:ProgramFiles(x86)}) }
-    TestScript = { (Test-Path ('{0}\tools\vs2015' -f $env:SystemDrive)) }
+    TestScript = { (Test-Path -Path ('{0}\tools\vs2015' -f $env:SystemDrive)) }
   }
   
   Script DirectXSdkDownload {
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\DXSDK_Jun10.exe' -f $env:Temp)) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\DXSDK_Jun10.exe' -f $env:Temp) -ErrorAction SilentlyContinue) } }
     SetScript = {
       (New-Object Net.WebClient).DownloadFile('http://download.microsoft.com/download/A/E/7/AE743F1F-632B-4809-87A9-AA1BB3458E31/DXSDK_Jun10.exe', ('{0}\DXSDK_Jun10.exe' -f $env:Temp))
       Unblock-File -Path ('{0}\DXSDK_Jun10.exe' -f $env:Temp)
@@ -70,35 +70,35 @@ Configuration SoftwareConfig {
   }
 
   Script PSToolsDownload {
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\PSTools.zip' -f $env:Temp)) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\PSTools.zip' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      (New-Object Net.WebClient).DownloadFile('https://download.sysinternals.com/files/PSTools.zip', ('{0}\PSTools.zip' -f $env:Temp))
-      Unblock-File -Path ('{0}\PSTools.zip' -f $env:Temp)
+      (New-Object Net.WebClient).DownloadFile('https://download.sysinternals.com/files/PSTools.zip', ('{0}\Temp\PSTools.zip' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\PSTools.zip' -f $env:SystemRoot)
     }
-    TestScript = { if ((Test-Path -Path ('{0}\PSTools.zip' -f $env:Temp) -ErrorAction SilentlyContinue)) { $true } else { $false } }
+    TestScript = { if ((Test-Path -Path ('{0}\Temp\PSTools.zip' -f $env:SystemRoot) -ErrorAction SilentlyContinue)) { $true } else { $false } }
   }
   Archive PSToolsExtract {
-    Path = ('{0}\PSTools.zip' -f $env:Temp)
+    Path = ('{0}\Temp\PSTools.zip' -f $env:SystemRoot)
     Destination = ('{0}\PSTools' -f $env:SystemDrive)
     Ensure = 'Present'
   }
   
   Script NssmDownload {
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\nssm-2.24.zip' -f $env:Temp)) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\nssm-2.24.zip' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      (New-Object Net.WebClient).DownloadFile('http://www.nssm.cc/release/nssm-2.24.zip', ('{0}\nssm-2.24.zip' -f $env:Temp))
-      Unblock-File -Path ('{0}\nssm-2.24.zip' -f $env:Temp)
+      (New-Object Net.WebClient).DownloadFile('http://www.nssm.cc/release/nssm-2.24.zip', ('{0}\Temp\nssm-2.24.zip' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\nssm-2.24.zip' -f $env:SystemRoot)
     }
-    TestScript = { if ((Test-Path -Path ('{0}\nssm-2.24.zip' -f $env:Temp) -ErrorAction SilentlyContinue)) { $true } else { $false } }
+    TestScript = { if ((Test-Path -Path ('{0}\Temp\nssm-2.24.zip' -f $env:SystemRoot) -ErrorAction SilentlyContinue)) { $true } else { $false } }
   }
   Archive NssmExtract {
-    Path = ('{0}\nssm-2.24.zip' -f $env:Temp)
+    Path = ('{0}\Temp\nssm-2.24.zip' -f $env:SystemRoot)
     Destination = ('{0}\' -f $env:SystemDrive)
     Ensure = 'Present'
   }
   
   Script GenericWorkerDownload {
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\generic-worker-windows-amd64.exe' -f $env:Temp)) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\generic-worker-windows-amd64.exe' -f $env:Temp) -ErrorAction SilentlyContinue) } }
     SetScript = {
       (New-Object Net.WebClient).DownloadFile('https://github.com/taskcluster/generic-worker/releases/download/v1.0.11/generic-worker-windows-amd64.exe', ('{0}\generic-worker-windows-amd64.exe' -f $env:Temp))
       Unblock-File -Path ('{0}\generic-worker-windows-amd64.exe' -f $env:Temp)
@@ -121,9 +121,9 @@ Configuration SoftwareConfig {
     LogPath = ('{0}\log\{1}.rust-beta-x86_64-pc-windows-msvc.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
   Script RustSymbolicLink {
-    GetScript = { @{ Result = (Test-Path ('{0}\tools\rust' -f $env:SystemDrive)) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\tools\rust' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = { New-Item -ItemType SymbolicLink -Path ('{0}\tools' -f $env:SystemDrive) -Name 'rust' -Target ('{0}\Rust beta MSVC 1.7' -f $env:ProgramFiles) }
-    TestScript = { (Test-Path ('{0}\tools\rust' -f $env:SystemDrive)) }
+    TestScript = { (Test-Path -Path ('{0}\tools\rust' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
   }
   
   Script MozillaBuildDownload {
@@ -135,11 +135,11 @@ Configuration SoftwareConfig {
     TestScript = { if (Test-Path -Path ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Script MozillaBuildInstall {
-    GetScript = { @{ Result = (Test-Path ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) } }
     SetScript = {
       Start-Process ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp) -ArgumentList '/S' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
-    TestScript = { ((Test-Path ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) -and ((Get-Content ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) -eq '2.1.0')) }
+    TestScript = { ((Test-Path -Path ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) -and ((Get-Content ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) -eq '2.1.0')) }
   }
 
   Script CygWinDownload {
@@ -151,11 +151,11 @@ Configuration SoftwareConfig {
     TestScript = { if (Test-Path -Path ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Script CygWinInstall {
-    GetScript = { @{ Result = (Test-Path ('{0}\cygwin\bin\cygrunsrv.exe' -f $env:SystemDrive)) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\cygwin\bin\cygrunsrv.exe' -f $env:SystemDrive)) } }
     SetScript = {
       Start-Process ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp) -ArgumentList ('--quiet-mode --wait --root {0}\cygwin --site http://cygwin.mirror.constant.com --packages openssh,vim,curl,tar,wget,zip,unzip,diffutils,bzr' -f $env:SystemDrive) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
-    TestScript = { (Test-Path ('{0}\cygwin\bin\cygrunsrv.exe' -f $env:SystemDrive)) }
+    TestScript = { (Test-Path -Path ('{0}\cygwin\bin\cygrunsrv.exe' -f $env:SystemDrive)) }
   }
   Script SshInboundFirewallEnable {
     GetScript = { @{ Result = (Get-NetFirewallRule -DisplayName 'Allow SSH inbound' -ErrorAction SilentlyContinue) } }
