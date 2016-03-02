@@ -37,19 +37,36 @@ Configuration SoftwareConfig {
     SetScript = { New-Item -ItemType SymbolicLink -Path ('{0}\tools' -f $env:SystemDrive) -Name 'vs2015' -Target ('{0}\Microsoft Visual Studio 14.0' -f ${env:ProgramFiles(x86)}) }
     TestScript = { (Test-Path ('{0}\tools\vs2015' -f $env:SystemDrive)) }
   }
+  
+  Script DirectXSdkDownload {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\DXSDK_Jun10.exe' -f $env:Temp)) } }
+    SetScript = {
+      (New-Object Net.WebClient).DownloadFile('http://download.microsoft.com/download/A/E/7/AE743F1F-632B-4809-87A9-AA1BB3458E31/DXSDK_Jun10.exe', ('{0}\DXSDK_Jun10.exe' -f $env:Temp))
+      Unblock-File -Path ('{0}\DXSDK_Jun10.exe' -f $env:Temp)
+    }
+    TestScript = { if (Test-Path -Path ('{0}\DXSDK_Jun10.exe' -f $env:Temp) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
+  Script DirectXSdkInstall {
+    GetScript = { @{ Result = $false } } # todo: fix this
+    SetScript = {
+      # https://blogs.msdn.microsoft.com/chuckw/2011/12/09/known-issue-directx-sdk-june-2010-setup-and-the-s1023-error/
+      Start-Process 'MsiExec.exe' -ArgumentList '/passive /X{F0C3E5D1-1ADE-321E-8167-68EF0DE699A5}' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.vcredist2010x86.uninstall.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.vcredist2010x86.uninstall.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Start-Process 'MsiExec.exe' -ArgumentList '/passive /X{1D8E6291-B0D5-35EC-8441-6616F567A0F7}' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.vcredist2010x64.uninstall.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.vcredist2010x64.uninstall.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Start-Process ('{0}\DXSDK_Jun10.exe' -f $env:Temp) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.DXSDK_Jun10.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.DXSDK_Jun10.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    }
+    TestScript = { $false } # todo: fix this
+  }
+
+  Chocolatey VCRedist2010Install {
+    Ensure = 'Present'
+    Package = 'vcredist2010'
+    Version = '10.0.40219.1'
+  }
 
   Chocolatey WindowsSdkInstall {
     Ensure = 'Present'
     Package = 'windows-sdk-8.1'
     Version = '8.100.26654.0'
-  }
-
-  Package DirectXSdkInstall {
-    Name = 'DXSDK_Jun10'
-    Path = 'http://download.microsoft.com/download/A/E/7/AE743F1F-632B-4809-87A9-AA1BB3458E31/DXSDK_Jun10.exe'
-    ProductId = ''
-    Ensure = 'Present'
-    LogPath = ('{0}\log\{1}.DXSDK_Jun10.exe.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
 
   Script PSToolsDownload {
