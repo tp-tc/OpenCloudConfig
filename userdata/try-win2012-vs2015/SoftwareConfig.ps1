@@ -113,7 +113,7 @@ Configuration SoftwareConfig {
   Script GenericWorkerInstall {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\generic-worker\generic-worker.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } } # todo: version check
     SetScript = {
-      Start-Process ('{0}\generic-worker\generic-worker.exe' -f $env:SystemDrive) -ArgumentList ('install --config {0}\\generic-worker\\generic-worker.config' -f $env:SystemDrive) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.generic-worker-windows-amd64.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.generic-worker-windows-amd64.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Start-Process ('{0}\generic-worker\generic-worker.exe' -f $env:SystemDrive) -ArgumentList ('install --config {0}\generic-worker\generic-worker.config' -f $env:SystemDrive) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.generic-worker-windows-amd64.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.generic-worker-windows-amd64.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
     TestScript = { if (Test-Path -Path ('{0}\generic-worker\generic-worker.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } } # todo: version check
   }
