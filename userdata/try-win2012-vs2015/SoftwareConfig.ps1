@@ -120,7 +120,7 @@ Configuration SoftwareConfig {
   Script SshInboundFirewallEnable {
     GetScript = { @{ Result = (Get-NetFirewallRule -DisplayName 'Allow SSH inbound' -ErrorAction SilentlyContinue) } }
     SetScript = { New-NetFirewallRule -DisplayName 'Allow SSH inbound' -Direction Inbound -LocalPort 22 -Protocol TCP -Action Allow }
-    TestScript = { (Get-NetFirewallRule -DisplayName 'Allow SSH inbound" -ErrorAction SilentlyContinue) }'
+    TestScript = { (Get-NetFirewallRule -DisplayName 'Allow SSH inbound' -ErrorAction SilentlyContinue) }
   }
   Script SshdServiceInstall {
     GetScript = { @{ Result = (Get-Service 'sshd' -ErrorAction SilentlyContinue) } }
