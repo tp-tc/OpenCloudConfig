@@ -17,8 +17,8 @@ $configs = @(
   'ResourceConfig',
   'Software/SublimeText3Config',
   'Software/VisualStudio2015Config',
-  'Software/CompilerToolChain',
-  'Software/TaskClusterToolChain',
+  'Software/CompilerToolChainConfig',
+  'Software/TaskClusterToolChainConfig',
   'Software/MaintenanceToolChainConfig',
   'ServiceConfig'
 )
