@@ -52,14 +52,30 @@ Configuration SoftwareConfig {
     LogPath = ('{0}\log\{1}.DXSDK_Jun10.exe.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
 
-  Archive PSToolsInstall {
-    Path = 'https://download.sysinternals.com/files/PSTools.zip'
+  Script PSToolsDownload {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\PSTools.zip' -f $env:Temp)) } }
+    SetScript = {
+        Invoke-WebRequest -Uri 'https://download.sysinternals.com/files/PSTools.zip' -OutFile ('{0}\PSTools.zip' -f $env:Temp)
+        Unblock-File -Path ('{0}\PSTools.zip' -f $env:Temp)
+    }
+    TestScript = { Test-Path -Path ('{0}\PSTools.zip' -f $env:Temp) }
+  }
+  Archive PSToolsExtract {
+    Path = ('{0}\PSTools.zip' -f $env:Temp)
     Destination = ('{0}\PSTools' -f $env:SystemDrive)
     Ensure = 'Present'
   }
   
-  Archive NssmInstall {
-    Path = 'http://www.nssm.cc/release/nssm-2.24.zip'
+  Script NssmDownload {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\nssm-2.24.zip' -f $env:Temp)) } }
+    SetScript = {
+        Invoke-WebRequest -Uri 'http://www.nssm.cc/release/nssm-2.24.zip' -OutFile ('{0}\nssm-2.24.zip' -f $env:Temp)
+        Unblock-File -Path ('{0}\nssm-2.24.zip' -f $env:Temp)
+    }
+    TestScript = { Test-Path -Path ('{0}\nssm-2.24.zip' -f $env:Temp) }
+  }
+  Archive NssmExtract {
+    Path = ('{0}\nssm-2.24.zip' -f $env:Temp)
     Destination = ('{0}\' -f $env:SystemDrive)
     Ensure = 'Present'
   }
@@ -93,5 +109,24 @@ Configuration SoftwareConfig {
     Arguments = '/S'
     Ensure = 'Present'
     LogPath = ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+  }
+
+  Package CygWinInstall {
+    Name = 'CygWin'
+    Path = 'https://www.cygwin.com/setup-x86_64.exe'
+    ProductId = ''
+    Arguments = ('--quiet-mode --wait --root {0}\cygwin --site http://cygwin.mirror.constant.com --packages openssh,vim,curl,tar,wget,zip,unzip,diffutils,bzr' -f $env:SystemDrive)
+  }
+  Script SshInboundFirewallEnable {
+    GetScript = { @{ Result = (Get-NetFirewallRule -DisplayName 'Allow SSH inbound' -ErrorAction SilentlyContinue) } }
+    SetScript = { New-NetFirewallRule -DisplayName 'Allow SSH inbound' -Direction Inbound -LocalPort 22 -Protocol TCP -Action Allow }
+    TestScript = { (Get-NetFirewallRule -DisplayName 'Allow SSH inbound" -ErrorAction SilentlyContinue) }'
+  }
+  Script SshdServiceInstall {
+    GetScript = { @{ Result = (Get-Service 'sshd' -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      Start-Process ('{0}\cygwin\bin\bash.exe' -f $env:SystemDrive) -ArgumentList ("--login -c `"ssh-host-config -y -c 'ntsec mintty' -u 'sshd' -w '{0}'`"" -f [Guid]::NewGuid().ToString().Substring(0, 10)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.ssh-host-config.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.ssh-host-config.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    }
+    TestScript = { (Get-Service 'sshd' -ErrorAction SilentlyContinue) }
   }
 }
