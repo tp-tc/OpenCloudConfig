@@ -58,7 +58,7 @@ Configuration SoftwareConfig {
       (New-Object Net.WebClient).DownloadFile('https://download.sysinternals.com/files/PSTools.zip', ('{0}\PSTools.zip' -f $env:Temp))
       Unblock-File -Path ('{0}\PSTools.zip' -f $env:Temp)
     }
-    TestScript = { Test-Path -Path ('{0}\PSTools.zip' -f $env:Temp) }
+    TestScript = { if ((Test-Path -Path ('{0}\PSTools.zip' -f $env:Temp) -ErrorAction SilentlyContinue)) { $true } else { $false } }
   }
   Archive PSToolsExtract {
     Path = ('{0}\PSTools.zip' -f $env:Temp)
@@ -72,7 +72,7 @@ Configuration SoftwareConfig {
       (New-Object Net.WebClient).DownloadFile('http://www.nssm.cc/release/nssm-2.24.zip', ('{0}\nssm-2.24.zip' -f $env:Temp))
       Unblock-File -Path ('{0}\nssm-2.24.zip' -f $env:Temp)
     }
-    TestScript = { if (Test-Path -Path ('{0}\nssm-2.24.zip' -f $env:Temp) -ErrorAction SilentlyContinue) { $true } else { $false } }
+    TestScript = { if ((Test-Path -Path ('{0}\nssm-2.24.zip' -f $env:Temp) -ErrorAction SilentlyContinue)) { $true } else { $false } }
   }
   Archive NssmExtract {
     Path = ('{0}\nssm-2.24.zip' -f $env:Temp)
@@ -86,7 +86,7 @@ Configuration SoftwareConfig {
       (New-Object Net.WebClient).DownloadFile('https://github.com/taskcluster/generic-worker/releases/download/v1.0.11/generic-worker-windows-amd64.exe', ('{0}\generic-worker-windows-amd64.exe' -f $env:Temp))
       Unblock-File -Path ('{0}\generic-worker-windows-amd64.exe' -f $env:Temp)
     }
-    TestScript = { Test-Path -Path ('{0}\generic-worker-windows-amd64.exe' -f $env:Temp) }
+    TestScript = { if (Test-Path -Path ('{0}\generic-worker-windows-amd64.exe' -f $env:Temp) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Script GenericWorkerInstall {
     GetScript = { @{ Result = (Get-Service 'generic-worker' -ErrorAction SilentlyContinue) } }
@@ -115,7 +115,7 @@ Configuration SoftwareConfig {
       (New-Object Net.WebClient).DownloadFile('http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.1.0.exe', ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp))
       Unblock-File -Path ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp)
     }
-    TestScript = { Test-Path -Path ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp) }
+    TestScript = { if (Test-Path -Path ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Script MozillaBuildInstall {
     GetScript = { @{ Result = (Test-Path ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) } }
@@ -131,7 +131,7 @@ Configuration SoftwareConfig {
       (New-Object Net.WebClient).DownloadFile('https://www.cygwin.com/setup-x86_64.exe', ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp))
       Unblock-File -Path ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp)
     }
-    TestScript = { Test-Path -Path ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp) }
+    TestScript = { if (Test-Path -Path ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Script CygWinInstall {
     GetScript = { @{ Result = (Test-Path ('{0}\cygwin\bin\cygrunsrv.exe' -f $env:SystemDrive)) } }
