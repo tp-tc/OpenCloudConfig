@@ -15,7 +15,6 @@ $url = 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userd
 $configs = @(
   'FeatureConfig',
   'ResourceConfig',
-  'Software/SublimeText3Config',
   'Software/VisualStudio2015Config',
   'Software/CompilerToolChainConfig',
   'Software/TaskClusterToolChainConfig',
