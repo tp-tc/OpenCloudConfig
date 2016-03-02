@@ -3,7 +3,7 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
-Configuration VisualStudio2013Config {
+Configuration VisualStudio2015Config {
   Import-DscResource -ModuleName PSDesiredStateConfiguration
   Chocolatey VisualStudio2015CommunityInstall {
     Ensure = 'Present'
