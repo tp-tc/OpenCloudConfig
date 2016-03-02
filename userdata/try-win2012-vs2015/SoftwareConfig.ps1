@@ -55,8 +55,8 @@ Configuration SoftwareConfig {
   Script PSToolsDownload {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\PSTools.zip' -f $env:Temp)) } }
     SetScript = {
-        Invoke-WebRequest -Uri 'https://download.sysinternals.com/files/PSTools.zip' -OutFile ('{0}\PSTools.zip' -f $env:Temp)
-        Unblock-File -Path ('{0}\PSTools.zip' -f $env:Temp)
+      (New-Object Net.WebClient).DownloadFile('https://download.sysinternals.com/files/PSTools.zip', ('{0}\PSTools.zip' -f $env:Temp))
+      Unblock-File -Path ('{0}\PSTools.zip' -f $env:Temp)
     }
     TestScript = { Test-Path -Path ('{0}\PSTools.zip' -f $env:Temp) }
   }
@@ -69,8 +69,8 @@ Configuration SoftwareConfig {
   Script NssmDownload {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\nssm-2.24.zip' -f $env:Temp)) } }
     SetScript = {
-        Invoke-WebRequest -Uri 'http://www.nssm.cc/release/nssm-2.24.zip' -OutFile ('{0}\nssm-2.24.zip' -f $env:Temp)
-        Unblock-File -Path ('{0}\nssm-2.24.zip' -f $env:Temp)
+      (New-Object Net.WebClient).DownloadFile('http://www.nssm.cc/release/nssm-2.24.zip', ('{0}\nssm-2.24.zip' -f $env:Temp))
+      Unblock-File -Path ('{0}\nssm-2.24.zip' -f $env:Temp)
     }
     TestScript = { if (Test-Path -Path ('{0}\nssm-2.24.zip' -f $env:Temp) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
@@ -83,8 +83,8 @@ Configuration SoftwareConfig {
   Script GenericWorkerDownload {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\generic-worker-windows-amd64.exe' -f $env:Temp)) } }
     SetScript = {
-        Invoke-WebRequest -Uri 'https://github.com/taskcluster/generic-worker/releases/download/v1.0.11/generic-worker-windows-amd64.exe' -OutFile ('{0}\generic-worker-windows-amd64.exe' -f $env:Temp)
-        Unblock-File -Path ('{0}\generic-worker-windows-amd64.exe' -f $env:Temp)
+      (New-Object Net.WebClient).DownloadFile('https://github.com/taskcluster/generic-worker/releases/download/v1.0.11/generic-worker-windows-amd64.exe', ('{0}\generic-worker-windows-amd64.exe' -f $env:Temp))
+      Unblock-File -Path ('{0}\generic-worker-windows-amd64.exe' -f $env:Temp)
     }
     TestScript = { Test-Path -Path ('{0}\generic-worker-windows-amd64.exe' -f $env:Temp) }
   }
@@ -112,8 +112,8 @@ Configuration SoftwareConfig {
   Script MozillaBuildDownload {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp)) } }
     SetScript = {
-        Invoke-WebRequest -Uri 'http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.1.0.exe' -OutFile ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp)
-        Unblock-File -Path ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp)
+      (New-Object Net.WebClient).DownloadFile('http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.1.0.exe', ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp))
+      Unblock-File -Path ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp)
     }
     TestScript = { Test-Path -Path ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp) }
   }
@@ -128,8 +128,8 @@ Configuration SoftwareConfig {
   Script CygWinDownload {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp)) } }
     SetScript = {
-        Invoke-WebRequest -Uri 'https://www.cygwin.com/setup-x86_64.exe' -OutFile ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp)
-        Unblock-File -Path ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp)
+      (New-Object Net.WebClient).DownloadFile('https://www.cygwin.com/setup-x86_64.exe', ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp))
+      Unblock-File -Path ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp)
     }
     TestScript = { Test-Path -Path ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp) }
   }
