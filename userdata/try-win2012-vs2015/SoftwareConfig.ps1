@@ -72,7 +72,7 @@ Configuration SoftwareConfig {
         Invoke-WebRequest -Uri 'http://www.nssm.cc/release/nssm-2.24.zip' -OutFile ('{0}\nssm-2.24.zip' -f $env:Temp)
         Unblock-File -Path ('{0}\nssm-2.24.zip' -f $env:Temp)
     }
-    TestScript = { Test-Path -Path ('{0}\nssm-2.24.zip' -f $env:Temp) }
+    TestScript = { if (Test-Path -Path ('{0}\nssm-2.24.zip' -f $env:Temp) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Archive NssmExtract {
     Path = ('{0}\nssm-2.24.zip' -f $env:Temp)
