@@ -101,14 +101,21 @@ Configuration SoftwareConfig {
     SetScript = { New-Item -ItemType SymbolicLink -Path ('{0}\tools' -f $env:SystemDrive) -Name 'rust' -Target ('{0}\Rust beta MSVC 1.7' -f $env:ProgramFiles) }
     TestScript = { (Test-Path ('{0}\tools\rust' -f $env:SystemDrive)) }
   }
-
-  Package MozillaBuildInstall {
-    Name = 'Mozilla Build'
-    Path = 'http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.1.0.exe'
-    ProductId = ''
-    Arguments = '/S'
-    Ensure = 'Present'
-    LogPath = ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+  
+  Script MozillaBuildDownload {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp)) } }
+    SetScript = {
+        Invoke-WebRequest -Uri 'http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.1.0.exe' -OutFile ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp)
+        Unblock-File -Path ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp)
+    }
+    TestScript = { Test-Path -Path ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp) }
+  }
+  Script MozillaBuildInstall {
+    GetScript = { @{ Result = (Test-Path ('{0}\mozilla-build\VERSION')) } }
+    SetScript = {
+      Start-Process ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp) -ArgumentList '/S' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    }
+    TestScript = { ((Test-Path ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) -and ((Get-Content ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) -eq '2.1.0')) }
   }
 
   Package CygWinInstall {
