@@ -118,18 +118,27 @@ Configuration SoftwareConfig {
     TestScript = { Test-Path -Path ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp) }
   }
   Script MozillaBuildInstall {
-    GetScript = { @{ Result = (Test-Path ('{0}\mozilla-build\VERSION')) } }
+    GetScript = { @{ Result = (Test-Path ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) } }
     SetScript = {
       Start-Process ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp) -ArgumentList '/S' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
     TestScript = { ((Test-Path ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) -and ((Get-Content ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) -eq '2.1.0')) }
   }
 
-  Package CygWinInstall {
-    Name = 'CygWin'
-    Path = 'https://www.cygwin.com/setup-x86_64.exe'
-    ProductId = ''
-    Arguments = ('--quiet-mode --wait --root {0}\cygwin --site http://cygwin.mirror.constant.com --packages openssh,vim,curl,tar,wget,zip,unzip,diffutils,bzr' -f $env:SystemDrive)
+  Script CygWinDownload {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp)) } }
+    SetScript = {
+        Invoke-WebRequest -Uri 'https://www.cygwin.com/setup-x86_64.exe' -OutFile ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp)
+        Unblock-File -Path ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp)
+    }
+    TestScript = { Test-Path -Path ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp) }
+  }
+  Script CygWinInstall {
+    GetScript = { @{ Result = (Test-Path ('{0}\cygwin\bin\cygrunsrv.exe' -f $env:SystemDrive)) } }
+    SetScript = {
+      Start-Process ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp) -ArgumentList ('--quiet-mode --wait --root {0}\cygwin --site http://cygwin.mirror.constant.com --packages openssh,vim,curl,tar,wget,zip,unzip,diffutils,bzr' -f $env:SystemDrive) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    }
+    TestScript = { (Test-Path ('{0}\cygwin\bin\cygrunsrv.exe' -f $env:SystemDrive)) }
   }
   Script SshInboundFirewallEnable {
     GetScript = { @{ Result = (Get-NetFirewallRule -DisplayName 'Allow SSH inbound' -ErrorAction SilentlyContinue) } }
