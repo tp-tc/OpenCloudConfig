@@ -22,6 +22,6 @@ $configs = @(
   'Software/MaintenanceToolChainConfig',
   'ServiceConfig'
 )
-foreach ($config in ) {
+foreach ($config in $configs) {
   Run-RemoteDesiredStateConfig -url ('{0}/{1}.ps1' -f $url, $config)
 }
