@@ -67,6 +67,8 @@ Configuration MaintenanceToolChainConfig {
       $password = [Guid]::NewGuid().ToString().Substring(0, 13)
       Start-Process ('{0}\cygwin\bin\bash.exe' -f $env:SystemDrive) -ArgumentList ("--login -c `"ssh-host-config -y -c 'ntsec mintty' -u 'sshd' -w '{0}'`"" -f $password) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.ssh-host-config.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.ssh-host-config.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
       & net @('user', 'sshd', $password, '/active:yes')
+      (Get-WmiObject -Class Win32_Service | Where-Object { $_.Name -eq 'sshd' }).Change($Null,$Null,$Null,$Null,$Null,$Null,$Null,$password,$Null,$Null,$Null)
+      & net @('start', 'sshd')
     }
     TestScript = { if ((Get-Service 'sshd' -ErrorAction SilentlyContinue) -and ((Get-Service 'sshd').Status -eq 'running')) { $true } else { $false } }
   }
