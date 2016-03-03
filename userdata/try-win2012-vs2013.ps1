@@ -11,6 +11,7 @@ function Run-RemoteDesiredStateConfig {
   Invoke-Expression "$config -OutputPath $mof"
   Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
 }
+Set-ExecutionPolicy RemoteSigned -force
 if ($PSVersionTable.PSVersion.Major -lt 4) {
   Invoke-Expression ((New-Object Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
   & choco @('upgrade', 'powershell', '-y')
