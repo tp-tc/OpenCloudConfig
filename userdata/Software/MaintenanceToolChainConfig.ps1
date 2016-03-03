@@ -66,7 +66,7 @@ Configuration MaintenanceToolChainConfig {
     SetScript = {
       $password = [Guid]::NewGuid().ToString().Substring(0, 13)
       Start-Process ('{0}\cygwin\bin\bash.exe' -f $env:SystemDrive) -ArgumentList ("--login -c `"ssh-host-config -y -c 'ntsec mintty' -u 'sshd' -w '{0}'`"" -f $password) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.ssh-host-config.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.ssh-host-config.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-      ([ADSI]'WinNT://./sshd').SetPassword("$password")
+      #([ADSI]'WinNT://./sshd').SetPassword("$password")
       ([ADSI]'WinNT://./sshd').UserFlags[0] = ([ADSI]'WinNT://./sshd').UserFlags[0] -bxor 0x2
       ([ADSI]'WinNT://./sshd').SetInfo()
     }
