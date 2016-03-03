@@ -15,7 +15,7 @@ Configuration ResourceConfig {
           New-Item $path -type directory -force
         }
         foreach ($ext in @('psd1', 'psm1', 'schema.mof')) {
-          $source = ('https://raw.githubusercontent.com/MozRelOps/powershell-utilities/master/dsc/resources/{0}/{0}.{1}' -f $resource, $ext)
+          $source = ('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/Resources/{0}/{0}.{1}' -f $resource, $ext)
           $target = ('{0}\{1}.{2}' -f $path, $resource, $ext)
           (New-Object Net.WebClient).DownloadFile($source, $target)
           Unblock-File -Path $target
