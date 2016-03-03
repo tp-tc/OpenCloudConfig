@@ -43,16 +43,16 @@ Configuration CompilerToolChainConfig {
   }
 
   Script RustDownload {
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:Temp) -ErrorAction SilentlyContinue) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      (New-Object Net.WebClient).DownloadFile('https://static.rust-lang.org/dist/rust-1.6.0-x86_64-pc-windows-msvc.msi', ('{0}\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:Temp))
-      Unblock-File -Path ('{0}\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:Temp)
+      (New-Object Net.WebClient).DownloadFile('https://static.rust-lang.org/dist/rust-1.6.0-x86_64-pc-windows-msvc.msi', ('{0}\Temp\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:SystemRoot)
     }
-    TestScript = { if (Test-Path -Path ('{0}\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:Temp) -ErrorAction SilentlyContinue) { $true } else { $false } }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Package RustInstall {
     Name = 'Rust 1.6 (MSVC 64-bit)'
-    Path = ('{0}\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:Temp)
+    Path = ('{0}\Temp\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:SystemRoot)
     ProductId = 'A21886AC-C591-4CC0-BA5B-C080B88F630B'
     Ensure = 'Present'
     LogPath = ('{0}\log\{1}.rust-1.6.0-x86_64-pc-windows-msvc.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
@@ -70,17 +70,17 @@ Configuration CompilerToolChainConfig {
   }
   
   Script MozillaBuildDownload {
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp)) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\MozillaBuildSetup-2.1.0.exe' -f $env:SystemRoot)) } }
     SetScript = {
-      (New-Object Net.WebClient).DownloadFile('http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.1.0.exe', ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp))
-      Unblock-File -Path ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp)
+      (New-Object Net.WebClient).DownloadFile('http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.1.0.exe', ('{0}\Temp\MozillaBuildSetup-2.1.0.exe' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\MozillaBuildSetup-2.1.0.exe' -f $env:SystemRoot)
     }
-    TestScript = { if (Test-Path -Path ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp) -ErrorAction SilentlyContinue) { $true } else { $false } }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\MozillaBuildSetup-2.1.0.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Script MozillaBuildInstall {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) } }
     SetScript = {
-      Start-Process ('{0}\MozillaBuildSetup-2.1.0.exe' -f $env:Temp) -ArgumentList '/S' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Start-Process ('{0}\Temp\MozillaBuildSetup-2.1.0.exe' -f $env:SystemRoot) -ArgumentList '/S' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
     TestScript = { ((Test-Path -Path ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) -and ((Get-Content ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) -eq '2.1.0')) }
   }
