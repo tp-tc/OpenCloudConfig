@@ -19,12 +19,12 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
 } else {
   $url = 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata'
   $configs = @(
-    'FeatureConfig',
     'ResourceConfig',
+    'Software/MaintenanceToolChainConfig',
     'Software/VisualStudio2013Config',
+    'FeatureConfig',
     'Software/CompilerToolChainConfig',
     'Software/TaskClusterToolChainConfig',
-    'Software/MaintenanceToolChainConfig',
     'ServiceConfig'
   )
   foreach ($config in $configs) {
