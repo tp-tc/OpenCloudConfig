@@ -61,7 +61,7 @@ Configuration MaintenanceToolChainConfig {
     SetScript = { New-NetFirewallRule -DisplayName 'Allow SSH inbound' -Direction Inbound -LocalPort 22 -Protocol TCP -Action Allow }
     TestScript = { if (Get-NetFirewallRule -DisplayName 'Allow SSH inbound' -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
-  Environment EnvironmentExample
+  Environment GenerateSshdPassword
   {
     Ensure = 'Present'
     Name = 'SshdPassword'
@@ -84,7 +84,7 @@ Configuration MaintenanceToolChainConfig {
     }
     TestScript = { if ((Get-Service 'sshd' -ErrorAction SilentlyContinue) -and ((Get-Service 'sshd').Status -eq 'running')) { $true } else { $false } }
   }
-  Environment EnvironmentExample
+  Environment RemoveSshdPassword
   {
     Ensure = 'Absent'
     Name = 'SshdPassword'
