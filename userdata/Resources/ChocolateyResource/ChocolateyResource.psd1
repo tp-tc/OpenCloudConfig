@@ -15,5 +15,5 @@
   RequiredModules = @()
   NestedModules = @("ChocolateyResource.psm1")
   FunctionsToExport = @("Get-TargetResource", "Set-TargetResource", "Test-TargetResource")
-  HelpInfoURI = 'https://github.com/MozRelOps/powershell-utilities'
+  HelpInfoURI = 'https://github.com/MozRelOps/OpenCloudConfig'
 }
