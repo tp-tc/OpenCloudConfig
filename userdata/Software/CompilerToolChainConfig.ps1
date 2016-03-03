@@ -51,7 +51,13 @@ Configuration CompilerToolChainConfig {
   }
   Script RustSymbolicLink {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\tools\rust' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
-    SetScript = { New-Item -ItemType SymbolicLink -Path ('{0}\tools' -f $env:SystemDrive) -Name 'rust' -Target ('{0}\Rust MSVC 1.6' -f $env:ProgramFiles) }
+    SetScript = {
+      if ($PSVersionTable.PSVersion.Major -gt 4) {
+        New-Item -ItemType SymbolicLink -Path ('{0}\tools' -f $env:SystemDrive) -Name 'rust' -Target ('{0}\Rust MSVC 1.6' -f $env:ProgramFiles)
+      } else {
+        & cmd @('/c', 'mklink', '/D', ('{0}\tools\rust' -f $env:SystemDrive), ('{0}\Rust MSVC 1.6' -f $env:ProgramFiles))
+      }
+    }
     TestScript = { (Test-Path -Path ('{0}\tools\rust' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
   }
   
