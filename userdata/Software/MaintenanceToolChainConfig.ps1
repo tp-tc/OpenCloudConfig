@@ -57,13 +57,6 @@ Configuration MaintenanceToolChainConfig {
     Version = '2.0.0.20140915'
   }
 
-  # log folder for installation logs
-  File LogFolder {
-    Type = 'Directory'
-    DestinationPath = ('{0}\log' -f $env:SystemDrive)
-    Ensure = 'Present'
-  }
-
   Script CygWinDownload {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp) -ErrorAction SilentlyContinue) } }
     SetScript = {
