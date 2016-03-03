@@ -30,7 +30,7 @@ Configuration MaintenanceToolChainConfig {
   Package NxLogInstall {
     Name = 'NxLog'
     Path = ('{0}\Temp\nxlog-ce-2.9.1504.msi' -f $env:SystemRoot)
-    ProductId = 'A21886AC-C591-4CC0-BA5B-C080B88F630B'
+    ProductId = ''
     Ensure = 'Present'
     LogPath = ('{0}\log\{1}.nxlog-ce-2.9.1504.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
