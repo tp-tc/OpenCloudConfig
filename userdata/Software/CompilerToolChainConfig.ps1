@@ -47,11 +47,11 @@ Configuration CompilerToolChainConfig {
     Path = 'https://static.rust-lang.org/dist/rust-1.6.0-x86_64-pc-windows-msvc.msi'
     ProductId = 'A21886AC-C591-4CC0-BA5B-C080B88F630B'
     Ensure = 'Present'
-    LogPath = ('{0}\log\{1}.rust-beta-x86_64-pc-windows-msvc.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    LogPath = ('{0}\log\{1}.rust-1.6.0-x86_64-pc-windows-msvc.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
   Script RustSymbolicLink {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\tools\rust' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
-    SetScript = { New-Item -ItemType SymbolicLink -Path ('{0}\tools' -f $env:SystemDrive) -Name 'rust' -Target ('{0}\Rust beta MSVC 1.7' -f $env:ProgramFiles) }
+    SetScript = { New-Item -ItemType SymbolicLink -Path ('{0}\tools' -f $env:SystemDrive) -Name 'rust' -Target ('{0}\Rust MSVC 1.6' -f $env:ProgramFiles) }
     TestScript = { (Test-Path -Path ('{0}\tools\rust' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
   }
   
