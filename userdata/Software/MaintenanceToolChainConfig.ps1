@@ -61,31 +61,15 @@ Configuration MaintenanceToolChainConfig {
     SetScript = { New-NetFirewallRule -DisplayName 'Allow SSH inbound' -Direction Inbound -LocalPort 22 -Protocol TCP -Action Allow }
     TestScript = { if (Get-NetFirewallRule -DisplayName 'Allow SSH inbound' -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
-  Environment GenerateSshdPassword {
-    Ensure = 'Present'
-    Name = 'SshdPassword'
-    Value = [Guid]::NewGuid().ToString().Substring(0, 13)
-  }
-  User "sshd" {
-    UserName = 'sshd'
-    Ensure = 'Present'
-    FullName = 'SSH Service Account'
-    Description = 'Used by the sshd Windows service'
-    Password = (New-Object Management.Automation.PSCredential 'sshd', (ConvertTo-SecureString 'p@ssw0rD' -AsPlainText -Force))
-    PasswordNeverExpires = $true
-    PasswordChangeRequired = $false
-    Disabled = $false
-  }
   Script SshdServiceInstall {
     GetScript = { @{ Result = ((Get-Service 'sshd' -ErrorAction SilentlyContinue) -and ((Get-Service 'sshd').Status -eq 'running')) } }
     SetScript = {
-      Start-Process ('{0}\cygwin\bin\bash.exe' -f $env:SystemDrive) -ArgumentList ("--login -c `"ssh-host-config -y -c 'ntsec mintty' -u 'sshd' -w 'p@ssw0rD'`"") -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.ssh-host-config.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.ssh-host-config.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      $password = [Guid]::NewGuid().ToString().Substring(0, 13)
+      Start-Process ('{0}\cygwin\bin\bash.exe' -f $env:SystemDrive) -ArgumentList ("--login -c `"ssh-host-config -y -c 'ntsec mintty' -u 'sshd' -w '{0}'`"" -f $password) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.ssh-host-config.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.ssh-host-config.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      ([ADSI]'WinNT://./sshd').SetPassword("$password")
+      ([ADSI]'WinNT://./sshd').UserFlags[0] = ([ADSI]'WinNT://./sshd').UserFlags[0] -bxor 0x2
+      ([ADSI]'WinNT://./sshd').SetInfo()
     }
     TestScript = { if ((Get-Service 'sshd' -ErrorAction SilentlyContinue) -and ((Get-Service 'sshd').Status -eq 'running')) { $true } else { $false } }
-  }
-  Environment RemoveSshdPassword {
-    Ensure = 'Absent'
-    Name = 'SshdPassword'
-    Value = ''
   }
 }

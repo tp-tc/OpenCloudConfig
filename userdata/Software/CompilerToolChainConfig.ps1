@@ -42,9 +42,17 @@ Configuration CompilerToolChainConfig {
     Version = '8.100.26654.0'
   }
 
+  Script RustDownload {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:Temp) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      (New-Object Net.WebClient).DownloadFile('https://static.rust-lang.org/dist/rust-1.6.0-x86_64-pc-windows-msvc.msi', ('{0}\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:Temp))
+      Unblock-File -Path ('{0}\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:Temp)
+    }
+    TestScript = { if (Test-Path -Path ('{0}\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:Temp) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
   Package RustInstall {
     Name = 'Rust 1.6 (MSVC 64-bit)'
-    Path = 'https://static.rust-lang.org/dist/rust-1.6.0-x86_64-pc-windows-msvc.msi'
+    Path = ('{0}\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:Temp)
     ProductId = 'A21886AC-C591-4CC0-BA5B-C080B88F630B'
     Ensure = 'Present'
     LogPath = ('{0}\log\{1}.rust-1.6.0-x86_64-pc-windows-msvc.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
