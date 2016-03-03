@@ -19,6 +19,6 @@ Configuration VisualStudio2013Config {
   Script VisualStudio2013SymbolicLink {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\tools\vs2013' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = { New-Item -ItemType SymbolicLink -Path ('{0}\tools' -f $env:SystemDrive) -Name 'vs2013' -Target ('{0}\Microsoft Visual Studio 12.0' -f ${env:ProgramFiles(x86)}) }
-    TestScript = { (Test-Path -Path ('{0}\tools\vs2013' -f $env:SystemDrive)) }
+    TestScript = { (Test-Path -Path ('{0}\tools\vs2013' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
   }
 }
