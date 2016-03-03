@@ -61,11 +61,28 @@ Configuration MaintenanceToolChainConfig {
     SetScript = { New-NetFirewallRule -DisplayName 'Allow SSH inbound' -Direction Inbound -LocalPort 22 -Protocol TCP -Action Allow }
     TestScript = { if (Get-NetFirewallRule -DisplayName 'Allow SSH inbound' -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
-  Script SshdServiceInstall {
-    GetScript = { @{ Result = (Get-Service 'sshd' -ErrorAction SilentlyContinue) } }
+  Script SshdPasswordGenerator {
+    GetScript = { @{ Result = ("$env:SshdPassword" -ne "") } }
     SetScript = {
-      Start-Process ('{0}\cygwin\bin\bash.exe' -f $env:SystemDrive) -ArgumentList ("--login -c `"ssh-host-config -y -c 'ntsec mintty' -u 'sshd' -w '{0}'`"" -f [Guid]::NewGuid().ToString().Substring(0, 10)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.ssh-host-config.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.ssh-host-config.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      [Environment]::SetEnvironmentVariable('SshdPassword', [Guid]::NewGuid().ToString().Substring(0, 13), 'Process')
     }
-    TestScript = { if (Get-Service 'sshd' -ErrorAction SilentlyContinue) { $true } else { $false } }
+    TestScript = { if ("$env:SshdPassword" -ne "") { $true } else { $false } }
+  }
+  User sshd {
+    UserName = 'sshd'
+    Ensure = 'Present'
+    FullName = 'SSH Service Account'
+    Description = 'Used by the sshd Windows service'
+    Password = (New-Object Management.Automation.PSCredential 'sshd', (ConvertTo-SecureString $env:SshdPassword -AsPlainText -Force))
+    PasswordNeverExpires = $true
+    PasswordChangeRequired = $false
+    Disabled = $false
+  }
+  Script SshdServiceInstall {
+    GetScript = { @{ Result = ((Get-Service 'sshd' -ErrorAction SilentlyContinue) -and ((Get-Service 'sshd').Status -eq 'running')) } }
+    SetScript = {
+      Start-Process ('{0}\cygwin\bin\bash.exe' -f $env:SystemDrive) -ArgumentList ("--login -c `"ssh-host-config -y -c 'ntsec mintty' -u 'sshd' -w '{0}'`"" -f $env:SshdPassword) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.ssh-host-config.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.ssh-host-config.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    }
+    TestScript = { if ((Get-Service 'sshd' -ErrorAction SilentlyContinue) -and ((Get-Service 'sshd').Status -eq 'running')) { $true } else { $false } }
   }
 }
