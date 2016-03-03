@@ -68,7 +68,7 @@ Configuration MaintenanceToolChainConfig {
     }
     TestScript = { if ("$env:SshdPassword" -ne "") { $true } else { $false } }
   }
-  User sshd {
+  User 'sshd' {
     UserName = 'sshd'
     Ensure = 'Present'
     FullName = 'SSH Service Account'
