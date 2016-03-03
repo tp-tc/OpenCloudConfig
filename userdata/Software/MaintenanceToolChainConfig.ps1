@@ -64,7 +64,7 @@ Configuration MaintenanceToolChainConfig {
   Script SshdPasswordGenerator {
     GetScript = { @{ Result = ("$env:SshdPassword" -ne "") } }
     SetScript = {
-      [Environment]::SetEnvironmentVariable('SshdPassword', [Guid]::NewGuid().ToString().Substring(0, 13), 'Process')
+      [Environment]::SetEnvironmentVariable('SshdPassword', [Guid]::NewGuid().ToString().Substring(0, 13), 'Machine')
     }
     TestScript = { if ("$env:SshdPassword" -ne "") { $true } else { $false } }
   }
@@ -82,6 +82,7 @@ Configuration MaintenanceToolChainConfig {
     GetScript = { @{ Result = ((Get-Service 'sshd' -ErrorAction SilentlyContinue) -and ((Get-Service 'sshd').Status -eq 'running')) } }
     SetScript = {
       Start-Process ('{0}\cygwin\bin\bash.exe' -f $env:SystemDrive) -ArgumentList ("--login -c `"ssh-host-config -y -c 'ntsec mintty' -u 'sshd' -w '{0}'`"" -f $env:SshdPassword) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.ssh-host-config.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.ssh-host-config.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      [Environment]::SetEnvironmentVariable('SshdPassword', '', 'Machine')
     }
     TestScript = { if ((Get-Service 'sshd' -ErrorAction SilentlyContinue) -and ((Get-Service 'sshd').Status -eq 'running')) { $true } else { $false } }
   }
