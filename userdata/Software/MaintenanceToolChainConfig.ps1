@@ -55,21 +55,21 @@ Configuration MaintenanceToolChainConfig {
   #  Version = '2.0.0.20140915'
   #}
   Script SublimeText3Download {
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
     SetScript = {
       if (Test-Path ${env:ProgramFiles(x86)} -ErrorAction SilentlyContinue) {
-          (New-Object Net.WebClient).DownloadFile('https://download.sublimetext.com/Sublime%20Text%20Build%203103%20x64%20Setup.exe', ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemDrive))
-        } else {
-          (New-Object Net.WebClient).DownloadFile('https://download.sublimetext.com/Sublime%20Text%20Build%203103%20Setup.exe', ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemDrive))
-        }
-      Unblock-File -Path ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemDrive)
+        (New-Object Net.WebClient).DownloadFile('https://download.sublimetext.com/Sublime%20Text%20Build%203103%20x64%20Setup.exe', ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemRoot))
+      } else {
+        (New-Object Net.WebClient).DownloadFile('https://download.sublimetext.com/Sublime%20Text%20Build%203103%20Setup.exe', ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemRoot))
+      }
+      Unblock-File -Path ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemRoot)
     }
-    TestScript = { if (Test-Path -Path ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Script SublimeText3Install {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\SublimeText\sublime_text.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      Start-Process ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemDrive) -ArgumentList '/VERYSILENT /NORESTART /TASKS="contextentry"' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.sublime-text-setup.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.sublime-text-setup.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Start-Process ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemRoot) -ArgumentList '/VERYSILENT /NORESTART /TASKS="contextentry"' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.sublime-text-setup.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.sublime-text-setup.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
     TestScript = { (Test-Path -Path ('{0}\SublimeText\sublime_text.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) }
   }
