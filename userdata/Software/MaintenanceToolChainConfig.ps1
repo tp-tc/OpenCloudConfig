@@ -57,7 +57,7 @@ Configuration MaintenanceToolChainConfig {
   Script SublimeText3Download {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      if (Test-Path ${env:ProgramFiles(x86)}) {
+      if (Test-Path ${env:ProgramFiles(x86)} -ErrorAction SilentlyContinue) {
           (New-Object Net.WebClient).DownloadFile('https://download.sublimetext.com/Sublime%20Text%20Build%203103%20x64%20Setup.exe', ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemDrive))
         } else {
           (New-Object Net.WebClient).DownloadFile('https://download.sublimetext.com/Sublime%20Text%20Build%203103%20Setup.exe', ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemDrive))
