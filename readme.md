@@ -17,3 +17,4 @@
     Invoke-Expression (New-Object Net.WebClient).DownloadString($url)
     </powershell>
     <persist>true</persist>
+    <runAsLocalSystem>true</runAsLocalSystem>
