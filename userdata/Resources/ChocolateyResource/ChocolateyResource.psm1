@@ -68,7 +68,7 @@ function Set-TargetResource {
   }
   if ($ensure -ieq "present") {
     Write-Verbose "ChocolateyResource: Before installing Chocolatey package"
-    & 'choco' @('install', '-y', '--force', $package, '--version', $version)  | Select-WriteHost | Out-Null
+    & $chocolateyPath @('install', '-y', '--force', $package, '--version', $version)  | Select-WriteHost | Out-Null
     Write-Verbose "ChocolateyResource: After installing Chocolatey package"
   } else {
     & $chocolateyPath @('uninstall', '-y', '--force', $package) | Select-WriteHost | Out-Null
