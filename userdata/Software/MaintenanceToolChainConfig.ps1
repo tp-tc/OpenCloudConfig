@@ -26,9 +26,9 @@ Configuration MaintenanceToolChainConfig {
     TestScript = { if (Test-Path -Path ('{0}\Temp\nxlog-ce-2.9.1504.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Package NxLogInstall {
-    Name = 'NxLog'
+    Name = 'NxLog-CE'
     Path = ('{0}\Temp\nxlog-ce-2.9.1504.msi' -f $env:SystemRoot)
-    ProductId = ''
+    ProductId = '5E1D25F5-647E-44CA-9223-387230EC02C6'
     Ensure = 'Present'
     LogPath = ('{0}\log\{1}.nxlog-ce-2.9.1504.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
@@ -57,7 +57,7 @@ Configuration MaintenanceToolChainConfig {
   Script SublimeText3Download {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      (New-Object Net.WebClient).DownloadFile(('https://download.sublimetext.com/{0}' -f @{$true='Sublime%20Text%20Build%203103%20x64%20Setup.exe';$false='Sublime%20Text%20Build%203103%20Setup.exe'}[(Test-Path Env:\'ProgramFiles(x86)')]), ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemDrive))
+      (New-Object Net.WebClient).DownloadFile(('https://download.sublimetext.com/{0}' -f @{$true='Sublime%20Text%20Build%203103%20x64%20Setup.exe';$false='Sublime%20Text%20Build%203103%20Setup.exe'}[(Test-Path ${env:ProgramFiles(x86)})]), ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemDrive))
       Unblock-File -Path ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemDrive)
     }
     TestScript = { if (Test-Path -Path ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
