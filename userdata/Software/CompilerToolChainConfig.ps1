@@ -123,4 +123,21 @@ Configuration CompilerToolChainConfig {
     }
     TestScript = { (Test-Path -Path ('{0}\mozilla-build\hg' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
   }
+  File MercurialCertFolder {
+    DependsOn = '[Script]MercurialSymbolicLink'
+    Type = 'Directory'
+    DestinationPath = ('{0}\mozilla-build\hg\hgrc.d' -f $env:SystemDrive)
+    Ensure = 'Present'
+  }
+  Script MercurialConfigure {
+    DependsOn = '[File]MercurialCertFolder'
+    GetScript = { @{ Result = ((Test-Path -Path ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\mozilla-build\hg\hgrc.d\cacert.pem' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) } }
+    SetScript = {
+      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.ini', ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive))
+      Unblock-File -Path ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive)
+      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Mercurial/cacert.pem', ('{0}\mozilla-build\hg\hgrc.d\cacert.pem' -f $env:SystemDrive))
+      Unblock-File -Path ('{0}\mozilla-build\hg\hgrc.d\cacert.pem' -f $env:SystemDrive)
+    }
+    TestScript = { if ((Test-Path -Path ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\mozilla-build\hg\hgrc.d\cacert.pem' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) { $true } else { $false } }
+  }
 }
