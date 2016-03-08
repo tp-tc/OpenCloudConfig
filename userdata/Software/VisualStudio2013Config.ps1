@@ -17,11 +17,11 @@ Configuration VisualStudio2013Config {
     TestScript = { if ((Test-Path -Path ('{0}\Temp\vs_community_2013.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\Temp\VisualStudio2013-AdminDeployment.xml' -f $env:SystemRoot) -ErrorAction SilentlyContinue)) { $true } else { $false } }
   }
   Script VsCommunity2013Install {
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\Microsoft Visual Studio 12.0\Common7\IDE\devenv.exe' -f @{$true=${env:ProgramFiles(x86)};$false=$env:ProgramFiles}[(Test-Path ${ProgramFiles(x86)})]) -ErrorAction SilentlyContinue) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Microsoft Visual Studio 12.0\Common7\IDE\devenv.exe' -f @{$true=${env:ProgramFiles(x86)};$false=$env:ProgramFiles}[(Test-Path -Path ${env:ProgramFiles(x86)} -ErrorAction SilentlyContinue)]) -ErrorAction SilentlyContinue) } }
     SetScript = {
       Start-Process ('{0}\Temp\vs_community_2013.exe' -f $env:SystemRoot) -ArgumentList ('/Passive /NoRestart /AdminFile {0} /Log {1}' -f ('{0}\Temp\VisualStudio2013-AdminDeployment.xml' -f $env:SystemRoot), ('{0}\log\{1}.vs_community_2013.exe.install.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.vs_community_2013.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.vs_community_2013.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
-    TestScript = { (Test-Path -Path ('{0}\Microsoft Visual Studio 12.0\Common7\IDE\devenv.exe' -f @{$true=${env:ProgramFiles(x86)};$false=$env:ProgramFiles}[(Test-Path ${ProgramFiles(x86)})]) -ErrorAction SilentlyContinue) }
+    TestScript = { (Test-Path -Path ('{0}\Microsoft Visual Studio 12.0\Common7\IDE\devenv.exe' -f @{$true=${env:ProgramFiles(x86)};$false=$env:ProgramFiles}[(Test-Path -Path ${env:ProgramFiles(x86)} -ErrorAction SilentlyContinue)]) -ErrorAction SilentlyContinue) }
   }
 
   # tools folder required by mozilla build scripts
