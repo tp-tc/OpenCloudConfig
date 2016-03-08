@@ -67,11 +67,11 @@ Configuration MaintenanceToolChainConfig {
     TestScript = { if (Test-Path -Path ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Script SublimeText3Install {
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\SublimeText\sublime_text.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Sublime Text 3\sublime_text.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) } }
     SetScript = {
       Start-Process ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemRoot) -ArgumentList '/VERYSILENT /NORESTART /TASKS="contextentry"' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.sublime-text-setup.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.sublime-text-setup.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
-    TestScript = { (Test-Path -Path ('{0}\SublimeText\sublime_text.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) }
+    TestScript = { (Test-Path -Path ('{0}\Sublime Text 3\sublime_text.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) }
   }
 
   Script CygWinDownload {
