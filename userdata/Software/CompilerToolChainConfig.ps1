@@ -96,9 +96,9 @@ Configuration CompilerToolChainConfig {
   }
   Package MercurialInstall {
     DependsOn = @('[Script]MercurialDownload', '[File]LogFolder')
-    Name = 'Mercurial'
+    Name = 'Mercurial 3.7.2 (x64)'
     Path = ('{0}\Temp\mercurial-3.7.2-x64.msi' -f $env:SystemRoot)
-    ProductId = ''
+    ProductId = 'CAED022C-BC65-447A-A821-060B09439984'
     Ensure = 'Present'
     LogPath = ('{0}\log\{1}.mercurial-3.7.2-x64.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
