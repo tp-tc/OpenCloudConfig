@@ -12,11 +12,6 @@ Configuration MaintenanceToolChainConfig {
     Ensure = 'Present'
   }
 
-  #Chocolatey NxLogInstall {
-  #  Ensure = 'Present'
-  #  Package = 'nxlog'
-  #  Version = '2.9.1504'
-  #}
   Script NxLogDownload {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\nxlog-ce-2.9.1504.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
     SetScript = {
@@ -26,6 +21,7 @@ Configuration MaintenanceToolChainConfig {
     TestScript = { if (Test-Path -Path ('{0}\Temp\nxlog-ce-2.9.1504.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Package NxLogInstall {
+    DependsOn = @('[Script]NxLogDownload', '[File]LogFolder')
     Name = 'NxLog-CE'
     Path = ('{0}\Temp\nxlog-ce-2.9.1504.msi' -f $env:SystemRoot)
     ProductId = '5E1D25F5-647E-44CA-9223-387230EC02C6'
@@ -33,6 +29,7 @@ Configuration MaintenanceToolChainConfig {
     LogPath = ('{0}\log\{1}.nxlog-ce-2.9.1504.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
   Script NxLogConfigure {
+    DependsOn = '[Package]NxLogInstall'
     GetScript = { @{ Result = ((Test-Path -Path ('{0}\nxlog\cert\papertrail-bundle.pem' -f ${env:ProgramFiles(x86)}) -ErrorAction SilentlyContinue) -and (((Get-Content ('{0}\nxlog\conf\nxlog.conf' -f ${env:ProgramFiles(x86)})) | %{ $_ -match 'papertrail-bundle.pem' }) -contains $true) -and (Get-Service 'nxlog' -ErrorAction SilentlyContinue)) } }
     SetScript = {
       (New-Object Net.WebClient).DownloadFile('https://papertrailapp.com/tools/papertrail-bundle.pem', ('{0}\nxlog\cert\papertrail-bundle.pem' -f ${env:ProgramFiles(x86)}))
@@ -44,16 +41,6 @@ Configuration MaintenanceToolChainConfig {
     TestScript = { if ((Test-Path -Path ('{0}\nxlog\cert\papertrail-bundle.pem' -f ${env:ProgramFiles(x86)}) -ErrorAction SilentlyContinue) -and (((Get-Content ('{0}\nxlog\conf\nxlog.conf' -f ${env:ProgramFiles(x86)})) | %{ $_ -match 'papertrail-bundle.pem' }) -contains $true) -and (Get-Service 'nxlog' -ErrorAction SilentlyContinue)) { $true } else { $false } }
   }
 
-  #Chocolatey SublimeText3Install {
-  #  Ensure = 'Present'
-  #  Package = 'sublimetext3'
-  #  Version = '3.0.0.3103'
-  #}
-  #Chocolatey SublimeText3PackageControlInstall {
-  #  Ensure = 'Present'
-  #  Package = 'sublimetext3.packagecontrol'
-  #  Version = '2.0.0.20140915'
-  #}
   Script SublimeText3Download {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
     SetScript = {
@@ -67,6 +54,7 @@ Configuration MaintenanceToolChainConfig {
     TestScript = { if (Test-Path -Path ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Script SublimeText3Install {
+    DependsOn = @('[Script]SublimeText3Download', '[File]LogFolder')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Sublime Text 3\sublime_text.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) } }
     SetScript = {
       Start-Process ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemRoot) -ArgumentList '/VERYSILENT /NORESTART /TASKS="contextentry"' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.sublime-text-setup.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.sublime-text-setup.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
@@ -83,6 +71,7 @@ Configuration MaintenanceToolChainConfig {
     TestScript = { if (Test-Path -Path ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Script CygWinInstall {
+    DependsOn = '[Script]CygWinDownload'
     GetScript = { @{ Result = (Test-Path -Path ('{0}\cygwin\bin\cygrunsrv.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
       Start-Process ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp) -ArgumentList ('--quiet-mode --wait --root {0}\cygwin --site http://cygwin.mirror.constant.com --packages openssh,vim,curl,tar,wget,zip,unzip,diffutils,bzr' -f $env:SystemDrive) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
@@ -95,6 +84,7 @@ Configuration MaintenanceToolChainConfig {
     TestScript = { if (Get-NetFirewallRule -DisplayName 'Allow SSH inbound' -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Script SshdServiceInstall {
+    DependsOn = @('[Script]SshInboundFirewallEnable', '[Script]CygWinInstall', '[File]LogFolder')
     GetScript = { @{ Result = ((Get-Service 'sshd' -ErrorAction SilentlyContinue) -and ((Get-Service 'sshd').Status -eq 'running')) } }
     SetScript = {
       $password = [Guid]::NewGuid().ToString().Substring(0, 13)
