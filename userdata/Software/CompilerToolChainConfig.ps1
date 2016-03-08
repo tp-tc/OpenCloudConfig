@@ -11,6 +11,11 @@ Configuration CompilerToolChainConfig {
     DestinationPath = ('{0}\log' -f $env:SystemDrive)
     Ensure = 'Present'
   }
+  File ToolsFolder {
+    Type = 'Directory'
+    DestinationPath = ('{0}\tools' -f $env:SystemDrive)
+    Ensure = 'Present'
+  }
   
   Script DirectXSdkDownload {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\DXSDK_Jun10.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
@@ -21,6 +26,7 @@ Configuration CompilerToolChainConfig {
     TestScript = { if (Test-Path -Path ('{0}\Temp\DXSDK_Jun10.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Script DirectXSdkInstall {
+    DependsOn = @('[Script]DirectXSdkDownload', '[File]LogFolder')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Microsoft DirectX SDK (June 2010)\system\uninstall\DXSDK_Jun10.exe' -f ${env:ProgramFiles(x86)}) -ErrorAction SilentlyContinue) } }
     SetScript = {
       # https://blogs.msdn.microsoft.com/chuckw/2011/12/09/known-issue-directx-sdk-june-2010-setup-and-the-s1023-error/
@@ -51,6 +57,7 @@ Configuration CompilerToolChainConfig {
     TestScript = { if (Test-Path -Path ('{0}\Temp\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Package RustInstall {
+    DependsOn = @('[Script]RustDownload', '[File]LogFolder')
     Name = 'Rust 1.6 (MSVC 64-bit)'
     Path = ('{0}\Temp\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:SystemRoot)
     ProductId = 'A21886AC-C591-4CC0-BA5B-C080B88F630B'
@@ -58,12 +65,13 @@ Configuration CompilerToolChainConfig {
     LogPath = ('{0}\log\{1}.rust-1.6.0-x86_64-pc-windows-msvc.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
   Script RustSymbolicLink {
+    DependsOn = @('[Package]RustInstall', '[File]ToolsFolder')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\tools\rust' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
       if ($PSVersionTable.PSVersion.Major -gt 4) {
-        New-Item -ItemType SymbolicLink -Path ('{0}\tools' -f $env:SystemDrive) -Name 'rust' -Target ('{0}\Rust MSVC 1.6' -f $env:ProgramFiles)
+        New-Item -ItemType SymbolicLink -Path ('{0}\tools' -f $env:SystemDrive) -Name 'rust' -Target ('{0}\Rust stable MSVC 1.6' -f $env:ProgramFiles)
       } else {
-        & cmd @('/c', 'mklink', '/D', ('{0}\tools\rust' -f $env:SystemDrive), ('{0}\Rust MSVC 1.6' -f $env:ProgramFiles))
+        & cmd @('/c', 'mklink', '/D', ('{0}\tools\rust' -f $env:SystemDrive), ('{0}\Rust stable MSVC 1.6' -f $env:ProgramFiles))
       }
     }
     TestScript = { (Test-Path -Path ('{0}\tools\rust' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
@@ -78,6 +86,7 @@ Configuration CompilerToolChainConfig {
     TestScript = { if (Test-Path -Path ('{0}\Temp\MozillaBuildSetup-2.1.0.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Script MozillaBuildInstall {
+    DependsOn = @('[Script]MozillaBuildDownload', '[File]LogFolder')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) } }
     SetScript = {
       Start-Process ('{0}\Temp\MozillaBuildSetup-2.1.0.exe' -f $env:SystemRoot) -ArgumentList '/S' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
