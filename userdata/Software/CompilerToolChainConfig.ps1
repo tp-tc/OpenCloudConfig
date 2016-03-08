@@ -140,4 +140,23 @@ Configuration CompilerToolChainConfig {
     }
     TestScript = { if ((Test-Path -Path ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\mozilla-build\hg\hgrc.d\cacert.pem' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) { $true } else { $false } }
   }
+  File MozillaRepositoriesFolder {
+    Type = 'Directory'
+    DestinationPath = ('{0}\builds\hg-shared' -f $env:SystemDrive)
+    Ensure = 'Present'
+  }
+  Script MozillaCentralCache {
+    DependsOn = @('[Script]MercurialConfigure', '[File]MozillaRepositoriesFolder')
+    GetScript = { @{ Result = $false } }
+    SetScript = {
+      $source = 'https://hg.mozilla.org/mozilla-central'
+      $target = ('{0}\builds\hg-shared\mozilla-central' -f $env:SystemDrive)
+      if ((Test-Path -Path $target -PathType Container -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\.hg' -f $target) -PathType Container -ErrorAction SilentlyContinue)) {
+        Start-Process ('{0}\mozilla-build\hg\hg.exe' -f $env:SystemRoot) -ArgumentList @('pull', '-R', $target) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.hg-pull.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.hg-pull.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      } else {
+        Start-Process ('{0}\mozilla-build\hg\hg.exe' -f $env:SystemRoot) -ArgumentList @('clone', '-U', $source, $target) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.hg-clone.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.hg-clone.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      }
+    }
+    TestScript = { $false }
+  }
 }
