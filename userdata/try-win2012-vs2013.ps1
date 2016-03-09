@@ -1,6 +1,7 @@
 function Run-RemoteDesiredStateConfig {
   param (
-    [string] $url
+    [string] $url,
+    [string] $log
   )
   $config = [IO.Path]::GetFileNameWithoutExtension($url)
   $target = ('{0}\{1}.ps1' -f $env:Temp, $config)
@@ -9,7 +10,7 @@ function Run-RemoteDesiredStateConfig {
   . $target
   $mof = ('{0}\{1}' -f $env:Temp, $config)
   Invoke-Expression "$config -OutputPath $mof"
-  Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
+  Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force | Tee-Object -filePath $log -append
 }
 $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
 New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
@@ -30,6 +31,6 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
     'ServiceConfig'
   )
   foreach ($config in $configs) {
-    Run-RemoteDesiredStateConfig -url ('{0}/{1}.ps1' -f $url, $config) | Tee-Object -filePath $logFile -append
+    Run-RemoteDesiredStateConfig -url ('{0}/{1}.ps1' -f $url, $config) -log $logFile | Tee-Object -filePath $logFile -append
   }
 }
