@@ -156,7 +156,8 @@ Configuration MaintenanceToolChainConfig {
     SetScript = {
       Start-Process ('{0}\Temp\7z1514-x64.exe' -f $env:SystemRoot) -ArgumentList ('/S' -f $env:SystemDrive) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.7z1514-x64.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.7z1514-x64.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
-    TestScript = { (Test-Path -Path ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) }
+    #TestScript = { if (Test-Path -Path ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) { $true } else { $false } }
+    TestScript = { [bool](Test-Path -Path ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) }
   }
   #Package SevenZipInstall {
   #  DependsOn = @('[Script]SevenZipDownload', '[File]LogFolder')
