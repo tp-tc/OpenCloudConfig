@@ -88,7 +88,7 @@ Configuration MaintenanceToolChainConfig {
       if ($PSVersionTable.PSVersion.Major -gt 4) {
         New-Item -ItemType SymbolicLink -Path ('{0}\cygwin' -f $env:SystemDrive) -Name 'home' -Target ('{0}\Users' -f $env:SystemDrive)
       } else {
-        & cmd @('/c', 'mklink', '/D', ('{0}\cygwin\home' -f $env:SystemDrive), ('{0}\Users' -f $env:SystemDrive))
+        & 'cmd' @('/c', 'mklink', '/D', ('{0}\cygwin\home' -f $env:SystemDrive), ('{0}\Users' -f $env:SystemDrive))
       }
     }
     TestScript = { if ((Test-Path -Path ('{0}\cygwin\home' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and ([bool]((Get-Item ('{0}\cygwin\home' -f $env:SystemDrive) -Force -ea 0).Attributes -band [IO.FileAttributes]::ReparsePoint))) { $true } else { $false } }
@@ -106,7 +106,7 @@ Configuration MaintenanceToolChainConfig {
       Start-Process ('{0}\cygwin\bin\bash.exe' -f $env:SystemDrive) -ArgumentList ("--login -c `"ssh-host-config -y -c 'ntsec mintty' -u 'sshd' -w '{0}'`"" -f $password) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.ssh-host-config.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.ssh-host-config.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
       & net @('user', 'sshd', $password, '/active:yes')
       (Get-WmiObject -Class Win32_Service | Where-Object { $_.Name -eq 'sshd' }).Change($Null,$Null,$Null,$Null,$Null,$Null,$Null,$password,$Null,$Null,$Null)
-      & net @('start', 'sshd')
+      & 'net' @('start', 'sshd')
     }
     TestScript = { if ((Get-Service 'sshd' -ErrorAction SilentlyContinue) -and ((Get-Service 'sshd').Status -eq 'running')) { $true } else { $false } }
   }
@@ -133,7 +133,7 @@ Configuration MaintenanceToolChainConfig {
     SetScript = {
       (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/gpg-gen-key.options', ('{0}\gpg-gen-key.options' -f $env:Temp))
       Unblock-File -Path ('{0}\gpg-gen-key.options' -f $env:Temp)
-      & diskperf @('-y')
+      & 'diskperf' @('-y')
       (Get-Content ('{0}\gpg-gen-key.options' -f $env:Temp)) | Foreach-Object {$_ -replace 'COMPUTERNAME', $env:COMPUTERNAME} | Out-File ('{0}\gpg-gen-key.options' -f $env:Temp)
       (Get-Content ('{0}\gpg-gen-key.options' -f $env:Temp)) | Foreach-Object {$_ -replace 'USERNAME', $env:USERNAME.TrimEnd('$')} | Out-File ('{0}\gpg-gen-key.options' -f $env:Temp)
       (Get-Content ('{0}\gpg-gen-key.options' -f $env:Temp)) | Foreach-Object {$_ -replace 'USERDOMAIN', $env:USERDOMAIN} | Out-File ('{0}\gpg-gen-key.options' -f $env:Temp)
