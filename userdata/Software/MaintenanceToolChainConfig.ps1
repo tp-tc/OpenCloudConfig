@@ -106,9 +106,9 @@ Configuration MaintenanceToolChainConfig {
   }
   Package SevenZipInstall {
     DependsOn = @('[Script]SevenZipDownload', '[File]LogFolder')
-    Name = '7-zip'
+    Name = '7-Zip 15.14 (x64 edition)'
     Path = ('{0}\Temp\7z1514-x64.msi' -f $env:SystemRoot)
-    ProductId = ''
+    ProductId = '23170F69-40C1-2702-1514-000001000000'
     Ensure = 'Present'
     LogPath = ('{0}\log\{1}.7z1514-x64.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
