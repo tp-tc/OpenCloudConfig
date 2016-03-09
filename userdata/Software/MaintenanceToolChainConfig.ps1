@@ -102,7 +102,7 @@ Configuration MaintenanceToolChainConfig {
       (New-Object Net.WebClient).DownloadFile('http://7-zip.org/a/7z1514-x64.msi', ('{0}\Temp\7z1514-x64.msi' -f $env:SystemRoot))
       Unblock-File -Path ('{0}\Temp\7z1514-x64.msi' -f $env:SystemRoot)
     }
-    TestScript = { if (Test-Path -Path ('{0}\Temp\nxlog-ce-2.9.1504.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\7z1514-x64.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Package SevenZipInstall {
     DependsOn = @('[Script]SevenZipDownload', '[File]LogFolder')
