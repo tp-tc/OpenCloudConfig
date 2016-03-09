@@ -143,19 +143,27 @@ Configuration MaintenanceToolChainConfig {
   }
 
   Script SevenZipDownload {
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\7z1514-x64.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\7z1514-x64.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      (New-Object Net.WebClient).DownloadFile('http://7-zip.org/a/7z1514-x64.msi', ('{0}\Temp\7z1514-x64.msi' -f $env:SystemRoot))
-      Unblock-File -Path ('{0}\Temp\7z1514-x64.msi' -f $env:SystemRoot)
+      (New-Object Net.WebClient).DownloadFile('http://7-zip.org/a/7z1514-x64.exe', ('{0}\Temp\7z1514-x64.exe' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\7z1514-x64.exe' -f $env:SystemRoot)
     }
-    TestScript = { if (Test-Path -Path ('{0}\Temp\7z1514-x64.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\7z1514-x64.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
-  Package SevenZipInstall {
-    DependsOn = @('[Script]SevenZipDownload', '[File]LogFolder')
-    Name = '7-Zip 15.14 (x64 edition)'
-    Path = ('{0}\Temp\7z1514-x64.msi' -f $env:SystemRoot)
-    ProductId = '23170F69-40C1-2702-1514-000001000000'
-    Ensure = 'Present'
-    LogPath = ('{0}\log\{1}.7z1514-x64.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+  Script SevenZipInstall {
+    DependsOn = '[Script]SevenZipDownload'
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      Start-Process ('{0}\Temp\7z1514-x64.exe' -f $env:SystemRoot) -ArgumentList ('/S' -f $env:SystemDrive) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.7z1514-x64.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.7z1514-x64.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    }
+    TestScript = { (Test-Path -Path ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) }
   }
+  #Package SevenZipInstall {
+  #  DependsOn = @('[Script]SevenZipDownload', '[File]LogFolder')
+  #  Name = '7-Zip 15.14 (x64 edition)'
+  #  Path = ('{0}\Temp\7z1514-x64.msi' -f $env:SystemRoot)
+  #  ProductId = '23170F69-40C1-2702-1514-000001000000'
+  #  Ensure = 'Present'
+  #  LogPath = ('{0}\log\{1}.7z1514-x64.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+  #}
 }
