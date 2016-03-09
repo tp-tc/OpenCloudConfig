@@ -24,7 +24,7 @@ function Send-Log {
     (New-Object Net.WebClient).DownloadFile('https://github.com/MozRelOps/OpenCloudConfig/blob/master/userdata/Configuration/smtp.pass.gpg?raw=true', ('{0}\smtp.pass.gpg' -f $env:Temp))
     $password = (& ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) @('-u', 'Administrator', '-d', ('{0}\smtp.pass.gpg' -f $env:Temp)))
     $credential = New-Object System.Management.Automation.PSCredential 'AKIAIPJEOD57YDLBF35Q', (ConvertTo-SecureString $password -AsPlainText -Force)
-    Send-MailMessage -To $to -Subject $subject -Body ([IO.File]::ReadAllText($logfile)) -SmtpServer $smtpServer -From $from -Attachments $attachments -Credential $credential
+    Send-MailMessage -To $to -Subject $subject -Body ([IO.File]::ReadAllText($logfile)) -SmtpServer $smtpServer -From $from -Attachments $attachments -Credential $credential -UseSsl
   } else {
     Write-Log -message ("{0} :: skipping log mail, file: {1} not found" -f $($MyInvocation.MyCommand.Name), $logfile) -severity 'WARN'
   }
