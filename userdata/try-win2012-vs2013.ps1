@@ -11,6 +11,22 @@ function Run-RemoteDesiredStateConfig {
   Invoke-Expression "$config -OutputPath $mof"
   Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
 }
+function Send-Log {
+  param (
+    [string] $logfile,
+    [string] $subject,
+    [string[]] $attachments = $null,
+    [string] $to = 'releng-puppet-mail@mozilla.com',
+    [string] $from = ('{0}@{1}.{2}' -f $env:USERNAME, $env:COMPUTERNAME, $env:USERDOMAIN),
+    [string] $smtpServer = 'smtp.mail.scl3.mozilla.com'
+  )
+  if (Test-Path $logfile) {
+    Send-MailMessage -To $to -Subject $subject -Body ([IO.File]::ReadAllText($logfile)) -SmtpServer $smtpServer -From $from -Attachments $attachments
+  } else {
+    Write-Log -message ("{0} :: skipping log mail, file: {1} not found" -f $($MyInvocation.MyCommand.Name), $logfile) -severity 'WARN'
+  }
+}
+
 $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
 New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
 Set-ExecutionPolicy RemoteSigned -force | Tee-Object -filePath $logFile -append
@@ -39,4 +55,5 @@ Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) -include '*.log' | Where-Obj
   Remove-Item -path $_.FullName -Force
 }
 & ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) @('a', $logFile.Replace('.log', '.zip'), ('{0}\log\*.log' -f $env:SystemDrive))
+Send-Log -logfile $logFile -subject ('UserData Run Report for TaskCluster worker: {0}' -f $env:ComputerName) -attachments @($logFile.Replace('.log', '.zip'))
 Remove-Item -path ('{0}\log\*.log' -f $env:SystemDrive) -Force
