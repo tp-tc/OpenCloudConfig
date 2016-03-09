@@ -9,7 +9,7 @@ function Run-RemoteDesiredStateConfig {
   Unblock-File -Path $target
   . $target
   $mof = ('{0}\{1}' -f $env:Temp, $config)
-  Invoke-Expression "$config -OutputPath $mof"
+  Invoke-Expression "$config -OutputPath $mof" | Tee-Object -filePath $logFile -append
   Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force | Out-File -filePath $log -append
 }
 $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
@@ -31,6 +31,6 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
     'ServiceConfig'
   )
   foreach ($config in $configs) {
-    Run-RemoteDesiredStateConfig -url ('{0}/{1}.ps1' -f $url, $config) -log $logFile | Tee-Object -filePath $logFile -append
+    Run-RemoteDesiredStateConfig -url ('{0}/{1}.ps1' -f $url, $config) -log $logFile
   }
 }
