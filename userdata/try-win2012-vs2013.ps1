@@ -11,23 +11,25 @@ function Run-RemoteDesiredStateConfig {
   Invoke-Expression "$config -OutputPath $mof"
   Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
 }
-Set-ExecutionPolicy RemoteSigned -force
-if ($PSVersionTable.PSVersion.Major -lt 4) {
-  Invoke-Expression ((New-Object Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-  & choco @('upgrade', 'powershell', '-y')
-  & shutdown @('-r', '-t', '0', '-c', 'Powershell upgraded', '-f', '-d', 'p:4:1')
-} else {
-  $url = 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata'
-  $configs = @(
-    'ResourceConfig',
-    'Software/MaintenanceToolChainConfig',
-    'Software/VisualStudio2013Config',
-    'FeatureConfig',
-    'Software/CompilerToolChainConfig',
-    'Software/TaskClusterToolChainConfig',
-    'ServiceConfig'
-  )
-  foreach ($config in $configs) {
-    Run-RemoteDesiredStateConfig -url ('{0}/{1}.ps1' -f $url, $config)
+{
+  Set-ExecutionPolicy RemoteSigned -force
+  if ($PSVersionTable.PSVersion.Major -lt 4) {
+    Invoke-Expression ((New-Object Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+    & choco @('upgrade', 'powershell', '-y')
+    & shutdown @('-r', '-t', '0', '-c', 'Powershell upgraded', '-f', '-d', 'p:4:1')
+  } else {
+    $url = 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata'
+    $configs = @(
+      'ResourceConfig',
+      'Software/MaintenanceToolChainConfig',
+      'Software/VisualStudio2013Config',
+      'FeatureConfig',
+      'Software/CompilerToolChainConfig',
+      'Software/TaskClusterToolChainConfig',
+      'ServiceConfig'
+    )
+    foreach ($config in $configs) {
+      Run-RemoteDesiredStateConfig -url ('{0}/{1}.ps1' -f $url, $config)
+    }
   }
-}
+} | Tee-Object -filePath ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
