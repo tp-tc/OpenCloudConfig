@@ -12,6 +12,7 @@ function Run-RemoteDesiredStateConfig {
   Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
 }
 $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
 Set-ExecutionPolicy RemoteSigned -force | Tee-Object -filePath $logFile -append
 if ($PSVersionTable.PSVersion.Major -lt 4) {
   Invoke-Expression ((New-Object Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) | Tee-Object -filePath $logFile -append
