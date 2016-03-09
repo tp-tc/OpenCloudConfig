@@ -95,4 +95,21 @@ Configuration MaintenanceToolChainConfig {
     }
     TestScript = { if ((Get-Service 'sshd' -ErrorAction SilentlyContinue) -and ((Get-Service 'sshd').Status -eq 'running')) { $true } else { $false } }
   }
+
+  Script SevenZipDownload {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\7z1514-x64.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      (New-Object Net.WebClient).DownloadFile('http://7-zip.org/a/7z1514-x64.msi', ('{0}\Temp\7z1514-x64.msi' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\7z1514-x64.msi' -f $env:SystemRoot)
+    }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\nxlog-ce-2.9.1504.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
+  Package SevenZipInstall {
+    DependsOn = @('[Script]SevenZipDownload', '[File]LogFolder')
+    Name = '7-zip'
+    Path = ('{0}\Temp\7z1514-x64.msi' -f $env:SystemRoot)
+    ProductId = ''
+    Ensure = 'Present'
+    LogPath = ('{0}\log\{1}.7z1514-x64.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+  }
 }
