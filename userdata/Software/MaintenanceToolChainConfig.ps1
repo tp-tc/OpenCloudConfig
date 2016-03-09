@@ -63,18 +63,18 @@ Configuration MaintenanceToolChainConfig {
   }
 
   Script CygWinDownload {
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp) -ErrorAction SilentlyContinue) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\cygwin-setup-x86_64.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      (New-Object Net.WebClient).DownloadFile('https://www.cygwin.com/setup-x86_64.exe', ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp))
-      Unblock-File -Path ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp)
+      (New-Object Net.WebClient).DownloadFile('https://www.cygwin.com/setup-x86_64.exe', ('{0}\Temp\cygwin-setup-x86_64.exe' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\cygwin-setup-x86_64.exe' -f $env:SystemRoot)
     }
-    TestScript = { if (Test-Path -Path ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp) -ErrorAction SilentlyContinue) { $true } else { $false } }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\cygwin-setup-x86_64.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Script CygWinInstall {
     DependsOn = '[Script]CygWinDownload'
     GetScript = { @{ Result = (Test-Path -Path ('{0}\cygwin\bin\cygrunsrv.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      Start-Process ('{0}\cygwin-setup-x86_64.exe' -f $env:Temp) -ArgumentList ('--quiet-mode --wait --root {0}\cygwin --site http://cygwin.mirror.constant.com --packages openssh,vim,curl,tar,wget,zip,unzip,diffutils,bzr' -f $env:SystemDrive) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.MozillaBuildSetup-2.1.0.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Start-Process ('{0}\Temp\cygwin-setup-x86_64.exe' -f $env:SystemRoot) -ArgumentList ('--quiet-mode --wait --root {0}\cygwin --site http://cygwin.mirror.constant.com --packages openssh,vim,curl,tar,wget,zip,unzip,diffutils,bzr' -f $env:SystemDrive) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.cygwin-setup-x86_64.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.cygwin-setup-x86_64.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
     TestScript = { (Test-Path -Path ('{0}\cygwin\bin\cygrunsrv.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
   }
@@ -109,6 +109,23 @@ Configuration MaintenanceToolChainConfig {
       & net @('start', 'sshd')
     }
     TestScript = { if ((Get-Service 'sshd' -ErrorAction SilentlyContinue) -and ((Get-Service 'sshd').Status -eq 'running')) { $true } else { $false } }
+  }
+
+  Script GpgForWinDownload {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\gpg4win-2.3.0.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      (New-Object Net.WebClient).DownloadFile('http://files.gpg4win.org/gpg4win-2.3.0.exe', ('{0}\Temp\gpg4win-2.3.0.exe' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\gpg4win-2.3.0.exe' -f $env:SystemRoot)
+    }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\gpg4win-2.3.0.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
+  Script GpgForWinInstall {
+    DependsOn = '[Script]GpgForWinDownload'
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\cygwin\bin\cygrunsrv.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      Start-Process ('{0}\Temp\gpg4win-2.3.0.exe' -f $env:SystemRoot) -ArgumentList ('/S' -f $env:SystemDrive) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg4win-2.3.0.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg4win-2.3.0.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    }
+    TestScript = { (Test-Path -Path ('{0}\cygwin\bin\cygrunsrv.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
   }
 
   Script SevenZipDownload {
