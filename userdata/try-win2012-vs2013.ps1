@@ -21,12 +21,14 @@ function Send-Log {
     [string] $smtpServer = 'smtp.mail.scl3.mozilla.com'
   )
   if (Test-Path $logfile) {
-    Send-MailMessage -To $to -Subject $subject -Body ([IO.File]::ReadAllText($logfile)) -SmtpServer $smtpServer -From $from -Attachments $attachments
+    (New-Object Net.WebClient).DownloadFile('https://github.com/MozRelOps/OpenCloudConfig/blob/master/userdata/Configuration/smtp.pass.gpg?raw=true', ('{0}\smtp.pass.gpg' -f $env:Temp))
+    $password = (& ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) @('-u', 'Administrator', '-d', ('{0}\smtp.pass.gpg' -f $env:Temp)))
+    $credential = New-Object System.Management.Automation.PSCredential 'AKIAIPJEOD57YDLBF35Q', (ConvertTo-SecureString $password -AsPlainText -Force)
+    Send-MailMessage -To $to -Subject $subject -Body ([IO.File]::ReadAllText($logfile)) -SmtpServer $smtpServer -From $from -Attachments $attachments -Credential $credential
   } else {
     Write-Log -message ("{0} :: skipping log mail, file: {1} not found" -f $($MyInvocation.MyCommand.Name), $logfile) -severity 'WARN'
   }
 }
-
 $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
 New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
 Set-ExecutionPolicy RemoteSigned -force | Tee-Object -filePath $logFile -append
