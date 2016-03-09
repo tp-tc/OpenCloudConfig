@@ -52,8 +52,8 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
   Stop-Transcript
 }
 Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) -include '*.log' | Where-Object { !$_.PSIsContainer -and $_.Length -eq 0 } | % {
-  Remove-Item -path $_.FullName -Force
+  Remove-Item -Path $_.FullName -Force
 }
 & ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) @('a', $logFile.Replace('.log', '.zip'), ('{0}\log\*.log' -f $env:SystemDrive))
 Send-Log -logfile $logFile -subject ('UserData Run Report for TaskCluster worker: {0}' -f $env:ComputerName) -attachments @($logFile.Replace('.log', '.zip'))
-Remove-Item -path ('{0}\log\*.log' -f $env:SystemDrive) -Force
+Remove-Item -Path ('{0}\log\*.log' -f $env:SystemDrive) -Force

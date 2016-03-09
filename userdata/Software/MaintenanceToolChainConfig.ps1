@@ -78,6 +78,21 @@ Configuration MaintenanceToolChainConfig {
     }
     TestScript = { (Test-Path -Path ('{0}\cygwin\bin\cygrunsrv.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
   }
+  Script CygWinConfigure {
+    DependsOn = @('[Script]CygWinInstall', '[File]LogFolder')
+    GetScript = { @{ Result = ((Test-Path -Path ('{0}\cygwin\home' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and ([bool]((Get-Item ('{0}\cygwin\home' -f $env:SystemDrive) -Force -ea 0).Attributes -band [IO.FileAttributes]::ReparsePoint))) } }
+    SetScript = {
+      # set cygwin home directories to windows profile directories
+      Start-Process ('{0}\cygwin\bin\bash.exe' -f $env:SystemDrive) -ArgumentList '--login -c "mkpasswd -l -p $(cygpath -H) > /etc/passwd"' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.mkpasswd.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.mkpasswd.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Remove-Item -Path ('{0}\cygwin\home' -f $env:SystemDrive) -Force
+      if ($PSVersionTable.PSVersion.Major -gt 4) {
+        New-Item -ItemType SymbolicLink -Path ('{0}\cygwin' -f $env:SystemDrive) -Name 'home' -Target ('{0}\Users' -f $env:SystemDrive)
+      } else {
+        & cmd @('/c', 'mklink', '/D', ('{0}\cygwin\home' -f $env:SystemDrive), ('{0}\Users' -f $env:SystemDrive))
+      }
+    }
+    TestScript = { if ((Test-Path -Path ('{0}\cygwin\home' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and ([bool]((Get-Item ('{0}\cygwin\home' -f $env:SystemDrive) -Force -ea 0).Attributes -band [IO.FileAttributes]::ReparsePoint))) { $true } else { $false } }
+  }
   Script SshInboundFirewallEnable {
     GetScript = { @{ Result = (Get-NetFirewallRule -DisplayName 'Allow SSH inbound' -ErrorAction SilentlyContinue) } }
     SetScript = { New-NetFirewallRule -DisplayName 'Allow SSH inbound' -Direction Inbound -LocalPort 22 -Protocol TCP -Action Allow }
