@@ -10,7 +10,7 @@ function Run-RemoteDesiredStateConfig {
   . $target
   $mof = ('{0}\{1}' -f $env:Temp, $config)
   Invoke-Expression "$config -OutputPath $mof"
-  Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force | Tee-Object -filePath $log -append
+  Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force | Out-File -filePath $log -append
 }
 $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
 New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
