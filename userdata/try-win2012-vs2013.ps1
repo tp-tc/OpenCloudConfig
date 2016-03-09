@@ -1,7 +1,6 @@
 function Run-RemoteDesiredStateConfig {
   param (
-    [string] $url,
-    [string] $log
+    [string] $url
   )
   $config = [IO.Path]::GetFileNameWithoutExtension($url)
   $target = ('{0}\{1}.ps1' -f $env:Temp, $config)
@@ -9,8 +8,8 @@ function Run-RemoteDesiredStateConfig {
   Unblock-File -Path $target
   . $target
   $mof = ('{0}\{1}' -f $env:Temp, $config)
-  Invoke-Expression "$config -OutputPath $mof" | Tee-Object -filePath $logFile -append
-  Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force | Out-File -filePath $log -append
+  Invoke-Expression "$config -OutputPath $mof"
+  Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
 }
 $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
 New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
@@ -30,7 +29,9 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
     'Software/TaskClusterToolChainConfig',
     'ServiceConfig'
   )
+  Start-Transcript -Path $logFile -Append
   foreach ($config in $configs) {
-    Run-RemoteDesiredStateConfig -url ('{0}/{1}.ps1' -f $url, $config) -log $logFile
+    Run-RemoteDesiredStateConfig -url ('{0}/{1}.ps1' -f $url, $config)
   }
+  Stop-Transcript
 }
