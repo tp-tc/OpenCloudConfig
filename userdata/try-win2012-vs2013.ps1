@@ -17,7 +17,7 @@ function Send-Log {
     [string] $subject,
     [string[]] $attachments = $null,
     [string] $to = 'releng-puppet-mail@mozilla.com',
-    [string] $from = ('{0}@{1}.{2}' -f $env:USERNAME, $env:COMPUTERNAME, $env:USERDOMAIN),
+    [string] $from = 'releng-puppet-mail@mozilla.com',#('{0}@{1}.{2}' -f $env:USERNAME, $env:COMPUTERNAME, $env:USERDOMAIN),
     [string] $smtpServer = 'email-smtp.us-east-1.amazonaws.com',
     [int] $smtpPort = 2587
   )
