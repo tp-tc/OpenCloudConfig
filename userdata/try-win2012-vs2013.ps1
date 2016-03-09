@@ -18,7 +18,7 @@ function Send-Log {
     [string[]] $attachments = $null,
     [string] $to = 'releng-puppet-mail@mozilla.com',
     [string] $from = ('{0}@{1}.{2}' -f $env:USERNAME, $env:COMPUTERNAME, $env:USERDOMAIN),
-    [string] $smtpServer = 'smtp.mail.scl3.mozilla.com'
+    [string] $smtpServer = 'email-smtp.us-east-1.amazonaws.com'
   )
   if (Test-Path $logfile) {
     (New-Object Net.WebClient).DownloadFile('https://github.com/MozRelOps/OpenCloudConfig/blob/master/userdata/Configuration/smtp.pass.gpg?raw=true', ('{0}\smtp.pass.gpg' -f $env:Temp))
