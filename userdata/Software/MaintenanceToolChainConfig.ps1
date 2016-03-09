@@ -133,10 +133,10 @@ Configuration MaintenanceToolChainConfig {
     SetScript = {
       (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/gpg-gen-key.options', ('{0}\gpg-gen-key.options' -f $env:Temp))
       Unblock-File -Path ('{0}\gpg-gen-key.options' -f $env:Temp)
-      (Get-Content ('{0}\gpg-gen-key.options' -f $env:Temp)) | Foreach-Object {$_ -replace 'COMPUTERNAME', $env:COMPUTERNAME} | Out-File ('{0}\gpg-gen-key.options' -f $env:Temp)
-      (Get-Content ('{0}\gpg-gen-key.options' -f $env:Temp)) | Foreach-Object {$_ -replace 'USERNAME', $env:USERNAME} | Out-File ('{0}\gpg-gen-key.options' -f $env:Temp)
-      (Get-Content ('{0}\gpg-gen-key.options' -f $env:Temp)) | Foreach-Object {$_ -replace 'USERDOMAIN', $env:USERDOMAIN} | Out-File ('{0}\gpg-gen-key.options' -f $env:Temp)
       & diskperf @('-y')
+      (Get-Content ('{0}\gpg-gen-key.options' -f $env:Temp)) | Foreach-Object {$_ -replace 'COMPUTERNAME', $env:COMPUTERNAME} | Out-File ('{0}\gpg-gen-key.options' -f $env:Temp)
+      (Get-Content ('{0}\gpg-gen-key.options' -f $env:Temp)) | Foreach-Object {$_ -replace 'USERNAME', $env:USERNAME.TrimEnd('$')} | Out-File ('{0}\gpg-gen-key.options' -f $env:Temp)
+      (Get-Content ('{0}\gpg-gen-key.options' -f $env:Temp)) | Foreach-Object {$_ -replace 'USERDOMAIN', $env:USERDOMAIN} | Out-File ('{0}\gpg-gen-key.options' -f $env:Temp)
       & ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) @('--batch', '--gen-key', ('{0}\gpg-gen-key.options' -f $env:Temp))
     }
     TestScript = { (Test-Path -Path ('{0}\gnupg\secring.gpg' -f $env:AppData) -ErrorAction SilentlyContinue) }
