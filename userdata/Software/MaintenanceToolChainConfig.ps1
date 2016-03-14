@@ -139,7 +139,7 @@ Configuration MaintenanceToolChainConfig {
       (Get-Content ('{0}\gpg-gen-key.options' -f $env:Temp)) | Foreach-Object {$_ -replace 'USERDOMAIN', $env:USERDOMAIN} | Out-File ('{0}\gpg-gen-key.options' -f $env:Temp)
       & ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) @('--batch', '--gen-key', ('{0}\gpg-gen-key.options' -f $env:Temp))
     }
-    TestScript = { (Test-Path -Path ('{0}\gnupg\secring.gpg' -f $env:AppData) -ErrorAction SilentlyContinue) }
+    TestScript = { if (Test-Path -Path ('{0}\gnupg\secring.gpg' -f $env:AppData) -ErrorAction SilentlyContinue)  { $true } else { $false } }
   }
 
   Script SevenZipDownload {
@@ -156,15 +156,6 @@ Configuration MaintenanceToolChainConfig {
     SetScript = {
       Start-Process ('{0}\Temp\7z1514-x64.exe' -f $env:SystemRoot) -ArgumentList ('/S' -f $env:SystemDrive) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.7z1514-x64.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.7z1514-x64.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
-    #TestScript = { if (Test-Path -Path ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) { $true } else { $false } }
-    TestScript = { [bool](Test-Path -Path ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) }
+    TestScript = { if (Test-Path -Path ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
-  #Package SevenZipInstall {
-  #  DependsOn = @('[Script]SevenZipDownload', '[File]LogFolder')
-  #  Name = '7-Zip 15.14 (x64 edition)'
-  #  Path = ('{0}\Temp\7z1514-x64.msi' -f $env:SystemRoot)
-  #  ProductId = '23170F69-40C1-2702-1514-000001000000'
-  #  Ensure = 'Present'
-  #  LogPath = ('{0}\log\{1}.7z1514-x64.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-  #}
 }
