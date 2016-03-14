@@ -128,22 +128,24 @@ Configuration MaintenanceToolChainConfig {
     TestScript = { (Test-Path -Path ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ErrorAction SilentlyContinue) }
   }
 
-  File GnuPgFolder {
-    Type = 'Directory'
-    DestinationPath = ('{0}\gnupg' -f $env:AppData)
+  File GnupgOptions {
+    Type = 'File'
     Ensure = 'Present'
+    DestinationPath = ('{0}\gnupg\gpg-gen-key.options' -f $env:AppData)
+    Force = $true
+    Contents = (@'Key-Type: 1
+Key-Length: 4096
+Subkey-Type: 1
+Subkey-Length: 4096
+Name-Real: {0}
+Name-Email: {1}@{0}.{2}
+Expire-Date: 0'@ -f $env:COMPUTERNAME.ToLower(), $env:USERNAME.TrimEnd('$').ToLower(), $env:USERDOMAIN.ToLower())
   }
   Script GpgKeyGenerate {
-    DependsOn = @('[Script]GpgForWinInstall', '[File]GnuPgFolder')
+    DependsOn = @('[Script]GpgForWinInstall', '[File]GnupgOptions')
     GetScript = { @{ Result = ((Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--list-keys', ('{0}@{1}.{2}' -f $env:USERNAME.TrimEnd('$').ToLower(), $env:COMPUTERNAME.ToLower(), $env:USERDOMAIN.ToLower())) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-list-keys.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-list-keys.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))).ExitCode -eq 0) } }
     SetScript = {
-      Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--version') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-version.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-version.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/gpg-gen-key.options', ('{0}\gnupg\gpg-gen-key.options' -f $env:AppData))
-      Unblock-File -Path ('{0}\gnupg\gpg-gen-key.options' -f $env:AppData)
       Start-Process ('{0}\System32\diskperf.exe' -f $env:SystemRoot) -ArgumentList '-y' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.diskperf.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.diskperf.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-      (Get-Content ('{0}\gnupg\gpg-gen-key.options' -f $env:AppData)) | Foreach-Object {$_ -replace 'COMPUTERNAME', $env:COMPUTERNAME.ToLower()} | Out-File ('{0}\gnupg\gpg-gen-key.options' -f $env:AppData)
-      (Get-Content ('{0}\gnupg\gpg-gen-key.options' -f $env:AppData)) | Foreach-Object {$_ -replace 'USERNAME', $env:USERNAME.TrimEnd('$').ToLower()} | Out-File ('{0}\gnupg\gpg-gen-key.options' -f $env:AppData)
-      (Get-Content ('{0}\gnupg\gpg-gen-key.options' -f $env:AppData)) | Foreach-Object {$_ -replace 'USERDOMAIN', $env:USERDOMAIN.ToLower()} | Out-File ('{0}\gnupg\gpg-gen-key.options' -f $env:AppData)
       Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--batch', '--gen-key', ('{0}\gnupg\gpg-gen-key.options' -f $env:AppData)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-gen-key.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-gen-key.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
     TestScript = { if ((Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--list-keys', ('{0}@{1}.{2}' -f $env:USERNAME.TrimEnd('$').ToLower(), $env:COMPUTERNAME.ToLower(), $env:USERDOMAIN.ToLower())) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-list-keys.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-list-keys.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))).ExitCode -eq 0)  { $true } else { $false } }
