@@ -133,14 +133,7 @@ Configuration MaintenanceToolChainConfig {
     Ensure = 'Present'
     DestinationPath = ('{0}\gnupg\gpg-gen-key.options' -f $env:AppData)
     Force = $true
-    Contents = (@'
-Key-Type: 1
-Key-Length: 4096
-Subkey-Type: 1
-Subkey-Length: 4096
-Name-Real: {0}
-Name-Email: {1}@{0}.{2}
-Expire-Date: 0'@ -f $env:COMPUTERNAME.ToLower(), $env:USERNAME.TrimEnd('$').ToLower(), $env:USERDOMAIN.ToLower())
+    Contents = ('Key-Type: 1`nKey-Length: 4096`nSubkey-Type: 1`nSubkey-Length: 4096`nName-Real: {0}`nName-Email: {1}@{0}.{2}`nExpire-Date: 0' -f $env:COMPUTERNAME.ToLower(), $env:USERNAME.TrimEnd('$').ToLower(), $env:USERDOMAIN.ToLower())
   }
   Script GpgKeyGenerate {
     DependsOn = @('[Script]GpgForWinInstall', '[File]GnupgOptions')
