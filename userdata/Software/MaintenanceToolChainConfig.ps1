@@ -133,7 +133,8 @@ Configuration MaintenanceToolChainConfig {
     Ensure = 'Present'
     DestinationPath = ('{0}\gnupg\gpg-gen-key.options' -f $env:AppData)
     Force = $true
-    Contents = (@'Key-Type: 1
+    Contents = (@'
+Key-Type: 1
 Key-Length: 4096
 Subkey-Type: 1
 Subkey-Length: 4096
