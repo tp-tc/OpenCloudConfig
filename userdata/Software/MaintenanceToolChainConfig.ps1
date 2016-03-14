@@ -127,11 +127,16 @@ Configuration MaintenanceToolChainConfig {
     }
     TestScript = { (Test-Path -Path ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ErrorAction SilentlyContinue) }
   }
+
+  File GnuPgFolder {
+    Type = 'Directory'
+    DestinationPath = ('{0}\gnupg' -f $env:AppData)
+    Ensure = 'Present'
+  }
   Script GpgKeyGenerate {
-    DependsOn = '[Script]GpgForWinInstall'
+    DependsOn = @('[Script]GpgForWinInstall', '[File]GnuPgFolder')
     GetScript = { @{ Result = ((Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--list-keys', ('{0}@{1}.{2}' -f $env:USERNAME.TrimEnd('$').ToLower(), $env:COMPUTERNAME.ToLower(), $env:USERDOMAIN.ToLower())) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-list-keys.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-list-keys.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))).ExitCode -eq 0) } }
     SetScript = {
-      # run `gpg --version` just to create AppData/gnupg
       Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--version') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-version.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-version.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
       (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/gpg-gen-key.options', ('{0}\gnupg\gpg-gen-key.options' -f $env:AppData))
       Unblock-File -Path ('{0}\gnupg\gpg-gen-key.options' -f $env:AppData)
