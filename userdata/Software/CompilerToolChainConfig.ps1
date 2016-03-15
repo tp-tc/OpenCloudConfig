@@ -184,4 +184,43 @@ Configuration CompilerToolChainConfig {
     Ensure = 'Present'
     LogPath = ('{0}\log\{1}.node-v4.4.0-x64.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
+  File NodeEtc {
+    DependsOn = '[Package]NodeInstall'
+    Type = 'Directory'
+    DestinationPath = ('{0}\nodejs\etc' -f $env:ProgramFiles)
+    Ensure = 'Present'
+  }
+  File NpmCache {
+    DependsOn = '[Package]NodeInstall'
+    Type = 'Directory'
+    DestinationPath = ('{0}\npm-cache' -f $env:ProgramData)
+    Ensure = 'Present'
+  }
+  File NodeModules {
+    DependsOn = '[Package]NodeInstall'
+    Type = 'Directory'
+    DestinationPath = ('{0}\npm\node_modules' -f $env:ProgramData)
+    Ensure = 'Present'
+  }
+  Script NodeConfigure {
+    DependsOn = @('[Package]NodeInstall', '[File]LogFolder', '[File]NodeEtc', '[File]NpmCache', '[File]NodeModules')
+    GetScript = { @{ Result = ($env:PATH.Contains(('{0}\npm' -f $env:ProgramData))) } }
+    SetScript = {
+      # https://github.com/npm/npm/blob/v1.4.10/doc/files/npm-folders.md#prefix-configuration
+      # http://stackoverflow.com/a/26894197/68115
+      Start-Process ('{0}\nodejs\npm.cmd' -f $env:ProgramFiles) -ArgumentList @('--global', 'set', 'prefix', ('{0}\npm' -f $env:ProgramData)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.npm-set-prefix.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.npm-set-prefix.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Start-Process ('{0}\nodejs\npm.cmd' -f $env:ProgramFiles) -ArgumentList @('--global', 'set', 'cache', ('{0}\npm-cache' -f $env:ProgramData)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.npm-set-cache.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.npm-set-cache.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      [Environment]::SetEnvironmentVariable('PATH', ('{0};{1}\npm' -f $env:PATH, $env:ProgramData), 'Machine')
+    }
+    TestScript = { if ($env:PATH.Contains(('{0}\npm' -f $env:ProgramData))) { $true } else { $false } }
+  }
+
+  Script TcVcsInstall {
+    DependsOn = @('[Script]NodeConfigure', '[File]LogFolder')
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\node-v4.4.0-x64.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      Start-Process ('{0}\nodejs\npm.cmd' -f $env:ProgramFiles) -ArgumentList @('install', '-g', 'taskcluster-vcs') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.taskcluster-vcs-install.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.taskcluster-vcs-install.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\node-v4.4.0-x64.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
 }
