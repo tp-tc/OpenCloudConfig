@@ -37,8 +37,10 @@ Configuration MaintenanceConfig {
       $smtpPort = 2587
       $smtpUsername = 'AKIAIPJEOD57YDLBF35Q'
       (New-Object Net.WebClient).DownloadFile('https://github.com/MozRelOps/OpenCloudConfig/blob/master/userdata/Configuration/smtp.pass.gpg?raw=true', ('{0}\smtp.pass.gpg' -f $env:Temp))
-      $smtpPassword = (& ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) @('-d', ('{0}\smtp.pass.gpg' -f $env:Temp)))
+      Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('-d', ('{0}\smtp.pass.gpg' -f $env:Temp)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\smtp.pass' -f $env:Temp) -RedirectStandardError ('{0}\log\{1}.gpg-decrypt.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      $smtpPassword = Get-Content ('{0}\smtp.pass' -f $env:Temp)
       $credential = New-Object Management.Automation.PSCredential $smtpUsername, (ConvertTo-SecureString "$smtpPassword" -AsPlainText -Force)
+      Remove-Item -Path ('{0}\smtp.pass' -f $env:Temp) -Force
       Remove-Item -Path ('{0}\smtp.pass.gpg' -f $env:Temp) -Force
       Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % {
         Remove-Item -Path $_.FullName -Force
