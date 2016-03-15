@@ -33,22 +33,19 @@ Configuration MaintenanceConfig {
       $to = 'releng-puppet-mail@mozilla.com'
       $from = 'releng-puppet-mail@mozilla.com'
       $subject = ('UserData Run Report for TaskCluster worker: {0}' -f $env:ComputerName)
-
       $smtpServer = 'email-smtp.us-east-1.amazonaws.com'
       $smtpPort = 2587
       $smtpUsername = 'AKIAIPJEOD57YDLBF35Q'
       (New-Object Net.WebClient).DownloadFile('https://github.com/MozRelOps/OpenCloudConfig/blob/master/userdata/Configuration/smtp.pass.gpg?raw=true', ('{0}\smtp.pass.gpg' -f $env:Temp))
       $smtpPassword = (& ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) @('-d', ('{0}\smtp.pass.gpg' -f $env:Temp)))
-      $credential = New-Object System.Management.Automation.PSCredential $smtpUsername, (ConvertTo-SecureString "$smtpPassword" -AsPlainText -Force)
+      $credential = New-Object Management.Automation.PSCredential $smtpUsername, (ConvertTo-SecureString "$smtpPassword" -AsPlainText -Force)
       Remove-Item -Path ('{0}\smtp.pass.gpg' -f $env:Temp) -Force
-
-      Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) -include '*.log' | Where-Object { !$_.PSIsContainer -and $_.Length -eq 0 } | % {
+      Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % {
         Remove-Item -Path $_.FullName -Force
       }
-      $logFile = Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) -include '*.userdata-run.log' | Sort-Object LastAccessTime -Descending | Select-Object -First 1
+      $logFile = (Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.Name.EndsWith('.userdata-run.log') } | Sort-Object LastAccessTime -Descending | Select-Object -First 1).FullName
       Start-Process ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ArgumentList @('a', $logFile.Replace('.log', '.zip'), ('{0}\log\*.log' -f $env:SystemDrive)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.zip-logs.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.zip-logs.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
       $attachments = @($logFile.Replace('.log', '.zip'))
-
       Send-MailMessage -To $to -Subject $subject -Body ([IO.File]::ReadAllText($logfile)) -SmtpServer $smtpServer -Port $smtpPort -From $from -Attachments $attachments -UseSsl -Credential $credential
       Remove-Item -Path ('{0}\log\*.log' -f $env:SystemDrive) -Force      
     }
