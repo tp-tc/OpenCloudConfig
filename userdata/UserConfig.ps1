@@ -4,7 +4,7 @@ Configuration UserConfig {
   Script RootUserCreate {
     GetScript = { @{ Result = (Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq 'root' }) } }
     SetScript = {
-      & net @('user', 'root', [Guid]::NewGuid().ToString().Substring(0, 13), '/active:yes')
+      & net @('user', 'root', [Guid]::NewGuid().ToString().Substring(0, 13), '/ADD', '/active:yes')
     }
     TestScript = { if (Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq 'root' }) { $true } else { $false } }
   }
