@@ -217,10 +217,10 @@ Configuration CompilerToolChainConfig {
 
   Script TcVcsInstall {
     DependsOn = @('[Script]NodeConfigure', '[File]LogFolder')
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\node-v4.4.0-x64.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\npm\tc-vcs' -f $env:ProgramData) -ErrorAction SilentlyContinue) } }
     SetScript = {
       Start-Process ('{0}\nodejs\npm.cmd' -f $env:ProgramFiles) -ArgumentList @('install', '-g', 'taskcluster-vcs') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.taskcluster-vcs-install.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.taskcluster-vcs-install.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
-    TestScript = { if (Test-Path -Path ('{0}\Temp\node-v4.4.0-x64.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
+    TestScript = { if (Test-Path -Path ('{0}\npm\tc-vcs' -f $env:ProgramData) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
 }
