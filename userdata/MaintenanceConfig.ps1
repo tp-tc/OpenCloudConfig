@@ -18,9 +18,9 @@ Configuration MaintenanceConfig {
     SetScript = {
       # todo: pipe key to gpg import, avoiding disk write
       Start-Process ('{0}\System32\diskperf.exe' -f $env:SystemRoot) -ArgumentList '-y' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.diskperf.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.diskperf.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-      [IO.File]::WriteAllLines(('{0}\private.key' -f $env:Temp), [regex]::matches((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data'), '(?s)-----BEGIN PGP PRIVATE KEY BLOCK-----.*-----END PGP PRIVATE KEY BLOCK-----').Value)
-      Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--allow-secret-key-import', '--import', ('{0}\private.key' -f $env:Temp)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-import-key.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-import-key.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-      Remove-Item -Path ('{0}\private.key' -f $env:Temp) -Force
+      [IO.File]::WriteAllLines(('{0}\Temp\private.key' -f $env:SystemRoot), [regex]::matches((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data'), '(?s)-----BEGIN PGP PRIVATE KEY BLOCK-----.*-----END PGP PRIVATE KEY BLOCK-----').Value)
+      Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--allow-secret-key-import', '--import', ('{0}\Temp\private.key' -f $env:SystemRoot)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-import-key.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-import-key.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Remove-Item -Path ('{0}\Temp\private.key' -f $env:SystemRoot) -Force
     }
     TestScript = { if ((Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--list-keys', 'releng-puppet-mail@mozilla.com') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-list-keys.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-list-keys.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))).ExitCode -eq 0)  { $true } else { $false } }
   }
@@ -36,12 +36,12 @@ Configuration MaintenanceConfig {
       $smtpServer = 'email-smtp.us-east-1.amazonaws.com'
       $smtpPort = 2587
       $smtpUsername = 'AKIAIPJEOD57YDLBF35Q'
-      (New-Object Net.WebClient).DownloadFile('https://github.com/MozRelOps/OpenCloudConfig/blob/master/userdata/Configuration/smtp.pass.gpg?raw=true', ('{0}\smtp.pass.gpg' -f $env:Temp))
-      Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('-d', ('{0}\smtp.pass.gpg' -f $env:Temp)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\smtp.pass' -f $env:Temp) -RedirectStandardError ('{0}\log\{1}.gpg-decrypt.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-      $smtpPassword = Get-Content ('{0}\smtp.pass' -f $env:Temp)
+      (New-Object Net.WebClient).DownloadFile('https://github.com/MozRelOps/OpenCloudConfig/blob/master/userdata/Configuration/smtp.pass.gpg?raw=true', ('{0}\Temp\smtp.pass.gpg' -f $env:SystemRoot))
+      Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('-d', ('{0}\Temp\smtp.pass.gpg' -f $env:SystemRoot)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\Temp\smtp.pass' -f $env:SystemRoot) -RedirectStandardError ('{0}\log\{1}.gpg-decrypt.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      $smtpPassword = Get-Content ('{0}\Temp\smtp.pass' -f $env:SystemRoot)
       $credential = New-Object Management.Automation.PSCredential $smtpUsername, (ConvertTo-SecureString "$smtpPassword" -AsPlainText -Force)
-      Remove-Item -Path ('{0}\smtp.pass' -f $env:Temp) -Force
-      Remove-Item -Path ('{0}\smtp.pass.gpg' -f $env:Temp) -Force
+      Remove-Item -Path ('{0}\Temp\smtp.pass' -f $env:SystemRoot) -Force
+      Remove-Item -Path ('{0}\Temp\smtp.pass.gpg' -f $env:SystemRoot) -Force
       Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % {
         Remove-Item -Path $_.FullName -Force
       }
