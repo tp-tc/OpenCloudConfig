@@ -167,4 +167,21 @@ Configuration CompilerToolChainConfig {
     }
     TestScript = { $false }
   }
+
+  Script NodeDownload {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\node-v4.4.0-x64.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      (New-Object Net.WebClient).DownloadFile('https://nodejs.org/dist/v4.4.0/node-v4.4.0-x64.msi', ('{0}\Temp\node-v4.4.0-x64.msi' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\node-v4.4.0-x64.msi' -f $env:SystemRoot)
+    }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\node-v4.4.0-x64.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
+  Package NodeInstall {
+    DependsOn = @('[Script]NodeDownload', '[File]LogFolder')
+    Name = 'Node 4.4'
+    Path = ('{0}\Temp\node-v4.4.0-x64.msi' -f $env:SystemRoot)
+    ProductId = ''
+    Ensure = 'Present'
+    LogPath = ('{0}\log\{1}.node-v4.4.0-x64.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+  }
 }
