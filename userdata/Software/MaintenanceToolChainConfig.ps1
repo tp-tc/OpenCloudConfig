@@ -128,19 +128,6 @@ Configuration MaintenanceToolChainConfig {
     TestScript = { (Test-Path -Path ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ErrorAction SilentlyContinue) }
   }
 
-  Script GpgKeyImport {
-    DependsOn = '[Script]GpgForWinInstall'
-    GetScript = { @{ Result = ((Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--list-keys', 'releng-puppet-mail@mozilla.com') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-list-keys.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-list-keys.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))).ExitCode -eq 0) } }
-    SetScript = {
-      # todo: pipe key to gpg import, avoiding disk write
-      Start-Process ('{0}\System32\diskperf.exe' -f $env:SystemRoot) -ArgumentList '-y' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.diskperf.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.diskperf.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-      [IO.File]::WriteAllLines(('{0}\private.key' -f $env:Temp), [regex]::matches((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data'), '(?s)-----BEGIN PGP PRIVATE KEY BLOCK-----.*-----END PGP PRIVATE KEY BLOCK-----').Value)
-      Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--allow-secret-key-import', '--import', ('{0}\private.key' -f $env:Temp)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-import-key.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-import-key.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-      Remove-Item -Path ('{0}\private.key' -f $env:Temp) -Force
-    }
-    TestScript = { if ((Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--list-keys', 'releng-puppet-mail@mozilla.com') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-list-keys.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-list-keys.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))).ExitCode -eq 0)  { $true } else { $false } }
-  }
-
   Script SevenZipDownload {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\7z1514-x64.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
     SetScript = {
