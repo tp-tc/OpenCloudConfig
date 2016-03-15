@@ -2,7 +2,6 @@
 Configuration UserConfig {
   Import-DscResource -ModuleName PSDesiredStateConfiguration
   Script RootUserCreate {
-    DependsOn = @('[Script]SshInboundFirewallEnable', '[Script]CygWinInstall', '[File]LogFolder')
     GetScript = { @{ Result = (Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq 'root' }) } }
     SetScript = {
       & net @('user', 'root', [Guid]::NewGuid().ToString().Substring(0, 13), '/active:yes')
