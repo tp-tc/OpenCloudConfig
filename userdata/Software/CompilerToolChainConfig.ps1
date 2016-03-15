@@ -178,9 +178,9 @@ Configuration CompilerToolChainConfig {
   }
   Package NodeInstall {
     DependsOn = @('[Script]NodeDownload', '[File]LogFolder')
-    Name = 'Node 4.4'
+    Name = 'Node.js'
     Path = ('{0}\Temp\node-v4.4.0-x64.msi' -f $env:SystemRoot)
-    ProductId = ''
+    ProductId = '6A9BB136-5F79-4F5D-9F9E-31C1182D0203'
     Ensure = 'Present'
     LogPath = ('{0}\log\{1}.node-v4.4.0-x64.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
