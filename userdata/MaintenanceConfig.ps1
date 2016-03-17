@@ -45,11 +45,18 @@ Configuration MaintenanceConfig {
       Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % {
         Remove-Item -Path $_.FullName -Force
       }
+      $vs2013Log = (Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.Name.EndsWith('.vs_community_2013.exe.install.log') } | Sort-Object LastAccessTime -Descending | Select-Object -First 1).FullName
+      if ($vs2013Log) {
+        Start-Process ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ArgumentList @('a', $vs2013Log.Replace('.log', '.zip'), ('{0}*.log' -f $vs2013Log.Replace('.log', '_'))) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.zip-logs.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.zip-logs.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+        Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.FullName.StartsWith($vs2013Log.Replace('.log', '_')) -and $_.Name.EndsWith('.log') } | % {
+          Remove-Item -Path $_.FullName -Force
+        }
+      }
       $logFile = (Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.Name.EndsWith('.userdata-run.log') } | Sort-Object LastAccessTime -Descending | Select-Object -First 1).FullName
       Start-Process ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ArgumentList @('a', $logFile.Replace('.log', '.zip'), ('{0}\log\*.log' -f $env:SystemDrive)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.zip-logs.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.zip-logs.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
       $attachments = @($logFile.Replace('.log', '.zip'))
       Send-MailMessage -To $to -Subject $subject -Body ([IO.File]::ReadAllText($logfile)) -SmtpServer $smtpServer -Port $smtpPort -From $from -Attachments $attachments -UseSsl -Credential $credential
-      Remove-Item -Path ('{0}\log\*.log' -f $env:SystemDrive) -Force      
+      Remove-Item -Path ('{0}\log\*.log' -f $env:SystemDrive) -Force
     }
     TestScript = { $false }
   }
