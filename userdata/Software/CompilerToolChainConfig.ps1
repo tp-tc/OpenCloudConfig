@@ -184,4 +184,16 @@ Configuration CompilerToolChainConfig {
     Ensure = 'Present'
     LogPath = ('{0}\log\{1}.python-2.7.11.amd64.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
+  Script PythonTwoSevenSymbolicLink {
+    DependsOn = @('[Package]PythonTwoSevenInstall')
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\python2.7.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      if ($PSVersionTable.PSVersion.Major -gt 4) {
+        New-Item -ItemType SymbolicLink -Path $env:SystemRoot -Name 'python2.7.exe' -Target ('{0}\Python27\python.exe' -f $env:SystemDrive)
+      } else {
+        & cmd @('/c', 'mklink', ('{0}\python2.7.exe' -f $env:SystemRoot), ('{0}\Python27\python.exe' -f $env:SystemDrive))
+      }
+    }
+    TestScript = { (Test-Path -Path ('{0}\python2.7.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) }
+  }
 }
