@@ -167,4 +167,21 @@ Configuration CompilerToolChainConfig {
     }
     TestScript = { $false }
   }
+
+  Script PythonTwoSevenDownload {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\python-2.7.11.amd64.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      (New-Object Net.WebClient).DownloadFile('https://www.python.org/ftp/python/2.7.11/python-2.7.11.amd64.msi', ('{0}\Temp\python-2.7.11.amd64.msi' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\python-2.7.11.amd64.msi' -f $env:SystemRoot)
+    }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\python-2.7.11.amd64.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
+  Package PythonTwoSevenInstall {
+    DependsOn = @('[Script]PythonTwoSevenDownload', '[File]LogFolder')
+    Name = 'Python 2.7'
+    Path = ('{0}\Temp\python-2.7.11.amd64.msi' -f $env:SystemRoot)
+    ProductId = ''
+    Ensure = 'Present'
+    LogPath = ('{0}\log\{1}.python-2.7.11.amd64.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+  }
 }
