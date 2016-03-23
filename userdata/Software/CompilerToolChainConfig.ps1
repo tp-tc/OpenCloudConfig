@@ -178,9 +178,9 @@ Configuration CompilerToolChainConfig {
   }
   Package PythonTwoSevenInstall {
     DependsOn = @('[Script]PythonTwoSevenDownload', '[File]LogFolder')
-    Name = 'Python 2.7'
+    Name = 'Python 2.7.11 (64-bit)'
     Path = ('{0}\Temp\python-2.7.11.amd64.msi' -f $env:SystemRoot)
-    ProductId = ''
+    ProductId = '16E52445-1392-469F-9ADB-FC03AF00CD62'
     Ensure = 'Present'
     LogPath = ('{0}\log\{1}.python-2.7.11.amd64.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
