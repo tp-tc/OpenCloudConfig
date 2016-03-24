@@ -220,7 +220,7 @@ Configuration CompilerToolChainConfig {
     TestScript = { $false }
   }
   Script VirtualEnvInstall {
-    DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]PythonTwoSevenPath')
+    DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]PipUpgrade')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Python27\Scripts\virtualenv.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
       Start-Process ('{0}\Python27\python.exe' -f $env:SystemDrive) -ArgumentList @('-m', 'pip', 'install', 'virtualenv') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.virtualenv-install.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.virtualenv-install.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
