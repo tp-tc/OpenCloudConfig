@@ -82,4 +82,12 @@ Configuration RegistryConfig {
     ValueType = 'String'
     ValueData = 'Consolas'
   }
+  Registry CursorDefaultTextSelect {
+    Ensure = 'Present'
+    Force = $true
+    Key = 'HKEY_USERS\.DEFAULT\Control Panel\Cursors'
+    ValueName = 'IBeam'
+    ValueType = 'String'
+    ValueData = '%SYSTEMROOT%\Cursors\beam_r.cur'
+  }
 }
