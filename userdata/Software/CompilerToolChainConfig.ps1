@@ -194,7 +194,7 @@ Configuration CompilerToolChainConfig {
         & cmd @('/c', 'mklink', ('{0}\Python27\python2.7.exe' -f $env:SystemDrive), ('{0}\Python27\python.exe' -f $env:SystemDrive))
       }
     }
-    TestScript = { if (Test-Path -Path ('{0}\Python27\python2.7.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false} }
+    TestScript = { if (Test-Path -Path ('{0}\Python27\python2.7.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Script PythonTwoSevenPath {
     DependsOn = @('[Package]PythonTwoSevenInstall')
@@ -202,7 +202,7 @@ Configuration CompilerToolChainConfig {
     SetScript = {
       [Environment]::SetEnvironmentVariable('PATH', ('{0};{1}\Python27;{1}\Python27\Scripts' -f $env:PATH, $env:SystemDrive), 'Machine')
     }
-    TestScript = { if ($env:PATH.Contains(('{0}\Python27;{0}\Python27\Scripts' -f $env:SystemDrive))) { $true } else { $false} }
+    TestScript = { if ($env:PATH.Contains(('{0}\Python27;{0}\Python27\Scripts' -f $env:SystemDrive))) { $true } else { $false } }
   }
   File MozillaBuildPythonRemove {
     DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]MozillaBuildInstall')
@@ -210,5 +210,21 @@ Configuration CompilerToolChainConfig {
     Type = 'Directory'
     DestinationPath = ('{0}\mozilla-build\python' -f $env:SystemDrive)
     Ensure = 'Absent'
+  }
+  Script PipUpgrade {
+    DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]PythonTwoSevenPath')
+    GetScript = { @{ Result = $false } }
+    SetScript = {
+      Start-Process ('{0}\Python27\python.exe' -f $env:SystemDrive) -ArgumentList @('-m', 'pip', 'install', '--upgrade', 'pip') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.pip-upgrade.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.pip-upgrade.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    }
+    TestScript = { $false }
+  }
+  Script VirtualEnvInstall {
+    DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]PythonTwoSevenPath')
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Python27\Scripts\virtualenv.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      Start-Process ('{0}\Python27\python.exe' -f $env:SystemDrive) -ArgumentList @('-m', 'pip', 'install', 'virtualenv') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.virtualenv-install.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.virtualenv-install.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    }
+    TestScript = { if (Test-Path -Path ('{0}\Python27\Scripts\virtualenv.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
 }
