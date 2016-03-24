@@ -7,7 +7,7 @@ Configuration RegistryConfig {
     Force = $true
     Key = 'HKEY_USERS\.DEFAULT\Console'
     ValueName = 'QuickEdit'
-    ValueType = 'REG_DWORD'
+    ValueType = 'Dword'
     ValueData = 0x00000001 # on
   }
   Registry ConsoleDefaultInsertMode {
@@ -15,7 +15,7 @@ Configuration RegistryConfig {
     Force = $true
     Key = 'HKEY_USERS\.DEFAULT\Console'
     ValueName = 'InsertMode'
-    ValueType = 'REG_DWORD'
+    ValueType = 'Dword'
     ValueData = 0x00000001 # on
   }
   Registry ConsoleDefaultScreenBufferSize {
@@ -23,7 +23,7 @@ Configuration RegistryConfig {
     Force = $true
     Key = 'HKEY_USERS\.DEFAULT\Console'
     ValueName = 'ScreenBufferSize'
-    ValueType = 'REG_DWORD'
+    ValueType = 'Dword'
     ValueData = 0x012c00a0 # 160x300
   }
   Registry ConsoleDefaultWindowSize {
@@ -31,7 +31,7 @@ Configuration RegistryConfig {
     Force = $true
     Key = 'HKEY_USERS\.DEFAULT\Console'
     ValueName = 'WindowSize'
-    ValueType = 'REG_DWORD'
+    ValueType = 'Dword'
     ValueData = 0x003c00a0 # 160x60
   }
   Registry ConsoleDefaultHistoryBufferSize {
@@ -39,7 +39,7 @@ Configuration RegistryConfig {
     Force = $true
     Key = 'HKEY_USERS\.DEFAULT\Console'
     ValueName = 'HistoryBufferSize'
-    ValueType = 'REG_DWORD'
+    ValueType = 'Dword'
     ValueData = 0x000003e7 # 999 (max)
   }
   Registry ConsoleDefaultScreenColors {
@@ -47,7 +47,7 @@ Configuration RegistryConfig {
     Force = $true
     Key = 'HKEY_USERS\.DEFAULT\Console'
     ValueName = 'ScreenColors'
-    ValueType = 'REG_DWORD'
+    ValueType = 'Dword'
     ValueData = 0x0000000a # green on black
   }
   Registry ConsoleDefaultFontSize {
@@ -55,7 +55,7 @@ Configuration RegistryConfig {
     Force = $true
     Key = 'HKEY_USERS\.DEFAULT\Console'
     ValueName = 'FontSize'
-    ValueType = 'REG_DWORD'
+    ValueType = 'Dword'
     ValueData = 0x000c0000 # 12
   }
   Registry ConsoleDefaultFontFamily {
@@ -63,7 +63,7 @@ Configuration RegistryConfig {
     Force = $true
     Key = 'HKEY_USERS\.DEFAULT\Console'
     ValueName = 'FontFamily'
-    ValueType = 'REG_DWORD'
+    ValueType = 'Dword'
     ValueData = 0x00000036 # Consolas
   }
   Registry ConsoleDefaultFaceName {
@@ -71,7 +71,7 @@ Configuration RegistryConfig {
     Force = $true
     Key = 'HKEY_USERS\.DEFAULT\Console'
     ValueName = 'FaceName'
-    ValueType = 'REG_SZ'
+    ValueType = 'String'
     ValueData = 'Consolas'
   }
 }
