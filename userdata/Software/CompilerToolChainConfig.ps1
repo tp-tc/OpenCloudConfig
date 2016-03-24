@@ -227,4 +227,22 @@ Configuration CompilerToolChainConfig {
     }
     TestScript = { if (Test-Path -Path ('{0}\Python27\Scripts\virtualenv.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
+
+  # here be dragons
+  # to slay dragons:
+  # - Remove C:\mozilla-build\buildbotve
+  # - Modify mozharness build scripts to not rely on C:\mozilla-build\buildbotve\virtualenv.py
+  Script UglyBuildBotVirtualEnvHacks {
+    DependsOn = @('[Script]VirtualEnvInstall')
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      Start-Process ('{0}\Python27\python.exe' -f $env:SystemDrive) -ArgumentList @('-m', 'virtualenv', ('{0}\mozilla-build\buildbotve' -f $env:SystemDrive)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.virtualenv-buildbotve.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.virtualenv-buildbotve.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      if ($PSVersionTable.PSVersion.Major -gt 4) {
+        New-Item -ItemType SymbolicLink -Path ('{0}\mozilla-build\buildbotve' -f $env:SystemDrive) -Name 'virtualenv.py' -Target ('{0}\Python27\lib\site-packages\virtualenv.py' -f $env:SystemDrive)
+      } else {
+        & cmd @('/c', 'mklink', ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive), ('{0}\Python27\lib\site-packages\virtualenv.py' -f $env:SystemDrive))
+      }
+    }
+    TestScript = { if (Test-Path -Path ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
 }
