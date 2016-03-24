@@ -101,6 +101,14 @@ Configuration CompilerToolChainConfig {
     }
     TestScript = { if ($env:PATH.Contains(('{0}\mozilla-build\msys\bin' -f $env:SystemDrive))) { $true } else { $false } }
   }
+  Script AutoconfPath {
+    DependsOn = @('[Script]MozillaBuildInstall')
+    GetScript = { @{ Result = ($env:PATH.Contains(('{0}\mozilla-build\msys\local\bin' -f $env:SystemDrive))) } }
+    SetScript = {
+      [Environment]::SetEnvironmentVariable('PATH', ('{0};{1}\mozilla-build\msys\local\bin' -f $env:PATH, $env:SystemDrive), 'Machine')
+    }
+    TestScript = { if ($env:PATH.Contains(('{0}\mozilla-build\msys\local\bin' -f $env:SystemDrive))) { $true } else { $false } }
+  }
 
   # todo: add 32 bit installer
   Script MercurialDownload {
@@ -223,19 +231,27 @@ Configuration CompilerToolChainConfig {
     DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]PythonTwoSevenPath')
     GetScript = { @{ Result = $false } }
     SetScript = {
-      Start-Process ('{0}\Python27\python.exe' -f $env:SystemDrive) -ArgumentList @('-m', 'pip', 'install', '--upgrade', 'pip') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.pip-upgrade.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.pip-upgrade.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Start-Process ('{0}\Python27\python.exe' -f $env:SystemDrive) -ArgumentList @('-m', 'pip', 'install', '--upgrade', 'pip') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.python-pip-upgrade.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.python-pip-upgrade.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
     TestScript = { $false }
   }
-  Script VirtualEnvInstall {
+  Script PythonVirtualEnvInstall {
     DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]PipUpgrade')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Python27\Scripts\virtualenv.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      Start-Process ('{0}\Python27\python.exe' -f $env:SystemDrive) -ArgumentList @('-m', 'pip', 'install', 'virtualenv') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.virtualenv-install.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.virtualenv-install.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Start-Process ('{0}\Python27\python.exe' -f $env:SystemDrive) -ArgumentList @('-m', 'pip', 'install', 'virtualenv') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.python-virtualenv-install.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.python-virtualenv-install.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
     TestScript = { if (Test-Path -Path ('{0}\Python27\Scripts\virtualenv.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
-  Script PyWinDownload {
+  Script PythonWheelInstall {
+    DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]PipUpgrade')
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Python27\Scripts\wheel.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      Start-Process ('{0}\Python27\python.exe' -f $env:SystemDrive) -ArgumentList @('-m', 'pip', 'install', 'wheel') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.python-wheel-install.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.python-wheel-install.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    }
+    TestScript = { if (Test-Path -Path ('{0}\Python27\Scripts\wheel.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
+  Script PythonPyWinDownload {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\pypiwin32-219-cp27-none-win_amd64.whl' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
     SetScript = {
       (New-Object Net.WebClient).DownloadFile('https://pypi.python.org/packages/cp27/p/pypiwin32/pypiwin32-219-cp27-none-win_amd64.whl#md5=d7bafcf3cce72c3ce9fdd633a262c335', ('{0}\Temp\pypiwin32-219-cp27-none-win_amd64.whl' -f $env:SystemRoot))
@@ -243,12 +259,12 @@ Configuration CompilerToolChainConfig {
     }
     TestScript = { if (Test-Path -Path ('{0}\Temp\pypiwin32-219-cp27-none-win_amd64.whl' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
-  Script PyWinInstall {
-    DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]PipUpgrade')
+  Script PythonPyWinInstall {
+    DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]PipUpgrade', '[Script]PythonPyWinDownload')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Python27\Scripts\pywin32_postinstall.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      Start-Process ('{0}\Python27\python.exe' -f $env:SystemDrive) -ArgumentList @('-m', 'pip', 'install', ('{0}\Temp\pypiwin32-219-cp27-none-win_amd64.whl' -f $env:SystemRoot)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.virtualenv-install.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.virtualenv-install.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-      Start-Process ('{0}\Python27\python.exe' -f $env:SystemDrive) -ArgumentList @(('{0}\Python27\Scripts\pywin32_postinstall.py' -f $env:SystemDrive), '-install') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.virtualenv-install.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.virtualenv-install.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Start-Process ('{0}\Python27\python.exe' -f $env:SystemDrive) -ArgumentList @('-m', 'pip', 'install', ('{0}\Temp\pypiwin32-219-cp27-none-win_amd64.whl' -f $env:SystemRoot)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.pypiwin32-219-cp27-none-win_amd64.whl.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.pypiwin32-219-cp27-none-win_amd64.whl.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Start-Process ('{0}\Python27\python.exe' -f $env:SystemDrive) -ArgumentList @(('{0}\Python27\Scripts\pywin32_postinstall.py' -f $env:SystemDrive), '-install') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.pywin32_postinstall.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.pywin32_postinstall.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
     TestScript = { if (Test-Path -Path ('{0}\Python27\Scripts\pywin32_postinstall.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
