@@ -186,15 +186,29 @@ Configuration CompilerToolChainConfig {
   }
   Script PythonTwoSevenSymbolicLink {
     DependsOn = @('[Package]PythonTwoSevenInstall')
-    GetScript = { @{ Result = ((Test-Path -Path ('{0}\Python27\python2.7.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and ($env:PATH.Contains(('{0}\Python27' -f $env:SystemDrive)))) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Python27\python2.7.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      [Environment]::SetEnvironmentVariable('PATH', ('{0};{1}\Python27' -f $env:PATH, $env:SystemDrive), 'Machine')
       if ($PSVersionTable.PSVersion.Major -gt 4) {
         New-Item -ItemType SymbolicLink -Path ('{0}\Python27' -f $env:SystemDrive) -Name 'python2.7.exe' -Target ('{0}\Python27\python.exe' -f $env:SystemDrive)
       } else {
         & cmd @('/c', 'mklink', ('{0}\Python27\python2.7.exe' -f $env:SystemDrive), ('{0}\Python27\python.exe' -f $env:SystemDrive))
       }
     }
-    TestScript = { if ((Test-Path -Path ('{0}\Python27\python2.7.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and ($env:PATH.Contains(('{0}\Python27' -f $env:SystemDrive)))) { $true } else { $false} }
+    TestScript = { if (Test-Path -Path ('{0}\Python27\python2.7.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false} }
+  }
+  Script PythonTwoSevenPath {
+    DependsOn = @('[Package]PythonTwoSevenInstall')
+    GetScript = { @{ Result = ($env:PATH.Contains(('{0}\Python27;{0}\Python27\Scripts' -f $env:SystemDrive))) } }
+    SetScript = {
+      [Environment]::SetEnvironmentVariable('PATH', ('{0};{1}\Python27;{1}\Python27\Scripts' -f $env:PATH, $env:SystemDrive), 'Machine')
+    }
+    TestScript = { if ($env:PATH.Contains(('{0}\Python27;{0}\Python27\Scripts' -f $env:SystemDrive))) { $true } else { $false} }
+  }
+  File MozillaBuildPythonRemove {
+    DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]MozillaBuildInstall')
+    Force = $true
+    Type = 'Directory'
+    DestinationPath = ('{0}\mozilla-build\python' -f $env:SystemDrive)
+    Ensure = 'Absent'
   }
 }
