@@ -28,7 +28,8 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
     'FeatureConfig',
     'Software/CompilerToolChainConfig',
     'Software/TaskClusterToolChainConfig',
-    'ServiceConfig'
+    'ServiceConfig',
+    'RegistryConfig'
   )
   Start-Transcript -Path $logFile -Append
   foreach ($config in $configs) {
