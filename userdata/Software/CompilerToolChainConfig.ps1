@@ -268,4 +268,17 @@ Configuration CompilerToolChainConfig {
     }
     TestScript = { if (Test-Path -Path ('{0}\Python27\Scripts\pywin32_postinstall.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
+  Script ToolToolInstall {
+    DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]PipUpgrade', '[Script]PythonPyWinDownload')
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Python27\Scripts\pywin32_postinstall.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py', ('{0}\mozilla-build\tooltool.py' -f $env:SystemDrive))
+      Unblock-File -Path ('{0}\mozilla-build\tooltool.py' -f $env:SystemDrive)
+      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/wget/ca-bundle.crt', ('{0}\mozilla-build\wget\ca-bundle.crt' -f $env:SystemDrive))
+      Unblock-File -Path ('{0}\mozilla-build\wget\ca-bundle.crt' -f $env:SystemDrive)
+      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/wget/cacert.pem', ('{0}\mozilla-build\wget\cacert.pem' -f $env:SystemDrive))
+      Unblock-File -Path ('{0}\mozilla-build\wget\cacert.pem' -f $env:SystemDrive)
+    }
+    TestScript = { if (Test-Path -Path ('{0}\Python27\Scripts\pywin32_postinstall.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
 }

@@ -95,7 +95,10 @@ Configuration MaintenanceToolChainConfig {
   }
   Script SshInboundFirewallEnable {
     GetScript = { @{ Result = (Get-NetFirewallRule -DisplayName 'Allow SSH inbound' -ErrorAction SilentlyContinue) } }
-    SetScript = { New-NetFirewallRule -DisplayName 'Allow SSH inbound' -Direction Inbound -LocalPort 22 -Protocol TCP -Action Allow }
+    SetScript = {
+      New-NetFirewallRule -DisplayName 'Allow SSH inbound' -Direction Inbound -LocalPort 22 -Protocol TCP -Action Allow
+      #netsh advfirewall firewall add rule name='Allow SSH inbound' dir=in action=allow protocol=TCP localport=22
+    }
     TestScript = { if (Get-NetFirewallRule -DisplayName 'Allow SSH inbound' -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Script SshdServiceInstall {
