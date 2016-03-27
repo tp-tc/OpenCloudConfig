@@ -21,7 +21,7 @@ Configuration VisualStudio2013Config {
     SetScript = {
       Start-Process ('{0}\Temp\vs_community_2013.exe' -f $env:SystemRoot) -ArgumentList ('/Passive /NoRestart /AdminFile {0} /Log {1}' -f ('{0}\Temp\VisualStudio2013-AdminDeployment.xml' -f $env:SystemRoot), ('{0}\log\{1}.vs_community_2013.exe.install.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.vs_community_2013.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.vs_community_2013.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
-    TestScript = { (Test-Path -Path ('{0}\Microsoft Visual Studio 12.0\Common7\IDE\devenv.exe' -f @{$true=${env:ProgramFiles(x86)};$false=$env:ProgramFiles}[(Test-Path -Path ${env:ProgramFiles(x86)} -ErrorAction SilentlyContinue)]) -ErrorAction SilentlyContinue) }
+    TestScript = { if (Test-Path -Path ('{0}\Microsoft Visual Studio 12.0\Common7\IDE\devenv.exe' -f @{$true=${env:ProgramFiles(x86)};$false=$env:ProgramFiles}[(Test-Path -Path ${env:ProgramFiles(x86)} -ErrorAction SilentlyContinue)]) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
 
   # tools folder required by mozilla build scripts
@@ -39,6 +39,6 @@ Configuration VisualStudio2013Config {
         & cmd @('/c', 'mklink', '/D', ('{0}\tools\vs2013' -f $env:SystemDrive), ('{0}\Microsoft Visual Studio 12.0' -f ${env:ProgramFiles(x86)}))
       }
     }
-    TestScript = { (Test-Path -Path ('{0}\tools\vs2013' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
+    TestScript = { if (Test-Path -Path ('{0}\tools\vs2013' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
 }

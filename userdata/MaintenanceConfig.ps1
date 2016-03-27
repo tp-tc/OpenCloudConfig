@@ -47,8 +47,15 @@ Configuration MaintenanceConfig {
       }
       $vs2013Log = (Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.Name.EndsWith('.vs_community_2013.exe.install.log') } | Sort-Object LastAccessTime -Descending | Select-Object -First 1).FullName
       if ($vs2013Log) {
-        Start-Process ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ArgumentList @('a', $vs2013Log.Replace('.log', '.zip'), ('{0}*.log' -f $vs2013Log.Replace('.log', '_'))) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.zip-logs.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.zip-logs.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+        Start-Process ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ArgumentList @('a', $vs2013Log.Replace('.log', '.zip'), ('{0}*.log' -f $vs2013Log.Replace('.log', '_'))) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.zip-vs2013-logs.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.zip-vs2013-logs.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
         Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.FullName.StartsWith($vs2013Log.Replace('.log', '_')) -and $_.Name.EndsWith('.log') } | % {
+          Remove-Item -Path $_.FullName -Force
+        }
+      }
+      $vs2015Log = (Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.Name.EndsWith('.vs_community_2015.exe.install.log') } | Sort-Object LastAccessTime -Descending | Select-Object -First 1).FullName
+      if ($vs2015Log) {
+        Start-Process ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ArgumentList @('a', $vs2015Log.Replace('.log', '.zip'), ('{0}*.log' -f $vs2015Log.Replace('.log', '_'))) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.zip-vs2015-logs.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.zip-vs2015-logs.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+        Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.FullName.StartsWith($vs2015Log.Replace('.log', '_')) -and $_.Name.EndsWith('.log') } | % {
           Remove-Item -Path $_.FullName -Force
         }
       }
