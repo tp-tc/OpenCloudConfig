@@ -237,6 +237,25 @@ Configuration CompilerToolChainConfig {
     }
     TestScript = { (Test-Path -Path ('{0}\mozilla-build\Python27' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
   }
+
+  # ugly hacks to deal with mozharness configs hardcoded buildbot paths to virtualenv.py
+  File MozillaBuildBuildBotVirtualEnv {
+    DependsOn = @('[Script]MozillaBuildInstall')
+    Type = 'Directory'
+    DestinationPath = ('{0}\mozilla-build\buildbotve' -f $env:SystemDrive)
+    Ensure = 'Present'
+  }
+  Script MozillaBuildBuildBotVirtualEnvScript {
+    DependsOn = @('[File]MozillaBuildBuildBotVirtualEnv')
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      (New-Object Net.WebClient).DownloadFile('https://hg.mozilla.org/mozilla-central/raw-file/78babd21215d/python/virtualenv/virtualenv.py', ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive))
+      Unblock-File -Path ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive)
+    }
+    TestScript = { (Test-Path -Path ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
+  }
+  # end ugly hacks to deal with mozharness configs hardcoded buildbot paths to virtualenv.py
+
   Script PipUpgrade {
     DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]PythonTwoSevenPath')
     GetScript = { @{ Result = $false } }
