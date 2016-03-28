@@ -225,6 +225,18 @@ Configuration CompilerToolChainConfig {
     DestinationPath = ('{0}\mozilla-build\python' -f $env:SystemDrive)
     Ensure = 'Absent'
   }
+  Script MozillaBuildPythonSymbolicLink {
+    DependsOn = @('[File]MozillaBuildPythonRemove')
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\Python27' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      if ($PSVersionTable.PSVersion.Major -gt 4) {
+        New-Item -ItemType SymbolicLink -Path ('{0}\mozilla-build' -f $env:SystemDrive) -Name 'Python27' -Target ('{0}\Python27' -f $env:SystemDrive)
+      } else {
+        & cmd @('/c', 'mklink', '/D', ('{0}\mozilla-build\Python27' -f $env:SystemDrive), ('{0}\Python27' -f $env:SystemDrive))
+      }
+    }
+    TestScript = { (Test-Path -Path ('{0}\mozilla-build\Python27' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
+  }
   Script PipUpgrade {
     DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]PythonTwoSevenPath')
     GetScript = { @{ Result = $false } }
