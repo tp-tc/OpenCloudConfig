@@ -60,4 +60,14 @@ Configuration TaskClusterToolChainConfig {
     }
     TestScript = { if (Test-Path -Path ('{0}\generic-worker\generic-worker.config' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
+  Script WindowsDesktopBuildScripts {
+    GetScript = { @{ Result = ((Test-Path -Path 'Y:\checkout-sources.cmd' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'Y:\buildprops.json' -ErrorAction SilentlyContinue)) } }
+    SetScript = {
+      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/TaskCluster/checkout-sources.cmd', 'Y:\checkout-sources.cmd')
+      Unblock-File -Path 'Y:\checkout-sources.cmd'
+      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/TaskCluster/buildprops.json', 'Y:\buildprops.json')
+      Unblock-File -Path 'Y:\buildprops.json'
+    }
+    TestScript = { if ((Test-Path -Path 'Y:\checkout-sources.cmd' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'Y:\buildprops.json' -ErrorAction SilentlyContinue)) { $true } else { $false } }
+  }
 }
