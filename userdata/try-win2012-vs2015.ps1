@@ -37,4 +37,5 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
   }
   Stop-Transcript
   Run-RemoteDesiredStateConfig -url ('{0}/MaintenanceConfig.ps1' -f $url)
+  & shutdown @('-s', '-t', '0', '-c', 'Userdata run complete', '-f', '-d', 'p:4:1')
 }
