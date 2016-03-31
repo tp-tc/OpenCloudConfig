@@ -46,6 +46,7 @@ Configuration TaskClusterToolChainConfig {
     Ensure = 'Present'
   }
   Script GenericWorkerDownload {
+    DependsOn = @('[File]GenericWorkerFolder')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\generic-worker\generic-worker.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } } # todo: version check
     SetScript = {
       (New-Object Net.WebClient).DownloadFile('https://github.com/taskcluster/generic-worker/releases/download/v1.0.11/generic-worker-windows-amd64.exe', ('{0}\generic-worker\generic-worker.exe' -f $env:SystemDrive))
@@ -54,20 +55,28 @@ Configuration TaskClusterToolChainConfig {
     TestScript = { if (Test-Path -Path ('{0}\generic-worker\generic-worker.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } } # todo: version check
   }
   Script GenericWorkerInstall {
+    DependsOn = @('[Script]GenericWorkerDownload', '[File]LogFolder')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\generic-worker\generic-worker.config' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
       Start-Process ('{0}\generic-worker\generic-worker.exe' -f $env:SystemDrive) -ArgumentList ('install --config {0}\generic-worker\generic-worker.config' -f $env:SystemDrive) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.generic-worker-windows-amd64.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.generic-worker-windows-amd64.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
     TestScript = { if (Test-Path -Path ('{0}\generic-worker\generic-worker.config' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
+  
+  File BuildWorkspaceFolder {
+    Type = 'Directory'
+    DestinationPath = ('{0}\home\worker\workspace' -f $env:SystemDrive)
+    Ensure = 'Present'
+  }
   Script WindowsDesktopBuildScripts {
-    GetScript = { @{ Result = ((Test-Path -Path 'Y:\checkout-sources.cmd' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'Y:\buildprops.json' -ErrorAction SilentlyContinue)) } }
+    DependsOn = @('[File]BuildWorkspaceFolder')
+    GetScript = { @{ Result = ((Test-Path -Path ('{0}\home\worker\workspace\checkout-sources.cmd' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\home\worker\workspace\buildprops.json' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) } }
     SetScript = {
-      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/TaskCluster/checkout-sources.cmd', 'Y:\checkout-sources.cmd')
-      Unblock-File -Path 'Y:\checkout-sources.cmd'
-      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/TaskCluster/buildprops.json', 'Y:\buildprops.json')
-      Unblock-File -Path 'Y:\buildprops.json'
+      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/TaskCluster/checkout-sources.cmd', ('{0}\home\worker\workspace\checkout-sources.cmd' -f $env:SystemDrive))
+      Unblock-File -Path ('{0}\home\worker\workspace\checkout-sources.cmd' -f $env:SystemDrive)
+      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/TaskCluster/buildprops.json', ('{0}\home\worker\workspace\buildprops.json' -f $env:SystemDrive))
+      Unblock-File -Path ('{0}\home\worker\workspace\buildprops.json' -f $env:SystemDrive)
     }
-    TestScript = { if ((Test-Path -Path 'Y:\checkout-sources.cmd' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'Y:\buildprops.json' -ErrorAction SilentlyContinue)) { $true } else { $false } }
+    TestScript = { if ((Test-Path -Path ('{0}\home\worker\workspace\checkout-sources.cmd' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\home\worker\workspace\buildprops.json' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) { $true } else { $false } }
   }
 }
