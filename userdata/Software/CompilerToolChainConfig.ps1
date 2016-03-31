@@ -307,11 +307,11 @@ Configuration CompilerToolChainConfig {
   }
   Script ToolToolInstall {
     DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]PipUpgrade', '[Script]PythonPyWinDownload')
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\Python27\Scripts\pywin32_postinstall.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\tooltool.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
       (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py', ('{0}\mozilla-build\tooltool.py' -f $env:SystemDrive))
       Unblock-File -Path ('{0}\mozilla-build\tooltool.py' -f $env:SystemDrive)
     }
-    TestScript = { if (Test-Path -Path ('{0}\Python27\Scripts\pywin32_postinstall.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
+    TestScript = { if (Test-Path -Path ('{0}\mozilla-build\tooltool.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
 }
