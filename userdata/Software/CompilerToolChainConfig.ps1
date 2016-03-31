@@ -139,6 +139,14 @@ Configuration CompilerToolChainConfig {
     }
     TestScript = { (Test-Path -Path ('{0}\mozilla-build\hg' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
   }
+  Script MercurialPath {
+    DependsOn = @('[Script]MercurialSymbolicLink')
+    GetScript = { @{ Result = ($env:PATH.Contains(('{0}\mozilla-build\hg' -f $env:SystemDrive))) } }
+    SetScript = {
+      [Environment]::SetEnvironmentVariable('PATH', ('{0};{1}\mozilla-build\hg' -f $env:PATH, $env:SystemDrive), 'Machine')
+    }
+    TestScript = { if ($env:PATH.Contains(('{0}\mozilla-build\hg' -f $env:SystemDrive))) { $true } else { $false } }
+  }
   File MercurialCertFolder {
     DependsOn = '[Script]MercurialSymbolicLink'
     Type = 'Directory'
