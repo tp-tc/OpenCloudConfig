@@ -123,7 +123,7 @@ Configuration CompilerToolChainConfig {
     DependsOn = @('[Script]MercurialDownload', '[File]LogFolder')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Mercurial\hg.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      Start-Process ('{0}\Temp\Mercurial-3.7.3-x64.exe' -f $env:SystemRoot) -ArgumentList '/S' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.Mercurial-3.7.3-x64.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.Mercurial-3.7.3-x64.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Start-Process ('{0}\Temp\Mercurial-3.7.3-x64.exe' -f $env:SystemRoot) -ArgumentList '/VERYSILENT' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.Mercurial-3.7.3-x64.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.Mercurial-3.7.3-x64.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
     TestScript = { if (Test-Path -Path ('{0}\Mercurial\hg.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
