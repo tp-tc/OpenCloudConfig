@@ -112,23 +112,23 @@ Configuration CompilerToolChainConfig {
 
   # todo: add 32 bit installer
   Script MercurialDownload {
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\mercurial-3.7.2-x64.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\Mercurial-3.7.3-x64.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      (New-Object Net.WebClient).DownloadFile('https://bitbucket.org/tortoisehg/files/downloads/mercurial-3.7.2-x64.msi', ('{0}\Temp\mercurial-3.7.2-x64.msi' -f $env:SystemRoot))
-      Unblock-File -Path ('{0}\Temp\mercurial-3.7.2-x64.msi' -f $env:SystemRoot)
+      (New-Object Net.WebClient).DownloadFile('https://mercurial-scm.org/release/windows/Mercurial-3.7.3-x64.exe', ('{0}\Temp\Mercurial-3.7.3-x64.exe' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\Mercurial-3.7.3-x64.exe' -f $env:SystemRoot)
     }
-    TestScript = { if (Test-Path -Path ('{0}\Temp\mercurial-3.7.2-x64.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\Mercurial-3.7.3-x64.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
-  Package MercurialInstall {
+  Script MercurialInstall {
     DependsOn = @('[Script]MercurialDownload', '[File]LogFolder')
-    Name = 'Mercurial 3.7.2 (x64)'
-    Path = ('{0}\Temp\mercurial-3.7.2-x64.msi' -f $env:SystemRoot)
-    ProductId = 'CAED022C-BC65-447A-A821-060B09439984'
-    Ensure = 'Present'
-    LogPath = ('{0}\log\{1}.mercurial-3.7.2-x64.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Mercurial\hg.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      Start-Process ('{0}\Temp\Mercurial-3.7.3-x64.exe' -f $env:SystemRoot) -ArgumentList '/S' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.Mercurial-3.7.3-x64.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.Mercurial-3.7.3-x64.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    }
+    TestScript = { if (Test-Path -Path ('{0}\Mercurial\hg.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Script MercurialSymbolicLink {
-    DependsOn = @('[Package]MercurialInstall', '[Script]MozillaBuildInstall')
+    DependsOn = @('[Script]MercurialInstall', '[Script]MozillaBuildInstall')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\hg' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
       if ($PSVersionTable.PSVersion.Major -gt 4) {
