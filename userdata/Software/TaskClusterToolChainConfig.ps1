@@ -62,21 +62,4 @@ Configuration TaskClusterToolChainConfig {
     }
     TestScript = { if (Test-Path -Path ('{0}\generic-worker\generic-worker.config' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
-  
-  File BuildWorkspaceFolder {
-    Type = 'Directory'
-    DestinationPath = ('{0}\home\worker\workspace' -f $env:SystemDrive)
-    Ensure = 'Present'
-  }
-  Script WindowsDesktopBuildScripts {
-    DependsOn = @('[File]BuildWorkspaceFolder')
-    GetScript = { @{ Result = ((Test-Path -Path ('{0}\home\worker\workspace\checkout-sources.cmd' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\home\worker\workspace\buildprops.json' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) } }
-    SetScript = {
-      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/TaskCluster/checkout-sources.cmd', ('{0}\home\worker\workspace\checkout-sources.cmd' -f $env:SystemDrive))
-      Unblock-File -Path ('{0}\home\worker\workspace\checkout-sources.cmd' -f $env:SystemDrive)
-      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/TaskCluster/buildprops.json', ('{0}\home\worker\workspace\buildprops.json' -f $env:SystemDrive))
-      Unblock-File -Path ('{0}\home\worker\workspace\buildprops.json' -f $env:SystemDrive)
-    }
-    TestScript = { if ((Test-Path -Path ('{0}\home\worker\workspace\checkout-sources.cmd' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\home\worker\workspace\buildprops.json' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) { $true } else { $false } }
-  }
 }
