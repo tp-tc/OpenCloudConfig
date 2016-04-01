@@ -47,35 +47,6 @@ Configuration CompilerToolChainConfig {
     Package = 'windows-sdk-8.1'
     Version = '8.100.26654.0'
   }
-
-  Script RustDownload {
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
-    SetScript = {
-      (New-Object Net.WebClient).DownloadFile('https://static.rust-lang.org/dist/rust-1.6.0-x86_64-pc-windows-msvc.msi', ('{0}\Temp\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:SystemRoot))
-      Unblock-File -Path ('{0}\Temp\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:SystemRoot)
-    }
-    TestScript = { if (Test-Path -Path ('{0}\Temp\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
-  }
-  Package RustInstall {
-    DependsOn = @('[Script]RustDownload', '[File]LogFolder')
-    Name = 'Rust 1.6 (MSVC 64-bit)'
-    Path = ('{0}\Temp\rust-1.6.0-x86_64-pc-windows-msvc.msi' -f $env:SystemRoot)
-    ProductId = 'A21886AC-C591-4CC0-BA5B-C080B88F630B'
-    Ensure = 'Present'
-    LogPath = ('{0}\log\{1}.rust-1.6.0-x86_64-pc-windows-msvc.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-  }
-  Script RustSymbolicLink {
-    DependsOn = @('[Package]RustInstall', '[File]ToolsFolder')
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\tools\rust' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
-    SetScript = {
-      if ($PSVersionTable.PSVersion.Major -gt 4) {
-        New-Item -ItemType SymbolicLink -Path ('{0}\tools' -f $env:SystemDrive) -Name 'rust' -Target ('{0}\Rust stable MSVC 1.6' -f $env:ProgramFiles)
-      } else {
-        & cmd @('/c', 'mklink', '/D', ('{0}\tools\rust' -f $env:SystemDrive), ('{0}\Rust stable MSVC 1.6' -f $env:ProgramFiles))
-      }
-    }
-    TestScript = { (Test-Path -Path ('{0}\tools\rust' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
-  }
   
   Script MozillaBuildDownload {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\MozillaBuildSetup-2.1.0.exe' -f $env:SystemRoot)) } }
