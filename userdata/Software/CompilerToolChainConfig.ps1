@@ -247,7 +247,7 @@ Configuration CompilerToolChainConfig {
     TestScript = { $false }
   }
   Script ToolToolInstall {
-    DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]PipUpgrade', '[Script]PythonPyWinDownload')
+    DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]PythonModules')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\tooltool.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
       (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py', ('{0}\mozilla-build\tooltool.py' -f $env:SystemDrive))
