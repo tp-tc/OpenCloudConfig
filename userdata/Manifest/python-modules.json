@@ -1,0 +1,26 @@
+[
+  {
+    "module": "pip",
+    "version": "8.1.1"
+  },
+  {
+    "module": "virtualenv",
+    "version": "15.0.1"
+  },
+  {
+    "module": "wheel",
+    "version": "0.29.0"
+  },
+  {
+    "module": "pypiwin32",
+    "version": "219"
+  },
+  {
+    "module": "PyHawk-with-a-single-extra-commit",
+    "version": "0.1.5"
+  },
+  {
+    "module": "taskcluster",
+    "version": "0.0.26"
+  }
+]
