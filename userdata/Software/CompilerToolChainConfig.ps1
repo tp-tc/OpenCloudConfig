@@ -36,16 +36,42 @@ Configuration CompilerToolChainConfig {
     }
     TestScript = { if (Test-Path -Path ('{0}\Microsoft DirectX SDK (June 2010)\system\uninstall\DXSDK_Jun10.exe' -f ${env:ProgramFiles(x86)}) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
-
-  Chocolatey VCRedist2010Install {
-    Ensure = 'Present'
-    Package = 'vcredist2010'
-    Version = '10.0.40219.1'
+  
+  Script VCRedist2010Download {
+    GetScript = { @{ Result = ((Test-Path -Path ('{0}\Temp\vcredist_x86.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\Temp\vcredist_x64.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue)) } }
+    SetScript = {
+      (New-Object Net.WebClient).DownloadFile('http://download.microsoft.com/download/C/6/D/C6D0FD4E-9E53-4897-9B91-836EBA2AACD3/vcredist_x86.exe', ('{0}\Temp\vcredist_x86.exe' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\vcredist_x86.exe' -f $env:SystemRoot)
+      (New-Object Net.WebClient).DownloadFile('http://download.microsoft.com/download/A/8/0/A80747C3-41BD-45DF-B505-E9710D2744E0/vcredist_x64.exe', ('{0}\Temp\vcredist_x64.exe' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\vcredist_x64.exe' -f $env:SystemRoot)
+    }
+    TestScript = { if ((Test-Path -Path ('{0}\Temp\vcredist_x86.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\Temp\vcredist_x64.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue)) { $true } else { $false } }
   }
-  Chocolatey WindowsSdkInstall {
-    Ensure = 'Present'
-    Package = 'windows-sdk-8.1'
-    Version = '8.100.26654.0'
+  Script VCRedist2010Install {
+    DependsOn = @('[Script]VCRedist2010Download', '[File]LogFolder')
+    GetScript = { @{ Result = $false } }
+    SetScript = {
+      Start-Process ('{0}\Temp\vcredist_x86.exe' -f $env:SystemRoot) -ArgumentList @('/Q') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.vcredist_x86.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.vcredist_x86.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Start-Process ('{0}\Temp\vcredist_x64.exe' -f $env:SystemRoot) -ArgumentList @('/Q') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.vcredist_x64.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.vcredist_x64.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    }
+    TestScript = { $false }
+  }
+  
+  Script WindowsSdkDownload {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\sdksetup.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      (New-Object Net.WebClient).DownloadFile('http://download.microsoft.com/download/B/0/C/B0C80BA3-8AD6-4958-810B-6882485230B5/standalonesdk/sdksetup.exe', ('{0}\Temp\sdksetup.exe' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\sdksetup.exe' -f $env:SystemRoot)
+    }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\sdksetup.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
+  Script WindowsSdkInstall {
+    DependsOn = @('[Script]WindowsSdkDownload', '[File]LogFolder')
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Windows Kits\8.1' -f ${env:ProgramFiles(x86)}) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      Start-Process ('{0}\Temp\sdksetup.exe' -f $env:SystemRoot) -ArgumentList @('/Quiet', '/NoRestart', '/Log', ('{0}\log\{1}.sdksetup.exe.install.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.sdksetup.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.sdksetup.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    }
+    TestScript = { if (Test-Path -Path ('{0}\Windows Kits\8.1' -f ${env:ProgramFiles(x86)}) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   
   Script MozillaBuildDownload {
