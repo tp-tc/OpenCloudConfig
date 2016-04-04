@@ -240,7 +240,7 @@ Configuration CompilerToolChainConfig {
 
   # ugly hacks to deal with mozharness configs hardcoded buildbot paths to virtualenv.py
   Script MozillaBuildBuildBotVirtualEnvScript {
-    DependsOn = @('[File]MozillaBuildBuildBotVirtualEnv')
+    DependsOn = @('[Script]MozillaBuildInstall', '[Package]PythonTwoSevenInstall', '[Script]PythonModules')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
       Start-Process ('{0}\Python27\python.exe' -f $env:SystemDrive) -ArgumentList @('-m', 'virtualenv', ('{0}\mozilla-build\buildbotve' -f $env:SystemDrive)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.python-pip-upgrade-{2}-{3}.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $module.module, $module.version) -RedirectStandardError ('{0}\log\{1}.python-pip-upgrade-{2}-{3}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $module.module, $module.version)
