@@ -8,7 +8,7 @@ Configuration UserConfig {
       if (!$password) {
         $password = [Guid]::NewGuid().ToString().Substring(0, 13)
       }
-      & net @('user', 'root', $password, '/ADD', '/active:yes', '/expires:never')
+      Start-Process 'net' -ArgumentList @('user', 'root', $password, '/ADD', '/active:yes', '/expires:never') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-root.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.net-user-root.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
       Start-Job -ScriptBlock {
         Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'QuickEdit' -Value '0x00000001' # on
         Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'InsertMode' -Value '0x00000001' # on
