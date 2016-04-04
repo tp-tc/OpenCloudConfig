@@ -16,6 +16,14 @@
     "version": "219"
   },
   {
+    "module": "requests",
+    "version": "2.7.0"
+  },
+  {
+    "module": "requests",
+    "version": "2.8.1"
+  },
+  {
     "module": "PyHawk-with-a-single-extra-commit",
     "version": "0.1.5"
   },
