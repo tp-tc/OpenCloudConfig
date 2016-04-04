@@ -68,9 +68,10 @@ Configuration FirefoxBuildResourcesConfig {
   }
   Script WindowsDesktopBuildSecrets {
     DependsOn = @('[File]LogFolder', '[File]BuildWorkspaceFolder', '[Script]GpgKeyImport')
-    GetScript = { @{ Result = $false } }
+    #todo: fix this!
+    GetScript = { @{ Result = ((Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/releng-secrets.json' -UseBasicParsing | ConvertFrom-Json | % { [bool](Test-Path -Path ('{0}\builds\{1}' -f $env:SystemDrive, $_) -ErrorAction SilentlyContinue) }) -eq @($true, $true, $true, $true, $true, $true, $true)) } }
     SetScript = {
-      $files = @('crash-stats-api.token', 'gapi.data', 'google-oauth-api.key', 'mozilla-api.key', 'mozilla-desktop-geoloc-api.key', 'mozilla-fennec-geoloc-api.key', 'relengapi.tok')
+      $files = Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/releng-secrets.json' -UseBasicParsing | ConvertFrom-Json
       foreach ($file in $files) {
         (New-Object Net.WebClient).DownloadFile(('https://github.com/MozRelOps/OpenCloudConfig/blob/master/userdata/Configuration/FirefoxBuildResources/{0}.gpg?raw=true' -f $file), ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file))
         Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('-d', ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\builds\{1}' -f $env:SystemDrive, $file) -RedirectStandardError ('{0}\log\{1}.gpg-decrypt-{2}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $file)
@@ -82,7 +83,8 @@ Configuration FirefoxBuildResourcesConfig {
         }
       }
     }
-    TestScript = { $false }
+    #todo: fix this!
+    TestScript = { if ((Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/releng-secrets.json' -UseBasicParsing | ConvertFrom-Json | % { [bool](Test-Path -Path ('{0}\builds\{1}' -f $env:SystemDrive, $_) -ErrorAction SilentlyContinue) }) -eq @($true, $true, $true, $true, $true, $true, $true)) { $true } else { $false } }
   }
 
   File ToolToolCacheFolder {
@@ -93,21 +95,17 @@ Configuration FirefoxBuildResourcesConfig {
   }
   Script ToolToolArtifactsCache {
     DependsOn = @('[File]ToolToolCacheFolder', '[Script]WindowsDesktopBuildSecrets')
-    GetScript = { @{ Result = $false } }
+    #todo: fix this!
+    GetScript = { @{ Result = ((Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/tooltool-artifacts.json' -UseBasicParsing | ConvertFrom-Json | % { [bool](Test-Path -Path ('{0}\home\worker\tooltool-cache\{1}' -f $env:SystemDrive, $_) -ErrorAction SilentlyContinue) }) -eq @($true, $true, $true, $true, $true)) } }
     SetScript = {
-      $files = @(
-        'bb345b0e700ffab4d09436981f14b5de84da55a3f18a7f09ebc4364a4488acdeab8d46f447b12ac70f2da1444a68b8ce8b8675f0dae2ccf845e966d1df0f0869',
-        'c4704dcc6774b9f3baaa9313192d26e36bfba2d4380d0518ee7cb89153d9adfe63f228f0ac29848f02948eb1ab7e6624ba71210f0121196d2b54ecebd640d1e6',
-        '9c2c40637de27a0852aa1166f2a08159908b23f7a55855c933087c541461bbb2a1ec9e0522df0d2b9da2b2c343b673dbb5a2fa8d30216fe8acee1eb1383336ea',
-        '0b71a936edf5bd70cf274aaa5d7abc8f77fe8e7b5593a208f805cc9436fac646b9c4f0b43c2b10de63ff3da671497d35536077ecbc72dba7f8159a38b580f831',
-        '0379fd087705f54aeb335449e6c623cd550b656d7110acafd1e5b315e1fc9272b7cdd1e37f99d575b16ecba4e8e4fe3af965967a3944c023b83caf68fa684888'
-      )
+      $files = Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/tooltool-artifacts.json' -UseBasicParsing | ConvertFrom-Json
       $webClient = New-Object Net.WebClient
       $webClient.Headers.Add('Authorization', ('Bearer {0}' -f [IO.File]::ReadAllText(('{0}\builds\relengapi.tok' -f $env:SystemDrive))))
       foreach ($file in $files) {
         $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $file), ('{0}\home\worker\tooltool-cache\{1}' -f $env:SystemDrive, $file))
       }
     }
-    TestScript = { $false }
+    #todo: fix this!
+    TestScript = { if ((Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/tooltool-artifacts.json' -UseBasicParsing | ConvertFrom-Json | % { [bool](Test-Path -Path ('{0}\home\worker\tooltool-cache\{1}' -f $env:SystemDrive, $_) -ErrorAction SilentlyContinue) }) -eq @($true, $true, $true, $true, $true)) { $true } else { $false } }
   }
 }
