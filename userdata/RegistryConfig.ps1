@@ -4,13 +4,13 @@ Configuration RegistryConfig {
   Import-DscResource -ModuleName PSDesiredStateConfiguration
 
   # https://bugzilla.mozilla.org/show_bug.cgi?id=1261812
-  Registry ConsoleDefaultQuickEdit {
+  Registry WindowsErrorReportingLocalDumps {
     Ensure = 'Present'
     Force = $true
     Hex = $true
     Key = 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps'
   }
-  Registry ConsoleDefaultQuickEdit {
+  Registry WindowsErrorReportingDontShowUI {
     Ensure = 'Present'
     Force = $true
     Hex = $true
