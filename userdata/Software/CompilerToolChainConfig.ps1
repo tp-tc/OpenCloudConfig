@@ -276,4 +276,14 @@ Configuration CompilerToolChainConfig {
     TestScript = { (Test-Path -Path ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
   }
   # end ugly hacks to deal with mozharness configs hardcoded buildbot paths to virtualenv.py
+  
+  Script MozillaBuildPermissions {
+    DependsOn = @('[Script]MozillaBuildInstall', '[Script]ToolToolInstall', '[Script]MozillaBuildBuildBotVirtualEnvScript', '[File]LogFolder')
+    GetScript = { @{ Result = $false } }
+    SetScript = {
+      Start-Process 'icacls' -ArgumentList @(('{0}\mozilla-build' -f $env:SystemDrive), '/reset', '/T') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.c-mozilla-build-reset.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.c-mozilla-build-reset.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Start-Process 'icacls' -ArgumentList @(('{0}\mozilla-build' -f $env:SystemDrive), '/grant', 'Administrators:(OI)(CI)F', '/grant', 'Everyone:(OI)(CI)RX', '/inheritance:r') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.c-mozilla-build-access.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.c-mozilla-build-access.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    }
+    TestScript = { $false }
+  }
 }
