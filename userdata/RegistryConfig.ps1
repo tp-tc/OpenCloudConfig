@@ -28,7 +28,7 @@ Configuration RegistryConfig {
     Key = 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt'
     ValueName = 'DefaultValue'
     ValueType = 'Dword'
-    ValueData = '0x00000000'
+    ValueData = '0'
   }
   # show full paths by default
   Registry ExplorerFolderShowFullPathOn {
