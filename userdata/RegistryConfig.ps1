@@ -7,8 +7,8 @@ Configuration RegistryConfig {
   Registry WindowsErrorReportingLocalDumps {
     Ensure = 'Present'
     Force = $true
-    Hex = $true
-    Key = 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps'
+    Key = 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting'
+    ValueName = 'LocalDumps'
   }
   Registry WindowsErrorReportingDontShowUI {
     Ensure = 'Present'
