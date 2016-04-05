@@ -10,6 +10,11 @@ Configuration UserConfig {
       }
       Start-Process 'net' -ArgumentList @('user', 'root', $password, '/ADD', '/active:yes', '/expires:never') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-root.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.net-user-root.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
       Start-Job -ScriptBlock {
+
+        # show file extensions in explorer
+        Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\' -Type 'DWord' -Name 'HideFileExt' -Value '0x00000000' # off
+
+        # a larger console, with a larger buffer
         Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'QuickEdit' -Value '0x00000001' # on
         Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'InsertMode' -Value '0x00000001' # on
         Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'ScreenBufferSize' -Value '0x012c00a0' # 160x300
@@ -20,11 +25,16 @@ Configuration UserConfig {
         Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'FontFamily' -Value '0x00000036' # Consolas
         Set-ItemProperty 'HKCU:\Console\' -Type 'String' -Name 'FaceName' -Value 'Consolas'
         Set-ItemProperty 'HKCU:\Control Panel\Cursors\' -Type 'String' -Name 'IBeam' -Value '%SYSTEMROOT%\Cursors\beam_r.cur'
+
+        # cmd and subl pinned to taskbar
         ((New-Object -c Shell.Application).Namespace('{0}\system32' -f $env:SystemRoot).parsename('cmd.exe')).InvokeVerb('taskbarpin')
         ((New-Object -c Shell.Application).Namespace('{0}\Sublime Text 3' -f $env:ProgramFiles).parsename('sublime_text.exe')).InvokeVerb('taskbarpin')
+
+        # ssh authorized_keys
         New-Item ('{0}\.ssh' -f $env:UserProfile) -type directory -force
         (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/authorized_keys', ('{0}\.ssh\authorized_keys' -f $env:UserProfile))
         Unblock-File -Path ('{0}\.ssh\authorized_keys' -f $env:UserProfile)
+        
       } -Credential (New-Object Management.Automation.PSCredential 'root', (ConvertTo-SecureString "$password" -AsPlainText -Force))
       #& icacls @(('{0}\Users\root' -f $env:SystemDrive), '/T', '/C', '/grant', 'Administrators:(F)')
     }
