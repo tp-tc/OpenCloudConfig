@@ -64,57 +64,45 @@ Configuration MaintenanceToolChainConfig {
     TestScript = { (Test-Path -Path ('{0}\Sublime Text 3\sublime_text.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) }
   }
 
-  Script CygWinDownload {
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\cygwin-setup-x86_64.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
+  Script OpenSshDownload {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\OpenSSH-Win64.zip' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      (New-Object Net.WebClient).DownloadFile('https://www.cygwin.com/setup-x86_64.exe', ('{0}\Temp\cygwin-setup-x86_64.exe' -f $env:SystemRoot))
-      Unblock-File -Path ('{0}\Temp\cygwin-setup-x86_64.exe' -f $env:SystemRoot)
+      (New-Object Net.WebClient).DownloadFile('https://github.com/PowerShell/Win32-OpenSSH/releases/download/3_19_2016/OpenSSH-Win64.zip', ('{0}\Temp\OpenSSH-Win64.zip' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\OpenSSH-Win64.zip' -f $env:SystemRoot)
     }
-    TestScript = { if (Test-Path -Path ('{0}\Temp\cygwin-setup-x86_64.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\OpenSSH-Win64.zip' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
-  Script CygWinInstall {
-    DependsOn = '[Script]CygWinDownload'
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\cygwin\bin\cygrunsrv.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
-    SetScript = {
-      Start-Process ('{0}\Temp\cygwin-setup-x86_64.exe' -f $env:SystemRoot) -ArgumentList ('--quiet-mode --wait --root {0}\cygwin --site http://cygwin.mirror.constant.com --packages openssh,vim,curl,tar,wget,zip,unzip,diffutils,bzr' -f $env:SystemDrive) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.cygwin-setup-x86_64.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.cygwin-setup-x86_64.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-    }
-    TestScript = { (Test-Path -Path ('{0}\cygwin\bin\cygrunsrv.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
+  Archive OpenSshExtract {
+    DependsOn = @('[Script]OpenSshDownload')
+    Path = ('{0}\Temp\OpenSSH-Win64.zip' -f $env:SystemRoot)
+    Destination = ('{0}' -f $env:ProgramFiles)
+    Ensure = 'Present'
   }
-  Script CygWinConfigure {
-    DependsOn = @('[Script]CygWinInstall', '[File]LogFolder')
-    GetScript = { @{ Result = ((Test-Path -Path ('{0}\cygwin\home' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and ([bool]((Get-Item ('{0}\cygwin\home' -f $env:SystemDrive) -Force -ea 0).Attributes -band [IO.FileAttributes]::ReparsePoint))) } }
+  Script OpenSshFirewallEnable {
+    GetScript = { @{ Result = (Get-NetFirewallRule -DisplayName 'SSH inbound: allow' -ErrorAction SilentlyContinue) } }
     SetScript = {
-      # set cygwin home directories to windows profile directories
-      Start-Process ('{0}\cygwin\bin\bash.exe' -f $env:SystemDrive) -ArgumentList '--login -c "mkpasswd -l -p $(cygpath -H) > /etc/passwd"' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.mkpasswd.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.mkpasswd.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-      Remove-Item -Path ('{0}\cygwin\home' -f $env:SystemDrive) -Force
-      if ($PSVersionTable.PSVersion.Major -gt 4) {
-        New-Item -ItemType SymbolicLink -Path ('{0}\cygwin' -f $env:SystemDrive) -Name 'home' -Target ('{0}\Users' -f $env:SystemDrive)
-      } else {
-        & 'cmd' @('/c', 'mklink', '/D', ('{0}\cygwin\home' -f $env:SystemDrive), ('{0}\Users' -f $env:SystemDrive))
-      }
-    }
-    TestScript = { if ((Test-Path -Path ('{0}\cygwin\home' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and ([bool]((Get-Item ('{0}\cygwin\home' -f $env:SystemDrive) -Force -ea 0).Attributes -band [IO.FileAttributes]::ReparsePoint))) { $true } else { $false } }
-  }
-  Script SshInboundFirewallEnable {
-    GetScript = { @{ Result = (Get-NetFirewallRule -DisplayName 'Allow SSH inbound' -ErrorAction SilentlyContinue) } }
-    SetScript = {
-      New-NetFirewallRule -DisplayName 'Allow SSH inbound' -Direction Inbound -LocalPort 22 -Protocol TCP -Action Allow
+      New-NetFirewallRule -DisplayName 'SSH inbound: allow' -Direction Inbound -LocalPort 22 -Protocol TCP -Action Allow
       #netsh advfirewall firewall add rule name='Allow SSH inbound' dir=in action=allow protocol=TCP localport=22
     }
-    TestScript = { if (Get-NetFirewallRule -DisplayName 'Allow SSH inbound' -ErrorAction SilentlyContinue) { $true } else { $false } }
+    TestScript = { if (Get-NetFirewallRule -DisplayName 'SSH inbound: allow' -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
-  Script SshdServiceInstall {
-    DependsOn = @('[Script]SshInboundFirewallEnable', '[Script]CygWinInstall', '[File]LogFolder')
-    GetScript = { @{ Result = ((Get-Service 'sshd' -ErrorAction SilentlyContinue) -and ((Get-Service 'sshd').Status -eq 'running')) } }
+  Script OpenSshInstall {
+    DependsOn = @('[Script]OpenSshFirewallEnable', '[Archive]OpenSshExtract', '[File]LogFolder')
+    GetScript = { @{ Result = (Get-Service 'sshd' -ErrorAction SilentlyContinue) } }
     SetScript = {
-      $password = [Guid]::NewGuid().ToString().Substring(0, 13)
-      $env:LOGONSERVER = ('\\{0}' -f $env:COMPUTERNAME)
-      Start-Process ('{0}\cygwin\bin\bash.exe' -f $env:SystemDrive) -ArgumentList ("--login -c `"ssh-host-config -y -c 'ntsec mintty' -u 'sshd' -w '{0}'`"" -f $password) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.ssh-host-config.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.ssh-host-config.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-      & net @('user', 'sshd', $password, '/active:yes')
-      (Get-WmiObject -Class Win32_Service | Where-Object { $_.Name -eq 'sshd' }).Change($Null,$Null,$Null,$Null,$Null,$Null,$Null,$password,$Null,$Null,$Null)
-      & 'net' @('start', 'sshd')
+      Start-Process ('{0}\OpenSSH-Win64\ssh-keygen.exe' -f $env:ProgramFiles) -ArgumentList @('-A') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.ssh-keygen.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.ssh-keygen.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Copy-Item -Path ('{0}\OpenSSH-Win64\ssh-lsa.dll' -f $env:ProgramFiles) -Destination ('{0}\System32' -f $env:SystemRoot)
+      # enable key authentication
+      $key = ([Microsoft.Win32.RegistryKey]::OpenBaseKey('LocalMachine', 0)).OpenSubKey('SYSTEM\CurrentControlSet\Control\Lsa', $true)
+      $arr = $key.GetValue('Authentication Packages')
+      if ($arr -notcontains 'ssh-lsa') {
+        $arr += 'ssh-lsa'
+        $key.SetValue('Authentication Packages', [string[]]$arr, 'MultiString')
+      }
+      Start-Process ('{0}\OpenSSH-Win64\sshd.exe' -f $env:ProgramFiles) -ArgumentList @('install') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.sshd-install.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.sshd-install.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Set-Service sshd -StartupType Automatic
     }
-    TestScript = { if ((Get-Service 'sshd' -ErrorAction SilentlyContinue) -and ((Get-Service 'sshd').Status -eq 'running')) { $true } else { $false } }
+    TestScript = { if (Get-Service 'sshd' -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
 
   Script GpgForWinDownload {
