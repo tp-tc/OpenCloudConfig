@@ -256,7 +256,7 @@ Configuration CompilerToolChainConfig {
     TestScript = { $false }
   }
   Script ToolToolInstall {
-    DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]PythonModules')
+    DependsOn = @('[Package]PythonTwoSevenInstall')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\tooltool.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
       (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py', ('{0}\mozilla-build\tooltool.py' -f $env:SystemDrive))
@@ -266,15 +266,27 @@ Configuration CompilerToolChainConfig {
   }
 
   # ugly hacks to deal with mozharness configs hardcoded buildbot paths to virtualenv.py
+  File VirtualEnvSupportFolder {
+    Type = 'Directory'
+    Force = $true
+    DestinationPath = ('{0}\mozilla-build\buildbotve\virtualenv_support' -f $env:SystemDrive)
+    Ensure = 'Present'
+  }
   Script MozillaBuildBuildBotVirtualEnvScript {
-    DependsOn = @('[Script]MozillaBuildInstall', '[Package]PythonTwoSevenInstall', '[Script]PythonModules')
+    DependsOn = @('[Script]MozillaBuildInstall', '[Package]PythonTwoSevenInstall', '[Script]PythonModules', '[File]VirtualEnvSupportFolder')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
       Start-Process ('{0}\Python27\python.exe' -f $env:SystemDrive) -ArgumentList @('-m', 'virtualenv', ('{0}\mozilla-build\buildbotve' -f $env:SystemDrive)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.python-virtualenv-buildbotve.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.python-virtualenv-buildbotve.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
       (New-Object Net.WebClient).DownloadFile('https://hg.mozilla.org/mozilla-central/raw-file/78babd21215d/python/virtualenv/virtualenv.py', ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive))
       Unblock-File -Path ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive)
+      $modules = Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/python-modules.json' -UseBasicParsing | ConvertFrom-Json
+      foreach ($module in $modules) {
+        foreach ($wheel in $module.wheels){
+          (New-Object Net.WebClient).DownloadFile($wheel, ('{0}\mozilla-build\buildbotve\virtualenv_support\{1}' -f $env:SystemDrive, [IO.Path]::GetFileName($wheel).Split('#')[0]))
+        }
+      }
     }
-    TestScript = { (Test-Path -Path ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
+    TestScript = { if (Test-Path -Path ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   # end ugly hacks to deal with mozharness configs hardcoded buildbot paths to virtualenv.py
   
