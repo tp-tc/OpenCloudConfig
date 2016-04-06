@@ -200,6 +200,7 @@ Configuration CompilerToolChainConfig {
     Name = 'Python 2.7.11 (64-bit)'
     Path = ('{0}\Temp\python-2.7.11.amd64.msi' -f $env:SystemRoot)
     ProductId = '16E52445-1392-469F-9ADB-FC03AF00CD62'
+    Arguments = ('/qn /norestart ALLUSERS=1 TARGETDIR={0}\Python27' -f $env:SystemDrive)
     Ensure = 'Present'
     LogPath = ('{0}\log\{1}.python-2.7.11.amd64.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
@@ -269,7 +270,7 @@ Configuration CompilerToolChainConfig {
     DependsOn = @('[Script]MozillaBuildInstall', '[Package]PythonTwoSevenInstall', '[Script]PythonModules')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      Start-Process ('{0}\Python27\python.exe' -f $env:SystemDrive) -ArgumentList @('-m', 'virtualenv', ('{0}\mozilla-build\buildbotve' -f $env:SystemDrive)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.python-pip-upgrade-{2}-{3}.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $module.module, $module.version) -RedirectStandardError ('{0}\log\{1}.python-pip-upgrade-{2}-{3}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $module.module, $module.version)
+      Start-Process ('{0}\Python27\python.exe' -f $env:SystemDrive) -ArgumentList @('-m', 'virtualenv', ('{0}\mozilla-build\buildbotve' -f $env:SystemDrive)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.python-virtualenv-buildbotve.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.python-virtualenv-buildbotve.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
       (New-Object Net.WebClient).DownloadFile('https://hg.mozilla.org/mozilla-central/raw-file/78babd21215d/python/virtualenv/virtualenv.py', ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive))
       Unblock-File -Path ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive)
     }
