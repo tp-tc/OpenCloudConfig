@@ -16,7 +16,7 @@ Configuration CompilerToolChainConfig {
     DestinationPath = ('{0}\tools' -f $env:SystemDrive)
     Ensure = 'Present'
   }
-
+  
   Script DirectXSdkDownload {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\DXSDK_Jun10.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
     SetScript = {
@@ -36,7 +36,7 @@ Configuration CompilerToolChainConfig {
     }
     TestScript = { if (Test-Path -Path ('{0}\Microsoft DirectX SDK (June 2010)\system\uninstall\DXSDK_Jun10.exe' -f ${env:ProgramFiles(x86)}) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
-
+  
   Script VCRedist2010Download {
     GetScript = { @{ Result = ((Test-Path -Path ('{0}\Temp\vcredist_x86.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\Temp\vcredist_x64.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue)) } }
     SetScript = {
@@ -56,7 +56,7 @@ Configuration CompilerToolChainConfig {
     }
     TestScript = { $false }
   }
-
+  
   Script WindowsSdkDownload {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\sdksetup.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
     SetScript = {
@@ -73,7 +73,7 @@ Configuration CompilerToolChainConfig {
     }
     TestScript = { if (Test-Path -Path ('{0}\Windows Kits\8.1' -f ${env:ProgramFiles(x86)}) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
-
+  
   Script MozillaBuildDownload {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\MozillaBuildSetup-2.1.0.exe' -f $env:SystemRoot)) } }
     SetScript = {
@@ -289,7 +289,7 @@ Configuration CompilerToolChainConfig {
     TestScript = { if (Test-Path -Path ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   # end ugly hacks to deal with mozharness configs hardcoded buildbot paths to virtualenv.py
-
+  
   Script MozillaBuildPermissions {
     DependsOn = @('[Script]MozillaBuildInstall', '[Script]ToolToolInstall', '[Script]MozillaBuildBuildBotVirtualEnvScript', '[File]LogFolder')
     GetScript = { @{ Result = $false } }
