@@ -1,34 +1,52 @@
 [
   {
     "module": "pip",
-    "version": "8.1.1"
+    "version": "8.1.1",
+    "wheels": [
+      "https://pypi.python.org/packages/py2.py3/p/pip/pip-8.1.1-py2.py3-none-any.whl#md5=22db7b6a517a09c29d54a76650f170eb"
+    ]
   },
   {
     "module": "virtualenv",
-    "version": "15.0.1"
+    "version": "15.0.1",
+    "wheels": [
+      "https://pypi.python.org/packages/py2.py3/v/virtualenv/virtualenv-15.0.1-py2.py3-none-any.whl#md5=1fca0d03249563ccc475d39cfe71491e"
+    ]
   },
   {
     "module": "wheel",
-    "version": "0.29.0"
+    "version": "0.29.0",
+    "wheels": [
+      "https://pypi.python.org/packages/py2.py3/s/setuptools/setuptools-20.6.7-py2.py3-none-any.whl#md5=755d4a1a62fc99aa97554379d94e50a5"
+    ]
   },
   {
     "module": "pypiwin32",
-    "version": "219"
+    "version": "219",
+    "wheels": [
+      "https://pypi.python.org/packages/cp27/p/pypiwin32/pypiwin32-219-cp27-none-win_amd64.whl#md5=d7bafcf3cce72c3ce9fdd633a262c335",
+      "https://pypi.python.org/packages/cp27/p/pypiwin32/pypiwin32-219-cp27-none-win32.whl#md5=a8b0c1b608c1afeb18cd38d759ee5e29"
+    ]
   },
   {
     "module": "requests",
-    "version": "2.7.0"
+    "version": "2.7.0",
+    "wheels": [
+      "https://pypi.python.org/packages/2.7/r/requests/requests-2.7.0-py2.py3-none-any.whl#md5=564fb256f865a79f977e57b79d31659a"
+    ]
   },
   {
     "module": "requests",
-    "version": "2.8.1"
+    "version": "2.8.1",
+    "wheels": [
+      "https://pypi.python.org/packages/2.7/r/requests/requests-2.8.1-py2.py3-none-any.whl#md5=46f1d621daa3ab38958a42f51478b1ee"
+    ]
   },
   {
-    "module": "PyHawk-with-a-single-extra-commit",
-    "version": "0.1.5"
-  },
-  {
-    "module": "taskcluster",
-    "version": "0.0.26"
+    "module": "requests",
+    "version": "2.9.1",
+    "wheels": [
+      "https://pypi.python.org/packages/2.7/r/requests/requests-2.9.1-py2.py3-none-any.whl#md5=58a444aaa02780ad01983f5f540e67b2"
+    ]
   }
 ]
