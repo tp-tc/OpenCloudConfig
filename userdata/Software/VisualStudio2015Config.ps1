@@ -9,7 +9,7 @@ Configuration VisualStudio2015Config {
     GetScript = { @{ Result = ((Test-Path -Path ('{0}\Temp\vs_community_2015.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\Temp\VisualStudio2015-AdminDeployment.xml' -f $env:SystemRoot) -ErrorAction SilentlyContinue)) } }
     SetScript = {
       (New-Object Net.WebClient).DownloadFile('http://download.microsoft.com/download/0/B/C/0BC321A4-013F-479C-84E6-4A2F90B11269/vs_community.exe', ('{0}\Temp\vs_community_2015.exe' -f $env:SystemRoot))
-      Unblock-File -Path ('{0}\Temp\vs_community_2013.exe' -f $env:SystemRoot)
+      Unblock-File -Path ('{0}\Temp\vs_community_2015.exe' -f $env:SystemRoot)
       (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/VisualStudio2015/AdminDeployment.xml', ('{0}\Temp\VisualStudio2015-AdminDeployment.xml' -f $env:SystemRoot))
       Unblock-File -Path ('{0}\Temp\VisualStudio2015-AdminDeployment.xml' -f $env:SystemRoot)
     }
