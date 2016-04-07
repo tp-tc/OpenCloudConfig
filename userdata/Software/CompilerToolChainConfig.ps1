@@ -300,20 +300,20 @@ Configuration CompilerToolChainConfig {
     TestScript = { $false }
   }
 
-    Script VCForPythonDownload {
-      GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
-      SetScript = {
-        (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi', ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot))
-        Unblock-File -Path ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot)
-      }
-      TestScript = { if (Test-Path -Path ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  Script VCForPythonDownload {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi', ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot)
     }
-    Package VCForPythonInstall {
-      DependsOn = @('[Script]VCForPythonDownload', '[File]LogFolder')
-      Name = 'VCForPython27'
-      Path = ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot)
-      ProductId = ''
-      Ensure = 'Present'
-      LogPath = ('{0}\log\{1}.VCForPython27.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-    }                                                          
+    TestScript = { if (Test-Path -Path ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
+  Package VCForPythonInstall {
+    DependsOn = @('[Script]VCForPythonDownload', '[File]LogFolder')
+    Name = 'VCForPython27'
+    Path = ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot)
+    ProductId = ''
+    Ensure = 'Present'
+    LogPath = ('{0}\log\{1}.VCForPython27.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+  }                                                          
 }
