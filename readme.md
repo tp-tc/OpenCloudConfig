@@ -8,6 +8,10 @@
 
     Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2012-vs2015.ps1')
 
+## Windows Server 2012 R2 without Visual Studio
+
+    Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2012.ps1')
+
 ### Or as AWS EC2 userdata:
 
     <powershell>

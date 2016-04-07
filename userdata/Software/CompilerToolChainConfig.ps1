@@ -315,5 +315,5 @@ Configuration CompilerToolChainConfig {
     ProductId = ''
     Ensure = 'Present'
     LogPath = ('{0}\log\{1}.VCForPython27.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-  }                                                          
+  }
 }
