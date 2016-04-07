@@ -69,7 +69,7 @@ Configuration FirefoxBuildResourcesConfig {
   }
   Script WindowsDesktopBuildSecrets {
     DependsOn = @('[File]LogFolder', '[File]BuildWorkspaceFolder', '[Script]GpgKeyImport')
-    GetScript = { @{ Result = (-not (Compare-Object -ReferenceObject (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/releng-secrets.json' -UseBasicParsing | ConvertFrom-Json) -DifferenceObject (Get-ChildItem -Path ('{0}\builds' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer } | % { $_.Name }))) } }
+    GetScript = { @{ Result = ((Test-Path -Path ('{0}\builds\*.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (-not (Compare-Object -ReferenceObject (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/releng-secrets.json' -UseBasicParsing | ConvertFrom-Json) -DifferenceObject (Get-ChildItem -Path ('{0}\builds' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer } | % { $_.Name })))) } }
     SetScript = {
       $files = Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/releng-secrets.json' -UseBasicParsing | ConvertFrom-Json
       foreach ($file in $files) {
@@ -83,7 +83,7 @@ Configuration FirefoxBuildResourcesConfig {
         }
       }
     }
-    TestScript = { if (-not (Compare-Object -ReferenceObject (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/releng-secrets.json' -UseBasicParsing | ConvertFrom-Json) -DifferenceObject (Get-ChildItem -Path ('{0}\builds' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer } | % { $_.Name }))) { $true } else { $false } }
+    TestScript = { if ((Test-Path -Path ('{0}\builds\*.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (-not (Compare-Object -ReferenceObject (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/releng-secrets.json' -UseBasicParsing | ConvertFrom-Json) -DifferenceObject (Get-ChildItem -Path ('{0}\builds' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer } | % { $_.Name })))) { $true } else { $false } }
   }
 
   File ToolToolCacheFolder {
@@ -94,7 +94,7 @@ Configuration FirefoxBuildResourcesConfig {
   }
   Script ToolToolArtifactsCache {
     DependsOn = @('[File]ToolToolCacheFolder', '[Script]WindowsDesktopBuildSecrets')
-    GetScript = { @{ Result = (-not (Compare-Object -ReferenceObject (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/tooltool-artifacts.json' -UseBasicParsing | ConvertFrom-Json) -DifferenceObject (Get-ChildItem -Path ('{0}\home\worker\tooltool-cache' -f $env:SystemDrive) | % { $_.Name }))) } }
+    GetScript = { @{ Result = ((Test-Path -Path ('{0}\home\worker\tooltool-cache\*' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (-not (Compare-Object -ReferenceObject (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/tooltool-artifacts.json' -UseBasicParsing | ConvertFrom-Json) -DifferenceObject (Get-ChildItem -Path ('{0}\home\worker\tooltool-cache' -f $env:SystemDrive) | % { $_.Name })))) } }
     SetScript = {
       $files = Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/tooltool-artifacts.json' -UseBasicParsing | ConvertFrom-Json
       $webClient = New-Object Net.WebClient
@@ -103,6 +103,6 @@ Configuration FirefoxBuildResourcesConfig {
         $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $file), ('{0}\home\worker\tooltool-cache\{1}' -f $env:SystemDrive, $file))
       }
     }
-    TestScript = { if (-not (Compare-Object -ReferenceObject (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/tooltool-artifacts.json' -UseBasicParsing | ConvertFrom-Json) -DifferenceObject (Get-ChildItem -Path ('{0}\home\worker\tooltool-cache' -f $env:SystemDrive) | % { $_.Name }))) { $true } else { $false } }
+    TestScript = { if ((Test-Path -Path ('{0}\home\worker\tooltool-cache\*' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (-not (Compare-Object -ReferenceObject (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/tooltool-artifacts.json' -UseBasicParsing | ConvertFrom-Json) -DifferenceObject (Get-ChildItem -Path ('{0}\home\worker\tooltool-cache' -f $env:SystemDrive) | % { $_.Name })))) { $true } else { $false } }
   }
 }
