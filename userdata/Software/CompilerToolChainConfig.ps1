@@ -310,9 +310,9 @@ Configuration CompilerToolChainConfig {
   }
   Package VCForPythonInstall {
     DependsOn = @('[Script]VCForPythonDownload', '[File]LogFolder')
-    Name = 'VCForPython27'
+    Name = 'Microsoft Visual C++ Compiler Package for Python 2.7'
     Path = ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot)
-    ProductId = ''
+    ProductId = '692514A8-5484-45FC-B0AE-BE2DF7A75891'
     Ensure = 'Present'
     LogPath = ('{0}\log\{1}.VCForPython27.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
