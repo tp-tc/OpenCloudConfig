@@ -96,7 +96,7 @@ Configuration MaintenanceToolChainConfig {
       $key = ([Microsoft.Win32.RegistryKey]::OpenBaseKey('LocalMachine', 0)).OpenSubKey('SYSTEM\CurrentControlSet\Control\Lsa', $true)
       $arr = $key.GetValue('Authentication Packages')
       if ($arr -notcontains 'ssh-lsa') {
-        $arr += 'ssh-lsa'
+        $arr += 'ssh-lsa' # 'msv1_0\0ssh-lsa.dll'
         $key.SetValue('Authentication Packages', [string[]]$arr, 'MultiString')
       }
       Start-Process ('{0}\OpenSSH-Win64\sshd.exe' -f $env:ProgramFiles) -ArgumentList @('install') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.sshd-install.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.sshd-install.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
