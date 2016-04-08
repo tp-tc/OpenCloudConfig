@@ -30,11 +30,6 @@ Configuration UserConfig {
         ((New-Object -c Shell.Application).Namespace('{0}\system32' -f $env:SystemRoot).parsename('cmd.exe')).InvokeVerb('taskbarpin')
         ((New-Object -c Shell.Application).Namespace('{0}\Sublime Text 3' -f $env:ProgramFiles).parsename('sublime_text.exe')).InvokeVerb('taskbarpin')
 
-        # powershell and cmd window transparency
-        if (-not Test-Path -Path $profile) { New-Item -path $profile -type file -force }
-        Add-Content -Path $profile -Value '$user32 = Add-Type -Name ''User32'' -Namespace ''Win32'' -PassThru -MemberDefinition ''[DllImport("user32.dll")]public static extern int GetWindowLong(IntPtr hWnd, int nIndex);[DllImport("user32.dll")]public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);[DllImport("user32.dll", SetLastError = true)]public static extern bool SetLayeredWindowAttributes(IntPtr hWnd, uint crKey, int bAlpha, uint dwFlags);'''
-        Add-Content -Path $profile -Value 'Get-Process | Where-Object { @(''powershell'', ''cmd'') -contains $_.ProcessName } | % { $user32::SetWindowLong($_.MainWindowHandle, -20, ($user32::GetWindowLong($_.MainWindowHandle, -20) -bor 0x80000)) | Out-Null;$user32::SetLayeredWindowAttributes($_.MainWindowHandle, 0, 200, 0x02) | Out-Null }'
-
         # ssh authorized_keys
         New-Item ('{0}\.ssh' -f $env:UserProfile) -type directory -force
         (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/authorized_keys', ('{0}\.ssh\authorized_keys' -f $env:UserProfile))
@@ -51,7 +46,13 @@ Configuration UserConfig {
     Ensure = 'Present'
     MembersToInclude = 'root'
   }
+  Script PowershellProfileCreate {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Microsoft.PowerShell_profile.ps1' -f $PsHome) -ErrorAction SilentlyContinue ) } }
+    SetScript = {
+      Add-Content -Path ('{0}\Microsoft.PowerShell_profile.ps1' -f $PsHome) -Value '$user32 = Add-Type -Name ''User32'' -Namespace ''Win32'' -PassThru -MemberDefinition ''[DllImport("user32.dll")]public static extern int GetWindowLong(IntPtr hWnd, int nIndex);[DllImport("user32.dll")]public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);[DllImport("user32.dll", SetLastError = true)]public static extern bool SetLayeredWindowAttributes(IntPtr hWnd, uint crKey, int bAlpha, uint dwFlags);'''
+      Add-Content -Path ('{0}\Microsoft.PowerShell_profile.ps1' -f $PsHome) -Value 'Get-Process | Where-Object { @(''powershell'', ''cmd'') -contains $_.ProcessName } | % { $user32::SetWindowLong($_.MainWindowHandle, -20, ($user32::GetWindowLong($_.MainWindowHandle, -20) -bor 0x80000)) | Out-Null;$user32::SetLayeredWindowAttributes($_.MainWindowHandle, 0, 200, 0x02) | Out-Null }'
+      Set-ItemProperty 'HKLM:\Software\Microsoft\Command Processor' -Type 'String' -Name 'AutoRun' -Value 'powershell -NoLogo -NonInteractive'
+    }
+    TestScript = { if (Test-Path -Path ('{0}\Microsoft.PowerShell_profile.ps1' -f $PsHome) -ErrorAction SilentlyContinue ) { $true } else { $false } }
+  }
 }
-
-Get-ItemProperty 'HKCU:\Console\' -Name 'FontFamily'
-Get-ItemProperty 'HKCU:\Console\' -Name 'FaceName'
