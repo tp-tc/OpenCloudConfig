@@ -1,6 +1,6 @@
 
 # show file extensions in explorer
-Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\' -Type 'DWord' -Name 'HideFileExt' -Value '0x00000000' # off
+Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' -Type 'DWord' -Name 'HideFileExt' -Value '0x00000002' # off
 
 # a large console, with a large screen buffer (for reading build logs)
 Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'QuickEdit' -Value '0x00000001' # on
