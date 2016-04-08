@@ -24,6 +24,8 @@ Configuration UserConfig {
         Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'FontSize' -Value '0x000c0000' # 12
         Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'FontFamily' -Value '0x00000036' # default console fonts
         Set-ItemProperty 'HKCU:\Console\' -Type 'String' -Name 'FaceName' -Value 'Lucida Console'
+
+        # a visible cursor on dark backgrounds (as well as light)
         Set-ItemProperty 'HKCU:\Control Panel\Cursors\' -Type 'String' -Name 'IBeam' -Value '%SYSTEMROOT%\Cursors\beam_r.cur'
 
         # cmd and subl pinned to taskbar
