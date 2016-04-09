@@ -204,6 +204,14 @@ Configuration CompilerToolChainConfig {
     Ensure = 'Present'
     LogPath = ('{0}\log\{1}.python-2.7.11.amd64.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
+  Script PythonTwoSevenCopy {
+    DependsOn = @('[Package]PythonTwoSevenInstall')
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Python27\python2.7.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      Copy-Item -Path ('{0}\Python27\python.exe' -f $env:SystemDrive) -Destination ('{0}\Python27\python2.7.exe' -f $env:SystemDrive)
+    }
+    TestScript = { if (Test-Path -Path ('{0}\Python27\python2.7.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
   Script PythonTwoSevenPath {
     DependsOn = @('[Package]PythonTwoSevenInstall')
     GetScript = { @{ Result = ($env:PATH.Contains(('{0}\Python27;{0}\Python27\Scripts' -f $env:SystemDrive))) } }
