@@ -21,8 +21,7 @@ Set-ItemProperty 'HKCU:\Control Panel\Cursors\' -Type 'String' -Name 'IBeam' -Va
 ((New-Object -c Shell.Application).Namespace('{0}\System32' -f $env:SystemRoot).parsename('cmd.exe')).InvokeVerb('taskbarpin')
 ((New-Object -c Shell.Application).Namespace('{0}\Sublime Text 3' -f $env:ProgramFiles).parsename('sublime_text.exe')).InvokeVerb('taskbarpin')
 
-# transparent powershell and cmd windows
-$user32 = Add-Type -Name 'User32' -Namespace 'Win32' -PassThru -MemberDefinition @'
+$md = @'
 [DllImport("user32.dll")]
 public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
 
@@ -32,7 +31,11 @@ public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 [DllImport("user32.dll", SetLastError = true)]
 public static extern bool SetLayeredWindowAttributes(IntPtr hWnd, uint crKey, int bAlpha, uint dwFlags);
 '@
-Get-Process | Where-Object { @('powershell', 'cmd') -contains $_.ProcessName } | % {
-  $user32::SetWindowLong($_.MainWindowHandle, -20, ($user32::GetWindowLong($_.MainWindowHandle, -20) -bor 0x80000)) | Out-Null
-  $user32::SetLayeredWindowAttributes($_.MainWindowHandle, 0, 200, 0x02) | Out-Null
+if ((Get-ItemProperty -Path ('{0}\system32\hal.dll' -f $env:SystemRoot)).VersionInfo.FileVersion.Split('.')[0] -ne '10') { # Windows versions other than 10
+  # transparent powershell and cmd windows
+  $user32 = Add-Type -Name 'User32' -Namespace 'Win32' -PassThru -MemberDefinition $md
+  Get-Process | Where-Object { @('powershell', 'cmd') -contains $_.ProcessName } | % {
+    $user32::SetWindowLong($_.MainWindowHandle, -20, ($user32::GetWindowLong($_.MainWindowHandle, -20) -bor 0x80000)) | Out-Null
+    $user32::SetLayeredWindowAttributes($_.MainWindowHandle, 0, 200, 0x02) | Out-Null
+  }
 }
