@@ -58,8 +58,13 @@ Configuration MaintenanceToolChainConfig {
     GetScript = { @{ Result = (Test-Path -Path ('{0}\Sublime Text 3\sublime_text.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) } }
     SetScript = {
       Start-Process ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemRoot) -ArgumentList '/VERYSILENT /NORESTART /TASKS="contextentry"' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.sublime-text-setup.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.sublime-text-setup.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-      (New-Object Net.WebClient).DownloadFile('http://sublime.wbond.net/Package%20Control.sublime-package', ('{0}\Users\Administrator\AppData\Roaming\Sublime Text 3\Packages\Package Control.sublime-package' -f $env:SystemDrive))
-      Unblock-File -Path ('{0}\Users\Administrator\AppData\Roaming\Sublime Text 3\Packages\Package Control.sublime-package' -f $env:SystemDrive)
+      Get-ChildItem -Path ('{0}\Users' -f $env:SystemDrive) | Where-Object { $_.PSIsContainer } | % {
+        if (Test-Path -Path ('{0}\AppData\Roaming' -f $_.FullName) -ErrorAction SilentlyContinue) {
+          New-Item ('{0}\AppData\Roaming\Sublime Text 3\Packages' -f $_.FullName) -type directory -force
+          (New-Object Net.WebClient).DownloadFile('http://sublime.wbond.net/Package%20Control.sublime-package', ('{0}\AppData\Roaming\Sublime Text 3\Packages\Package Control.sublime-package' -f $_.FullName))
+          Unblock-File -Path ('{0}\AppData\Roaming\Sublime Text 3\Packages\Package Control.sublime-package' -f $_.FullName)
+        }
+      }
     }
     TestScript = { (Test-Path -Path ('{0}\Sublime Text 3\sublime_text.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) }
   }

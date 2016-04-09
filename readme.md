@@ -1,21 +1,21 @@
 # OpenCloudConfig
 
-## Windows Server 2012 R2 with Visual Studio 2013
-
-    Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2012-vs2013.ps1')
-
-## Windows Server 2012 R2 with Visual Studio 2015
-
-    Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2012-vs2015.ps1')
-
-## Windows Server 2012 R2 without Visual Studio
+## Windows Server 2012 R2 (build instance)
 
     Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2012.ps1')
+
+## Windows 10 (test instance)
+
+    Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win10-64.ps1')
+
+## Windows 7 (test instance)
+
+    Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win7-32.ps1')
 
 ### Or as AWS EC2 userdata:
 
     <powershell>
-    $config = 'win2012-vs2013.ps1'
+    $config = 'win2012.ps1'
     $repo = 'MozRelOps/OpenCloudConfig'
     $url = ('https://raw.githubusercontent.com/{0}/master/userdata/{1}' -f $repo, $config)
     Invoke-Expression (New-Object Net.WebClient).DownloadString($url)
