@@ -16,8 +16,9 @@ Set-ItemProperty 'HKCU:\Console\' -Type 'String' -Name 'FaceName' -Value 'Lucida
 # a visible cursor on dark backgrounds (as well as light)
 Set-ItemProperty 'HKCU:\Control Panel\Cursors\' -Type 'String' -Name 'IBeam' -Value '%SYSTEMROOT%\Cursors\beam_r.cur'
 
-# cmd and subl pinned to taskbar
-((New-Object -c Shell.Application).Namespace('{0}\system32' -f $env:SystemRoot).parsename('cmd.exe')).InvokeVerb('taskbarpin')
+# powershell, cmd and subl pinned to taskbar
+((New-Object -c Shell.Application).Namespace('{0}\System32\WindowsPowerShell\v1.0' -f $env:SystemRoot).parsename('powershell.exe')).InvokeVerb('taskbarpin')
+((New-Object -c Shell.Application).Namespace('{0}\System32' -f $env:SystemRoot).parsename('cmd.exe')).InvokeVerb('taskbarpin')
 ((New-Object -c Shell.Application).Namespace('{0}\Sublime Text 3' -f $env:ProgramFiles).parsename('sublime_text.exe')).InvokeVerb('taskbarpin')
 
 # transparent powershell and cmd windows
