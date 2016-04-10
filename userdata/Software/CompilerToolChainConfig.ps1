@@ -312,4 +312,27 @@ Configuration CompilerToolChainConfig {
     Ensure = 'Present'
     LogPath = ('{0}\log\{1}.VCForPython27.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
   }
+
+  Script UnzipDownload {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\unz600xn.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      (New-Object Net.WebClient).DownloadFile('http://fossies.org/windows/misc/unz600xn.exe', ('{0}\Temp\unz600xn.exe' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\unz600xn.exe' -f $env:SystemRoot)
+    }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\unz600xn.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
+  Archive UnzipExtract {
+    DependsOn = @('[Script]UnzipDownload')
+    Path = ('{0}\Temp\unz600xn.exe' -f $env:SystemRoot)
+    Destination = ('{0}\mozilla-build\unzip' -f $env:SystemDrive)
+    Ensure = 'Present'
+  }
+  Script UnzipPath {
+    DependsOn = @('[Archive]UnzipExtract')
+    GetScript = { @{ Result = ($env:PATH.Contains(('{0}\mozilla-build\unzip' -f $env:SystemDrive))) } }
+    SetScript = {
+      [Environment]::SetEnvironmentVariable('PATH', ('{0};{1}\mozilla-build\unzip' -f $env:PATH, $env:SystemDrive), 'Machine')
+    }
+    TestScript = { if ($env:PATH.Contains(('{0}\mozilla-build\unzip' -f $env:SystemDrive))) { $true } else { $false } }
+  }
 }
