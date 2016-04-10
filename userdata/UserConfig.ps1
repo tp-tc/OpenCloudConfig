@@ -31,7 +31,7 @@ Configuration UserConfig {
     SetScript = {
       (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Microsoft.PowerShell_profile.ps1', ('{0}\Microsoft.PowerShell_profile.ps1' -f $PsHome))
       Unblock-File -Path ('{0}\Microsoft.PowerShell_profile.ps1' -f $PsHome)
-      Set-ItemProperty 'HKLM:\Software\Microsoft\Command Processor' -Type 'String' -Name 'AutoRun' -Value 'powershell -NoLogo -NonInteractive'
+      #Set-ItemProperty 'HKLM:\Software\Microsoft\Command Processor' -Type 'String' -Name 'AutoRun' -Value 'powershell -NoLogo -NonInteractive'
     }
     TestScript = { if (Test-Path -Path ('{0}\Microsoft.PowerShell_profile.ps1' -f $PsHome) -ErrorAction SilentlyContinue ) { $true } else { $false } }
   }
