@@ -5,7 +5,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
 Configuration VisualStudio2013Config {
   Import-DscResource -ModuleName PSDesiredStateConfiguration
-
   Script VsCommunity2013Download {
     GetScript = { @{ Result = ((Test-Path -Path ('{0}\Temp\vs_community_2013.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\Temp\VisualStudio2013-AdminDeployment.xml' -f $env:SystemRoot) -ErrorAction SilentlyContinue)) } }
     SetScript = {

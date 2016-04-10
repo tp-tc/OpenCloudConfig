@@ -21,7 +21,6 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
 } else {
   $url = 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata'
   $configs = @(
-    'ResourceConfig',
     'UserConfig',
     'Software/MaintenanceToolChainConfig',
     'Software/VisualStudio2015Config',
