@@ -6,7 +6,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 Configuration EnvironmentConfig {
   Import-DscResource -ModuleName PSDesiredStateConfiguration
   Script Path {
-    DependsOn = @('[Script]MozillaBuildInstall')
     GetScript = { @{ Result = $false } }
     SetScript = {
       $env:PATH = (((($env:PATH -split ';') + @(
