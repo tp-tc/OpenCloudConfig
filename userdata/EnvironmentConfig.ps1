@@ -13,6 +13,7 @@ Configuration EnvironmentConfig {
         ('{0}\mozilla-build\msys\local\bin' -f $env:SystemDrive),
         ('{0}\mozilla-build\hg' -f $env:SystemDrive),
         ('{0}\mozilla-build\unzip\bin' -f $env:SystemDrive),
+        ('{0}\mozilla-build\yasm' -f $env:SystemDrive),
         ('{0}\Python27' -f $env:SystemDrive),
         ('{0}\Python27\Scripts' -f $env:SystemDrive)
       )) | select -Unique) -join ';')
