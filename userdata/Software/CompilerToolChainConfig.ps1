@@ -90,24 +90,6 @@ Configuration CompilerToolChainConfig {
     }
     TestScript = { if ((Test-Path -Path ('{0}\mozilla-build\VERSION' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and ((Get-Content ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) -eq '2.1.0') -and (Test-Path -Path ('{0}\mozilla-build\msys\bin\sh.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) { $true } else { $false } }
   }
-  Script ShPath {
-    DependsOn = @('[Script]MozillaBuildInstall')
-    GetScript = { @{ Result = ($env:PATH.Contains(('{0}\mozilla-build\msys\bin' -f $env:SystemDrive))) } }
-    SetScript = {
-      $env:PATH = ((('{0};{1}\mozilla-build\msys\bin' -f $env:PATH, $env:SystemDrive) -split ';' | select -Unique ) -join ';')
-      [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'Machine')
-    }
-    TestScript = { if ($env:PATH.Contains(('{0}\mozilla-build\msys\bin' -f $env:SystemDrive))) { $true } else { $false } }
-  }
-  Script AutoconfPath {
-    DependsOn = @('[Script]MozillaBuildInstall')
-    GetScript = { @{ Result = ($env:PATH.Contains(('{0}\mozilla-build\msys\local\bin' -f $env:SystemDrive))) } }
-    SetScript = {
-      $env:PATH = ((('{0};{1}\mozilla-build\msys\local\bin' -f $env:PATH, $env:SystemDrive) -split ';' | select -Unique ) -join ';')
-      [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'Machine')
-    }
-    TestScript = { if ($env:PATH.Contains(('{0}\mozilla-build\msys\local\bin' -f $env:SystemDrive))) { $true } else { $false } }
-  }
 
   # todo: add 32 bit installer
   Script MercurialDownload {
@@ -137,15 +119,6 @@ Configuration CompilerToolChainConfig {
       }
     }
     TestScript = { (Test-Path -Path ('{0}\mozilla-build\hg' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
-  }
-  Script MercurialPath {
-    DependsOn = @('[Script]MercurialSymbolicLink')
-    GetScript = { @{ Result = ($env:PATH.Contains(('{0}\mozilla-build\hg' -f $env:SystemDrive))) } }
-    SetScript = {
-      $env:PATH = ((('{0};{1}\mozilla-build\hg' -f $env:PATH, $env:SystemDrive) -split ';' | select -Unique ) -join ';')
-      [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'Machine')
-    }
-    TestScript = { if ($env:PATH.Contains(('{0}\mozilla-build\hg' -f $env:SystemDrive))) { $true } else { $false } }
   }
   File MercurialCertFolder {
     DependsOn = '[Script]MercurialSymbolicLink'
@@ -214,15 +187,6 @@ Configuration CompilerToolChainConfig {
       Copy-Item -Path ('{0}\Python27\python.exe' -f $env:SystemDrive) -Destination ('{0}\Python27\python2.7.exe' -f $env:SystemDrive)
     }
     TestScript = { if (Test-Path -Path ('{0}\Python27\python2.7.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
-  }
-  Script PythonTwoSevenPath {
-    DependsOn = @('[Package]PythonTwoSevenInstall')
-    GetScript = { @{ Result = ($env:PATH.Contains(('{0}\Python27;{0}\Python27\Scripts' -f $env:SystemDrive))) } }
-    SetScript = {
-      $env:PATH = (( ('{0};{1}\Python27;{1}\Python27\Scripts' -f $env:PATH, $env:SystemDrive) -split ';' | select -Unique ) -join ';')
-      [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'Machine')
-    }
-    TestScript = { if ($env:PATH.Contains(('{0}\Python27;{0}\Python27\Scripts' -f $env:SystemDrive))) { $true } else { $false } }
   }
   File MozillaBuildPythonRemove {
     DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]MozillaBuildInstall')
@@ -330,14 +294,5 @@ Configuration CompilerToolChainConfig {
     Path = ('{0}\Temp\unzip.zip' -f $env:SystemRoot)
     Destination = ('{0}\mozilla-build\unzip' -f $env:SystemDrive)
     Ensure = 'Present'
-  }
-  Script UnzipPath {
-    DependsOn = @('[Archive]UnzipExtract')
-    GetScript = { @{ Result = ($env:PATH.Contains(('{0}\mozilla-build\unzip\bin' -f $env:SystemDrive))) } }
-    SetScript = {
-      $env:PATH = ((('{0};{1}\mozilla-build\unzip\bin' -f $env:PATH, $env:SystemDrive) -split ';' | select -Unique ) -join ';')
-      [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'Machine')
-    }
-    TestScript = { if ($env:PATH.Contains(('{0}\mozilla-build\unzip\bin' -f $env:SystemDrive))) { $true } else { $false } }
   }
 }

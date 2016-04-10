@@ -28,7 +28,8 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
     'Software/TaskClusterToolChainConfig',
     'FirefoxBuildResourcesConfig',
     'ServiceConfig',
-    'RegistryConfig'
+    'RegistryConfig',
+    'EnvironmentConfig'
   )
   Start-Transcript -Path $logFile -Append
   foreach ($config in $configs) {
