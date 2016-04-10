@@ -94,7 +94,9 @@ Configuration CompilerToolChainConfig {
     DependsOn = @('[Script]MozillaBuildInstall')
     GetScript = { @{ Result = ($env:PATH.Contains(('{0}\mozilla-build\msys\bin' -f $env:SystemDrive))) } }
     SetScript = {
-      [Environment]::SetEnvironmentVariable('PATH', ('{0};{1}\mozilla-build\msys\bin' -f $env:PATH, $env:SystemDrive), 'Machine')
+      $path = ('{0};{1}\mozilla-build\msys\bin' -f $env:PATH, $env:SystemDrive)
+      [Environment]::SetEnvironmentVariable('PATH', $path, 'Machine')
+      Start-Process 'setx' -ArgumentList @('PATH', $path) -Wait -NoNewWindow -PassThru | Out-Null
     }
     TestScript = { if ($env:PATH.Contains(('{0}\mozilla-build\msys\bin' -f $env:SystemDrive))) { $true } else { $false } }
   }
@@ -102,7 +104,9 @@ Configuration CompilerToolChainConfig {
     DependsOn = @('[Script]MozillaBuildInstall')
     GetScript = { @{ Result = ($env:PATH.Contains(('{0}\mozilla-build\msys\local\bin' -f $env:SystemDrive))) } }
     SetScript = {
-      [Environment]::SetEnvironmentVariable('PATH', ('{0};{1}\mozilla-build\msys\local\bin' -f $env:PATH, $env:SystemDrive), 'Machine')
+      $path = ('{0};{1}\mozilla-build\msys\local\bin' -f $env:PATH, $env:SystemDrive)
+      [Environment]::SetEnvironmentVariable('PATH', $path, 'Machine')
+      Start-Process 'setx' -ArgumentList @('PATH', $path) -Wait -NoNewWindow -PassThru | Out-Null
     }
     TestScript = { if ($env:PATH.Contains(('{0}\mozilla-build\msys\local\bin' -f $env:SystemDrive))) { $true } else { $false } }
   }
@@ -140,7 +144,9 @@ Configuration CompilerToolChainConfig {
     DependsOn = @('[Script]MercurialSymbolicLink')
     GetScript = { @{ Result = ($env:PATH.Contains(('{0}\mozilla-build\hg' -f $env:SystemDrive))) } }
     SetScript = {
-      [Environment]::SetEnvironmentVariable('PATH', ('{0};{1}\mozilla-build\hg' -f $env:PATH, $env:SystemDrive), 'Machine')
+      $path = ('{0};{1}\mozilla-build\hg' -f $env:PATH, $env:SystemDrive)
+      [Environment]::SetEnvironmentVariable('PATH', $path, 'Machine')
+      Start-Process 'setx' -ArgumentList @('PATH', $path) -Wait -NoNewWindow -PassThru | Out-Null
     }
     TestScript = { if ($env:PATH.Contains(('{0}\mozilla-build\hg' -f $env:SystemDrive))) { $true } else { $false } }
   }
@@ -216,7 +222,9 @@ Configuration CompilerToolChainConfig {
     DependsOn = @('[Package]PythonTwoSevenInstall')
     GetScript = { @{ Result = ($env:PATH.Contains(('{0}\Python27;{0}\Python27\Scripts' -f $env:SystemDrive))) } }
     SetScript = {
-      [Environment]::SetEnvironmentVariable('PATH', ('{0};{1}\Python27;{1}\Python27\Scripts' -f $env:PATH, $env:SystemDrive), 'Machine')
+      $path = ('{0};{1}\Python27;{1}\Python27\Scripts' -f $env:PATH, $env:SystemDrive)
+      [Environment]::SetEnvironmentVariable('PATH', $path, 'Machine')
+      Start-Process 'setx' -ArgumentList @('PATH', $path) -Wait -NoNewWindow -PassThru | Out-Null
     }
     TestScript = { if ($env:PATH.Contains(('{0}\Python27;{0}\Python27\Scripts' -f $env:SystemDrive))) { $true } else { $false } }
   }
@@ -241,7 +249,7 @@ Configuration CompilerToolChainConfig {
   }
 
   Script PythonModules {
-    DependsOn = @('[Package]PythonTwoSevenInstall', '[Script]PythonTwoSevenPath')
+    DependsOn = @('[Package]PythonTwoSevenInstall')
     GetScript = { @{ Result = $false } }
     SetScript = {
       $modules = Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/python-modules.json' -UseBasicParsing | ConvertFrom-Json
@@ -331,7 +339,9 @@ Configuration CompilerToolChainConfig {
     DependsOn = @('[Archive]UnzipExtract')
     GetScript = { @{ Result = ($env:PATH.Contains(('{0}\mozilla-build\unzip\bin' -f $env:SystemDrive))) } }
     SetScript = {
-      [Environment]::SetEnvironmentVariable('PATH', ('{0};{1}\mozilla-build\unzip\bin' -f $env:PATH, $env:SystemDrive), 'Machine')
+      $path = ('{0};{1}\mozilla-build\unzip\bin' -f $env:PATH, $env:SystemDrive)
+      [Environment]::SetEnvironmentVariable('PATH', $path, 'Machine')
+      Start-Process 'setx' -ArgumentList @('PATH', $path) -Wait -NoNewWindow -PassThru | Out-Null
     }
     TestScript = { if ($env:PATH.Contains(('{0}\mozilla-build\unzip\bin' -f $env:SystemDrive))) { $true } else { $false } }
   }
