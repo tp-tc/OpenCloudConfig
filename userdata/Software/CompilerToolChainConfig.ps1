@@ -282,16 +282,16 @@ Configuration CompilerToolChainConfig {
   }
 
   Script UnzipDownload {
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\unzip.zip' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\unz600xn.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      Invoke-WebRequest -Uri 'http://gnuwin32.sourceforge.net/downlinks/unzip-bin-zip.php' -OutFile ('{0}\Temp\unzip.zip' -f $env:SystemRoot) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
-      Unblock-File -Path ('{0}\Temp\unzip.zip' -f $env:SystemRoot)
+      Invoke-WebRequest -Uri 'http://fossies.org/windows/misc/unz600xn.exe' -OutFile ('{0}\Temp\unz600xn.exe' -f $env:SystemRoot) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+      Unblock-File -Path ('{0}\Temp\unz600xn.exe' -f $env:SystemRoot)
     }
-    TestScript = { if (Test-Path -Path ('{0}\Temp\unzip.zip' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\unz600xn.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
   Archive UnzipExtract {
     DependsOn = @('[Script]UnzipDownload')
-    Path = ('{0}\Temp\unzip.zip' -f $env:SystemRoot)
+    Path = ('{0}\Temp\unz600xn.exe' -f $env:SystemRoot)
     Destination = ('{0}\mozilla-build\unzip' -f $env:SystemDrive)
     Ensure = 'Present'
   }

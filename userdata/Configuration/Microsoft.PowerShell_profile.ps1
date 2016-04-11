@@ -1,6 +1,8 @@
 
 # show file extensions in explorer
-Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' -Type 'DWord' -Name 'HideFileExt' -Value '0x00000002' # off
+Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\' -Type 'DWord' -Name 'HideFileExt' -Value '0x00000002' # off
+Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' -Type 'DWord' -Name 'Hidden' -Value '0x00000001'
+Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' -Type 'DWord' -Name 'ShowSuperHidden' -Value '0x00000001'
 
 # a large console, with a large screen buffer (for reading build logs)
 Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'QuickEdit' -Value '0x00000001' # on
@@ -19,6 +21,7 @@ Set-ItemProperty 'HKCU:\Control Panel\Cursors\' -Type 'String' -Name 'IBeam' -Va
 # powershell, cmd and subl pinned to taskbar
 ((New-Object -c Shell.Application).Namespace('{0}\System32\WindowsPowerShell\v1.0' -f $env:SystemRoot).parsename('powershell.exe')).InvokeVerb('taskbarpin')
 ((New-Object -c Shell.Application).Namespace('{0}\System32' -f $env:SystemRoot).parsename('cmd.exe')).InvokeVerb('taskbarpin')
+((New-Object -c Shell.Application).Namespace('{0}\System32' -f $env:SystemRoot).parsename('eventvwr.msc')).InvokeVerb('taskbarpin')
 ((New-Object -c Shell.Application).Namespace('{0}\Sublime Text 3' -f $env:ProgramFiles).parsename('sublime_text.exe')).InvokeVerb('taskbarpin')
 
 $md = @'
