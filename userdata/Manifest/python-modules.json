@@ -7,6 +7,13 @@
     ]
   },
   {
+    "module": "setuptools",
+    "version": "20.7.0",
+    "wheels": [
+      "https://pypi.python.org/packages/py2.py3/s/setuptools/setuptools-20.7.0-py2.py3-none-any.whl#md5=9e0248519bf3e19ca6b3c217dc633ba8"
+    ]
+  },
+  {
     "module": "virtualenv",
     "version": "15.0.1",
     "wheels": [
