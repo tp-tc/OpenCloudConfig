@@ -48,5 +48,13 @@
     "wheels": [
       "https://pypi.python.org/packages/2.7/r/requests/requests-2.9.1-py2.py3-none-any.whl#md5=58a444aaa02780ad01983f5f540e67b2"
     ]
+  },
+  {
+    "module": "psutil",
+    "version": "4.1.0",
+    "wheels": [
+      "https://pypi.python.org/packages/2.7/p/psutil/psutil-4.1.0-cp27-cp27m-win_amd64.whl#md5=ab1ce766f282ab4246fd00f78a6f72b4",
+      "https://pypi.python.org/packages/2.7/p/psutil/psutil-4.1.0-cp27-cp27m-win32.whl#md5=4bc43677c085c31f6cd288c4d52422ec"
+    ]
   }
 ]
