@@ -295,4 +295,19 @@ Configuration CompilerToolChainConfig {
     Destination = ('{0}\mozilla-build\unzip' -f $env:SystemDrive)
     Ensure = 'Present'
   }
+
+  Script ZipDownload {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\zip300xn-x64.zip' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      Invoke-WebRequest -Uri 'http://fossies.org/windows/misc/zip300xn-x64.zip' -OutFile ('{0}\Temp\zip300xn-x64.zip' -f $env:SystemRoot) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+      Unblock-File -Path ('{0}\Temp\zip300xn-x64.zip' -f $env:SystemRoot)
+    }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\zip300xn-x64.zip' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
+  Archive ZipExtract {
+    DependsOn = @('[Script]ZipDownload')
+    Path = ('{0}\Temp\zip300xn-x64.zip' -f $env:SystemRoot)
+    Destination = ('{0}\mozilla-build\zip' -f $env:SystemDrive)
+    Ensure = 'Present'
+  }
 }
