@@ -92,7 +92,6 @@ Configuration CompilerToolChainConfig {
   }
 
   Script MercurialConfigure {
-    DependsOn = '[File]MercurialCertFolder'
     GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\python\Scripts\mercurial.ini' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
       (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.ini', ('{0}\mozilla-build\python\Scripts\mercurial.ini' -f $env:SystemDrive))
