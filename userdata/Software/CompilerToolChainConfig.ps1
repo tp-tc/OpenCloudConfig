@@ -118,7 +118,8 @@ Configuration CompilerToolChainConfig {
     Ensure = 'Present'
   }
   Script MozillaRepositoriesCache {
-    DependsOn = @('[Script]MercurialConfigure', '[File]MozillaRepositoriesFolder')
+    #DependsOn = @('[Script]MercurialConfigure', '[File]MozillaRepositoriesFolder')
+    DependsOn = @('[File]MozillaRepositoriesFolder')
     GetScript = { @{ Result = $false } }
     SetScript = {
       $repos = @{
@@ -161,7 +162,7 @@ Configuration CompilerToolChainConfig {
   #  TestScript = { $false }
   #}
   Script ToolToolInstall {
-    DependsOn = @('[Package]PythonTwoSevenInstall')
+    #DependsOn = @('[Package]PythonTwoSevenInstall')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\tooltool.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
       (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py', ('{0}\mozilla-build\tooltool.py' -f $env:SystemDrive))
