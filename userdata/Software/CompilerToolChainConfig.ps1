@@ -84,11 +84,11 @@ Configuration CompilerToolChainConfig {
   }
   Script MozillaBuildInstall {
     DependsOn = @('[Script]MozillaBuildDownload', '[File]LogFolder')
-    GetScript = { @{ Result = ((Test-Path -Path ('{0}\mozilla-build\VERSION' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and ((Get-Content ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) -eq '2.1.0') -and (Test-Path -Path ('{0}\mozilla-build\msys\bin\sh.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) } }
+    GetScript = { @{ Result = ((Test-Path -Path ('{0}\mozilla-build\VERSION' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and ((Get-Content ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) -eq '2.2.0') -and (Test-Path -Path ('{0}\mozilla-build\msys\bin\sh.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) } }
     SetScript = {
       Start-Process ('{0}\Temp\MozillaBuildSetup-2.2.0.exe' -f $env:SystemRoot) -ArgumentList '/S' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.MozillaBuildSetup-2.2.0.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.MozillaBuildSetup-2.2.0.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
-    TestScript = { if ((Test-Path -Path ('{0}\mozilla-build\VERSION' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and ((Get-Content ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) -eq '2.1.0') -and (Test-Path -Path ('{0}\mozilla-build\msys\bin\sh.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) { $true } else { $false } }
+    TestScript = { if ((Test-Path -Path ('{0}\mozilla-build\VERSION' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and ((Get-Content ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) -eq '2.2.0') -and (Test-Path -Path ('{0}\mozilla-build\msys\bin\sh.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) { $true } else { $false } }
   }
 
   Script MercurialConfigure {
