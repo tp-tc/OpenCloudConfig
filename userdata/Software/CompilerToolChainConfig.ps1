@@ -91,35 +91,22 @@ Configuration CompilerToolChainConfig {
     TestScript = { if ((Test-Path -Path ('{0}\mozilla-build\VERSION' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and ((Get-Content ('{0}\mozilla-build\VERSION' -f $env:SystemDrive)) -eq '2.1.0') -and (Test-Path -Path ('{0}\mozilla-build\msys\bin\sh.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) { $true } else { $false } }
   }
 
-  #Script MercurialSymbolicLink {
-  #  DependsOn = @('[Script]MercurialInstall', '[Script]MozillaBuildInstall')
-  #  GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\hg' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
-  #  SetScript = {
-  #    if ($PSVersionTable.PSVersion.Major -gt 4) {
-  #      New-Item -ItemType SymbolicLink -Path ('{0}\mozilla-build' -f $env:SystemDrive) -Name 'hg' -Target ('{0}\Mercurial' -f $env:ProgramFiles)
-  #    } else {
-  #      & cmd @('/c', 'mklink', '/D', ('{0}\mozilla-build\hg' -f $env:SystemDrive), ('{0}\Mercurial' -f $env:ProgramFiles))
-  #    }
-  #  }
-  #  TestScript = { (Test-Path -Path ('{0}\mozilla-build\hg' -f $env:SystemDrive) -ErrorAction SilentlyContinue) }
-  #}
-  #Script MercurialConfigure {
-  #  DependsOn = '[File]MercurialCertFolder'
-  #  GetScript = { @{ Result = ((Test-Path -Path ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\mozilla-build\hg\hgrc.d\cacert.pem' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) } }
-  #  SetScript = {
-  #    (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.ini', ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive))
-  #    Unblock-File -Path ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive)
-  #  }
-  #  TestScript = { if ((Test-Path -Path ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\mozilla-build\hg\hgrc.d\cacert.pem' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) { $true } else { $false } }
-  #}
+  Script MercurialConfigure {
+    DependsOn = '[File]MercurialCertFolder'
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\python\Scripts\mercurial.ini' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.ini', ('{0}\mozilla-build\python\Scripts\mercurial.ini' -f $env:SystemDrive))
+      Unblock-File -Path ('{0}\mozilla-build\python\Scripts\mercurial.ini' -f $env:SystemDrive)
+    }
+    TestScript = { if (Test-Path -Path ('{0}\mozilla-build\python\Scripts\mercurial.ini' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
   File MozillaRepositoriesFolder {
     Type = 'Directory'
     DestinationPath = ('{0}\builds\hg-shared' -f $env:SystemDrive)
     Ensure = 'Present'
   }
   Script MozillaRepositoriesCache {
-    #DependsOn = @('[Script]MercurialConfigure', '[File]MozillaRepositoriesFolder')
-    DependsOn = @('[File]MozillaRepositoriesFolder')
+    DependsOn = @('[Script]MercurialConfigure', '[File]MozillaRepositoriesFolder')
     GetScript = { @{ Result = $false } }
     SetScript = {
       $repos = @{
@@ -132,9 +119,9 @@ Configuration CompilerToolChainConfig {
       }
       foreach ($repo in $repos.GetEnumerator()) {
         if (Test-Path -Path ('{0}\.hg' -f $repo.Value) -PathType Container -ErrorAction SilentlyContinue) {
-          Start-Process ('{0}\mozilla-build\hg\hg.exe' -f $env:SystemDrive) -ArgumentList @('pull', '-R', $repo.Value) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.hg-pull-{2}.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), (Split-Path $repo.Value -Leaf)) -RedirectStandardError ('{0}\log\{1}.hg-pull-{2}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), (Split-Path $repo.Value -Leaf))
+          Start-Process ('{0}\mozilla-build\python\Scripts\hg.exe' -f $env:SystemDrive) -ArgumentList @('pull', '-R', $repo.Value) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.hg-pull-{2}.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), (Split-Path $repo.Value -Leaf)) -RedirectStandardError ('{0}\log\{1}.hg-pull-{2}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), (Split-Path $repo.Value -Leaf))
         } else {
-          Start-Process ('{0}\mozilla-build\hg\hg.exe' -f $env:SystemDrive) -ArgumentList @('clone', '-U', $repo.Name, $repo.Value) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.hg-clone-{2}.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), (Split-Path $repo.Value -Leaf)) -RedirectStandardError ('{0}\log\{1}.hg-clone-{2}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), (Split-Path $repo.Value -Leaf))
+          Start-Process ('{0}\mozilla-build\python\Scripts\hg.exe' -f $env:SystemDrive) -ArgumentList @('clone', '-U', $repo.Name, $repo.Value) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.hg-clone-{2}.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), (Split-Path $repo.Value -Leaf)) -RedirectStandardError ('{0}\log\{1}.hg-clone-{2}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), (Split-Path $repo.Value -Leaf))
         }
       }
     }

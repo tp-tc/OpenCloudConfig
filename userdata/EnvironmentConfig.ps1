@@ -9,7 +9,6 @@ Configuration EnvironmentConfig {
     GetScript = { @{ Result = $false } }
     SetScript = {
       $env:PATH = (((($env:PATH -split ';') + @(
-        ('{0}\mozilla-build\hg' -f $env:SystemDrive),
         ('{0}\mozilla-build\info-zip' -f $env:SystemDrive),
         ('{0}\mozilla-build\msys\bin' -f $env:SystemDrive),
         ('{0}\mozilla-build\msys\local\bin' -f $env:SystemDrive),

@@ -24,7 +24,7 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
     #'SystemConfig',
     'UserConfig',
     'Software/MaintenanceToolChainConfig',
-    'FeatureConfig',
+    #'FeatureConfig',
     'Software/CompilerToolChainConfig',
     'Software/TaskClusterToolChainConfig',
     'FirefoxBuildResourcesConfig',
