@@ -9,14 +9,13 @@ Configuration EnvironmentConfig {
     GetScript = { @{ Result = $false } }
     SetScript = {
       $env:PATH = (((($env:PATH -split ';') + @(
+        ('{0}\mozilla-build\hg' -f $env:SystemDrive),
+        ('{0}\mozilla-build\info-zip' -f $env:SystemDrive),
         ('{0}\mozilla-build\msys\bin' -f $env:SystemDrive),
         ('{0}\mozilla-build\msys\local\bin' -f $env:SystemDrive),
-        ('{0}\mozilla-build\hg' -f $env:SystemDrive),
-        ('{0}\mozilla-build\unzip' -f $env:SystemDrive),
-        ('{0}\mozilla-build\yasm' -f $env:SystemDrive),
-        ('{0}\mozilla-build\zip' -f $env:SystemDrive),
-        ('{0}\Python27' -f $env:SystemDrive),
-        ('{0}\Python27\Scripts' -f $env:SystemDrive))) | select -Unique) -join ';')
+        ('{0}\mozilla-build\python' -f $env:SystemDrive),
+        ('{0}\mozilla-build\python\Scripts' -f $env:SystemDrive),
+        ('{0}\mozilla-build\yasm' -f $env:SystemDrive))) | select -Unique) -join ';')
       [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'Machine')
     }
     TestScript = { $false }

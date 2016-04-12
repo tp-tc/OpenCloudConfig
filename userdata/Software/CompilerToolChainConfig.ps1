@@ -141,15 +141,6 @@ Configuration CompilerToolChainConfig {
     TestScript = { $false }
   }
 
-  #Script PythonTwoSevenCopy {
-  #  DependsOn = @('[Package]PythonTwoSevenInstall')
-  #  GetScript = { @{ Result = (Test-Path -Path ('{0}\Python27\python2.7.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
-  #  SetScript = {
-  #    Copy-Item -Path ('{0}\Python27\python.exe' -f $env:SystemDrive) -Destination ('{0}\Python27\python2.7.exe' -f $env:SystemDrive)
-  #  }
-  #  TestScript = { if (Test-Path -Path ('{0}\Python27\python2.7.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
-  #}
-
   #Script PythonModules {
   #  DependsOn = @('[Package]PythonTwoSevenInstall')
   #  GetScript = { @{ Result = $false } }
@@ -162,7 +153,6 @@ Configuration CompilerToolChainConfig {
   #  TestScript = { $false }
   #}
   Script ToolToolInstall {
-    #DependsOn = @('[Package]PythonTwoSevenInstall')
     GetScript = { @{ Result = (Test-Path -Path ('{0}\mozilla-build\tooltool.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) } }
     SetScript = {
       (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py', ('{0}\mozilla-build\tooltool.py' -f $env:SystemDrive))
@@ -195,36 +185,6 @@ Configuration CompilerToolChainConfig {
   #  TestScript = { if (Test-Path -Path ('{0}\mozilla-build\buildbotve\virtualenv.py' -f $env:SystemDrive) -ErrorAction SilentlyContinue) { $true } else { $false } }
   #}
   # end ugly hacks to deal with mozharness configs hardcoded buildbot paths to virtualenv.py
-
-  Script UnzipDownload {
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\unz600xn.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
-    SetScript = {
-      Invoke-WebRequest -Uri 'http://fossies.org/windows/misc/unz600xn.exe' -OutFile ('{0}\Temp\unz600xn.exe' -f $env:SystemRoot) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
-      Unblock-File -Path ('{0}\Temp\unz600xn.exe' -f $env:SystemRoot)
-    }
-    TestScript = { if (Test-Path -Path ('{0}\Temp\unz600xn.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
-  }
-  Archive UnzipExtract {
-    DependsOn = @('[Script]UnzipDownload')
-    Path = ('{0}\Temp\unz600xn.exe' -f $env:SystemRoot)
-    Destination = ('{0}\mozilla-build\unzip' -f $env:SystemDrive)
-    Ensure = 'Present'
-  }
-
-  Script ZipDownload {
-    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\zip300xn-x64.zip' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
-    SetScript = {
-      Invoke-WebRequest -Uri 'http://fossies.org/windows/misc/zip300xn-x64.zip' -OutFile ('{0}\Temp\zip300xn-x64.zip' -f $env:SystemRoot) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
-      Unblock-File -Path ('{0}\Temp\zip300xn-x64.zip' -f $env:SystemRoot)
-    }
-    TestScript = { if (Test-Path -Path ('{0}\Temp\zip300xn-x64.zip' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
-  }
-  Archive ZipExtract {
-    DependsOn = @('[Script]ZipDownload')
-    Path = ('{0}\Temp\zip300xn-x64.zip' -f $env:SystemRoot)
-    Destination = ('{0}\mozilla-build\zip' -f $env:SystemDrive)
-    Ensure = 'Present'
-  }
 
   #Script VCForPythonDownload {
   #  GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
