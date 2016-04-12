@@ -128,7 +128,7 @@ Configuration CompilerToolChainConfig {
   }
 
   Script PythonModules {
-    DependsOn = @('[Package]PythonTwoSevenInstall')
+    DependsOn = @('[Script]MozillaBuildInstall')
     GetScript = { @{ Result = $false } }
     SetScript = {
       $modules = Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/python-modules.json' -UseBasicParsing | ConvertFrom-Json
