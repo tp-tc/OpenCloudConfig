@@ -19,6 +19,7 @@ if (-not ([Net.Dns]::GetHostName() -ieq (New-Object Net.WebClient).DownloadStrin
   $env:COMPUTERNAME = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-id')
   [Environment]::SetEnvironmentVariable("COMPUTERNAME", $env:COMPUTERNAME, "Machine")
   (Get-WmiObject Win32_ComputerSystem).Rename($env:COMPUTERNAME)
+  & shutdown @('-r', '-t', '0', '-c', 'Host renamed', '-f', '-d', 'p:4:1')
 } else {
   if ($PSVersionTable.PSVersion.Major -lt 4) {
     Get-Service wuauserv | Set-Service -StartupType manual
