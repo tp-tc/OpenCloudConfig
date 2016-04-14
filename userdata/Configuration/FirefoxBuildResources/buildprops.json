@@ -1,6 +1,9 @@
 {
   "properties": {
-    "buildername": ""
+    "buildername": "",
+    "branch": "try",
+    "platform": "win64",
+    "master": "taskcluster.usw2.mozilla.com"
   },
   "sourcestamp": {
     "changes": []
