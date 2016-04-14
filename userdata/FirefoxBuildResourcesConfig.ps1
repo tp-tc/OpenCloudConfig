@@ -113,7 +113,7 @@ Configuration FirefoxBuildResourcesConfig {
     Ensure = 'Present'
   }
   Script MozillaRepositoriesCache {
-    DependsOn = @('[Script]MercurialConfigure', '[File]MozillaRepositoriesFolder')
+    DependsOn = @('[File]MozillaRepositoriesFolder')
     GetScript = { @{ Result = $false } }
     SetScript = {
       $repos = @{
