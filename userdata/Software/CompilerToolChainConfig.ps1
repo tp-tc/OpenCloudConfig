@@ -167,20 +167,20 @@ Configuration CompilerToolChainConfig {
   }
   # end ugly hacks to deal with mozharness configs hardcoded buildbot paths to virtualenv.py
 
-  #Script VCForPythonDownload {
-  #  GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
-  #  SetScript = {
-  #    (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi', ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot))
-  #    Unblock-File -Path ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot)
-  #  }
-  #  TestScript = { if (Test-Path -Path ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
-  #}
-  #Package VCForPythonInstall {
-  #  DependsOn = @('[Script]VCForPythonDownload', '[File]LogFolder')
-  #  Name = 'Microsoft Visual C++ Compiler Package for Python 2.7'
-  #  Path = ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot)
-  #  ProductId = '692514A8-5484-45FC-B0AE-BE2DF7A75891'
-  #  Ensure = 'Present'
-  #  LogPath = ('{0}\log\{1}.VCForPython27.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-  #}
+  Script VCForPythonDownload {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi', ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot)
+    }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
+  Package VCForPythonInstall {
+    DependsOn = @('[Script]VCForPythonDownload', '[File]LogFolder')
+    Name = 'Microsoft Visual C++ Compiler Package for Python 2.7'
+    Path = ('{0}\Temp\VCForPython27.msi' -f $env:SystemRoot)
+    ProductId = '692514A8-5484-45FC-B0AE-BE2DF7A75891'
+    Ensure = 'Present'
+    LogPath = ('{0}\log\{1}.VCForPython27.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+  }
 }
