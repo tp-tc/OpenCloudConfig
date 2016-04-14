@@ -15,6 +15,7 @@ Configuration EnvironmentConfig {
       } else {
         $pythonPath = ('{0}\Python27' -f $env:SystemDrive)
       }
+
       $env:PATH = (((($env:PATH -split ';') + @(
         ('{0}\mozilla-build\info-zip' -f $env:SystemDrive),
         ('{0}\mozilla-build\msys\bin' -f $env:SystemDrive),
@@ -23,6 +24,12 @@ Configuration EnvironmentConfig {
         ('{0}\Scripts' -f $pythonPath),
         ('{0}\mozilla-build\yasm' -f $env:SystemDrive))) | select -Unique) -join ';')
       [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'Machine')
+
+      if (Test-Path -Path ('{0}\SysWOW64\config\systemprofile\AppData\Local\Programs\Common\Microsoft\Visual C++ for Python\9.0\VC' -f $env:SystemRoot) -ErrorAction SilentlyContinue) {
+        $env:VCINSTALLDIR = ('{0}\SysWOW64\config\systemprofile\AppData\Local\Programs\Common\Microsoft\Visual C++ for Python\9.0\VC' -f $env:SystemRoot)
+        [Environment]::SetEnvironmentVariable('VCINSTALLDIR', $env:VCINSTALLDIR, 'Machine')
+      }
+      
     }
     TestScript = { $false }
   }

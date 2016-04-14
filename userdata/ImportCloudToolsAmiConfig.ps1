@@ -12,12 +12,20 @@ Configuration ImportCloudToolsAmiConfig {
       }
       TestScript = { $false }
     }
+    Log ('LogUserLogoff-{0}' -f $user) {
+      DependsOn = ('[Script]UserLogoff-{0}' -f $using:user)
+      Message = ('User: {0}, logged off' -f $using:user)
+    }
     Script ('UserDelete-{0}' -f $user) {
       GetScript = { @{ Result = (-not (Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq $using:user })) } }
       SetScript = {
         Start-Process 'net' -ArgumentList @('user', $using:user, '/DELETE') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:user) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:user)
       }
       TestScript = { if (-not (Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq $using:user })) { $true } else { $false } }
+    }
+    Log ('LogUserDelete-{0}' -f $user) {
+      DependsOn = ('[Script]UserDelete-{0}' -f $using:user)
+      Message = ('User: {0}, deleted' -f $using:user)
     }
   }
 
@@ -32,10 +40,14 @@ Configuration ImportCloudToolsAmiConfig {
     ('{0}\Users\cltbld' -f $env:SystemDrive)
   )
   foreach ($path in $paths) {
-    Script ('PathRemove-{0}' -f $path.Replace(':', '').Replace('\', '_')) {
+    Script ('PathDelete-{0}' -f $path.Replace(':', '').Replace('\', '_')) {
       GetScript = { @{ Result = (-not (Test-Path -Path $using:path -ErrorAction SilentlyContinue)) } }
       SetScript = { Remove-Item $using:path -Confirm:$false -force }
       TestScript = { if (-not (Test-Path -Path $using:path -ErrorAction SilentlyContinue)) { $true } else { $false } }
+    }
+    Log ('LogPathDelete-{0}' -f $path) {
+      DependsOn = ('[Script]PathDelete-{0}' -f $using:path)
+      Message = ('Path: {0}, deleted' -f $using:path)
     }
   }
 
@@ -44,7 +56,7 @@ Configuration ImportCloudToolsAmiConfig {
     'uvnc_service'
   )
   foreach ($service in $services) {
-    Script ('ServiceRemove-{0}' -f $service.Replace(' ', '_')) {
+    Script ('ServiceDelete-{0}' -f $service.Replace(' ', '_')) {
       GetScript = { @{ Result = (-not (Get-Service -Name $using:service -ErrorAction SilentlyContinue)) } }
       SetScript = {
         Get-Service -Name $using:service | Stop-Service -PassThru
@@ -52,6 +64,10 @@ Configuration ImportCloudToolsAmiConfig {
         $service.delete()
       }
       TestScript = { if (-not (Get-Service -Name $using:service -ErrorAction SilentlyContinue)) { $true } else { $false } }
+    }
+    Log ('LogServiceDelete-{0}' -f $service) {
+      DependsOn = ('[Script]ServiceDelete-{0}' -f $using:service)
+      Message = ('Service: {0}, deleted' -f $using:service)
     }
   }
 
