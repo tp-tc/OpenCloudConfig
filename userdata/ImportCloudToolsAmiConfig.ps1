@@ -13,8 +13,8 @@ Configuration ImportCloudToolsAmiConfig {
       TestScript = { $false }
     }
     Log ('LogUserLogoff-{0}' -f $user) {
-      DependsOn = ('[Script]UserLogoff-{0}' -f $using:user)
-      Message = ('User: {0}, logged off' -f $using:user)
+      DependsOn = ('[Script]UserLogoff-{0}' -f $user)
+      Message = ('User: {0}, logged off' -f $user)
     }
     Script ('UserDelete-{0}' -f $user) {
       GetScript = { @{ Result = (-not (Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq $using:user })) } }
@@ -24,8 +24,8 @@ Configuration ImportCloudToolsAmiConfig {
       TestScript = { if (-not (Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq $using:user })) { $true } else { $false } }
     }
     Log ('LogUserDelete-{0}' -f $user) {
-      DependsOn = ('[Script]UserDelete-{0}' -f $using:user)
-      Message = ('User: {0}, deleted' -f $using:user)
+      DependsOn = ('[Script]UserDelete-{0}' -f $user)
+      Message = ('User: {0}, deleted' -f $user)
     }
   }
 
@@ -46,8 +46,8 @@ Configuration ImportCloudToolsAmiConfig {
       TestScript = { if (-not (Test-Path -Path $using:path -ErrorAction SilentlyContinue)) { $true } else { $false } }
     }
     Log ('LogPathDelete-{0}' -f $path) {
-      DependsOn = ('[Script]PathDelete-{0}' -f $using:path)
-      Message = ('Path: {0}, deleted' -f $using:path)
+      DependsOn = ('[Script]PathDelete-{0}' -f $path)
+      Message = ('Path: {0}, deleted' -f $path)
     }
   }
 
@@ -66,8 +66,8 @@ Configuration ImportCloudToolsAmiConfig {
       TestScript = { if (-not (Get-Service -Name $using:service -ErrorAction SilentlyContinue)) { $true } else { $false } }
     }
     Log ('LogServiceDelete-{0}' -f $service) {
-      DependsOn = ('[Script]ServiceDelete-{0}' -f $using:service)
-      Message = ('Service: {0}, deleted' -f $using:service)
+      DependsOn = ('[Script]ServiceDelete-{0}' -f $service)
+      Message = ('Service: {0}, deleted' -f $service)
     }
   }
 
