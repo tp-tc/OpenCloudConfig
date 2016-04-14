@@ -1,5 +1,10 @@
 Configuration ImportCloudToolsAmiConfig {
   Import-DscResource -ModuleName PSDesiredStateConfiguration
+  File LogFolder {
+    Type = 'Directory'
+    DestinationPath = ('{0}\log' -f $env:SystemDrive)
+    Ensure = 'Present'
+  }
 
   $users = @('cltbld')
   foreach ($user in $users) {
