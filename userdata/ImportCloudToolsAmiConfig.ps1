@@ -8,45 +8,21 @@ Configuration ImportCloudToolsAmiConfig {
     }
     TestScript = { if (-not (Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq 'root' })) { $true } else { $false } }
   }
-  File CltbldUserFolderRemove {
-    Type = 'Directory'
-    DestinationPath = ('{0}\Users\cltbld' -f $env:SystemDrive)
-    Ensure = 'Absent'
-    Force = $true
-  }
-  File OptFolderRemove {
-    Type = 'Directory'
-    DestinationPath = ('{0}\opt' -f $env:SystemDrive)
-    Ensure = 'Absent'
-    Force = $true
-  }
-  File EtcFolderRemove {
-    Type = 'Directory'
-    DestinationPath = ('{0}\etc' -f $env:SystemDrive)
-    Ensure = 'Absent'
-    Force = $true
-  }
-  Service PuppetServiceRemove {
-    Name = 'puppet'
-    Ensure = 'Absent'
-    Force = $true
-  }
-  File PuppetLabsRemove {
-    Type = 'Directory'
-    DestinationPath = ('{0}\PuppetLabs' -f $env:ProgramData)
-    Ensure = 'Absent'
-    Force = $true
-  }
-  File PuppetAgainRemove {
-    Type = 'Directory'
-    DestinationPath = ('{0}\puppetagain' -f $env:ProgramData)
-    Ensure = 'Absent'
-    Force = $true
-  }
-  File InstallerSourceRemove {
-    Type = 'Directory'
-    DestinationPath = ('{0}\installersource' -f $env:SystemDrive)
-    Ensure = 'Absent'
-    Force = $true
+  $paths = @(
+    ('{0}\etc' -f $env:SystemDrive),
+    ('{0}\opt' -f $env:SystemDrive),
+    ('{0}\PuppetLabs' -f $env:ProgramData),
+    ('{0}\puppetagain' -f $env:ProgramData),
+    ('{0}\installersource' -f $env:SystemDrive),
+    ('{0}\Users\cltbld' -f $env:SystemDrive)
+  )
+  foreach ($path in $paths) {
+    File ('PathRemove-{0}' -f $path.Replace(':', '').Replace('\', '_')) {
+      GetScript = { @{ Result = (-not (Test-Path -Path $path -ErrorAction SilentlyContinue)) } }
+      SetScript = {
+        Remove-Item $path -Recurse -Confirm:$false -force
+      }
+      TestScript = { if (-not (Test-Path -Path $path -ErrorAction SilentlyContinue)) { $true } else { $false } }
+    }
   }
 }
