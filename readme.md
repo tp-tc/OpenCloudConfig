@@ -1,5 +1,9 @@
 # OpenCloudConfig
 
+## Windows Server 2008 R2 (build instance)
+
+    Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2008.ps1')
+
 ## Windows Server 2012 R2 (build instance)
 
     Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2012.ps1')
