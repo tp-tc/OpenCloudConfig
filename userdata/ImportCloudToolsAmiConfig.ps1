@@ -78,16 +78,44 @@ Configuration ImportCloudToolsAmiConfig {
     }
   }
 
-  # todo: handle us-east-1 also
-  Script HgFingerprintUpdate {
-    GetScript = { @{ Result = (((Get-Content ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive)) | %{ $_ -match '1a:0e:4a:64:90:c1:d0:2f:79:46:95:b5:17:dc:63:45:cf:19:37:bd' }) -contains $true) } }
+  Script MercurialDownload {
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\Mercurial-3.7.3-x64.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
     SetScript = {
-      [IO.File]::WriteAllLines(('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive), ((Get-Content ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive)) | % { $_ -replace 'ad:ab:0d:1e:fe:1c:78:5b:94:f9:76:b2:5a:12:51:9a:12:7b:66:a2','1a:0e:4a:64:90:c1:d0:2f:79:46:95:b5:17:dc:63:45:cf:19:37:bd' }), (New-Object Text.UTF8Encoding($false)))
+      (New-Object Net.WebClient).DownloadFile('https://mercurial-scm.org/release/windows/Mercurial-3.7.3-x64.exe', ('{0}\Temp\Mercurial-3.7.3-x64.exe' -f $env:SystemRoot))
+      Unblock-File -Path ('{0}\Temp\Mercurial-3.7.3-x64.exe' -f $env:SystemRoot)
     }
-    TestScript = { if (((Get-Content ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive)) | %{ $_ -match '1a:0e:4a:64:90:c1:d0:2f:79:46:95:b5:17:dc:63:45:cf:19:37:bd' }) -contains $true) { $true } else { $false } }
+    TestScript = { if (Test-Path -Path ('{0}\Temp\Mercurial-3.7.3-x64.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
   }
-  Log LogHgFingerprintUpdate {
-    DependsOn = '[Script]HgFingerprintUpdate'
-    Message = 'Mercurial fingerprint updated'
+  Script MercurialInstall {
+    DependsOn = @('[Script]MercurialDownload', '[File]LogFolder')
+    GetScript = { @{ Result = (Test-Path -Path ('{0}\Mercurial\hg.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) } }
+    SetScript = {
+      Start-Process ('{0}\Temp\Mercurial-3.7.3-x64.exe' -f $env:SystemRoot) -ArgumentList '/VERYSILENT' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.Mercurial-3.7.3-x64.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.Mercurial-3.7.3-x64.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    }
+    TestScript = { if (Test-Path -Path ('{0}\Mercurial\hg.exe' -f $env:ProgramFiles) -ErrorAction SilentlyContinue) { $true } else { $false } }
+  }
+  Script MercurialSymbolicLink {
+    DependsOn = @('[Script]MercurialInstall')
+    GetScript = { @{ Result = ((Test-Path -Path ('{0}\mozilla-build\hg' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\mozilla-build\hg' -f $env:SystemDrive)).Attributes.ToString() -match "ReparsePoint")) } }
+    SetScript = {
+      if (Test-Path -Path ('{0}\mozilla-build\hg' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
+        Remove-Item ('{0}\mozilla-build\hg' -f $env:SystemDrive) -Confirm:$false -recurse -force
+      }
+      if ($PSVersionTable.PSVersion.Major -gt 4) {
+        New-Item -ItemType SymbolicLink -Path ('{0}\mozilla-build' -f $env:SystemDrive) -Name 'hg' -Target ('{0}\Mercurial' -f $env:ProgramFiles)
+      } else {
+        & cmd @('/c', 'mklink', '/D', ('{0}\mozilla-build\hg' -f $env:SystemDrive), ('{0}\Mercurial' -f $env:ProgramFiles))
+      }
+    }
+    TestScript = { if ((Test-Path -Path ('{0}\mozilla-build\hg' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\mozilla-build\hg' -f $env:SystemDrive)).Attributes.ToString() -match "ReparsePoint")) { $true } else { $false } }
+  }
+  Script MercurialConfigure {
+    DependsOn = '[Script]MercurialSymbolicLink'
+    GetScript = { @{ Result = ((Test-Path -Path ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\mozilla-build\hg\hgrc.d\cacert.pem' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) } }
+    SetScript = {
+      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.ini', ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive))
+      Unblock-File -Path ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive)
+    }
+    TestScript = { if ((Test-Path -Path ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\mozilla-build\hg\hgrc.d\cacert.pem' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) { $true } else { $false } }
   }
 }
