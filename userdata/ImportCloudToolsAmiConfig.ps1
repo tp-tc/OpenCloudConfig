@@ -11,6 +11,8 @@ Configuration ImportCloudToolsAmiConfig {
   $paths = @(
     ('{0}\etc' -f $env:SystemDrive),
     ('{0}\opt' -f $env:SystemDrive),
+    ('{0}\mozilla-buildbuildbotve' -f $env:SystemDrive),
+    ('{0}\mozilla-buildpython27' -f $env:SystemDrive),
     ('{0}\PuppetLabs' -f $env:ProgramData),
     ('{0}\puppetagain' -f $env:ProgramData),
     ('{0}\installersource' -f $env:SystemDrive),
@@ -19,7 +21,7 @@ Configuration ImportCloudToolsAmiConfig {
   foreach ($path in $paths) {
     Script ('PathRemove-{0}' -f $path.Replace(':', '').Replace('\', '_')) {
       GetScript = { @{ Result = (-not (Test-Path -Path $path -ErrorAction SilentlyContinue)) } }
-      SetScript = { Remove-Item $path -Recurse -Confirm:$false -force }
+      SetScript = { Remove-Item $path -Confirm:$false -force }
       TestScript = { if (-not (Test-Path -Path $path -ErrorAction SilentlyContinue)) { $true } else { $false } }
     }
   }
