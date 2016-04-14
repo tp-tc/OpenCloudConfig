@@ -1,14 +1,24 @@
 Configuration ImportCloudToolsAmiConfig {
   Import-DscResource -ModuleName PSDesiredStateConfiguration
 
-  Script CltbldUserRemove {
-    GetScript = { @{ Result = (-not (Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq 'root' })) } }
-    SetScript = {
-      Start-Process 'logoff' -ArgumentList @((((quser /server:. | ? { $_ -match 'cltbld' }) -split ' +')[2]), '/server:.') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-cltbld-logoff.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.net-user-cltbld-logoff.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-      Start-Process 'net' -ArgumentList @('user', 'cltbld', '/DELETE') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-cltbld-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.net-user-cltbld-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+  $users = @('cltbld')
+  foreach ($user in $users) {
+    Script ('UserLogoff-{0}' -f $user) {
+      GetScript = { @{ Result = $false } }
+      SetScript = {
+        Start-Process 'logoff' -ArgumentList @((((quser /server:. | ? { $_ -match $using:user }) -split ' +')[2]), '/server:.') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-logoff.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:user) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-logoff.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:user)
+      }
+      TestScript = { $false }
     }
-    TestScript = { if (-not (Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq 'root' })) { $true } else { $false } }
+    Script ('UserDelete-{0}' -f $user) {
+      GetScript = { @{ Result = (-not (Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq $using:user })) } }
+      SetScript = {
+        Start-Process 'net' -ArgumentList @('user', $using:user, '/DELETE') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:user) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:user)
+      }
+      TestScript = { if (-not (Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq $using:user })) { $true } else { $false } }
+    }
   }
+
   $paths = @(
     ('{0}\etc' -f $env:SystemDrive),
     ('{0}\opt' -f $env:SystemDrive),
