@@ -12,34 +12,41 @@ Configuration ImportCloudToolsAmiConfig {
     Type = 'Directory'
     DestinationPath = ('{0}\Users\cltbld' -f $env:SystemDrive)
     Ensure = 'Absent'
+    Force = $true
   }
   File OptFolderRemove {
     Type = 'Directory'
     DestinationPath = ('{0}\opt' -f $env:SystemDrive)
     Ensure = 'Absent'
+    Force = $true
   }
   File EtcFolderRemove {
     Type = 'Directory'
     DestinationPath = ('{0}\etc' -f $env:SystemDrive)
     Ensure = 'Absent'
+    Force = $true
   }
   Service PuppetServiceRemove {
     Name = 'puppet'
     Ensure = 'Absent'
+    Force = $true
   }
   File PuppetLabsRemove {
     Type = 'Directory'
     DestinationPath = ('{0}\PuppetLabs' -f $env:ProgramData)
     Ensure = 'Absent'
+    Force = $true
   }
   File PuppetAgainRemove {
     Type = 'Directory'
     DestinationPath = ('{0}\puppetagain' -f $env:ProgramData)
     Ensure = 'Absent'
+    Force = $true
   }
   File InstallerSourceRemove {
     Type = 'Directory'
     DestinationPath = ('{0}\installersource' -f $env:SystemDrive)
     Ensure = 'Absent'
+    Force = $true
   }
 }
