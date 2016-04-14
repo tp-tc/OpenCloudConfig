@@ -15,6 +15,8 @@ $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.
 New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
 Set-ExecutionPolicy RemoteSigned -force | Tee-Object -filePath $logFile -append
 if ($PSVersionTable.PSVersion.Major -lt 4) {
+  Get-Service wuauserv | Set-Service -StartupType manual
+  Get-Service wuauserv | Start-Service -PassThru
   Invoke-Expression ((New-Object Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) | Tee-Object -filePath $logFile -append
   & choco @('upgrade', 'powershell', '-y') | Out-File -filePath $logFile -append
   & shutdown @('-r', '-t', '0', '-c', 'Powershell upgraded', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
