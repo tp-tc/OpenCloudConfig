@@ -46,7 +46,7 @@ Configuration ImportCloudToolsAmiConfig {
       TestScript = { if (-not (Test-Path -Path $using:path -ErrorAction SilentlyContinue)) { $true } else { $false } }
     }
     Log ('LogPathDelete-{0}' -f $path.Replace(':', '').Replace('\', '_')) {
-      DependsOn = ('[Script]PathDelete-{0}' -f $path)
+      DependsOn = ('[Script]PathDelete-{0}' -f $path.Replace(':', '').Replace('\', '_'))
       Message = ('Path: {0}, deleted' -f $path)
     }
   }
@@ -66,7 +66,7 @@ Configuration ImportCloudToolsAmiConfig {
       TestScript = { if (-not (Get-Service -Name $using:service -ErrorAction SilentlyContinue)) { $true } else { $false } }
     }
     Log ('LogServiceDelete-{0}' -f $service.Replace(' ', '_')) {
-      DependsOn = ('[Script]ServiceDelete-{0}' -f $service)
+      DependsOn = ('[Script]ServiceDelete-{0}' -f $service.Replace(' ', '_'))
       Message = ('Service: {0}, deleted' -f $service)
     }
   }
