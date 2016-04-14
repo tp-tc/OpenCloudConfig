@@ -42,7 +42,14 @@ Configuration ImportCloudToolsAmiConfig {
   foreach ($path in $paths) {
     Script ('PathDelete-{0}' -f $path.Replace(':', '').Replace('\', '_')) {
       GetScript = { @{ Result = (-not (Test-Path -Path $using:path -ErrorAction SilentlyContinue)) } }
-      SetScript = { Remove-Item $using:path -Confirm:$false -force }
+      SetScript = {
+        try {
+          Remove-Item $using:path -Confirm:$false -force
+        } catch {
+          Start-Process ('icacls' -f ${env:ProgramFiles(x86)}) -ArgumentList @($using:path, '/grant', ('{0}:(OI)(CI)F' -f $env:Username), '/inheritance:r') -Wait -NoNewWindow -PassThru | Out-Null
+          Remove-Item $using:path -Confirm:$false -force
+        }
+      }
       TestScript = { if (-not (Test-Path -Path $using:path -ErrorAction SilentlyContinue)) { $true } else { $false } }
     }
     Log ('LogPathDelete-{0}' -f $path.Replace(':', '').Replace('\', '_')) {
