@@ -20,9 +20,9 @@ Configuration ImportCloudToolsAmiConfig {
   )
   foreach ($path in $paths) {
     Script ('PathRemove-{0}' -f $path.Replace(':', '').Replace('\', '_')) {
-      GetScript = { @{ Result = (-not (Test-Path -Path $path -ErrorAction SilentlyContinue)) } }
-      SetScript = { Remove-Item $path -Confirm:$false -force }
-      TestScript = { if (-not (Test-Path -Path $path -ErrorAction SilentlyContinue)) { $true } else { $false } }
+      GetScript = { @{ Result = (-not (Test-Path -Path $using:path -ErrorAction SilentlyContinue)) } }
+      SetScript = { Remove-Item $using:path -Confirm:$false -force }
+      TestScript = { if (-not (Test-Path -Path $using:path -ErrorAction SilentlyContinue)) { $true } else { $false } }
     }
   }
 }
