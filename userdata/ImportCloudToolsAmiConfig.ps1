@@ -31,4 +31,10 @@ Configuration ImportCloudToolsAmiConfig {
     Name = 'puppet'
     Ensure = 'Absent'
   }
+
+  File PuppetLabsRemove {
+    Type = 'Directory'
+    DestinationPath = ('{0}\PuppetLabs' -f $env:ProgramData)
+    Ensure = 'Absent'
+  }
 }
