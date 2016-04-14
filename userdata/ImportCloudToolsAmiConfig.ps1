@@ -45,7 +45,7 @@ Configuration ImportCloudToolsAmiConfig {
       SetScript = { Remove-Item $using:path -Confirm:$false -force }
       TestScript = { if (-not (Test-Path -Path $using:path -ErrorAction SilentlyContinue)) { $true } else { $false } }
     }
-    Log ('LogPathDelete-{0}' -f $path) {
+    Log ('LogPathDelete-{0}' -f $path.Replace(':', '').Replace('\', '_')) {
       DependsOn = ('[Script]PathDelete-{0}' -f $path)
       Message = ('Path: {0}, deleted' -f $path)
     }
@@ -65,7 +65,7 @@ Configuration ImportCloudToolsAmiConfig {
       }
       TestScript = { if (-not (Get-Service -Name $using:service -ErrorAction SilentlyContinue)) { $true } else { $false } }
     }
-    Log ('LogServiceDelete-{0}' -f $service) {
+    Log ('LogServiceDelete-{0}' -f $service.Replace(' ', '_')) {
       DependsOn = ('[Script]ServiceDelete-{0}' -f $service)
       Message = ('Service: {0}, deleted' -f $service)
     }
@@ -78,5 +78,9 @@ Configuration ImportCloudToolsAmiConfig {
       [IO.File]::WriteAllLines(('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive), ((Get-Content ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive)) | % { $_ -replace 'ad:ab:0d:1e:fe:1c:78:5b:94:f9:76:b2:5a:12:51:9a:12:7b:66:a2','1a:0e:4a:64:90:c1:d0:2f:79:46:95:b5:17:dc:63:45:cf:19:37:bd' }), (New-Object Text.UTF8Encoding($false)))
     }
     TestScript = { if (((Get-Content ('{0}\mozilla-build\hg\mercurial.ini' -f $env:SystemDrive)) | %{ $_ -match '1a:0e:4a:64:90:c1:d0:2f:79:46:95:b5:17:dc:63:45:cf:19:37:bd' }) -contains $true) { $true } else { $false } }
+  }
+  Log LogHgFingerprintUpdate {
+    DependsOn = '[Script]HgFingerprintUpdate'
+    Message = 'Mercurial fingerprint updated'
   }
 }
