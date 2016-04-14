@@ -17,11 +17,9 @@ Configuration ImportCloudToolsAmiConfig {
     ('{0}\Users\cltbld' -f $env:SystemDrive)
   )
   foreach ($path in $paths) {
-    File ('PathRemove-{0}' -f $path.Replace(':', '').Replace('\', '_')) {
+    Script ('PathRemove-{0}' -f $path.Replace(':', '').Replace('\', '_')) {
       GetScript = { @{ Result = (-not (Test-Path -Path $path -ErrorAction SilentlyContinue)) } }
-      SetScript = {
-        Remove-Item $path -Recurse -Confirm:$false -force
-      }
+      SetScript = { Remove-Item $path -Recurse -Confirm:$false -force }
       TestScript = { if (-not (Test-Path -Path $path -ErrorAction SilentlyContinue)) { $true } else { $false } }
     }
   }
