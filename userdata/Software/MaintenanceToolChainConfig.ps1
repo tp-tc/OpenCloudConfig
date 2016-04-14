@@ -55,7 +55,7 @@ Configuration MaintenanceToolChainConfig {
   }
   Script SublimeText3Install {
     DependsOn = @('[Script]SublimeText3Download', '[File]LogFolder')
-    GetScript = { @{ Result = ((& ('{0}\Sublime Text 3\subl.exe'-f $env:ProgramFiles) '--version') -ieq 'Sublime Text Build 3103') } }
+    GetScript = { @{ Result = ((Test-Path -Path ('{0}\Sublime Text 3\subl.exe'-f $env:ProgramFiles) -ErrorAction SilentlyContinue) -and ((& ('{0}\Sublime Text 3\subl.exe'-f $env:ProgramFiles) '--version') -ieq 'Sublime Text Build 3103')) } }
     SetScript = {
       Start-Process ('{0}\Temp\sublime-text-setup.exe' -f $env:SystemRoot) -ArgumentList '/VERYSILENT /NORESTART /TASKS="contextentry"' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.sublime-text-setup.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.sublime-text-setup.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
       Get-ChildItem -Path ('{0}\Users' -f $env:SystemDrive) | Where-Object { $_.PSIsContainer } | % {
@@ -66,7 +66,7 @@ Configuration MaintenanceToolChainConfig {
         }
       }
     }
-    TestScript = { if ((& ('{0}\Sublime Text 3\subl.exe'-f $env:ProgramFiles) '--version') -ieq 'Sublime Text Build 3103') { $true } else { $false } }
+    TestScript = { if ((Test-Path -Path ('{0}\Sublime Text 3\subl.exe'-f $env:ProgramFiles) -ErrorAction SilentlyContinue) -and ((& ('{0}\Sublime Text 3\subl.exe'-f $env:ProgramFiles) '--version') -ieq 'Sublime Text Build 3103')) { $true } else { $false } }
   }
 
   Script OpenSshDownload {
