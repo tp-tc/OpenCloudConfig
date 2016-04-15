@@ -52,28 +52,28 @@ Configuration DynamicConfig {
         }
       }
       'ExeInstall' {
-        Script ('Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension(if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url })) {
+        Script ('Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url }))) {
           GetScript = { @{ Result = $false } }
           SetScript = {
             try {
-              (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName(if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url })))
+              (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url }))))
             } catch {
               # handle redirects (eg: sourceforge)
-              Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName(if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url })) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+              Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url }))) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
             }
-            Unblock-File -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName(if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url }))
+            Unblock-File -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url })))
           }
-          TestScript = { return (Test-Path -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName(if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url })) -ErrorAction SilentlyContinue) }
+          TestScript = { return (Test-Path -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url }))) -ErrorAction SilentlyContinue) }
         }
-        Log ('LogDownload-{0}' -f [IO.Path]::GetFileNameWithoutExtension(if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url })) {
+        Log ('LogDownload-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url }))) {
           DependsOn = ('[Script]Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension(if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url }))
-          Message = ('Download: {0}, succeeded (or present)' -f [IO.Path]::GetFileNameWithoutExtension(if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url }))
+          Message = ('Download: {0}, succeeded (or present)' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url })))
         }
-        Script ('Install-{0}' -f [IO.Path]::GetFileNameWithoutExtension(if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url })) {
-          DependsOn = ('[Script]Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension(if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url }))
+        Script ('Install-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url }))) {
+          DependsOn = ('[Script]Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url })))
           GetScript = { @{ Result = $false } }
           SetScript = {
-            $exe = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName(if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url }))
+            $exe = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url })))
             $process = Start-Process $exe -ArgumentList @('/Q') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), [IO.Path]::GetFileNameWithoutExtension($exe)) -RedirectStandardError ('{0}\log\{1}-{2}-stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), [IO.Path]::GetFileNameWithoutExtension($exe))
             if (-not (($process.ExitCode -eq 0) -or ($using:item.AllowedExitCodes -contains $process.ExitCode))) {
               throw
@@ -138,89 +138,11 @@ Configuration DynamicConfig {
             );
           }
         }
-        Log ('LogInstall-{0}' -f [IO.Path]::GetFileNameWithoutExtension(if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url })) {
-          DependsOn = ('[Script]Install-{0}' -f [IO.Path]::GetFileNameWithoutExtension(if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url }))
-          Message = ('Download: {0}, succeeded (or present)' -f [IO.Path]::GetFileNameWithoutExtension(if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url }))
+        Log ('LogInstall-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url }))) {
+          DependsOn = ('[Script]Install-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url })))
+          Message = ('Download: {0}, succeeded (or present)' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url })))
         }
       }
-
-
-
-
-
-
-  
-  #Script DirectXSdkDownload {
-  #  GetScript = { @{ Result = (Test-Path -Path ('{0}\Temp\DXSDK_Jun10.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) } }
-  #  SetScript = {
-  #    (New-Object Net.WebClient).DownloadFile('http://download.microsoft.com/download/A/E/7/AE743F1F-632B-4809-87A9-AA1BB3458E31/DXSDK_Jun10.exe', ('{0}\Temp\DXSDK_Jun10.exe' -f $env:SystemRoot))
-  #    Unblock-File -Path ('{0}\Temp\DXSDK_Jun10.exe' -f $env:SystemRoot)
-  #  }
-  #  TestScript = { if (Test-Path -Path ('{0}\Temp\DXSDK_Jun10.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) { $true } else { $false } }
-  #}
-  #Script DirectXSdkInstall {
-  #  DependsOn = @('[Script]DirectXSdkDownload', '[File]LogFolder')
-  #  GetScript = { @{ Result = (Test-Path -Path ('{0}\Microsoft DirectX SDK (June 2010)\system\uninstall\DXSDK_Jun10.exe' -f ${env:ProgramFiles(x86)}) -ErrorAction SilentlyContinue) } }
-  #  SetScript = {
-  #    # https://blogs.msdn.microsoft.com/chuckw/2011/12/09/known-issue-directx-sdk-june-2010-setup-and-the-s1023-error/
-  #    Start-Process 'MsiExec.exe' -ArgumentList '/passive /X{F0C3E5D1-1ADE-321E-8167-68EF0DE699A5}' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.vcredist2010x86.uninstall.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.vcredist2010x86.uninstall.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-  #    Start-Process 'MsiExec.exe' -ArgumentList '/passive /X{1D8E6291-B0D5-35EC-8441-6616F567A0F7}' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.vcredist2010x64.uninstall.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.vcredist2010x64.uninstall.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-  #    Start-Process ('{0}\Temp\DXSDK_Jun10.exe' -f $env:SystemRoot) -ArgumentList '/U' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.DXSDK_Jun10.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.DXSDK_Jun10.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-  #  }
-  #  TestScript = { if (Test-Path -Path ('{0}\Microsoft DirectX SDK (June 2010)\system\uninstall\DXSDK_Jun10.exe' -f ${env:ProgramFiles(x86)}) -ErrorAction SilentlyContinue) { $true } else { $false } }
-  #}
-  Script VCRedist2010Download {
-    GetScript = { @{ Result = ((Test-Path -Path ('{0}\Temp\vcredist_x86.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\Temp\vcredist_x64.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue)) } }
-    SetScript = {
-      (New-Object Net.WebClient).DownloadFile('http://download.microsoft.com/download/C/6/D/C6D0FD4E-9E53-4897-9B91-836EBA2AACD3/vcredist_x86.exe', ('{0}\Temp\vcredist_x86.exe' -f $env:SystemRoot))
-      Unblock-File -Path ('{0}\Temp\vcredist_x86.exe' -f $env:SystemRoot)
-      (New-Object Net.WebClient).DownloadFile('http://download.microsoft.com/download/A/8/0/A80747C3-41BD-45DF-B505-E9710D2744E0/vcredist_x64.exe', ('{0}\Temp\vcredist_x64.exe' -f $env:SystemRoot))
-      Unblock-File -Path ('{0}\Temp\vcredist_x64.exe' -f $env:SystemRoot)
     }
-    TestScript = { if ((Test-Path -Path ('{0}\Temp\vcredist_x86.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\Temp\vcredist_x64.exe' -f $env:SystemRoot) -ErrorAction SilentlyContinue)) { $true } else { $false } }
-  }
-  Script VCRedist2010Install {
-    DependsOn = @('[Script]VCRedist2010Download', '[File]LogFolder')
-    GetScript = { @{ Result = $false } }
-    SetScript = {
-      Start-Process ('{0}\Temp\vcredist_x86.exe' -f $env:SystemRoot) -ArgumentList @('/Q') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.vcredist_x86.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.vcredist_x86.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-      Start-Process ('{0}\Temp\vcredist_x64.exe' -f $env:SystemRoot) -ArgumentList @('/Q') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.vcredist_x64.exe.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.vcredist_x64.exe.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-    }
-    TestScript = { $false }
-  }
-
-
-
-
-
-    }
-  }
-  Script Path {
-    GetScript = { @{ Result = $false } }
-    SetScript = {
-      if (Test-Path -Path ('{0}\mozilla-build\python' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
-        $pythonPath = ('{0}\mozilla-build\python' -f $env:SystemDrive)
-      } elseif (Test-Path -Path ('{0}\mozilla-build\python27' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
-        $pythonPath = ('{0}\mozilla-build\python27' -f $env:SystemDrive)
-      } else {
-        $pythonPath = ('{0}\Python27' -f $env:SystemDrive)
-      }
-
-      $env:PATH = (((($env:PATH -split ';') + @(
-        ('{0}\mozilla-build\info-zip' -f $env:SystemDrive),
-        ('{0}\mozilla-build\msys\bin' -f $env:SystemDrive),
-        ('{0}\mozilla-build\msys\local\bin' -f $env:SystemDrive),
-        ('{0}' -f $pythonPath),
-        ('{0}\Scripts' -f $pythonPath),
-        ('{0}\mozilla-build\yasm' -f $env:SystemDrive))) | select -Unique) -join ';')
-      [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'Machine')
-
-      if (Test-Path -Path ('{0}\SysWOW64\config\systemprofile\AppData\Local\Programs\Common\Microsoft\Visual C++ for Python\9.0\VC' -f $env:SystemRoot) -ErrorAction SilentlyContinue) {
-        $env:VCINSTALLDIR = ('{0}\SysWOW64\config\systemprofile\AppData\Local\Programs\Common\Microsoft\Visual C++ for Python\9.0\VC' -f $env:SystemRoot)
-        [Environment]::SetEnvironmentVariable('VCINSTALLDIR', $env:VCINSTALLDIR, 'Machine')
-      }
-      
-    }
-    TestScript = { $false }
   }
 }
