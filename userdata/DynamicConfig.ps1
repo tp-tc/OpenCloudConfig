@@ -37,7 +37,7 @@ Configuration DynamicConfig {
         }
         Log ('LogDirectoryCreate-{0}' -f $item.ComponentName) {
           DependsOn = ('[File]DirectoryCreate-{0}' -f $item.ComponentName)
-          Message = ('Directory: {0}, created (or present)' -f $($item.Path))
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'DirectoryDelete' {
@@ -57,7 +57,7 @@ Configuration DynamicConfig {
         }
         Log ('LogDirectoryDelete-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]DirectoryDelete-{0}' -f $($item.Path).Replace(':', '').Replace('\', '_'))
-          Message = ('Directory: {0}, deleted (or not present)' -f $($item.Path))
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'CommandRun' {
@@ -71,7 +71,7 @@ Configuration DynamicConfig {
         }
         Log ('LogCommandRun-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]CommandRun-{0}' -f $item.ComponentName)
-          Message = ('CommandRun: {0}, run (or not required)' -f $($item.Path))
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'ExeInstall' {
@@ -91,7 +91,7 @@ Configuration DynamicConfig {
         }
         Log ('LogDownload-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]Download-{0}' -f $item.ComponentName)
-          Message = ('Download: {0}, succeeded (or present)' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName))
+          Message = ('{0}: {1}, download completed' -f $item.ComponentType, $item.ComponentName)
         }
         Script ('ExeInstall-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]Download-{0}' -f $item.ComponentName)
@@ -155,7 +155,7 @@ Configuration DynamicConfig {
         }
         Log ('LogExeInstall-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]ExeInstall-{0}' -f $item.ComponentName)
-          Message = ('Install: {0}, succeeded (or present)' -f $item.ComponentName)
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
     }
