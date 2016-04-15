@@ -52,28 +52,28 @@ Configuration DynamicConfig {
         }
       }
       'ExeInstall' {
-        Script ('Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url }))) {
+        Script ('Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName)) {
           GetScript = { @{ Result = $false } }
           SetScript = {
             try {
-              (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url }))))
+              (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.LocalName)))
             } catch {
               # handle redirects (eg: sourceforge)
-              Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url }))) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+              Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.LocalName)) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
             }
-            Unblock-File -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url })))
+            Unblock-File -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.LocalName))
           }
-          TestScript = { return (Test-Path -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url }))) -ErrorAction SilentlyContinue) }
+          TestScript = { return (Test-Path -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.LocalName)) -ErrorAction SilentlyContinue) }
         }
-        Log ('LogDownload-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url }))) {
-          DependsOn = ('[Script]Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url })))
-          Message = ('Download: {0}, succeeded (or present)' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url })))
+        Log ('LogDownload-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName)) {
+          DependsOn = ('[Script]Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName))
+          Message = ('Download: {0}, succeeded (or present)' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName))
         }
-        Script ('Install-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url }))) {
-          DependsOn = ('[Script]Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url })))
+        Script ('Install-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName)) {
+          DependsOn = ('[Script]Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension($using:item.LocalName))
           GetScript = { @{ Result = $false } }
           SetScript = {
-            $exe = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url })))
+            $exe = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.LocalName))
             $process = Start-Process $exe -ArgumentList @('/Q') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), [IO.Path]::GetFileNameWithoutExtension($exe)) -RedirectStandardError ('{0}\log\{1}-{2}-stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), [IO.Path]::GetFileNameWithoutExtension($exe))
             if (-not (($process.ExitCode -eq 0) -or ($using:item.AllowedExitCodes -contains $process.ExitCode))) {
               throw
@@ -129,9 +129,9 @@ Configuration DynamicConfig {
             )
           }
         }
-        Log ('LogInstall-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url }))) {
-          DependsOn = ('[Script]Install-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url })))
-          Message = ('Install: {0}, succeeded (or present)' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url })))
+        Log ('LogInstall-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName)) {
+          DependsOn = ('[Script]Install-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName))
+          Message = ('Install: {0}, succeeded (or present)' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName))
         }
       }
     }

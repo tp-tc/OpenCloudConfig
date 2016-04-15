@@ -20,14 +20,17 @@
     },
     {
       "ComponentType": "ExeInstall",
+      "LocalName": "vcredist_x86.exe",
       "Url": "http://download.microsoft.com/download/C/6/D/C6D0FD4E-9E53-4897-9B91-836EBA2AACD3/vcredist_x86.exe"
     },
     {
       "ComponentType": "ExeInstall",
+      "LocalName": "vcredist_x64.exe",
       "Url": "http://download.microsoft.com/download/A/8/0/A80747C3-41BD-45DF-B505-E9710D2744E0/vcredist_x64.exe"
     },
     {
       "ComponentType": "ExeInstall",
+      "LocalName": "DXSDK_Jun10.exe",
       "Url": "http://download.microsoft.com/download/A/E/7/AE743F1F-632B-4809-87A9-AA1BB3458E31/DXSDK_Jun10.exe",
       "Validate": {
         "PathsExist": [
@@ -42,6 +45,7 @@
     },
     {
       "ComponentType": "ExeInstall",
+      "LocalName": "MozillaBuildSetup-2.2.0.exe",
       "Url": "http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.2.0.exe",
       "Validate": {
         "PathsExist": [
