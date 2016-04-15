@@ -16,24 +16,37 @@ Configuration DynamicConfig {
       $manifest = ('{"Items":[{"ComponentType":"DirectoryCreate","Path":"$env:SystemDrive\\log"}]}' | ConvertFrom-Json)
     }
   }
+  # this hashtable maps json manifest component types to DSC component types for dependency mapping
+  $componentMap = @{
+    'DirectoryCreate' = 'File';
+    'DirectoryDelete' = 'Script';
+    'CommandRun' = 'Script';
+    'ExeInstall' = 'Script'
+  }
   Log Manifest {
     Message = ('Manifest: {0}' -f $manifest)
   }
   foreach ($item in $manifest.Items) {
     switch ($item.ComponentType) {
       'DirectoryCreate' {
-        File ('DirectoryCreate-{0}' -f $($item.Path).Replace(':', '').Replace('\', '_')) {
+        File ('DirectoryCreate-{0}' -f $item.ComponentName) {
+          if ($item.DependsOn.Length) {
+            DependsOn = @($item.DependsOn | % ('[{0}]{1}-{2}' -f $componentMap.Get_Item($_.ComponentType), $_.ComponentType, $_.ComponentName))
+          }
           Ensure = 'Present'
           Type = 'Directory'
           DestinationPath = $($item.Path)
         }
-        Log ('Log-DirectoryCreate-{0}' -f $($item.Path).Replace(':', '').Replace('\', '_')) {
-          DependsOn = ('[File]DirectoryCreate-{0}' -f $($item.Path).Replace(':', '').Replace('\', '_'))
+        Log ('LogDirectoryCreate-{0}' -f $item.ComponentName) {
+          DependsOn = ('[File]DirectoryCreate-{0}' -f $item.ComponentName)
           Message = ('Directory: {0}, created (or present)' -f $($item.Path))
         }
       }
       'DirectoryDelete' {
-        Script ('DirectoryDelete-{0}' -f $($item.Path).Replace(':', '').Replace('\', '_')) {
+        Script ('DirectoryDelete-{0}' -f $item.ComponentName) {
+          if ($item.DependsOn.Length) {
+            DependsOn = @($item.DependsOn | % ('[{0}]{1}-{2}' -f $componentMap.Get_Item($_.ComponentType), $_.ComponentType, $_.ComponentName))
+          }
           GetScript = "@{ DirectoryDelete = $($item.Path) }"
           SetScript = {
             try {
@@ -46,14 +59,33 @@ Configuration DynamicConfig {
           }
           TestScript = { (-not (Test-Path -Path $($using:item.Path) -ErrorAction SilentlyContinue)) }
         }
-        Log ('LogDirectoryDelete-{0}' -f $($item.Path).Replace(':', '').Replace('\', '_')) {
+        Log ('LogDirectoryDelete-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]DirectoryDelete-{0}' -f $($item.Path).Replace(':', '').Replace('\', '_'))
           Message = ('Directory: {0}, deleted (or not present)' -f $($item.Path))
         }
       }
+      'CommandRun' {
+        Script ('CommandRun-{0}' -f $item.ComponentName) {
+          if ($item.DependsOn.Length) {
+            DependsOn = @($item.DependsOn | % ('[{0}]{1}-{2}' -f $componentMap.Get_Item($_.ComponentType), $_.ComponentType, $_.ComponentName))
+          }
+          GetScript = "@{ CommandRun = $item.ComponentName }"
+          SetScript = {
+            Start-Process $($using:item.Command) -ArgumentList @($using:item.InstallArguments | % { $($_) }) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName) -RedirectStandardError ('{0}\log\{1}-{2}-stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName)
+          }
+          TestScript = { $false } # todo: implement
+        }
+        Log ('LogCommandRun-{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]CommandRun-{0}' -f $item.ComponentName)
+          Message = ('CommandRun: {0}, run (or not required)' -f $($item.Path))
+        }
+      }
       'ExeInstall' {
-        Script ('Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName)) {
-          GetScript = "@{ ExeDownload = $item.Url }"
+        Script ('Download-{0}' -f $item.ComponentName) {
+          if ($item.DependsOn.Length) {
+            DependsOn = @($item.DependsOn | % ('[{0}]{1}-{2}' -f $componentMap.Get_Item($_.ComponentType), $_.ComponentType, $_.ComponentName))
+          }
+          GetScript = "@{ ExeDownload = $item.ComponentName }"
           SetScript = {
             try {
               (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}' -f $env:SystemRoot, $using:item.LocalName))
@@ -65,15 +97,15 @@ Configuration DynamicConfig {
           }
           TestScript = { return (Test-Path -Path ('{0}\Temp\{1}' -f $env:SystemRoot, $using:item.LocalName) -ErrorAction SilentlyContinue) }
         }
-        Log ('LogDownload-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName)) {
-          DependsOn = ('[Script]Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName))
+        Log ('LogDownload-{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]Download-{0}' -f $item.ComponentName)
           Message = ('Download: {0}, succeeded (or present)' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName))
         }
-        Script ('Install-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName)) {
-          DependsOn = ('[Script]Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName))
-          GetScript = "@{ ExeInstall = $env:SystemRoot\Temp\$item.LocalName }"
+        Script ('ExeInstall-{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]Download-{0}' -f $item.ComponentName)
+          GetScript = "@{ ExeInstall = $item.ComponentName }"
           SetScript = {
-            $exe = ('{0}\Temp\{1}' -f $env:SystemRoot, $using:item.LocalName)
+            $exe = ('{0}\Temp\{1}' -f $env:SystemRoot, $using:item.ComponentName)
             $process = Start-Process $exe -ArgumentList @('/Q') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), [IO.Path]::GetFileNameWithoutExtension($exe)) -RedirectStandardError ('{0}\log\{1}-{2}-stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), [IO.Path]::GetFileNameWithoutExtension($exe))
             if (-not (($process.ExitCode -eq 0) -or ($using:item.AllowedExitCodes -contains $process.ExitCode))) {
               throw
@@ -129,9 +161,9 @@ Configuration DynamicConfig {
             )
           }
         }
-        Log ('LogInstall-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName)) {
-          DependsOn = ('[Script]Install-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName))
-          Message = ('Install: {0}, succeeded (or present)' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName))
+        Log ('LogExeInstall-{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]ExeInstall-{0}' -f $item.ComponentName)
+          Message = ('Install: {0}, succeeded (or present)' -f $item.ComponentName)
         }
       }
     }

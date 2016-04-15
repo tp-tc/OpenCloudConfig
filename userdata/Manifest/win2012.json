@@ -1,27 +1,50 @@
 {
   "Items": [
     {
+      "ComponentName": "LogDirectory",
       "ComponentType": "DirectoryCreate",
       "Path": "$env:SystemDrive\\log"
     },
     {
+      "ComponentName": "ToolsDirectory",
       "ComponentType": "DirectoryCreate",
       "Path": "$env:SystemDrive\\tools"
     },
     {
-      "ComponentType": "ExeInstall",
-      "LocalName": "vcredist_x86.exe",
-      "Url": "http://download.microsoft.com/download/C/6/D/C6D0FD4E-9E53-4897-9B91-836EBA2AACD3/vcredist_x86.exe"
+      "ComponentName": "VisualC2010RedistributablePackageX86Uninstall",
+      "ComponentType": "CommandRun",
+      "Command": "msiexec.exe",
+      "Arguments": [
+        "/passive",
+        "X{F0C3E5D1-1ADE-321E-8167-68EF0DE699A5}"
+      ]
     },
     {
-      "ComponentType": "ExeInstall",
-      "LocalName": "vcredist_x64.exe",
-      "Url": "http://download.microsoft.com/download/A/8/0/A80747C3-41BD-45DF-B505-E9710D2744E0/vcredist_x64.exe"
+      "ComponentName": "VisualC2010RedistributablePackageX86_64Uninstall",
+      "ComponentType": "CommandRun",
+      "Command": "msiexec.exe",
+      "Arguments": [
+        "/passive",
+        "X{1D8E6291-B0D5-35EC-8441-6616F567A0F7}"
+      ]
     },
     {
+      "ComponentName": "DXSDK_Jun10",
       "ComponentType": "ExeInstall",
-      "LocalName": "DXSDK_Jun10.exe",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "VisualC2010RedistributablePackageX86Uninstall"
+        },
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "VisualC2010RedistributablePackageX86_64Uninstall"
+        }
+      ],
       "Url": "http://download.microsoft.com/download/A/E/7/AE743F1F-632B-4809-87A9-AA1BB3458E31/DXSDK_Jun10.exe",
+      "Arguments": [
+        "/U"
+      ],
       "Validate": {
         "PathsExist": [
           "${env:ProgramFiles(x86)}\\Microsoft DirectX SDK (June 2010)\\system\\uninstall\\DXSDK_Jun10.exe"
@@ -29,8 +52,39 @@
       }
     },
     {
+      "ComponentName": "vcredist_x86",
       "ComponentType": "ExeInstall",
-      "LocalName": "MozillaBuildSetup-2.2.0.exe",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "DXSDK_Jun10"
+        }
+      ],
+      "Url": "http://download.microsoft.com/download/C/6/D/C6D0FD4E-9E53-4897-9B91-836EBA2AACD3/vcredist_x86.exe",
+      "Arguments": [
+        "/Q"
+      ]
+    },
+    {
+      "ComponentName": "vcredist_x64",
+      "ComponentType": "ExeInstall",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "DXSDK_Jun10"
+        }
+      ],
+      "Url": "http://download.microsoft.com/download/A/8/0/A80747C3-41BD-45DF-B505-E9710D2744E0/vcredist_x64.exe",
+      "Arguments": [
+        "/Q"
+      ]
+    },
+    {
+      "ComponentName": "MozillaBuildSetup",
+      "ComponentType": "ExeInstall",
+      "Arguments": [
+        "/S"
+      ],
       "Url": "http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.2.0.exe",
       "Validate": {
         "PathsExist": [
