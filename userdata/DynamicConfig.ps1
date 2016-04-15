@@ -22,33 +22,33 @@ Configuration DynamicConfig {
   foreach ($item in $manifest.Items) {
     switch ($item.ComponentType) {
       'DirectoryCreate' {
-        File ('DirectoryCreate-{0}' -f ($item.Path.Format -f @($item.Path.Tokens | % { $($_) })).Replace(':', '').Replace('\', '_')) {
+        File ('DirectoryCreate-{0}' -f $item.Path.Replace(':', '').Replace('\', '_')) {
           Ensure = 'Present'
           Type = 'Directory'
-          DestinationPath = ($item.Path.Format -f @($item.Path.Tokens | % { $($_) }))
+          DestinationPath = $item.Path
         }
-        Log ('Log-DirectoryCreate-{0}' -f ($item.Path.Format -f @($item.Path.Tokens | % { $($_) })).Replace(':', '').Replace('\', '_')) {
-          DependsOn = ('[File]DirectoryCreate-{0}' -f ($item.Path.Format -f @($item.Path.Tokens | % { $($_) })).Replace(':', '').Replace('\', '_'))
-          Message = ('Directory: {0}, created (or present)' -f ($item.Path.Format -f @($item.Path.Tokens | % { $($_) })))
+        Log ('Log-DirectoryCreate-{0}' -f $item.Path.Replace(':', '').Replace('\', '_')) {
+          DependsOn = ('[File]DirectoryCreate-{0}' -f $item.Path.Replace(':', '').Replace('\', '_'))
+          Message = ('Directory: {0}, created (or present)' -f $item.Path)
         }
       }
       'DirectoryDelete' {
-        Script ('DirectoryDelete-{0}' -f ($item.Path.Format -f @($item.Path.Tokens | % { $($_) })).Replace(':', '').Replace('\', '_')) {
+        Script ('DirectoryDelete-{0}' -f $item.Path.Replace(':', '').Replace('\', '_')) {
           GetScript = { @{ Result = $false } }
           SetScript = {
             try {
-              Remove-Item ($using:item.Path.Format -f @($using:item.Path.Tokens | % { $($_) })) -Confirm:$false -force
+              Remove-Item $using:item.Path -Confirm:$false -force
             } catch {
-              Start-Process 'icacls' -ArgumentList @(($using:item.Path.Format -f @($using:item.Path.Tokens | % { $($_) })), '/grant', ('{0}:(OI)(CI)F' -f $env:Username), '/inheritance:r') -Wait -NoNewWindow -PassThru | Out-Null
-              Remove-Item ($using:item.Path.Format -f @($using:item.Path.Tokens | % { $($_) })) -Confirm:$false -force
+              Start-Process 'icacls' -ArgumentList @($using:item.Path, '/grant', ('{0}:(OI)(CI)F' -f $env:Username), '/inheritance:r') -Wait -NoNewWindow -PassThru | Out-Null
+              Remove-Item $using:item.Path -Confirm:$false -force
               # todo: another try catch block with move to recycle bin, empty recycle bin
             }
           }
-          TestScript = { (-not (Test-Path -Path ($using:item.Path.Format -f @($using:item.Path.Tokens | % { $($_) })) -ErrorAction SilentlyContinue)) }
+          TestScript = { (-not (Test-Path -Path $using:item.Path -ErrorAction SilentlyContinue)) }
         }
-        Log ('LogDirectoryDelete-{0}' -f ($item.Path.Format -f @($item.Path.Tokens | % { $($_) })).Replace(':', '').Replace('\', '_')) {
-          DependsOn = ('[Script]DirectoryDelete-{0}' -f ($item.Path.Format -f @($item.Path.Tokens | % { $($_) })).Replace(':', '').Replace('\', '_'))
-          Message = ('Directory: {0}, deleted (or not present)' -f ($item.Path.Format -f @($item.Path.Tokens | % { $($_) })))
+        Log ('LogDirectoryDelete-{0}' -f $item.Path.Replace(':', '').Replace('\', '_')) {
+          DependsOn = ('[Script]DirectoryDelete-{0}' -f $item.Path.Replace(':', '').Replace('\', '_'))
+          Message = ('Directory: {0}, deleted (or not present)' -f $item.Path)
         }
       }
       'ExeInstall' {
@@ -96,7 +96,7 @@ Configuration DynamicConfig {
 
                   # all validation paths-exist are satisfied (exist on the instance)
                   (-not (@($using:item.Validate.PathsExist | % {
-                    (Test-Path -Path ($_.Path.Format -f $_.Path.Tokens) -ErrorAction SilentlyContinue)
+                    (Test-Path -Path $_.Path -ErrorAction SilentlyContinue)
                   }) -contains $false))
                 )
               ) -and (
@@ -120,7 +120,7 @@ Configuration DynamicConfig {
                   # all validation files-contain are satisfied
                   (-not (@($using:item.Validate.FilesContain | % {
                     $fc = $_
-                    (((Get-Content ($fc.Path.Format -f $fc.Path.Tokens)) | % {
+                    (((Get-Content $fc.Path) | % {
                       $_ -match $fc.Match
                     }) -contains $true) # a line within the file contained a match
                   }) -contains $false)) # no files failed to contain a match (see '-not' above)

@@ -2,21 +2,11 @@
   "Items": [
     {
       "ComponentType": "DirectoryCreate",
-      "Path": {
-        "Format": "{0}\\log",
-        "Tokens": [
-          "$env:SystemDrive"
-        ]
-      }
+      "Path": "$env:SystemDrive\\log"
     },
     {
       "ComponentType": "DirectoryCreate",
-      "Path": {
-        "Format": "{0}\\tools",
-        "Tokens": [
-          "$env:SystemDrive"
-        ]
-      }
+      "Path": "$env:SystemDrive\\tools"
     },
     {
       "ComponentType": "ExeInstall",
@@ -34,12 +24,7 @@
       "Url": "http://download.microsoft.com/download/A/E/7/AE743F1F-632B-4809-87A9-AA1BB3458E31/DXSDK_Jun10.exe",
       "Validate": {
         "PathsExist": [
-          {
-            "Format": "{0}\\Microsoft DirectX SDK (June 2010)\\system\\uninstall\\DXSDK_Jun10.exe",
-            "Tokens": [
-              "${env:ProgramFiles(x86)}"
-            ]
-          }
+          "${env:ProgramFiles(x86)}\\Microsoft DirectX SDK (June 2010)\\system\\uninstall\\DXSDK_Jun10.exe"
         ]
       }
     },
@@ -49,45 +34,15 @@
       "Url": "http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.2.0.exe",
       "Validate": {
         "PathsExist": [
-          {
-            "Format": "{0}\\mozilla-build\\msys\\bin\\sh.exe",
-            "Tokens": [
-              "$env:SystemDrive"
-            ]
-          },
-          {
-            "Format": "{0}\\mozilla-build\\msys\\local\\bin\\make.exe",
-            "Tokens": [
-              "$env:SystemDrive"
-            ]
-          },
-          {
-            "Format": "{0}\\mozilla-build\\msys\\local\\bin\\autoconf-2.13",
-            "Tokens": [
-              "$env:SystemDrive"
-            ]
-          },
-          {
-            "Format": "{0}\\mozilla-build\\info-zip\\unzip.exe",
-            "Tokens": [
-              "$env:SystemDrive"
-            ]
-          },
-          {
-            "Format": "{0}\\mozilla-build\\info-zip\\zip.exe",
-            "Tokens": [
-              "$env:SystemDrive"
-            ]
-          }
+          "$env:SystemDrive\\mozilla-build\\msys\\bin\\sh.exe",
+          "$env:SystemDrive\\mozilla-build\\msys\\local\\bin\\make.exe",
+          "$env:SystemDrive\\mozilla-build\\msys\\local\\bin\\autoconf-2.13",
+          "$env:SystemDrive\\mozilla-build\\info-zip\\unzip.exe",
+          "$env:SystemDrive\\mozilla-build\\info-zip\\zip.exe"
         ],
         "FilesContain": [
           {
-            "Path": {
-              "Format": "{0}\\mozilla-build\\VERSION",
-              "Tokens": [
-                "$env:SystemDrive"
-              ]
-            },
+            "Path": "$env:SystemDrive\\mozilla-build\\VERSION",
             "Match": "2.2.0"
           }
         ]
