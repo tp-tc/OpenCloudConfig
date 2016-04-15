@@ -70,7 +70,7 @@ Configuration DynamicConfig {
           Message = ('Download: {0}, succeeded (or present)' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName))
         }
         Script ('Install-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName)) {
-          DependsOn = ('[Script]Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension($using:item.LocalName))
+          DependsOn = ('[Script]Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName))
           GetScript = { @{ Result = $false } }
           SetScript = {
             $exe = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.LocalName))
