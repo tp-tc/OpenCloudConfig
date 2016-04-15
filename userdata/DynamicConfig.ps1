@@ -66,8 +66,8 @@ Configuration DynamicConfig {
           TestScript = { return (Test-Path -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url }))) -ErrorAction SilentlyContinue) }
         }
         Log ('LogDownload-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url }))) {
-          DependsOn = ('[Script]Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url })))
-          Message = ('Download: {0}, succeeded (or present)' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url })))
+          DependsOn = ('[Script]Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url })))
+          Message = ('Download: {0}, succeeded (or present)' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url })))
         }
         Script ('Install-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url }))) {
           DependsOn = ('[Script]Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url })))
@@ -139,8 +139,8 @@ Configuration DynamicConfig {
           }
         }
         Log ('LogInstall-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url }))) {
-          DependsOn = ('[Script]Install-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url })))
-          Message = ('Download: {0}, succeeded (or present)' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($using:item.LocalName)) { $using:item.LocalName } else { $using:item.Url })))
+          DependsOn = ('[Script]Install-{0}' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url })))
+          Message = ('Install: {0}, succeeded (or present)' -f [IO.Path]::GetFileNameWithoutExtension((if (-not [string]::IsNullOrWhitespace($item.LocalName)) { $item.LocalName } else { $item.Url })))
         }
       }
     }
