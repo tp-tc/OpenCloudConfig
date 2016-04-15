@@ -53,7 +53,7 @@ Configuration DynamicConfig {
       }
       'ExeInstall' {
         Script ('Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName)) {
-          GetScript = { @{ ExeDownload = $using:item.Url } }
+          GetScript = { @{ ExeDownload = $($using:item.Url) } }
           SetScript = {
             try {
               (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.LocalName)))
@@ -71,7 +71,7 @@ Configuration DynamicConfig {
         }
         Script ('Install-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName)) {
           DependsOn = ('[Script]Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName))
-          GetScript = { @{ ExeInstall = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.LocalName)) } }
+          GetScript = { @{ ExeInstall = $('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.LocalName)) } }
           SetScript = {
             $exe = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.LocalName))
             $process = Start-Process $exe -ArgumentList @('/Q') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), [IO.Path]::GetFileNameWithoutExtension($exe)) -RedirectStandardError ('{0}\log\{1}-{2}-stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), [IO.Path]::GetFileNameWithoutExtension($exe))
