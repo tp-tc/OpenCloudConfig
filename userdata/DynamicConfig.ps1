@@ -34,7 +34,7 @@ Configuration DynamicConfig {
       }
       'DirectoryDelete' {
         Script ('DirectoryDelete-{0}' -f $item.Path.Replace(':', '').Replace('\', '_')) {
-          GetScript = { @{ DirectoryDelete = $using:item.Path } }
+          GetScript = { @{ DirectoryDelete = $($using:item.Path) } }
           SetScript = {
             try {
               Remove-Item $using:item.Path -Confirm:$false -force
