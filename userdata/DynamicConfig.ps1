@@ -34,7 +34,7 @@ Configuration DynamicConfig {
       }
       'DirectoryDelete' {
         Script ('DirectoryDelete-{0}' -f $item.Path.Replace(':', '').Replace('\', '_')) {
-          GetScript = ('@{ DirectoryDelete = {0} }' -f $item.Path)
+          GetScript = "@{ DirectoryDelete = $item.Path }"
           SetScript = {
             try {
               Remove-Item $using:item.Path -Confirm:$false -force
@@ -53,17 +53,17 @@ Configuration DynamicConfig {
       }
       'ExeInstall' {
         Script ('Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName)) {
-          GetScript = ('@{ ExeDownload = {0} }' -f $item.Url)
+          GetScript = "@{ ExeDownload = $item.Url }"
           SetScript = {
             try {
-              (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.LocalName)))
+              (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}' -f $env:SystemRoot, $using:item.LocalName))
             } catch {
               # handle redirects (eg: sourceforge)
-              Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.LocalName)) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+              Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}' -f $env:SystemRoot, $using:item.LocalName) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
             }
-            Unblock-File -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.LocalName))
+            Unblock-File -Path ('{0}\Temp\{1}' -f $env:SystemRoot, $using:item.LocalName)
           }
-          TestScript = { return (Test-Path -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.LocalName)) -ErrorAction SilentlyContinue) }
+          TestScript = { return (Test-Path -Path ('{0}\Temp\{1}' -f $env:SystemRoot, $using:item.LocalName) -ErrorAction SilentlyContinue) }
         }
         Log ('LogDownload-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName)) {
           DependsOn = ('[Script]Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName))
@@ -71,9 +71,9 @@ Configuration DynamicConfig {
         }
         Script ('Install-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName)) {
           DependsOn = ('[Script]Download-{0}' -f [IO.Path]::GetFileNameWithoutExtension($item.LocalName))
-          GetScript = ('@{ ExeInstall = {0} }' -f ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($item.LocalName)))
+          GetScript = "@{ ExeInstall = $env:SystemRoot\Temp\$item.LocalName }"
           SetScript = {
-            $exe = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.LocalName))
+            $exe = ('{0}\Temp\{1}' -f $env:SystemRoot, $using:item.LocalName)
             $process = Start-Process $exe -ArgumentList @('/Q') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), [IO.Path]::GetFileNameWithoutExtension($exe)) -RedirectStandardError ('{0}\log\{1}-{2}-stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), [IO.Path]::GetFileNameWithoutExtension($exe))
             if (-not (($process.ExitCode -eq 0) -or ($using:item.AllowedExitCodes -contains $process.ExitCode))) {
               throw
