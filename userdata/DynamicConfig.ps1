@@ -83,7 +83,7 @@ Configuration DynamicConfig {
             return (
               # if no validations are specified, this function will return $false and cause the exe package to be (re)installed.
               (
-                $using:item.Validate -and (
+                ($using:item.Validate) -and (
                   ($using:item.Validate.PathsExist -and ($using:item.Validate.Paths.Length -gt 0))
                   -or ($using:item.Validate.CommandsReturn -and ($using:item.Validate.CommandsReturn.Length -gt 0))
                   -or ($using:item.Validate.FilesContain -and ($using:item.Validate.FilesContain.Length -gt 0))
