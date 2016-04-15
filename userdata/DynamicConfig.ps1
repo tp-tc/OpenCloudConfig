@@ -27,8 +27,8 @@ Configuration DynamicConfig {
           Type = 'Directory'
           DestinationPath = ($item.Path.Format -f $item.Path.Tokens)
         }
-        Log ('Log-{0}-{1}-{2}' -f ($item.Path.Format -f $item.Path.Tokens).Replace(':', '').Replace('\', '_')) {
-          DependsOn = ('[File]{0}-{1}-{2}' -f ($item.Path.Format -f $item.Path.Tokens).Replace(':', '').Replace('\', '_'))
+        Log ('Log-{0}' -f ($item.Path.Format -f $item.Path.Tokens).Replace(':', '').Replace('\', '_')) {
+          DependsOn = ('[File]{0}' -f ($item.Path.Format -f $item.Path.Tokens).Replace(':', '').Replace('\', '_'))
           Message = ('Directory: {0}, created (or present)' -f ($item.Path.Format -f $item.Path.Tokens))
         }
       }
