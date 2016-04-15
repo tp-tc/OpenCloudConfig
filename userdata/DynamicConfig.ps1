@@ -83,49 +83,42 @@ Configuration DynamicConfig {
             (
               # if no validations are specified, this function will return $false and cause the exe package to be (re)installed.
               (
-                (($using:item.Validate.PathsExist) -and ($using:item.Validate.Paths.Length -gt 0))
-                -or (($using:item.Validate.CommandsReturn) -and ($using:item.Validate.CommandsReturn.Length -gt 0))
-                -or (($using:item.Validate.FilesContain) -and ($using:item.Validate.FilesContain.Length -gt 0))
-              )
+                (($using:item.Validate.PathsExist) -and ($using:item.Validate.Paths.Length -gt 0)) -or
+                (($using:item.Validate.CommandsReturn) -and ($using:item.Validate.CommandsReturn.Length -gt 0)) -or
+                (($using:item.Validate.FilesContain) -and ($using:item.Validate.FilesContain.Length -gt 0))
+              ) -and (
 
-              -and (
                 # either no validation paths-exist are specified
-                (-not ($using:item.Validate.PathsExist))
+                (-not ($using:item.Validate.PathsExist)) -or (
 
-                -or (
                   # validation paths-exist are specified
-                  (($using:item.Validate.PathsExist) -and ($using:item.Validate.PathsExist.Length -gt 0))
+                  (($using:item.Validate.PathsExist) -and ($using:item.Validate.PathsExist.Length -gt 0)) -and
 
                   # all validation paths-exist are satisfied (exist on the instance)
-                  -and (-not (@($using:item.Validate.PathsExist | % {
+                  (-not (@($using:item.Validate.PathsExist | % {
                     (Test-Path -Path ($_.Path.Format -f $_.Path.Tokens) -ErrorAction SilentlyContinue)
                   }) -contains $false))
                 )
-              )              
+              ) -and (
 
-              -and (
                 # either no validation commands-return are specified
-                (-not ($using:item.Validate.CommandsReturn))
+                (-not ($using:item.Validate.CommandsReturn)) -or (
 
-                -or (
                   # validation commands-return are specified
-                  (($using:item.Validate.CommandsReturn) -and ($using:item.Validate.CommandsReturn.Length -gt 0))
+                  (($using:item.Validate.CommandsReturn) -and ($using:item.Validate.CommandsReturn.Length -gt 0)) -and
 
                   # all validation commands-return are satisfied
-                  -and ($false) # todo: implement
+                  ($false) # todo: implement
                 )
-              )
-
-              -and (
+              ) -and (
                 # either no validation files-contain are specified
-                (-not ($using:item.Validate.FilesContain))
+                (-not ($using:item.Validate.FilesContain)) -or (
 
-                -or (
                   # validation files-contain are specified
-                  (($using:item.Validate.FilesContain) -and ($using:item.Validate.FilesContain.Length -gt 0))
+                  (($using:item.Validate.FilesContain) -and ($using:item.Validate.FilesContain.Length -gt 0)) -and
 
                   # all validation files-contain are satisfied
-                  -and (-not (@($using:item.Validate.FilesContain | % {
+                  (-not (@($using:item.Validate.FilesContain | % {
                     $fc = $_
                     (((Get-Content ($fc.Path.Format -f $fc.Path.Tokens)) | % {
                       $_ -match $fc.Match
