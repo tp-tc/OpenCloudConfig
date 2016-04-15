@@ -22,33 +22,33 @@ Configuration DynamicConfig {
   foreach ($item in $manifest.Items) {
     switch ($item.ComponentType) {
       'DirectoryCreate' {
-        File ('DirectoryCreate-{0}' -f $item.Path.Replace(':', '').Replace('\', '_')) {
+        File ('DirectoryCreate-{0}' -f $($item.Path).Replace(':', '').Replace('\', '_')) {
           Ensure = 'Present'
           Type = 'Directory'
-          DestinationPath = $item.Path
+          DestinationPath = $($item.Path)
         }
-        Log ('Log-DirectoryCreate-{0}' -f $item.Path.Replace(':', '').Replace('\', '_')) {
-          DependsOn = ('[File]DirectoryCreate-{0}' -f $item.Path.Replace(':', '').Replace('\', '_'))
-          Message = ('Directory: {0}, created (or present)' -f $item.Path)
+        Log ('Log-DirectoryCreate-{0}' -f $($item.Path).Replace(':', '').Replace('\', '_')) {
+          DependsOn = ('[File]DirectoryCreate-{0}' -f $($item.Path).Replace(':', '').Replace('\', '_'))
+          Message = ('Directory: {0}, created (or present)' -f $($item.Path))
         }
       }
       'DirectoryDelete' {
-        Script ('DirectoryDelete-{0}' -f $item.Path.Replace(':', '').Replace('\', '_')) {
-          GetScript = "@{ DirectoryDelete = $item.Path }"
+        Script ('DirectoryDelete-{0}' -f $($item.Path).Replace(':', '').Replace('\', '_')) {
+          GetScript = "@{ DirectoryDelete = $($item.Path) }"
           SetScript = {
             try {
-              Remove-Item $using:item.Path -Confirm:$false -force
+              Remove-Item $($using:item.Path) -Confirm:$false -force
             } catch {
-              Start-Process 'icacls' -ArgumentList @($using:item.Path, '/grant', ('{0}:(OI)(CI)F' -f $env:Username), '/inheritance:r') -Wait -NoNewWindow -PassThru | Out-Null
-              Remove-Item $using:item.Path -Confirm:$false -force
+              Start-Process 'icacls' -ArgumentList @($($using:item.Path), '/grant', ('{0}:(OI)(CI)F' -f $env:Username), '/inheritance:r') -Wait -NoNewWindow -PassThru | Out-Null
+              Remove-Item $($using:item.Path) -Confirm:$false -force
               # todo: another try catch block with move to recycle bin, empty recycle bin
             }
           }
-          TestScript = { (-not (Test-Path -Path $using:item.Path -ErrorAction SilentlyContinue)) }
+          TestScript = { (-not (Test-Path -Path $($using:item.Path) -ErrorAction SilentlyContinue)) }
         }
-        Log ('LogDirectoryDelete-{0}' -f $item.Path.Replace(':', '').Replace('\', '_')) {
-          DependsOn = ('[Script]DirectoryDelete-{0}' -f $item.Path.Replace(':', '').Replace('\', '_'))
-          Message = ('Directory: {0}, deleted (or not present)' -f $item.Path)
+        Log ('LogDirectoryDelete-{0}' -f $($item.Path).Replace(':', '').Replace('\', '_')) {
+          DependsOn = ('[Script]DirectoryDelete-{0}' -f $($item.Path).Replace(':', '').Replace('\', '_'))
+          Message = ('Directory: {0}, deleted (or not present)' -f $($item.Path))
         }
       }
       'ExeInstall' {
