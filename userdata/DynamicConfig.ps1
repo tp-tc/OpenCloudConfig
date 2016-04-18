@@ -34,7 +34,7 @@ Configuration DynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           Ensure = 'Present'
           Type = 'Directory'
-          DestinationPath = $("${item.Path}")
+          DestinationPath = $($item.Path)
         }
         Log ('Log-DirectoryCreate-{0}' -f $item.ComponentName) {
           DependsOn = ('[File]DirectoryCreate-{0}' -f $item.ComponentName)
