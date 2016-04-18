@@ -16,7 +16,12 @@
       "Url": "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x86.exe",
       "Arguments": [
         "/Q"
-      ]
+      ],
+      "Validate": {
+        "PathsExist": [
+          "${env:SystemRoot}\\System32\\msvcr120.dll"
+        ]
+      }
     },
     {
       "ComponentName": "vcredist_vs2013_x64",
@@ -24,7 +29,12 @@
       "Url": "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe",
       "Arguments": [
         "/Q"
-      ]
+      ],
+      "Validate": {
+        "PathsExist": [
+          "${env:SystemRoot}\\SysWOW64\\msvcr120.dll"
+        ]
+      }
     },
     {
       "ComponentName": "windowssdksetup",
