@@ -2,6 +2,11 @@ function Run-RemoteDesiredStateConfig {
   param (
     [string] $url
   )
+  # terminate any running dsc process
+  $dscpid = (Get-WmiObject msft_providers | ? {$_.provider -like 'dsccore'} | Select-Object -ExpandProperty HostProcessIdentifier)
+  if ($dscpid) {
+    Get-Process -Id $dscpid | Stop-Process -f
+  }
   $config = [IO.Path]::GetFileNameWithoutExtension($url)
   $target = ('{0}\{1}.ps1' -f $env:Temp, $config)
   (New-Object Net.WebClient).DownloadFile(('{0}?{1}' -f $url, [Guid]::NewGuid()), $target)
