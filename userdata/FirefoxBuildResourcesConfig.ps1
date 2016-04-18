@@ -34,15 +34,6 @@ Configuration FirefoxBuildResourcesConfig {
     DestinationPath = ('{0}\home\worker\workspace' -f $env:SystemDrive)
     Ensure = 'Present'
   }
-  Script BuildWorkspacePermissions {
-    DependsOn = @('[File]BuildWorkspaceFolder')
-    GetScript = { @{ Result = $false } }
-    SetScript = {
-      #todo: change 'Everyone' to whatever group the taskcluster worker users are being added to.
-      Start-Process ('icacls' -f ${env:ProgramFiles(x86)}) -ArgumentList @(('{0}\Users\worker' -f $env:SystemDrive), '/grant', 'Everyone:(OI)(CI)F', '/inheritance:r') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.grant-worker-access.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.grant-worker-access.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-    }
-    TestScript = { $false }
-  }
   Script WindowsDesktopBuildScripts {
     DependsOn = @('[File]BuildWorkspaceFolder')
     GetScript = { @{ Result = ((Test-Path -Path ('{0}\home\worker\workspace\checkout-sources.cmd' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\home\worker\workspace\buildprops.json' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) } }

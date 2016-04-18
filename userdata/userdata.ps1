@@ -2,6 +2,11 @@ function Run-RemoteDesiredStateConfig {
   param (
     [string] $url
   )
+  # terminate any running dsc process
+  $dscpid = (Get-WmiObject msft_providers | ? {$_.provider -like 'dsccore'} | Select-Object -ExpandProperty HostProcessIdentifier)
+  if ($dscpid) {
+    Get-Process -Id $dscpid | Stop-Process -f
+  }
   $config = [IO.Path]::GetFileNameWithoutExtension($url)
   $target = ('{0}\{1}.ps1' -f $env:Temp, $config)
   (New-Object Net.WebClient).DownloadFile(('{0}?{1}' -f $url, [Guid]::NewGuid()), $target)
@@ -20,22 +25,9 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
   & shutdown @('-r', '-t', '0', '-c', 'Powershell upgraded', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
 } else {
   $url = 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata'
-  $configs = @(
-    #'SystemConfig',
-    'UserConfig',
-    'Software/MaintenanceToolChainConfig',
-    #'FeatureConfig',
-    'Software/CompilerToolChainConfig',
-    'Software/TaskClusterToolChainConfig',
-    'FirefoxBuildResourcesConfig',
-    'ServiceConfig',
-    'RegistryConfig',
-    'EnvironmentConfig'
-  )
   Start-Transcript -Path $logFile -Append
-  foreach ($config in $configs) {
-    Run-RemoteDesiredStateConfig -url ('{0}/{1}.ps1' -f $url, $config)
-  }
+  Run-RemoteDesiredStateConfig -url ('{0}/FirefoxBuildResourcesConfig' -f $url, $config)
+  Run-RemoteDesiredStateConfig -url ('{0}/DynamicConfig.ps1' -f $url, $config)
   Stop-Transcript
   if (((Get-Content $logFile) | % { $_ -match 'A reboot is required to progress further' }) -contains $true) {
     & shutdown @('-r', '-t', '0', '-c', 'Userdata reboot required', '-f', '-d', 'p:4:1')
