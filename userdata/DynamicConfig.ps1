@@ -96,7 +96,7 @@ Configuration DynamicConfig {
         }
       }
       'ExeInstall' {
-        Script ('Download-{0}' -f $item.ComponentName) {
+        Script ('ExeDownload-{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ ExeDownload = $item.ComponentName }"
           SetScript = {
@@ -116,7 +116,7 @@ Configuration DynamicConfig {
           Message = ('{0}: {1}, download completed' -f $item.ComponentType, $item.ComponentName)
         }
         Script ('ExeInstall-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]Download-{0}' -f $item.ComponentName)
+          DependsOn = ('[Script]ExeDownload-{0}' -f $item.ComponentName)
           GetScript = "@{ ExeInstall = $item.ComponentName }"
           SetScript = {
             $exe = ('{0}\Temp\{1}' -f $env:SystemRoot, $using:item.ComponentName)
