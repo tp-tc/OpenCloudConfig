@@ -3,12 +3,12 @@
     {
       "ComponentName": "LogDirectory",
       "ComponentType": "DirectoryCreate",
-      "Path": "${env:SystemDrive}\\log"
+      "Path": "$($env:SystemDrive)\\log"
     },
     {
       "ComponentName": "ToolsDirectory",
       "ComponentType": "DirectoryCreate",
-      "Path": "${env:SystemDrive}\\tools"
+      "Path": "$($env:SystemDrive)\\tools"
     },
     {
       "ComponentName": "vcredist_vs2013_x86",
@@ -19,7 +19,7 @@
       ],
       "Validate": {
         "PathsExist": [
-          "${env:SystemRoot}\\System32\\msvcr120.dll"
+          "$($env:SystemRoot)\\System32\\msvcr120.dll"
         ]
       }
     },
@@ -32,7 +32,7 @@
       ],
       "Validate": {
         "PathsExist": [
-          "${env:SystemRoot}\\SysWOW64\\msvcr120.dll"
+          "$($env:SystemRoot)\\SysWOW64\\msvcr120.dll"
         ]
       }
     },
@@ -45,7 +45,7 @@
         "/NoRestart",
         "/Log",
         "/Log",
-        "${env:SystemDrive}\\log"
+        "$($env:SystemDrive)\\log"
       ]
     },
     {
@@ -57,15 +57,15 @@
       "Url": "http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.2.0.exe",
       "Validate": {
         "PathsExist": [
-          "${env:SystemDrive}\\mozilla-build\\msys\\bin\\sh.exe",
-          "${env:SystemDrive}\\mozilla-build\\msys\\local\\bin\\make.exe",
-          "${env:SystemDrive}\\mozilla-build\\msys\\local\\bin\\autoconf-2.13",
-          "${env:SystemDrive}\\mozilla-build\\info-zip\\unzip.exe",
-          "${env:SystemDrive}\\mozilla-build\\info-zip\\zip.exe"
+          "$($env:SystemDrive)\\mozilla-build\\msys\\bin\\sh.exe",
+          "$($env:SystemDrive)\\mozilla-build\\msys\\local\\bin\\make.exe",
+          "$($env:SystemDrive)\\mozilla-build\\msys\\local\\bin\\autoconf-2.13",
+          "$($env:SystemDrive)\\mozilla-build\\info-zip\\unzip.exe",
+          "$($env:SystemDrive)\\mozilla-build\\info-zip\\zip.exe"
         ],
         "FilesContain": [
           {
-            "Path": "${env:SystemDrive}\\mozilla-build\\VERSION",
+            "Path": "$($env:SystemDrive)\\mozilla-build\\VERSION",
             "Match": "2.2.0"
           }
         ]
@@ -81,7 +81,7 @@
         }
       ],
       "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.ini",
-      "Target": "${env:SystemDrive}\\mozilla-build\\python\\Scripts\\mercurial.ini"
+      "Target": "$($env:SystemDrive)\\mozilla-build\\python\\Scripts\\mercurial.ini"
     },
     {
       "ComponentName": "pip-upgrade-pip",
@@ -92,7 +92,7 @@
           "ComponentName": "MozillaBuildSetup"
         }
       ],
-      "Command": "${env:SystemDrive}\\mozilla-build\\python\\python.exe",
+      "Command": "$($env:SystemDrive)\\mozilla-build\\python\\python.exe",
       "Arguments": [
         "-m",
         "pip",
@@ -103,7 +103,7 @@
       "Validate": {
         "CommandsReturn": [
           {
-            "Command": "${env:SystemDrive}\\mozilla-build\\python\\python.exe",
+            "Command": "$($env:SystemDrive)\\mozilla-build\\python\\python.exe",
             "Arguments": [
               "-m",
               "pip",
@@ -124,7 +124,7 @@
           "ComponentName": "pip-upgrade-pip"
         }
       ],
-      "Command": "${env:SystemDrive}\\mozilla-build\\python\\python.exe",
+      "Command": "$($env:SystemDrive)\\mozilla-build\\python\\python.exe",
       "Arguments": [
         "-m",
         "pip",
@@ -135,7 +135,7 @@
       "Validate": {
         "CommandsReturn": [
           {
-            "Command": "${env:SystemDrive}\\mozilla-build\\python\\python.exe",
+            "Command": "$($env:SystemDrive)\\mozilla-build\\python\\python.exe",
             "Arguments": [
               "-m",
               "pip",
@@ -156,7 +156,7 @@
           "ComponentName": "pip-upgrade-pip"
         }
       ],
-      "Command": "${env:SystemDrive}\\mozilla-build\\python\\python.exe",
+      "Command": "$($env:SystemDrive)\\mozilla-build\\python\\python.exe",
       "Arguments": [
         "-m",
         "pip",
@@ -167,7 +167,7 @@
       "Validate": {
         "CommandsReturn": [
           {
-            "Command": "${env:SystemDrive}\\mozilla-build\\python\\python.exe",
+            "Command": "$($env:SystemDrive)\\mozilla-build\\python\\python.exe",
             "Arguments": [
               "-m",
               "pip",
@@ -188,7 +188,7 @@
           "ComponentName": "pip-upgrade-pip"
         }
       ],
-      "Command": "${env:SystemDrive}\\mozilla-build\\python\\python.exe",
+      "Command": "$($env:SystemDrive)\\mozilla-build\\python\\python.exe",
       "Arguments": [
         "-m",
         "pip",
@@ -199,7 +199,7 @@
       "Validate": {
         "CommandsReturn": [
           {
-            "Command": "${env:SystemDrive}\\mozilla-build\\python\\python.exe",
+            "Command": "$($env:SystemDrive)\\mozilla-build\\python\\python.exe",
             "Arguments": [
               "-m",
               "pip",
@@ -220,7 +220,7 @@
           "ComponentName": "pip-upgrade-pip"
         }
       ],
-      "Command": "${env:SystemDrive}\\mozilla-build\\python\\python.exe",
+      "Command": "$($env:SystemDrive)\\mozilla-build\\python\\python.exe",
       "Arguments": [
         "-m",
         "pip",
@@ -231,7 +231,7 @@
       "Validate": {
         "CommandsReturn": [
           {
-            "Command": "${env:SystemDrive}\\mozilla-build\\python\\python.exe",
+            "Command": "$($env:SystemDrive)\\mozilla-build\\python\\python.exe",
             "Arguments": [
               "-m",
               "pip",
@@ -252,7 +252,7 @@
           "ComponentName": "pip-upgrade-pip"
         }
       ],
-      "Command": "${env:SystemDrive}\\mozilla-build\\python\\python.exe",
+      "Command": "$($env:SystemDrive)\\mozilla-build\\python\\python.exe",
       "Arguments": [
         "-m",
         "pip",
@@ -263,7 +263,7 @@
       "Validate": {
         "CommandsReturn": [
           {
-            "Command": "${env:SystemDrive}\\mozilla-build\\python\\python.exe",
+            "Command": "$($env:SystemDrive)\\mozilla-build\\python\\python.exe",
             "Arguments": [
               "-m",
               "pip",
@@ -284,7 +284,7 @@
           "ComponentName": "pip-upgrade-pip"
         }
       ],
-      "Command": "${env:SystemDrive}\\mozilla-build\\python\\python.exe",
+      "Command": "$($env:SystemDrive)\\mozilla-build\\python\\python.exe",
       "Arguments": [
         "-m",
         "pip",
@@ -295,7 +295,7 @@
       "Validate": {
         "CommandsReturn": [
           {
-            "Command": "${env:SystemDrive}\\mozilla-build\\python\\python.exe",
+            "Command": "$($env:SystemDrive)\\mozilla-build\\python\\python.exe",
             "Arguments": [
               "-m",
               "pip",
