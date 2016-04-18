@@ -3,7 +3,7 @@
     {
       "ComponentName": "LogDirectory",
       "ComponentType": "DirectoryCreate",
-      "Path": "$env:SystemDrive\\log",
+      "Path": "$env:SystemDrive\\log"
     },
     {
       "ComponentName": "ToolsDirectory",
