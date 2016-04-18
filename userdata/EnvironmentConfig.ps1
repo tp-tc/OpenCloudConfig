@@ -8,28 +8,54 @@ Configuration EnvironmentConfig {
   Script Path {
     GetScript = { @{ Result = $false } }
     SetScript = {
-      if (Test-Path -Path ('{0}\mozilla-build\python' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
-        $pythonPath = ('{0}\mozilla-build\python' -f $env:SystemDrive)
-      } elseif (Test-Path -Path ('{0}\mozilla-build\python27' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
-        $pythonPath = ('{0}\mozilla-build\python27' -f $env:SystemDrive)
-      } else {
+
+      # MOZBUILDDIR, MOZILLABUILD
+      if (Test-Path -Path ('{0}\mozilla-build' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
+        $env:MOZBUILDDIR = ('{0}\mozilla-build' -f $env:SystemDrive)
+        [Environment]::SetEnvironmentVariable('MOZBUILDDIR', $env:MOZBUILDDIR, 'Machine')
+        $env:MOZILLABUILD = ('{0}\mozilla-build' -f $env:SystemDrive)
+        [Environment]::SetEnvironmentVariable('MOZILLABUILD', $env:MOZILLABUILD, 'Machine')
+      }
+      # MOZ_TOOLS
+      if (Test-Path -Path ('{0}\moztools-x64' -f $env:MOZILLABUILD) -ErrorAction SilentlyContinue) {
+        $env:MOZ_TOOLS = ('{0}\moztools-x64' -f $env:MOZILLABUILD)
+        [Environment]::SetEnvironmentVariable('MOZ_TOOLS', $env:INPUTRC, 'Machine')
+      }
+      # INPUTRC
+      if (Test-Path -Path ('{0}\msys\etc\inputrc' -f $env:MOZILLABUILD) -ErrorAction SilentlyContinue) {
+        $env:INPUTRC = ('{0}\msys\etc\inputrc' -f $env:MOZILLABUILD)
+        [Environment]::SetEnvironmentVariable('INPUTRC', $env:INPUTRC, 'Machine')
+      }
+      # SHELL
+      if (Test-Path -Path ('{0}\msys\bin\sh.exe' -f $env:MOZILLABUILD) -ErrorAction SilentlyContinue) {
+        $env:SHELL = ('{0}\msys\bin\sh.exe' -f $env:MOZILLABUILD)
+        [Environment]::SetEnvironmentVariable('SHELL', $env:SHELL, 'Machine')
+        $env:SHLVL = 1
+        [Environment]::SetEnvironmentVariable('SHLVL', $env:SHLVL, 'Machine')
+      }
+      # VCINSTALLDIR
+      if (Test-Path -Path ('{0}\SysWOW64\config\systemprofile\AppData\Local\Programs\Common\Microsoft\Visual C++ for Python\9.0\VC' -f $env:SystemRoot) -ErrorAction SilentlyContinue) {
+        $env:VCINSTALLDIR = ('{0}\SysWOW64\config\systemprofile\AppData\Local\Programs\Common\Microsoft\Visual C++ for Python\9.0\VC' -f $env:SystemRoot)
+        [Environment]::SetEnvironmentVariable('VCINSTALLDIR', $env:VCINSTALLDIR, 'Machine')
+      } 
+
+      # PATH
+      if (Test-Path -Path ('{0}\python' -f $env:MOZILLABUILD) -ErrorAction SilentlyContinue) {
+        $pythonPath = ('{0}\python' -f $env:MOZILLABUILD)
+      } elseif (Test-Path -Path ('{0}\python27' -f $env:MOZILLABUILD) -ErrorAction SilentlyContinue) {
+        $pythonPath = ('{0}\python27' -f $env:MOZILLABUILD)
+      } elseif (Test-Path -Path ('{0}\Python27' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
         $pythonPath = ('{0}\Python27' -f $env:SystemDrive)
       }
-
       $env:PATH = (((($env:PATH -split ';') + @(
         ('{0}\mozilla-build\info-zip' -f $env:SystemDrive),
         ('{0}\mozilla-build\msys\bin' -f $env:SystemDrive),
         ('{0}\mozilla-build\msys\local\bin' -f $env:SystemDrive),
         ('{0}' -f $pythonPath),
         ('{0}\Scripts' -f $pythonPath),
+        ('{0}\mozilla-build\wget' -f $env:SystemDrive),
         ('{0}\mozilla-build\yasm' -f $env:SystemDrive))) | select -Unique) -join ';')
-      [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'Machine')
-
-      if (Test-Path -Path ('{0}\SysWOW64\config\systemprofile\AppData\Local\Programs\Common\Microsoft\Visual C++ for Python\9.0\VC' -f $env:SystemRoot) -ErrorAction SilentlyContinue) {
-        $env:VCINSTALLDIR = ('{0}\SysWOW64\config\systemprofile\AppData\Local\Programs\Common\Microsoft\Visual C++ for Python\9.0\VC' -f $env:SystemRoot)
-        [Environment]::SetEnvironmentVariable('VCINSTALLDIR', $env:VCINSTALLDIR, 'Machine')
-      }
-      
+      [Environment]::SetEnvironmentVariable('PATH', $env:PATH, 'Machine')     
     }
     TestScript = { $false }
   }

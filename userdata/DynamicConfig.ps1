@@ -26,7 +26,7 @@ Configuration DynamicConfig {
   Log Manifest {
     Message = ('Manifest: {0}' -f $manifest)
   }
-  foreach ($item in $manifest.Items) {
+  foreach ($item in $manifest.Components) {
     switch ($item.ComponentType) {
       'DirectoryCreate' {
         File ('DirectoryCreate-{0}' -f $item.ComponentName) {
@@ -35,7 +35,7 @@ Configuration DynamicConfig {
           Type = 'Directory'
           DestinationPath = $($item.Path)
         }
-        Log ('LogDirectoryCreate-{0}' -f $item.ComponentName) {
+        Log ('Log-DirectoryCreate-{0}' -f $item.ComponentName) {
           DependsOn = ('[File]DirectoryCreate-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
@@ -55,7 +55,7 @@ Configuration DynamicConfig {
           }
           TestScript = { (-not (Test-Path -Path $($using:item.Path) -ErrorAction SilentlyContinue)) }
         }
-        Log ('LogDirectoryDelete-{0}' -f $item.ComponentName) {
+        Log ('Log-DirectoryDelete-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]DirectoryDelete-{0}' -f $($item.Path).Replace(':', '').Replace('\', '_'))
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
@@ -69,8 +69,28 @@ Configuration DynamicConfig {
           }
           TestScript = { $false } # todo: implement
         }
-        Log ('LogCommandRun-{0}' -f $item.ComponentName) {
+        Log ('Log-CommandRun-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]CommandRun-{0}' -f $item.ComponentName)
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
+        }
+      }
+      'FileDownload' {
+        Script ('FileDownload-{0}' -f $item.ComponentName) {
+          DependsOn = @($item.DependsOn | % ('[{0}]{1}-{2}' -f $componentMap.Get_Item($_.ComponentType), $_.ComponentType, $_.ComponentName))
+          GetScript = "@{ FileDownload = $item.ComponentName }"
+          SetScript = {
+            try {
+              (New-Object Net.WebClient).DownloadFile($using:item.Source, $using:item.Target)
+            } catch {
+              # handle redirects (eg: sourceforge)
+              Invoke-WebRequest -Uri $using:item.Source -OutFile $using:item.Target -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+            }
+            Unblock-File -Path $using:item.Target
+          }
+          TestScript = { return (Test-Path -Path $using:item.Target -ErrorAction SilentlyContinue) }
+        }
+        Log ('Log-FileDownload-{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]FileDownload-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
@@ -79,17 +99,18 @@ Configuration DynamicConfig {
           DependsOn = @($item.DependsOn | % ('[{0}]{1}-{2}' -f $componentMap.Get_Item($_.ComponentType), $_.ComponentType, $_.ComponentName))
           GetScript = "@{ ExeDownload = $item.ComponentName }"
           SetScript = {
+            # todo: handle non-http fetches
             try {
-              (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}' -f $env:SystemRoot, $using:item.LocalName))
+              (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName))
             } catch {
               # handle redirects (eg: sourceforge)
-              Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}' -f $env:SystemRoot, $using:item.LocalName) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+              Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
             }
-            Unblock-File -Path ('{0}\Temp\{1}' -f $env:SystemRoot, $using:item.LocalName)
+            Unblock-File -Path ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName)
           }
-          TestScript = { return (Test-Path -Path ('{0}\Temp\{1}' -f $env:SystemRoot, $using:item.LocalName) -ErrorAction SilentlyContinue) }
+          TestScript = { return (Test-Path -Path ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName) -ErrorAction SilentlyContinue) }
         }
-        Log ('LogDownload-{0}' -f $item.ComponentName) {
+        Log ('Log-Download-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]Download-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, download completed' -f $item.ComponentType, $item.ComponentName)
         }
@@ -153,7 +174,7 @@ Configuration DynamicConfig {
             )
           }
         }
-        Log ('LogExeInstall-{0}' -f $item.ComponentName) {
+        Log ('Log-ExeInstall-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]ExeInstall-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
