@@ -31,7 +31,7 @@ Configuration DynamicConfig {
     switch ($item.ComponentType) {
       'DirectoryCreate' {
         File ('DirectoryCreate-{0}' -f $item.ComponentName) {
-          DependsOn = @(@($item.DependsOn) | % ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName))
+          DependsOn = @($item.DependsOn | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           Ensure = 'Present'
           Type = 'Directory'
           DestinationPath = $($item.Path)
@@ -43,7 +43,7 @@ Configuration DynamicConfig {
       }
       'DirectoryDelete' {
         Script ('DirectoryDelete-{0}' -f $item.ComponentName) {
-          DependsOn = @(@($item.DependsOn) | % ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName))
+          DependsOn = @($item.DependsOn | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ DirectoryDelete = $($item.Path) }"
           SetScript = {
             try {
@@ -63,7 +63,7 @@ Configuration DynamicConfig {
       }
       'CommandRun' {
         Script ('CommandRun-{0}' -f $item.ComponentName) {
-          DependsOn = @(@($item.DependsOn) | % ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName))
+          DependsOn = @($item.DependsOn | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ CommandRun = $item.ComponentName }"
           SetScript = {
             Start-Process $($using:item.Command) -ArgumentList @($using:item.Arguments | % { $($_) }) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName) -RedirectStandardError ('{0}\log\{1}-{2}-stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName)
@@ -77,7 +77,7 @@ Configuration DynamicConfig {
       }
       'FileDownload' {
         Script ('FileDownload-{0}' -f $item.ComponentName) {
-          DependsOn = @(@($item.DependsOn) | % ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName))
+          DependsOn = @($item.DependsOn | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ FileDownload = $item.ComponentName }"
           SetScript = {
             try {
@@ -97,7 +97,7 @@ Configuration DynamicConfig {
       }
       'ExeInstall' {
         Script ('Download-{0}' -f $item.ComponentName) {
-          DependsOn = @(@($item.DependsOn) | % ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName))
+          DependsOn = @($item.DependsOn | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ ExeDownload = $item.ComponentName }"
           SetScript = {
             # todo: handle non-http fetches
