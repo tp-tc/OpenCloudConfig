@@ -236,7 +236,7 @@ Configuration DynamicConfig {
           LogPath = ('{0}\log\{1}-{2}.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $item.ComponentName)
         }
         Log ('Log-MsiInstall-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]MsiInstall-{0}' -f $item.ComponentName)
+          DependsOn = ('[Package]MsiInstall-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
