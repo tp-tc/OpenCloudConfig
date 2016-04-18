@@ -84,7 +84,7 @@
       "ComponentType": "MsiInstall",
       "Url": "https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi",
       "Name": "Microsoft Visual C++ Compiler Package for Python 2.7",
-      "ProductId": "692514A8-5484-45FC-B0AE-BE2DF7A75891",
+      "ProductId": "692514A8-5484-45FC-B0AE-BE2DF7A75891"
     },
     {
       "ComponentName": "MercurialPythonPatch",
@@ -351,7 +351,7 @@
         "C:\\mozilla-build\\python",
         "C:\\mozilla-build\\python\\Scripts",
         "C:\\mozilla-build\\wget",
-        "C:\\mozilla-build\\yasm",
+        "C:\\mozilla-build\\yasm"
       ],
       "Target": "Machine"
     },
