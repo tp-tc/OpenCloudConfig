@@ -21,6 +21,7 @@ Configuration DynamicConfig {
     'DirectoryCreate' = 'File';
     'DirectoryDelete' = 'Script';
     'CommandRun' = 'Script';
+    'FileDownload' = 'Script';
     'ExeInstall' = 'Script'
   }
   Log Manifest {
