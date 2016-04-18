@@ -23,7 +23,10 @@ Configuration DynamicConfig {
     'CommandRun' = 'Script';
     'FileDownload' = 'Script';
     'SymbolicLink' = 'Script';
-    'ExeInstall' = 'Script'
+    'ExeInstall' = 'Script';
+    'MsiInstall' = 'Package';
+    'EnvironmentVariableSet' = 'Script';
+    'EnvironmentVariableUniqueAppend' = 'Script'
   }
   Log Manifest {
     Message = ('Manifest: {0}' -f $manifest)
@@ -130,7 +133,7 @@ Configuration DynamicConfig {
           }
           TestScript = { return (Test-Path -Path ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName) -ErrorAction SilentlyContinue) }
         }
-        Log ('Log-Download-{0}' -f $item.ComponentName) {
+        Log ('Log-ExeDownload-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]ExeDownload-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, download completed' -f $item.ComponentType, $item.ComponentName)
         }
@@ -202,6 +205,68 @@ Configuration DynamicConfig {
         Log ('Log-ExeInstall-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]ExeInstall-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
+        }
+      }
+      'MsiInstall' {
+        Script ('MsiDownload-{0}' -f $item.ComponentName) {
+          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          GetScript = "@{ MsiDownload = $item.ComponentName }"
+          SetScript = {
+            # todo: handle non-http fetches
+            try {
+              (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $using:item.ComponentName))
+            } catch {
+              # handle redirects (eg: sourceforge)
+              Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $using:item.ComponentName) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+            }
+            Unblock-File -Path ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $using:item.ComponentName)
+          }
+          TestScript = { return (Test-Path -Path ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $using:item.ComponentName) -ErrorAction SilentlyContinue) }
+        }
+        Log ('Log-MsiDownload-{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]MsiDownload-{0}' -f $item.ComponentName)
+          Message = ('{0}: {1}, download completed' -f $item.ComponentType, $item.ComponentName)
+        }
+        Package ('MsiInstall-{0}' -f $item.ComponentName) {
+          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          Name = $item.Name
+          Path = ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $item.ComponentName)
+          ProductId = $item.ProductId
+          Ensure = 'Present'
+          LogPath = ('{0}\log\{1}-{2}.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $item.ComponentName)
+        }
+        Log ('Log-MsiInstall-{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]MsiInstall-{0}' -f $item.ComponentName)
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
+        }
+      }
+      'EnvironmentVariableSet' {
+        Script ('EnvironmentVariableSet-{0}' -f $item.ComponentName) {
+          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          GetScript = "@{ EnvironmentVariableSet = $item.ComponentName }"
+          SetScript = {
+            [Environment]::SetEnvironmentVariable($using:item.Name, $using:item.Value, $using:item.Target)
+          }
+          TestScript = { return ((Get-ChildItem env: | ? { $_.Name -ieq $using:item.Name } | Select-Object -first 1).Value -eq $using:item.Value) }
+        }
+        Log ('Log-EnvironmentVariableSet-{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]EnvironmentVariableSet-{0}' -f $item.ComponentName)
+          Message = ('{0}: {1}, download completed' -f $item.ComponentType, $item.ComponentName)
+        }
+      }
+      'EnvironmentVariableUniqueAppend' {
+        Script ('EnvironmentVariableUniqueAppend-{0}' -f $item.ComponentName) {
+          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          GetScript = "@{ EnvironmentVariableUniqueAppend = $item.ComponentName }"
+          SetScript = {
+            $value = (@((@(((Get-ChildItem env: | ? { $_.Name -ieq $using:item.Name } | Select-Object -first 1).Value) -split ';') + $using:item.Values) | select -Unique) -join ';')
+            [Environment]::SetEnvironmentVariable($using:item.Name, $value, $using:item.Target)
+          }
+          TestScript = { return $false }
+        }
+        Log ('Log-EnvironmentVariableUniqueAppend-{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]EnvironmentVariableUniqueAppend-{0}' -f $item.ComponentName)
+          Message = ('{0}: {1}, download completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
     }
