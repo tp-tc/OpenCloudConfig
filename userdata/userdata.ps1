@@ -25,9 +25,20 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
   & shutdown @('-r', '-t', '0', '-c', 'Powershell upgraded', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
 } else {
   $url = 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata'
+  $configs = @(
+    'UserConfig',
+    'Software/MaintenanceToolChainConfig',
+    'DynamicConfig',
+    'Software/TaskClusterToolChainConfig',
+    'FirefoxBuildResourcesConfig',
+    'ServiceConfig',
+    'RegistryConfig',
+    'EnvironmentConfig'
+  )
   Start-Transcript -Path $logFile -Append
-  Run-RemoteDesiredStateConfig -url ('{0}/FirefoxBuildResourcesConfig' -f $url, $config)
-  Run-RemoteDesiredStateConfig -url ('{0}/DynamicConfig.ps1' -f $url, $config)
+  foreach ($config in $configs) {
+    Run-RemoteDesiredStateConfig -url ('{0}/{1}.ps1' -f $url, $config)
+  }
   Stop-Transcript
   if (((Get-Content $logFile) | % { $_ -match 'A reboot is required to progress further' }) -contains $true) {
     & shutdown @('-r', '-t', '0', '-c', 'Userdata reboot required', '-f', '-d', 'p:4:1')
