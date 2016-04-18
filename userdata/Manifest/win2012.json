@@ -3,19 +3,16 @@
     {
       "ComponentName": "LogDirectory",
       "ComponentType": "DirectoryCreate",
-      "DependsOn": [],
-      "Path": "$env:SystemDrive\\log"
+      "Path": "$env:SystemDrive\\log",
     },
     {
       "ComponentName": "ToolsDirectory",
       "ComponentType": "DirectoryCreate",
-      "DependsOn": [],
       "Path": "$env:SystemDrive\\tools"
     },
     {
       "ComponentName": "VisualC2010RedistributablePackageX86Uninstall",
       "ComponentType": "CommandRun",
-      "DependsOn": [],
       "Command": "msiexec.exe",
       "Arguments": [
         "/passive",
@@ -25,7 +22,6 @@
     {
       "ComponentName": "VisualC2010RedistributablePackageX86_64Uninstall",
       "ComponentType": "CommandRun",
-      "DependsOn": [],
       "Command": "msiexec.exe",
       "Arguments": [
         "/passive",
@@ -86,7 +82,6 @@
     {
       "ComponentName": "vcredist_vs2013_x86",
       "ComponentType": "ExeInstall",
-      "DependsOn": [],
       "Url": "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x86.exe",
       "Arguments": [
         "/Q"
@@ -95,7 +90,6 @@
     {
       "ComponentName": "vcredist_vs2013_x64",
       "ComponentType": "ExeInstall",
-      "DependsOn": [],
       "Url": "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe",
       "Arguments": [
         "/Q"
@@ -104,7 +98,6 @@
     {
       "ComponentName": "windowssdksetup",
       "ComponentType": "ExeInstall",
-      "DependsOn": [],
       "Url": "http://download.microsoft.com/download/B/0/C/B0C80BA3-8AD6-4958-810B-6882485230B5/standalonesdk/sdksetup.exe",
       "Arguments": [
         "/Quiet",
@@ -117,7 +110,6 @@
     {
       "ComponentName": "MozillaBuildSetup",
       "ComponentType": "ExeInstall",
-      "DependsOn": [],
       "Arguments": [
         "/S"
       ],
