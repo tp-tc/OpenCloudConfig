@@ -22,17 +22,10 @@ Configuration EnvironmentConfig {
         [Environment]::SetEnvironmentVariable('MOZ_TOOLS', $env:INPUTRC, 'Machine')
       }
       # INPUTRC
-      if (Test-Path -Path ('{0}\msys\etc\inputrc' -f $env:MOZILLABUILD) -ErrorAction SilentlyContinue) {
-        $env:INPUTRC = ('{0}\msys\etc\inputrc' -f $env:MOZILLABUILD)
-        [Environment]::SetEnvironmentVariable('INPUTRC', $env:INPUTRC, 'Machine')
-      }
-      # SHELL
-      if (Test-Path -Path ('{0}\msys\bin\sh.exe' -f $env:MOZILLABUILD) -ErrorAction SilentlyContinue) {
-        $env:SHELL = ('{0}\msys\bin\sh.exe' -f $env:MOZILLABUILD)
-        [Environment]::SetEnvironmentVariable('SHELL', $env:SHELL, 'Machine')
-        $env:SHLVL = 1
-        [Environment]::SetEnvironmentVariable('SHLVL', $env:SHLVL, 'Machine')
-      }
+      #if (Test-Path -Path ('{0}\msys\etc\inputrc' -f $env:MOZILLABUILD) -ErrorAction SilentlyContinue) {
+      #  $env:INPUTRC = ('{0}\msys\etc\inputrc' -f $env:MOZILLABUILD)
+      #  [Environment]::SetEnvironmentVariable('INPUTRC', $env:INPUTRC, 'Machine')
+      #}
       # VCINSTALLDIR
       if (Test-Path -Path ('{0}\SysWOW64\config\systemprofile\AppData\Local\Programs\Common\Microsoft\Visual C++ for Python\9.0\VC' -f $env:SystemRoot) -ErrorAction SilentlyContinue) {
         $env:VCINSTALLDIR = ('{0}\SysWOW64\config\systemprofile\AppData\Local\Programs\Common\Microsoft\Visual C++ for Python\9.0\VC' -f $env:SystemRoot)
