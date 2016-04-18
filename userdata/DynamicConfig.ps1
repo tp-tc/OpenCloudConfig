@@ -22,7 +22,6 @@ Configuration DynamicConfig {
     'DirectoryDelete' = 'Script';
     'CommandRun' = 'Script';
     'FileDownload' = 'Script';
-    'ArchiveExtract' = 'Script';
     'ExeInstall' = 'Script'
   }
   Log Manifest {
@@ -93,26 +92,6 @@ Configuration DynamicConfig {
         }
         Log ('Log-FileDownload-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]FileDownload-{0}' -f $item.ComponentName)
-          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
-        }
-      }
-      'ArchiveExtract' {
-        Script ('ArchiveExtract-{0}' -f $item.ComponentName) {
-          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
-          GetScript = "@{ ArchiveExtract = $item.ComponentName }"
-          SetScript = {
-            try {
-              (New-Object Net.WebClient).DownloadFile($using:item.Source, $using:item.Target)
-            } catch {
-              # handle redirects (eg: sourceforge)
-              Invoke-WebRequest -Uri $using:item.Source -OutFile $using:item.Target -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
-            }
-            Unblock-File -Path $using:item.Target
-          }
-          TestScript = { return (Test-Path -Path $using:item.Target -ErrorAction SilentlyContinue) }
-        }
-        Log ('Log-ArchiveExtract-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]ArchiveExtract-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
