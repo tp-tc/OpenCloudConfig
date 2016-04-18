@@ -15,7 +15,11 @@
       "ComponentType": "ExeInstall",
       "Url": "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x86.exe",
       "Arguments": [
-        "/Q"
+        "/install",
+        "/passive",
+        "/norestart",
+        "/Log",
+        "$($env:SystemDrive)\\log\\vcredist_vs2013_x86-install.log"
       ],
       "Validate": {
         "PathsExist": [
@@ -28,7 +32,11 @@
       "ComponentType": "ExeInstall",
       "Url": "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe",
       "Arguments": [
-        "/Q"
+        "/install",
+        "/passive",
+        "/norestart",
+        "/Log",
+        "$($env:SystemDrive)\\log\\vcredist_vs2013_x64-install.log"
       ],
       "Validate": {
         "PathsExist": [
@@ -44,15 +52,15 @@
         "/Quiet",
         "/NoRestart",
         "/Log",
-        "/Log",
-        "$($env:SystemDrive)\\log"
+        "$($env:SystemDrive)\\log\\windowssdksetup.log"
       ]
     },
     {
       "ComponentName": "MozillaBuildSetup",
       "ComponentType": "ExeInstall",
       "Arguments": [
-        "/S"
+        "/S",
+        "/D=$($env:SystemDrive)\\mozilla-build"
       ],
       "Url": "http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.2.0.exe",
       "Validate": {
