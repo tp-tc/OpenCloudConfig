@@ -117,7 +117,7 @@ Configuration FirefoxBuildResourcesConfig {
       }
       if (Test-Path -Path ('{0}\mozilla-build\python\Scripts\hg.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
         $hg = ('{0}\mozilla-build\python\Scripts\hg.exe' -f $env:SystemDrive)
-      } else if (Test-Path -Path ('{0}\mozilla-build\hg\hg.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
+      } elseif (Test-Path -Path ('{0}\mozilla-build\hg\hg.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
         $hg = ('{0}\mozilla-build\hg\hg.exe' -f $env:SystemDrive)
       } else {
         $hg = 'hg.exe'
