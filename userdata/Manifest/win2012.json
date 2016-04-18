@@ -80,6 +80,18 @@
       }
     },
     {
+      "ComponentName": "MercurialPythonPatch",
+      "ComponentType": "SymbolicLink",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        }
+      ],
+      "Target": "C:\\mozilla-build\\python\\python27.dll",
+      "Link": "C:\\mozilla-build\\python\\Scripts\\python27.dll"
+    },
+    {
       "ComponentName": "MercurialConfig",
       "ComponentType": "FileDownload",
       "DependsOn": [

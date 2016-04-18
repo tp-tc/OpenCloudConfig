@@ -22,6 +22,7 @@ Configuration DynamicConfig {
     'DirectoryDelete' = 'Script';
     'CommandRun' = 'Script';
     'FileDownload' = 'Script';
+    'SymbolicLink' = 'Script';
     'ExeInstall' = 'Script'
   }
   Log Manifest {
@@ -92,6 +93,24 @@ Configuration DynamicConfig {
         }
         Log ('Log-FileDownload-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]FileDownload-{0}' -f $item.ComponentName)
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
+        }
+      }
+      'SymbolicLink' {
+        Script ('SymbolicLink-{0}' -f $item.ComponentName) {
+          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          GetScript = "@{ SymbolicLink = $item.ComponentName }"
+          SetScript = {
+            if (Test-Path -Path $using:item.Target -PathType Container -ErrorAction SilentlyContinue) {
+              & 'cmd' @('/c', 'mklink', '/D', $using:item.Link, $using:item.Target)
+            } elseif (Test-Path -Path $using:item.Target -PathType Leaf -ErrorAction SilentlyContinue) {
+              & 'cmd' @('/c', 'mklink', $using:item.Link, $using:item.Target)
+            }
+          }
+          TestScript = { return ((Test-Path -Path $using:item.Link -ErrorAction SilentlyContinue) -and ((Get-Item $using:item.Link).Attributes.ToString() -match "ReparsePoint")) }
+        }
+        Log ('Log-SymbolicLink-{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]SymbolicLink-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
