@@ -112,7 +112,7 @@ Configuration DynamicConfig {
           TestScript = { return (Test-Path -Path ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName) -ErrorAction SilentlyContinue) }
         }
         Log ('Log-Download-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]Download-{0}' -f $item.ComponentName)
+          DependsOn = ('[Script]ExeDownload-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, download completed' -f $item.ComponentType, $item.ComponentName)
         }
         Script ('ExeInstall-{0}' -f $item.ComponentName) {
