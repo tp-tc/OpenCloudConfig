@@ -82,12 +82,6 @@
     {
       "ComponentName": "vcredist_vs2013_x86",
       "ComponentType": "ExeInstall",
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "DXSDK_Jun10"
-        }
-      ],
       "Url": "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x86.exe",
       "Arguments": [
         "/Q"
@@ -96,12 +90,6 @@
     {
       "ComponentName": "vcredist_vs2013_x64",
       "ComponentType": "ExeInstall",
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "DXSDK_Jun10"
-        }
-      ],
       "Url": "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe",
       "Arguments": [
         "/Q"
