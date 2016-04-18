@@ -66,7 +66,7 @@ Configuration DynamicConfig {
           DependsOn = @(@($item.DependsOn) | % ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName))
           GetScript = "@{ CommandRun = $item.ComponentName }"
           SetScript = {
-            Start-Process $($using:item.Command) -ArgumentList @($using:item.InstallArguments | % { $($_) }) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName) -RedirectStandardError ('{0}\log\{1}-{2}-stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName)
+            Start-Process $($using:item.Command) -ArgumentList @($using:item.Arguments | % { $($_) }) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName) -RedirectStandardError ('{0}\log\{1}-{2}-stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName)
           }
           TestScript = { $false } # todo: implement
         }
@@ -154,7 +154,12 @@ Configuration DynamicConfig {
                   (($using:item.Validate.CommandsReturn) -and ($using:item.Validate.CommandsReturn.Length -gt 0)) -and
 
                   # all validation commands-return are satisfied
-                  ($false) # todo: implement
+                  (-not (@($using:item.Validate.CommandsReturn | % {
+                    $cr = $_
+                    @(@(& $cr.Command $cr.Arguments) | ? {
+                      $_ -match $cr.Match
+                    })
+                  }) -contains $false))
                 )
               ) -and (
                 # either no validation files-contain are specified

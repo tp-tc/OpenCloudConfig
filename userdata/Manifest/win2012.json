@@ -141,6 +141,230 @@
       ],
       "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.ini",
       "Target": "$env:SystemDrive\\mozilla-build\\python\\Scripts\\mercurial.ini"
+    },
+    {
+      "ComponentName": "pip-upgrade-pip",
+      "ComponentType": "CommandRun",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        }
+      ],
+      "Command": "$env:SystemDrive\\mozilla-build\\python\\python.exe",
+      "Arguments": [
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        "pip==8.1.1"
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "$env:SystemDrive\\mozilla-build\\python\\python.exe",
+            "Arguments": [
+              "-m",
+              "pip",
+              "show",
+              "pip"
+            ],
+            "Match": "Version: 8.1.1"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "pip-upgrade-setuptools",
+      "ComponentType": "CommandRun",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "pip-upgrade-pip"
+        }
+      ],
+      "Command": "$env:SystemDrive\\mozilla-build\\python\\python.exe",
+      "Arguments": [
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        "setuptools==20.7.0"
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "$env:SystemDrive\\mozilla-build\\python\\python.exe",
+            "Arguments": [
+              "-m",
+              "pip",
+              "show",
+              "setuptools"
+            ],
+            "Match": "Version: 20.7.0"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "pip-upgrade-virtualenv",
+      "ComponentType": "CommandRun",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "pip-upgrade-pip"
+        }
+      ],
+      "Command": "$env:SystemDrive\\mozilla-build\\python\\python.exe",
+      "Arguments": [
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        "virtualenv==15.0.1"
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "$env:SystemDrive\\mozilla-build\\python\\python.exe",
+            "Arguments": [
+              "-m",
+              "pip",
+              "show",
+              "virtualenv"
+            ],
+            "Match": "Version: 15.0.1"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "pip-upgrade-wheel",
+      "ComponentType": "CommandRun",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "pip-upgrade-pip"
+        }
+      ],
+      "Command": "$env:SystemDrive\\mozilla-build\\python\\python.exe",
+      "Arguments": [
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        "wheel==0.29.0"
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "$env:SystemDrive\\mozilla-build\\python\\python.exe",
+            "Arguments": [
+              "-m",
+              "pip",
+              "show",
+              "wheel"
+            ],
+            "Match": "Version: 0.29.0"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "pip-upgrade-pypiwin32",
+      "ComponentType": "CommandRun",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "pip-upgrade-pip"
+        }
+      ],
+      "Command": "$env:SystemDrive\\mozilla-build\\python\\python.exe",
+      "Arguments": [
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        "pypiwin32==219"
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "$env:SystemDrive\\mozilla-build\\python\\python.exe",
+            "Arguments": [
+              "-m",
+              "pip",
+              "show",
+              "pypiwin32"
+            ],
+            "Match": "Version: 219"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "pip-upgrade-requests",
+      "ComponentType": "CommandRun",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "pip-upgrade-pip"
+        }
+      ],
+      "Command": "$env:SystemDrive\\mozilla-build\\python\\python.exe",
+      "Arguments": [
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        "requests==2.9.1"
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "$env:SystemDrive\\mozilla-build\\python\\python.exe",
+            "Arguments": [
+              "-m",
+              "pip",
+              "show",
+              "requests"
+            ],
+            "Match": "Version: 2.9.1"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "pip-upgrade-psutil",
+      "ComponentType": "CommandRun",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "pip-upgrade-pip"
+        }
+      ],
+      "Command": "$env:SystemDrive\\mozilla-build\\python\\python.exe",
+      "Arguments": [
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        "psutil==4.1.0"
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "$env:SystemDrive\\mozilla-build\\python\\python.exe",
+            "Arguments": [
+              "-m",
+              "pip",
+              "show",
+              "psutil"
+            ],
+            "Match": "Version: 4.1.0"
+          }
+        ]
+      }
     }
   ]
 }
