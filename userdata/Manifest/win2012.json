@@ -365,7 +365,8 @@
         }
       ],
       "Variable": "MOZBUILDDIR",
-      "Value": "C:\\mozilla-build"
+      "Value": "C:\\mozilla-build",
+      "Target": "Machine"
     },
     {
       "ComponentName": "env-MOZILLABUILD",
@@ -377,7 +378,8 @@
         }
       ],
       "Variable": "MOZILLABUILD",
-      "Value": "C:\\mozilla-build"
+      "Value": "C:\\mozilla-build",
+      "Target": "Machine"
     },
     {
       "ComponentName": "env-MOZ_TOOLS",
@@ -389,7 +391,8 @@
         }
       ],
       "Variable": "MOZ_TOOLS",
-      "Value": "C:\\mozilla-build\\moztools-x64"
+      "Value": "C:\\mozilla-build\\moztools-x64",
+      "Target": "Machine"
     },
     {
       "ComponentName": "env-VCINSTALLDIR",
@@ -401,7 +404,8 @@
         }
       ],
       "Variable": "VCINSTALLDIR",
-      "Value": "C:\\Windows\\SysWOW64\\config\\systemprofile\\AppData\\Local\\Programs\\Common\\Microsoft\\Visual C++ for Python\\9.0\\VC"
+      "Value": "C:\\Windows\\SysWOW64\\config\\systemprofile\\AppData\\Local\\Programs\\Common\\Microsoft\\Visual C++ for Python\\9.0\\VC",
+      "Target": "Machine"
     }
   ]
 }
