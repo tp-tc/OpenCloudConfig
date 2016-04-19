@@ -11,8 +11,45 @@
       "Path": "C:\\tools"
     },
     {
+      "ComponentName": "vcredist_vs2010_x86",
+      "ComponentType": "ExeInstall",
+      "Comment": "Required by yasm (c:/mozilla-build/yasm/yasm.exe)",
+      "Url": "http://download.microsoft.com/download/C/6/D/C6D0FD4E-9E53-4897-9B91-836EBA2AACD3/vcredist_x86.exe",
+      "Arguments": [
+        "/install",
+        "/passive",
+        "/norestart",
+        "/Log",
+        "C:\\log\\vcredist_vs2010_x86-install.log"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Windows\\System32\\msvcr100.dll"
+        ]
+      }
+    },
+    {
+      "ComponentName": "vcredist_vs2010_x64",
+      "ComponentType": "ExeInstall",
+      "Comment": "Required by yasm (c:/mozilla-build/yasm/yasm.exe)",
+      "Url": "http://download.microsoft.com/download/A/8/0/A80747C3-41BD-45DF-B505-E9710D2744E0/vcredist_x64.exe",
+      "Arguments": [
+        "/install",
+        "/passive",
+        "/norestart",
+        "/Log",
+        "C:\\log\\vcredist_vs2010_x64-install.log"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Windows\\SysWOW64\\msvcr100.dll"
+        ]
+      }
+    },
+    {
       "ComponentName": "vcredist_vs2013_x86",
       "ComponentType": "ExeInstall",
+      "Comment": "Required by rustc (tooltool artefact)",
       "Url": "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x86.exe",
       "Arguments": [
         "/install",
@@ -30,6 +67,7 @@
     {
       "ComponentName": "vcredist_vs2013_x64",
       "ComponentType": "ExeInstall",
+      "Comment": "Required by rustc (tooltool artefact)",
       "Url": "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe",
       "Arguments": [
         "/install",
