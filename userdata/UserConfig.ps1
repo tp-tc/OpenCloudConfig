@@ -36,4 +36,9 @@ Configuration UserConfig {
     }
     TestScript = { if (Test-Path -Path ('{0}\Microsoft.PowerShell_profile.ps1' -f $PsHome) -ErrorAction SilentlyContinue ) { $true } else { $false } }
   }
+  Group TCWorkersGroupCreate {
+    GroupName = 'TCWorkers'
+    Description = 'TaskCluster Generic Worker disposable builder service accounts'
+    Ensure = 'Present'
+  }
 }
