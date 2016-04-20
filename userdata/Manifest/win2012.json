@@ -16,7 +16,7 @@
       ],
       "Validate": {
         "PathsExist": [
-          "${env:ProgramFiles(x86)}\\Microsoft DirectX SDK (June 2010)\\system\\uninstall\\DXSDK_Jun10.exe"
+          "C:\\Program Files (x86)\\Microsoft DirectX SDK (June 2010)\\system\\uninstall\\DXSDK_Jun10.exe"
         ]
       }
     },
