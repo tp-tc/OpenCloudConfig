@@ -7,14 +7,26 @@
       "Path": "C:\\log"
     },
     {
+      "ComponentName": "NET-Framework-Core",
+      "ComponentType": "WindowsFeatureInstall",
+      "Comment": "Required by DXSDK_Jun10",
+      "Name": "NET-Framework-Core"
+    },
+    {
       "ComponentName": "VisualC2010RedistributablePackageX86Uninstall",
       "ComponentType": "CommandRun",
       "Comment": "Required by DXSDK_Jun10 (https://blogs.msdn.microsoft.com/chuckw/2011/12/09/known-issue-directx-sdk-june-2010-setup-and-the-s1023-error)",
       "Command": "msiexec.exe",
       "Arguments": [
         "/passive",
-        "X{F0C3E5D1-1ADE-321E-8167-68EF0DE699A5}"
-      ]
+        "/uninstall",
+        "{F0C3E5D1-1ADE-321E-8167-68EF0DE699A5}"
+      ],
+      "Validate": {
+        "PathsNotExist": [
+          "C:\\Windows\\System32\\msvcr100.dll"
+        ]
+      }
     },
     {
       "ComponentName": "VisualC2010RedistributablePackageX86_64Uninstall",
@@ -23,8 +35,14 @@
       "Command": "msiexec.exe",
       "Arguments": [
         "/passive",
-        "X{1D8E6291-B0D5-35EC-8441-6616F567A0F7}"
-      ]
+        "/uninstall",
+        "{1D8E6291-B0D5-35EC-8441-6616F567A0F7}"
+      ],
+      "Validate": {
+        "PathsNotExist": [
+          "C:\\Windows\\SysWOW64\\msvcr100.dll"
+        ]
+      }
     },
     {
       "ComponentName": "DXSDK_Jun10",
@@ -35,6 +53,10 @@
         "/U"
       ],
       "DependsOn": [
+        {
+          "ComponentType": "WindowsFeatureInstall",
+          "ComponentName": "NET-Framework-Core"
+        },
         {
           "ComponentType": "CommandRun",
           "ComponentName": "VisualC2010RedistributablePackageX86Uninstall"

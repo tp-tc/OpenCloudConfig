@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
 
-function Validate-PathsExist {
+function Validate-PathsExistOrNotRequested {
   param(
     [object[]] $items
   )
@@ -12,14 +12,75 @@ function Validate-PathsExist {
   process {
     # either no validation paths-exist are specified
     return ((-not ($items)) -or (
-
       # validation paths-exist are specified
       (($items) -and ($items.Length -gt 0)) -and
-
       # all validation paths-exist are satisfied (exist on the instance)
       (-not (@($items | % {
         (Test-Path -Path $_.Path -ErrorAction SilentlyContinue)
       }) -contains $false))
+    ))
+  }
+  end {}
+}
+
+function Validate-PathsNotExistOrNotRequested {
+  param(
+    [object[]] $items
+  )
+  begin {}
+  process {
+    # either no validation paths-exist are specified
+    return ((-not ($items)) -or (
+      # validation paths-exist are specified
+      (($items) -and ($items.Length -gt 0)) -and
+      # all validation paths-exist are satisfied (exist on the instance)
+      (-not (@($items | % {
+        (-not (Test-Path -Path $_.Path -ErrorAction SilentlyContinue))
+      }) -contains $false))
+    ))
+  }
+  end {}
+}
+
+function Validate-CommandsReturnOrNotRequested {
+  param(
+    [object[]] $items
+  )
+  begin {}
+  process {
+    # either no validation commands-return are specified
+    return ((-not ($items)) -or (
+      # validation commands-return are specified
+      (($items) -and ($items.Length -gt 0)) -and
+      # all validation commands-return are satisfied
+      (-not (@($items | % {
+        $cr = $_
+        @(@(& $cr.Command $cr.Arguments) | ? {
+          $_ -match $cr.Match
+        })
+      }) -contains $false))
+    ))
+  }
+  end {}
+}
+
+function Validate-FilesContainOrNotRequested {
+  param(
+    [object[]] $items
+  )
+  begin {}
+  process {
+    # either no validation files-contain are specified
+    return ((-not ($items)) -or (
+      # validation files-contain are specified
+      (($items) -and ($items.Length -gt 0)) -and
+      # all validation files-contain are satisfied
+      (-not (@($items | % {
+        $fc = $_
+        (((Get-Content $fc.Path) | % {
+          $_ -match $fc.Match
+        }) -contains $true) # a line within the file contained a match
+      }) -contains $false)) # no files failed to contain a match (see '-not' above)
     ))
   }
   end {}
@@ -48,6 +109,7 @@ Configuration DynamicConfig {
     'SymbolicLink' = 'Script';
     'ExeInstall' = 'Script';
     'MsiInstall' = 'Package';
+    'WindowsFeatureInstall' = 'WindowsFeature';
     'EnvironmentVariableSet' = 'Script';
     'EnvironmentVariableUniqueAppend' = 'Script';
     'RegistryValueSet' = 'Script'
@@ -175,42 +237,18 @@ Configuration DynamicConfig {
             (
               # if no validations are specified, this function will return $false and cause the exe package to be (re)installed.
               (
-                (($using:item.Validate.PathsExist) -and ($using:item.Validate.Paths.Length -gt 0)) -or
+                (($using:item.Validate.PathsExist) -and ($using:item.Validate.PathsExist.Length -gt 0)) -or
+                (($using:item.Validate.PathsNotExist) -and ($using:item.Validate.PathsNotExist.Length -gt 0)) -or
                 (($using:item.Validate.CommandsReturn) -and ($using:item.Validate.CommandsReturn.Length -gt 0)) -or
                 (($using:item.Validate.FilesContain) -and ($using:item.Validate.FilesContain.Length -gt 0))
               ) -and (
-                Validate-PathsExist -items $using:item.Validate.PathsExist
+                Validate-PathsExistOrNotRequested -items $using:item.Validate.PathsExist
               ) -and (
-
-                # either no validation commands-return are specified
-                (-not ($using:item.Validate.CommandsReturn)) -or (
-
-                  # validation commands-return are specified
-                  (($using:item.Validate.CommandsReturn) -and ($using:item.Validate.CommandsReturn.Length -gt 0)) -and
-
-                  # all validation commands-return are satisfied
-                  (-not (@($using:item.Validate.CommandsReturn | % {
-                    $cr = $_
-                    @(@(& $cr.Command $cr.Arguments) | ? {
-                      $_ -match $cr.Match
-                    })
-                  }) -contains $false))
-                )
+                Validate-PathsNotExistOrNotRequested -items $using:item.Validate.PathsNotExist
               ) -and (
-                # either no validation files-contain are specified
-                (-not ($using:item.Validate.FilesContain)) -or (
-
-                  # validation files-contain are specified
-                  (($using:item.Validate.FilesContain) -and ($using:item.Validate.FilesContain.Length -gt 0)) -and
-
-                  # all validation files-contain are satisfied
-                  (-not (@($using:item.Validate.FilesContain | % {
-                    $fc = $_
-                    (((Get-Content $fc.Path) | % {
-                      $_ -match $fc.Match
-                    }) -contains $true) # a line within the file contained a match
-                  }) -contains $false)) # no files failed to contain a match (see '-not' above)
-                )
+                Validate-CommandsReturnOrNotRequested -items $using:item.Validate.CommandsReturn
+              ) -and (
+                Validate-FilesContainOrNotRequested -items $using:item.Validate.FilesContain
               )
             )
           }
@@ -250,6 +288,17 @@ Configuration DynamicConfig {
         }
         Log ('Log-MsiInstall-{0}' -f $item.ComponentName) {
           DependsOn = ('[Package]MsiInstall-{0}' -f $item.ComponentName)
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
+        }
+      }
+      'WindowsFeatureInstall' {
+        WindowsFeature ('WindowsFeatureInstall-{0}' -f $item.ComponentName) {
+          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          Name = $item.Name
+          Ensure = 'Present'
+        }
+        Log ('Log-WindowsFeatureInstall-{0}' -f $item.ComponentName) {
+          DependsOn = ('[WindowsFeature]WindowsFeatureInstall-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
