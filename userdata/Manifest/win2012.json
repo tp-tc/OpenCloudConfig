@@ -7,6 +7,20 @@
       "Path": "C:\\log"
     },
     {
+      "ComponentName": "DXSDK_Jun10",
+      "ComponentType": "ExeInstall",
+      "Comment": "Provides D3D compilers required by 32 bit builds",
+      "Url": "http://download.microsoft.com/download/A/E/7/AE743F1F-632B-4809-87A9-AA1BB3458E31/DXSDK_Jun10.exe",
+      "Arguments": [
+        "/U"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "${env:ProgramFiles(x86)}\\Microsoft DirectX SDK (June 2010)\\system\\uninstall\\DXSDK_Jun10.exe"
+        ]
+      }
+    },
+    {
       "ComponentName": "vcredist_vs2010_x86",
       "ComponentType": "ExeInstall",
       "Comment": "Required by yasm (c:/mozilla-build/yasm/yasm.exe)",
@@ -139,6 +153,7 @@
     {
       "ComponentName": "MercurialConfig",
       "ComponentType": "FileDownload",
+      "Comment": "Required by CloneBundles (hg extension)",
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
