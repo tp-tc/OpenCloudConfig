@@ -3,12 +3,8 @@
     {
       "ComponentName": "LogDirectory",
       "ComponentType": "DirectoryCreate",
+      "Comment": "Required by OpenCloudConfig for DSC logging",
       "Path": "C:\\log"
-    },
-    {
-      "ComponentName": "ToolsDirectory",
-      "ComponentType": "DirectoryCreate",
-      "Path": "C:\\tools"
     },
     {
       "ComponentName": "vcredist_vs2010_x86",
@@ -85,6 +81,7 @@
     {
       "ComponentName": "windowssdksetup",
       "ComponentType": "ExeInstall",
+      "Comment": "Deprecated? Test building without and remove or justify",
       "Url": "http://download.microsoft.com/download/B/0/C/B0C80BA3-8AD6-4958-810B-6882485230B5/standalonesdk/sdksetup.exe",
       "Arguments": [
         "/Quiet",
@@ -96,6 +93,7 @@
     {
       "ComponentName": "MozillaBuildSetup",
       "ComponentType": "ExeInstall",
+      "Comment": "Base Firefox on Windows build requirement",
       "Arguments": [
         "/S",
         "/D=C:\\mozilla-build"
@@ -120,6 +118,7 @@
     {
       "ComponentName": "VCForPython",
       "ComponentType": "MsiInstall",
+      "Comment": "Required by BuildBot VirtualEnv used by Mozharness (c:/mozilla-build/buildbotve)",
       "Url": "https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi",
       "Name": "Microsoft Visual C++ Compiler Package for Python 2.7",
       "ProductId": "692514A8-5484-45FC-B0AE-BE2DF7A75891"
@@ -127,6 +126,7 @@
     {
       "ComponentName": "MercurialPythonPatch",
       "ComponentType": "SymbolicLink",
+      "Comment": "Required by hg extensions",
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
