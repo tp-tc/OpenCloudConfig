@@ -660,6 +660,19 @@
       "Name": "VCINSTALLDIR",
       "Value": "C:\\Windows\\SysWOW64\\config\\systemprofile\\AppData\\Local\\Programs\\Common\\Microsoft\\Visual C++ for Python\\9.0\\VC",
       "Target": "Machine"
+    },
+    {
+      "ComponentName": "env-DXSDK_DIR",
+      "ComponentType": "EnvironmentVariableSet",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "DXSDK_Jun10"
+        }
+      ],
+      "Name": "DXSDK_DIR",
+      "Value": "C:\\Program Files (x86)\\Microsoft DirectX SDK (June 2010)",
+      "Target": "Machine"
     }
   ]
 }
