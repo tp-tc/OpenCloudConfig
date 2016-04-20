@@ -1,6 +1,6 @@
 
 # show file extensions in explorer
-Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\' -Type 'DWord' -Name 'HideFileExt' -Value '0x00000002' # off
+Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' -Type 'DWord' -Name 'HideFileExt' -Value '0x00000002' # off
 Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' -Type 'DWord' -Name 'Hidden' -Value '0x00000001'
 Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' -Type 'DWord' -Name 'ShowSuperHidden' -Value '0x00000001'
 

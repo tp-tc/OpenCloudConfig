@@ -7,12 +7,42 @@
       "Path": "C:\\log"
     },
     {
+      "ComponentName": "VisualC2010RedistributablePackageX86Uninstall",
+      "ComponentType": "CommandRun",
+      "Comment": "Required by DXSDK_Jun10 (https://blogs.msdn.microsoft.com/chuckw/2011/12/09/known-issue-directx-sdk-june-2010-setup-and-the-s1023-error)",
+      "Command": "msiexec.exe",
+      "Arguments": [
+        "/passive",
+        "X{F0C3E5D1-1ADE-321E-8167-68EF0DE699A5}"
+      ]
+    },
+    {
+      "ComponentName": "VisualC2010RedistributablePackageX86_64Uninstall",
+      "ComponentType": "CommandRun",
+      "Comment": "Required by DXSDK_Jun10 (https://blogs.msdn.microsoft.com/chuckw/2011/12/09/known-issue-directx-sdk-june-2010-setup-and-the-s1023-error)",
+      "Command": "msiexec.exe",
+      "Arguments": [
+        "/passive",
+        "X{1D8E6291-B0D5-35EC-8441-6616F567A0F7}"
+      ]
+    },
+    {
       "ComponentName": "DXSDK_Jun10",
       "ComponentType": "ExeInstall",
       "Comment": "Provides D3D compilers required by 32 bit builds",
       "Url": "http://download.microsoft.com/download/A/E/7/AE743F1F-632B-4809-87A9-AA1BB3458E31/DXSDK_Jun10.exe",
       "Arguments": [
         "/U"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "VisualC2010RedistributablePackageX86Uninstall"
+        },
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "VisualC2010RedistributablePackageX86_64Uninstall"
+        }
       ],
       "Validate": {
         "PathsExist": [
@@ -32,6 +62,12 @@
         "/Log",
         "C:\\log\\vcredist_vs2010_x86-install.log"
       ],
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "DXSDK_Jun10"
+        }
+      ],
       "Validate": {
         "PathsExist": [
           "C:\\Windows\\System32\\msvcr100.dll"
@@ -49,6 +85,12 @@
         "/norestart",
         "/Log",
         "C:\\log\\vcredist_vs2010_x64-install.log"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "DXSDK_Jun10"
+        }
       ],
       "Validate": {
         "PathsExist": [

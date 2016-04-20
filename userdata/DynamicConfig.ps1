@@ -251,7 +251,7 @@ Configuration DynamicConfig {
         }
         Log ('Log-EnvironmentVariableSet-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]EnvironmentVariableSet-{0}' -f $item.ComponentName)
-          Message = ('{0}: {1}, download completed' -f $item.ComponentType, $item.ComponentName)
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'EnvironmentVariableUniqueAppend' {
@@ -266,7 +266,21 @@ Configuration DynamicConfig {
         }
         Log ('Log-EnvironmentVariableUniqueAppend-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]EnvironmentVariableUniqueAppend-{0}' -f $item.ComponentName)
-          Message = ('{0}: {1}, download completed' -f $item.ComponentType, $item.ComponentName)
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
+        }
+      }
+      'RegistryValueSet' {
+        Script ('RegistryValueSet-{0}' -f $item.ComponentName) {
+          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          GetScript = "@{ RegistryValueSet = $item.ComponentName }"
+          SetScript = {
+            Set-ItemProperty -Path $using:item.Path -Type $using:item.Type -Name $using:item.Name -Value $using:item.Value
+          }
+          TestScript = { return (Get-ItemProperty -Path $using:item.Path -Name $using:item.Name -eq $using:item.Value) }
+        }
+        Log ('Log-RegistryValueSet-{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]RegistryValueSet-{0}' -f $item.ComponentName)
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
     }
