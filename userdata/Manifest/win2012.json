@@ -7,10 +7,24 @@
       "Path": "C:\\log"
     },
     {
+      "ComponentName": "Start-wuauserv",
+      "ComponentType": "ServiceControl",
+      "Comment": "Required by NET-Framework-Core",
+      "Name": "wuauserv",
+      "StartupType": "Manual",
+      "State": "Running"
+    },
+    {
       "ComponentName": "NET-Framework-Core",
       "ComponentType": "WindowsFeatureInstall",
       "Comment": "Required by DXSDK_Jun10",
-      "Name": "NET-Framework-Core"
+      "Name": "NET-Framework-Core",
+      "DependsOn": [
+        {
+          "ComponentType": "ServiceControl",
+          "ComponentName": "Start-wuauserv"
+        }
+      ]
     },
     {
       "ComponentName": "VisualC2010RedistributablePackageX86Uninstall",
@@ -737,6 +751,14 @@
       "Name": "DXSDK_DIR",
       "Value": "C:\\Program Files (x86)\\Microsoft DirectX SDK (June 2010)",
       "Target": "Machine"
+    },
+    {
+      "ComponentName": "Stop-wuauserv",
+      "ComponentType": "ServiceControl",
+      "Comment": "Windows Update will interfere with desired state if left running",
+      "Name": "wuauserv",
+      "StartupType": "Manual",
+      "State": "Stopped"
     }
   ]
 }
