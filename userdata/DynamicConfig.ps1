@@ -3,6 +3,29 @@ This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
+
+function Validate-PathsExist {
+  param(
+    [object[]] $items
+  )
+  begin {}
+  process {
+    # either no validation paths-exist are specified
+    return ((-not ($items)) -or (
+
+      # validation paths-exist are specified
+      (($items) -and ($items.Length -gt 0)) -and
+
+      # all validation paths-exist are satisfied (exist on the instance)
+      (-not (@($items | % {
+        (Test-Path -Path $_.Path -ErrorAction SilentlyContinue)
+      }) -contains $false))
+    ))
+  }
+  end {}
+}
+
+
 Configuration DynamicConfig {
   Import-DscResource -ModuleName PSDesiredStateConfiguration
   switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
@@ -26,7 +49,8 @@ Configuration DynamicConfig {
     'ExeInstall' = 'Script';
     'MsiInstall' = 'Package';
     'EnvironmentVariableSet' = 'Script';
-    'EnvironmentVariableUniqueAppend' = 'Script'
+    'EnvironmentVariableUniqueAppend' = 'Script';
+    'RegistryValueSet' = 'Script'
   }
   Log Manifest {
     Message = ('Manifest: {0}' -f $manifest)
@@ -155,18 +179,7 @@ Configuration DynamicConfig {
                 (($using:item.Validate.CommandsReturn) -and ($using:item.Validate.CommandsReturn.Length -gt 0)) -or
                 (($using:item.Validate.FilesContain) -and ($using:item.Validate.FilesContain.Length -gt 0))
               ) -and (
-
-                # either no validation paths-exist are specified
-                (-not ($using:item.Validate.PathsExist)) -or (
-
-                  # validation paths-exist are specified
-                  (($using:item.Validate.PathsExist) -and ($using:item.Validate.PathsExist.Length -gt 0)) -and
-
-                  # all validation paths-exist are satisfied (exist on the instance)
-                  (-not (@($using:item.Validate.PathsExist | % {
-                    (Test-Path -Path $_.Path -ErrorAction SilentlyContinue)
-                  }) -contains $false))
-                )
+                Validate-PathsExist -items $using:item.Validate.PathsExist
               ) -and (
 
                 # either no validation commands-return are specified
