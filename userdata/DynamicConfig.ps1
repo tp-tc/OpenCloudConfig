@@ -177,7 +177,6 @@ Configuration DynamicConfig {
             }
           }
           TestScript = {
-            Import-Module OCC-Validate
             return (
               # if no validations are specified, this function will return $false and cause the exe package to be (re)installed.
               (
