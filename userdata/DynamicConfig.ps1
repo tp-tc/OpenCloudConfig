@@ -18,14 +18,14 @@ Configuration DynamicConfig {
         $filename = [IO.Path]::GetFileName($url)
         $moduleName = [IO.Path]::GetFileNameWithoutExtension($filename)
         $modulePath = ('{0}\{1}' -f $modulesPath, $moduleName)
-        if (Test-Path $modulePath) {{
-          Remove-Module $moduleName -ErrorAction SilentlyContinue
+        if (Test-Path -Path $modulePath -ErrorAction SilentlyContinue) {
+          Remove-Module -Name $moduleName -Force -ErrorAction SilentlyContinue
           Remove-Item -path $modulePath -recurse -force
-        }}
+        }
         New-Item -ItemType Directory -Force -Path $modulePath
         (New-Object Net.WebClient).DownloadFile(('{0}?{1}' -f $url, [Guid]::NewGuid()), ('{0}\{1}' -f $modulePath, $filename))
         Unblock-File -Path ('{0}\{1}' -f $modulePath, $filename)
-        Import-Module $moduleName
+        Import-Module -Name $moduleName
       }
     }
     TestScript = { return $false }
@@ -101,7 +101,7 @@ Configuration DynamicConfig {
           SetScript = {
             Start-Process $($using:item.Command) -ArgumentList @($using:item.Arguments | % { $($_) }) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName) -RedirectStandardError ('{0}\log\{1}-{2}-stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName)
           }
-          TestScript = { $false } # todo: implement
+          TestScript = { return Validate-All -validations $using:item.Validate }
         }
         Log ('Log-CommandRun-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]CommandRun-{0}' -f $item.ComponentName)
@@ -176,25 +176,7 @@ Configuration DynamicConfig {
               throw
             }
           }
-          TestScript = {
-            return (
-              # if no validations are specified, this function will return $false and cause the exe package to be (re)installed.
-              (
-                (($using:item.Validate.PathsExist) -and ($using:item.Validate.PathsExist.Length -gt 0)) -or
-                (($using:item.Validate.PathsNotExist) -and ($using:item.Validate.PathsNotExist.Length -gt 0)) -or
-                (($using:item.Validate.CommandsReturn) -and ($using:item.Validate.CommandsReturn.Length -gt 0)) -or
-                (($using:item.Validate.FilesContain) -and ($using:item.Validate.FilesContain.Length -gt 0))
-              ) -and (
-                Validate-PathsExistOrNotRequested -items $using:item.Validate.PathsExist
-              ) -and (
-                Validate-PathsNotExistOrNotRequested -items $using:item.Validate.PathsNotExist
-              ) -and (
-                Validate-CommandsReturnOrNotRequested -items $using:item.Validate.CommandsReturn
-              ) -and (
-                Validate-FilesContainOrNotRequested -items $using:item.Validate.FilesContain
-              )
-            )
-          }
+          TestScript = { return Validate-All -validations $using:item.Validate }
         }
         Log ('Log-ExeInstall-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]ExeInstall-{0}' -f $item.ComponentName)
@@ -242,6 +224,37 @@ Configuration DynamicConfig {
         }
         Log ('Log-WindowsFeatureInstall-{0}' -f $item.ComponentName) {
           DependsOn = ('[WindowsFeature]WindowsFeatureInstall-{0}' -f $item.ComponentName)
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
+        }
+      }
+      'ZipInstall' {
+        Script ('ZipDownload-{0}' -f $item.ComponentName) {
+          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          GetScript = "@{ ZipDownload = $item.ComponentName }"
+          SetScript = {
+            # todo: handle non-http fetches
+            try {
+              (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName))
+            } catch {
+              # handle redirects (eg: sourceforge)
+              Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+            }
+            Unblock-File -Path ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName)
+          }
+          TestScript = { return (Test-Path -Path ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName) -ErrorAction SilentlyContinue) }
+        }
+        Log ('Log-ZipDownload-{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]ZipDownload-{0}' -f $item.ComponentName)
+          Message = ('{0}: {1}, download completed' -f $item.ComponentType, $item.ComponentName)
+        }
+        Archive ('ZipInstall-{0}' -f $item.ComponentName) {
+          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          Path = ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $item.ComponentName)
+          Destination = $item.Destination
+          Ensure = 'Present'
+        }
+        Log ('Log-ZipInstall-{0}' -f $item.ComponentName) {
+          DependsOn = ('[Package]ZipInstall-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
@@ -301,5 +314,21 @@ Configuration DynamicConfig {
         }
       }
     }
+  }
+  Script RemoveSupportingModules {
+    GetScript = "@{ Script = RemoveSupportingModules }"
+    SetScript = {
+      $modulesPath = ('{0}\Modules' -f $pshome)
+      foreach ($url in $using:supportingModules) {
+        $filename = [IO.Path]::GetFileName($url)
+        $moduleName = [IO.Path]::GetFileNameWithoutExtension($filename)
+        $modulePath = ('{0}\{1}' -f $modulesPath, $moduleName)
+        if (Test-Path -Path $modulePath -ErrorAction SilentlyContinue) {
+          Remove-Module -Name $moduleName -Force -ErrorAction SilentlyContinue
+          Remove-Item -path $modulePath -recurse -force
+        }
+      }
+    }
+    TestScript = { return (-not (Test-Path -Path ('{0}\Modules\OCC-*' -f $pshome) -ErrorAction SilentlyContinue)) }
   }
 }

@@ -30,7 +30,6 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
     'UserConfig',
     'Software/MaintenanceToolChainConfig',
     'DynamicConfig',
-    'Software/TaskClusterToolChainConfig',
     'FirefoxBuildResourcesConfig',
     'ServiceConfig',
     'RegistryConfig',

@@ -1,0 +1,38 @@
+[
+  {
+    "error": {
+      "message": "The program can't start because MSVCR100.dll is missing from your computer. Try reinstalling the program to fix this problem.",
+      "comment": "This error shows up in a Windows graphical error message dialogue that pops up in the user environment"
+    },
+    "diagnosis": {
+      "summary": "In Mozilla Firefox Windows builds, this error occurs when an attempt is made to run a yasm assembler, which has a dependency on C:\\Windows\\System32\\msvcr100.dll and C:\\Windows\\SysWOW64\\msvcr100.dll."
+    },
+    "resolution": {
+      "instructions": [
+        "Install both the x86 and x64 Microsoft Visual C++ 2010 Redistributable packages"
+      ],
+      "artifacts": [
+        "http://download.microsoft.com/download/C/6/D/C6D0FD4E-9E53-4897-9B91-836EBA2AACD3/vcredist_x86.exe",
+        "http://download.microsoft.com/download/A/8/0/A80747C3-41BD-45DF-B505-E9710D2744E0/vcredist_x64.exe"
+      ]
+    }
+  },
+  {
+    "error": {
+      "message": "The program can't start because MSVCR120.dll is missing from your computer. Try reinstalling the program to fix this problem.",
+      "comment": "This error shows up in a Windows graphical error message dialogue that pops up in the user environment"
+    },
+    "diagnosis": {
+      "summary": "In Mozilla Firefox Windows builds, this error occurs when an attempt is made to run a rustc compiler, which has a dependency on C:\\Windows\\System32\\msvcr120.dll and C:\\Windows\\SysWOW64\\msvcr120.dll."
+    },
+    "resolution": {
+      "instructions": [
+        "Install both the x86 and x64 Microsoft Visual C++ 2013 Redistributable packages"
+      ],
+      "artifacts": [
+        "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x86.exe",
+        "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe"
+      ]
+    }
+  }
+]
