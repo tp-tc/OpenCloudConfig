@@ -747,7 +747,7 @@
       "ComponentType": "RegistryKeySet",
       "Comment": "",
       "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting",
-      "ValueName": "LocalDumps",
+      "ValueName": "LocalDumps"
     },
     {
       "ComponentName": "reg-WindowsErrorReportingDontShowUI",
