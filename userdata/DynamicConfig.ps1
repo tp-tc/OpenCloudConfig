@@ -326,7 +326,7 @@ Configuration DynamicConfig {
           ValueData = $item.ValueData
         }
         Log ('Log-RegistryValueSet-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]RegistryValueSet-{0}' -f $item.ComponentName)
+          DependsOn = ('[Registry]RegistryValueSet-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
