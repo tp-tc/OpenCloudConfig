@@ -23,7 +23,7 @@ Configuration DynamicConfig {
           Remove-Item -path $modulePath -recurse -force
         }}
         New-Item -ItemType Directory -Force -Path $modulePath
-        (New-Object Net.WebClient).DownloadFile($url, ('{0}\{1}' -f $modulePath, $filename))
+        (New-Object Net.WebClient).DownloadFile(('{0}?{1}' -f $url, [Guid]::NewGuid()), ('{0}\{1}' -f $modulePath, $filename))
         Unblock-File -Path ('{0}\{1}' -f $modulePath, $filename)
         Import-Module $moduleName
       }
