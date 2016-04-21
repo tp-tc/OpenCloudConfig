@@ -52,6 +52,7 @@ Configuration DynamicConfig {
     'ExeInstall' = 'Script';
     'MsiInstall' = 'Package';
     'WindowsFeatureInstall' = 'WindowsFeature';
+    'ZipInstall' = 'Archive';
     'ServiceControl' = 'Service';
     'EnvironmentVariableSet' = 'Script';
     'EnvironmentVariableUniqueAppend' = 'Script';
@@ -254,7 +255,7 @@ Configuration DynamicConfig {
           Ensure = 'Present'
         }
         Log ('Log-ZipInstall-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Package]ZipInstall-{0}' -f $item.ComponentName)
+          DependsOn = ('[Archive]ZipInstall-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }

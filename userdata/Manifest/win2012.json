@@ -795,6 +795,16 @@
         "--config",
         "C:\\generic-worker\\generic-worker.config"
       ],
+      "DependsOn": [
+        {
+          "ComponentType": "ZipInstall",
+          "ComponentName": "PSTools"
+        },
+        {
+          "ComponentType": "ZipInstall",
+          "ComponentName": "NSSM"
+        }
+      ],
       "Validate": {
         "PathsExist": [
           "C:\\generic-worker\\generic-worker.config"
