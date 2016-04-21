@@ -4,91 +4,33 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
 
-function Validate-PathsExistOrNotRequested {
-  param(
-    [object[]] $items
-  )
-  begin {}
-  process {
-    # either no validation paths-exist are specified
-    return ((-not ($items)) -or (
-      # validation paths-exist are specified
-      (($items) -and ($items.Length -gt 0)) -and
-      # all validation paths-exist are satisfied (exist on the instance)
-      (-not (@($items | % {
-        (Test-Path -Path $_.Path -ErrorAction SilentlyContinue)
-      }) -contains $false))
-    ))
-  }
-  end {}
-}
-
-function Validate-PathsNotExistOrNotRequested {
-  param(
-    [object[]] $items
-  )
-  begin {}
-  process {
-    # either no validation paths-exist are specified
-    return ((-not ($items)) -or (
-      # validation paths-exist are specified
-      (($items) -and ($items.Length -gt 0)) -and
-      # all validation paths-exist are satisfied (exist on the instance)
-      (-not (@($items | % {
-        (-not (Test-Path -Path $_.Path -ErrorAction SilentlyContinue))
-      }) -contains $false))
-    ))
-  }
-  end {}
-}
-
-function Validate-CommandsReturnOrNotRequested {
-  param(
-    [object[]] $items
-  )
-  begin {}
-  process {
-    # either no validation commands-return are specified
-    return ((-not ($items)) -or (
-      # validation commands-return are specified
-      (($items) -and ($items.Length -gt 0)) -and
-      # all validation commands-return are satisfied
-      (-not (@($items | % {
-        $cr = $_
-        @(@(& $cr.Command $cr.Arguments) | ? {
-          $_ -match $cr.Match
-        })
-      }) -contains $false))
-    ))
-  }
-  end {}
-}
-
-function Validate-FilesContainOrNotRequested {
-  param(
-    [object[]] $items
-  )
-  begin {}
-  process {
-    # either no validation files-contain are specified
-    return ((-not ($items)) -or (
-      # validation files-contain are specified
-      (($items) -and ($items.Length -gt 0)) -and
-      # all validation files-contain are satisfied
-      (-not (@($items | % {
-        $fc = $_
-        (((Get-Content $fc.Path) | % {
-          $_ -match $fc.Match
-        }) -contains $true) # a line within the file contained a match
-      }) -contains $false)) # no files failed to contain a match (see '-not' above)
-    ))
-  }
-  end {}
-}
-
-
 Configuration DynamicConfig {
   Import-DscResource -ModuleName PSDesiredStateConfiguration
+
+  $supportingModules = @(
+    'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/OCC-Validate.psm1'
+  )
+  Script InstallSupportingModules {
+    GetScript = "@{ Script = InstallSupportingModules }"
+    SetScript = {
+      $modulesPath = ('{0}\Modules' -f $pshome)
+      foreach ($url in $using:supportingModules) {
+        $filename = [IO.Path]::GetFileName($url)
+        $moduleName = [IO.Path]::GetFileNameWithoutExtension($filename)
+        $modulePath = ('{0}\{1}' -f $modulesPath, $moduleName)
+        if (Test-Path $modulePath) {{
+          Remove-Module $moduleName -ErrorAction SilentlyContinue
+          Remove-Item -path $modulePath -recurse -force
+        }}
+        New-Item -ItemType Directory -Force -Path $modulePath
+        (New-Object Net.WebClient).DownloadFile($url, ('{0}\{1}' -f $modulePath, $filename))
+        Unblock-File -Path ('{0}\{1}' -f $modulePath, $filename)
+        Import-Module $moduleName
+      }
+    }
+    TestScript = { return (-not (@($supportingModules | % { Test-Path -Path ('{0}\Modules\{1}\{2}' -f $pshome, [IO.Path]::GetFileNameWithoutExtension($_), [IO.Path]::GetFileName($_)) -ErrorAction SilentlyContinue }) -contains $false)) }
+  }
+
   switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     'Microsoft Windows Server 2012*' {
       $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/win2012.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
