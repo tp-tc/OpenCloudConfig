@@ -303,27 +303,15 @@ Configuration DynamicConfig {
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
-      'ServiceStart' {
-        Service ('ServiceStart-{0}' -f $item.ComponentName) {
+      'ServiceControl' {
+        Service ('ServiceControl-{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           Name = $item.Name
           State = $item.State
           StartupType = $item.StartupType
         }
-        Log ('Log-ServiceStart-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Service]ServiceStart-{0}' -f $item.ComponentName)
-          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
-        }
-      }
-      'ServiceStop' {
-        Service ('ServiceStop-{0}' -f $item.ComponentName) {
-          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
-          Name = $item.Name
-          State = $item.State
-          StartupType = $item.StartupType
-        }
-        Log ('Log-ServiceStop-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Service]ServiceStop-{0}' -f $item.ComponentName)
+        Log ('Log-ServiceControl-{0}' -f $item.ComponentName) {
+          DependsOn = ('[Service]ServiceControl-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }

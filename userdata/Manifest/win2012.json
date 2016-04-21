@@ -8,7 +8,7 @@
     },
     {
       "ComponentName": "Start-wuauserv",
-      "ComponentType": "ServiceStart",
+      "ComponentType": "ServiceControl",
       "Comment": "Required by NET-Framework-Core",
       "Name": "wuauserv",
       "StartupType": "Manual",
@@ -751,14 +751,6 @@
       "Name": "DXSDK_DIR",
       "Value": "C:\\Program Files (x86)\\Microsoft DirectX SDK (June 2010)",
       "Target": "Machine"
-    },
-    {
-      "ComponentName": "Stop-wuauserv",
-      "ComponentType": "ServiceStop",
-      "Comment": "Windows Update will interfere with desired state if left running",
-      "Name": "wuauserv",
-      "StartupType": "Manual",
-      "State": "Stopped"
     }
   ]
 }
