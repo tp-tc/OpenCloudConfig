@@ -56,7 +56,8 @@ Configuration DynamicConfig {
     'ServiceControl' = 'Service';
     'EnvironmentVariableSet' = 'Script';
     'EnvironmentVariableUniqueAppend' = 'Script';
-    'RegistryValueSet' = 'Script'
+    'RegistryKeySet' = 'Registry';
+    'RegistryValueSet' = 'Registry'
   }
   Log Manifest {
     Message = ('Manifest: {0}' -f $manifest)
@@ -300,14 +301,29 @@ Configuration DynamicConfig {
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
-      'RegistryValueSet' {
-        Script ('RegistryValueSet-{0}' -f $item.ComponentName) {
+      'RegistryKeySet' {
+        Registry ('RegistryKeySet-{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
-          GetScript = "@{ RegistryValueSet = $item.ComponentName }"
-          SetScript = {
-            Set-ItemProperty -Path $using:item.Path -Type $using:item.Type -Name $using:item.Name -Value $using:item.Value
-          }
-          TestScript = { return (Get-ItemProperty -Path $using:item.Path -Name $using:item.Name -eq $using:item.Value) }
+          Ensure = 'Present'
+          Force = $true
+          Key = $item.Key
+          ValueName = $item.ValueName
+        }
+        Log ('Log-RegistryKeySet-{0}' -f $item.ComponentName) {
+          DependsOn = ('[Registry]RegistryKeySet-{0}' -f $item.ComponentName)
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
+        }
+      }
+      'RegistryValueSet' {
+        Registry ('RegistryValueSet-{0}' -f $item.ComponentName) {
+          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          Ensure = 'Present'
+          Force = $true
+          Key = $item.Key
+          ValueName = $item.ValueName
+          ValueType = $item.ValueType
+          Hex = $item.Hex
+          ValueData = $item.ValueData
         }
         Log ('Log-RegistryValueSet-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]RegistryValueSet-{0}' -f $item.ComponentName)

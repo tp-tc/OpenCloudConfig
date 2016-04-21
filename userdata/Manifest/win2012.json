@@ -743,6 +743,23 @@
       "Target": "Machine"
     },
     {
+      "ComponentName": "reg-WindowsErrorReportingLocalDumps",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting",
+      "ValueName": "LocalDumps",
+    },
+    {
+      "ComponentName": "reg-WindowsErrorReportingDontShowUI",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting",
+      "ValueName": "DontShowUI",
+      "ValueType": "Dword",
+      "ValueData": "0x00000001",
+      "Hex": true
+    },
+    {
       "ComponentName": "env-DXSDK_DIR",
       "ComponentType": "EnvironmentVariableSet",
       "DependsOn": [
