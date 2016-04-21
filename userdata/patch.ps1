@@ -19,6 +19,7 @@ function Run-RemoteDesiredStateConfig {
 $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
 New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
 Set-ExecutionPolicy RemoteSigned -force | Tee-Object -filePath $logFile -append
+& winrm @('set', 'winrm/config', '@{MaxEnvelopeSizekb="8192"}')
 if ($PSVersionTable.PSVersion.Major -lt 4) {
   Invoke-Expression ((New-Object Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) | Tee-Object -filePath $logFile -append
   & choco @('upgrade', 'powershell', '-y') | Out-File -filePath $logFile -append
@@ -26,7 +27,8 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
 } else {
   $url = 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata'
   $configs = @(
-    'DynamicConfig'
+    'DynamicConfig',
+    'ServiceConfig'
   )
   Start-Transcript -Path $logFile -Append
   foreach ($config in $configs) {
