@@ -17,7 +17,7 @@ function Validate-PathsExistOrNotRequested {
       (($items) -and ($items.Length -gt 0)) -and
       # all validation paths-exist are satisfied (exist on the instance)
       (-not (@($items | % {
-        (Test-Path -Path $_.Path -ErrorAction SilentlyContinue)
+        (Test-Path -Path $_ -ErrorAction SilentlyContinue)
       }) -contains $false))
     ))
   }
@@ -37,7 +37,7 @@ function Validate-PathsNotExistOrNotRequested {
       (($items) -and ($items.Length -gt 0)) -and
       # all validation paths-exist are satisfied (exist on the instance)
       (-not (@($items | % {
-        (-not (Test-Path -Path $_.Path -ErrorAction SilentlyContinue))
+        (-not (Test-Path -Path $_ -ErrorAction SilentlyContinue))
       }) -contains $false))
     ))
   }
