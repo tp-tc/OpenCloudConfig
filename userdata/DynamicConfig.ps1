@@ -28,7 +28,7 @@ Configuration DynamicConfig {
         Import-Module $moduleName
       }
     }
-    TestScript = { return (-not (@($supportingModules | % { Test-Path -Path ('{0}\Modules\{1}\{2}' -f $pshome, [IO.Path]::GetFileNameWithoutExtension($_), [IO.Path]::GetFileName($_)) -ErrorAction SilentlyContinue }) -contains $false)) }
+    TestScript = { return $false }
   }
 
   switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
