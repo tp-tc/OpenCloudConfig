@@ -41,11 +41,25 @@
       "comment": "This error shows up in 32 bit Firefox build logs during the old-configure step."
     },
     "diagnosis": {
-      "summary": "In Mozilla Firefox Windows builds, this error occurs when ---"
+      "summary": "In Mozilla Firefox Windows builds, this error occurs when the configure step attempts to locate the path to D3DCompiler_43_x86.cab"
     },
     "resolution": {
       "instructions": [
-        ""
+        "If the cab file exists on the filesysten (under C:\\Program Files (x86)\\Microsoft DirectX SDK (June 2010)\\Redist), the problem may be with the path to \"C:\\mozilla-build\\msys\\bin\\find.exe\" having a lower priority than \"C:\\Windows\\System32\\find.exe\". Change the resolution order in the PATH environment variable to give priority to msys find."
+      ]
+    }
+  },
+  {
+    "error": {
+      "message": "configure: error: This version (..) of the MSVC compiler is unsupported.",
+      "comment": "This error shows up in 32 bit Firefox build logs during the old-configure step."
+    },
+    "diagnosis": {
+      "summary": "Not diagnoed"
+    },
+    "resolution": {
+      "instructions": [
+        "Unresolved"
       ],
       "artifacts": []
     }
@@ -68,5 +82,6 @@
       ]
     }
   }
+
 ]
 
