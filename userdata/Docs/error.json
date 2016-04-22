@@ -49,6 +49,24 @@
       ],
       "artifacts": []
     }
+  },
+  {
+    "error": {
+      "message": "ImportError: No module named win32api",
+      "comment": "This error shows up in Firefox build logs during the tooltool artifact download step."
+    },
+    "diagnosis": {
+      "summary": "In Mozilla Firefox Windows builds, this error occurs when the loacal system python (or the virtual environment where python is running) does not have pypiwin32 installed."
+    },
+    "resolution": {
+      "instructions": [
+        "Install pypiwin32"
+      ],
+      "artifacts": [
+        "https://pypi.python.org/packages/cp27/p/pypiwin32/pypiwin32-219-cp27-none-win_amd64.whl#md5=d7bafcf3cce72c3ce9fdd633a262c335",
+        "https://pypi.python.org/packages/cp27/p/pypiwin32/pypiwin32-219-cp27-none-win32.whl#md5=a8b0c1b608c1afeb18cd38d759ee5e29"
+      ]
+    }
   }
 ]
 
