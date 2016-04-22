@@ -56,6 +56,7 @@ Configuration DynamicConfig {
     'ServiceControl' = 'Service';
     'EnvironmentVariableSet' = 'Script';
     'EnvironmentVariableUniqueAppend' = 'Script';
+    'EnvironmentVariableUniquePrepend' = 'Script';
     'RegistryKeySet' = 'Registry';
     'RegistryValueSet' = 'Registry'
   }
@@ -298,6 +299,21 @@ Configuration DynamicConfig {
         }
         Log ('Log-EnvironmentVariableUniqueAppend-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]EnvironmentVariableUniqueAppend-{0}' -f $item.ComponentName)
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
+        }
+      }
+      'EnvironmentVariableUniquePrepend' {
+        Script ('EnvironmentVariableUniquePrepend-{0}' -f $item.ComponentName) {
+          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          GetScript = "@{ EnvironmentVariableUniquePrepend = $item.ComponentName }"
+          SetScript = {
+            $value = (@(($using:item.Values + @(((Get-ChildItem env: | ? { $_.Name -ieq $using:item.Name } | Select-Object -first 1).Value) -split ';')) | select -Unique) -join ';')
+            [Environment]::SetEnvironmentVariable($using:item.Name, $value, $using:item.Target)
+          }
+          TestScript = { return $false }
+        }
+        Log ('Log-EnvironmentVariableUniquePrepend-{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]EnvironmentVariableUniquePrepend-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }

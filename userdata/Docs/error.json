@@ -34,5 +34,21 @@
         "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe"
       ]
     }
+  },
+  {
+    "error": {
+      "message": "configure: error: DirectX SDK at C:/Program Files (x86)/Microsoft DirectX SDK (June 2010) appears broken.",
+      "comment": "This error shows up in 32 bit Firefox build logs during the old-configure step."
+    },
+    "diagnosis": {
+      "summary": "In Mozilla Firefox Windows builds, this error occurs when ---"
+    },
+    "resolution": {
+      "instructions": [
+        ""
+      ],
+      "artifacts": []
+    }
   }
 ]
+
