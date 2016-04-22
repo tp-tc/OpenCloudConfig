@@ -1,6 +1,24 @@
 [
   {
     "error": {
+      "message": "ImportError: No module named win32api",
+      "comment": "This error shows up in Firefox build logs during the tooltool artifact download step."
+    },
+    "diagnosis": {
+      "summary": "In Mozilla Firefox Windows builds, this error occurs when the loacal system python (or the virtual environment where python is running) does not have pypiwin32 installed."
+    },
+    "resolution": {
+      "instructions": [
+        "Install pypiwin32"
+      ],
+      "artifacts": [
+        "https://pypi.python.org/packages/cp27/p/pypiwin32/pypiwin32-219-cp27-none-win_amd64.whl#md5=d7bafcf3cce72c3ce9fdd633a262c335",
+        "https://pypi.python.org/packages/cp27/p/pypiwin32/pypiwin32-219-cp27-none-win32.whl#md5=a8b0c1b608c1afeb18cd38d759ee5e29"
+      ]
+    }
+  },
+  {
+    "error": {
       "message": "The program can't start because MSVCR100.dll is missing from your computer. Try reinstalling the program to fix this problem.",
       "comment": "This error shows up in a Windows graphical error message dialogue that pops up in the user environment"
     },
@@ -66,22 +84,18 @@
   },
   {
     "error": {
-      "message": "ImportError: No module named win32api",
-      "comment": "This error shows up in Firefox build logs during the tooltool artifact download step."
+      "message": "configure: error: cannot compile for x86_64-pc-windows-msvc with C:/Users/Task_1461264561/build/src/rustc/bin/rustc",
+      "comment": "This error shows up in 64 bit Firefox build logs during the old-configure step."
     },
     "diagnosis": {
-      "summary": "In Mozilla Firefox Windows builds, this error occurs when the loacal system python (or the virtual environment where python is running) does not have pypiwin32 installed."
+      "summary": "Not diagnoed"
     },
     "resolution": {
       "instructions": [
-        "Install pypiwin32"
+        "Unresolved"
       ],
-      "artifacts": [
-        "https://pypi.python.org/packages/cp27/p/pypiwin32/pypiwin32-219-cp27-none-win_amd64.whl#md5=d7bafcf3cce72c3ce9fdd633a262c335",
-        "https://pypi.python.org/packages/cp27/p/pypiwin32/pypiwin32-219-cp27-none-win32.whl#md5=a8b0c1b608c1afeb18cd38d759ee5e29"
-      ]
+      "artifacts": []
     }
   }
-
 ]
 
