@@ -98,7 +98,7 @@
         "/install",
         "/passive",
         "/norestart",
-        "/Log",
+        "/log",
         "C:\\log\\vcredist_vs2010_x86-install.log"
       ],
       "DependsOn": [
@@ -122,7 +122,7 @@
         "/install",
         "/passive",
         "/norestart",
-        "/Log",
+        "/log",
         "C:\\log\\vcredist_vs2010_x64-install.log"
       ],
       "DependsOn": [
@@ -146,7 +146,7 @@
         "/install",
         "/passive",
         "/norestart",
-        "/Log",
+        "/log",
         "C:\\log\\vcredist_vs2013_x86-install.log"
       ],
       "Validate": {
@@ -164,12 +164,48 @@
         "/install",
         "/passive",
         "/norestart",
-        "/Log",
+        "/log",
         "C:\\log\\vcredist_vs2013_x64-install.log"
       ],
       "Validate": {
         "PathsExist": [
           "C:\\Windows\\System32\\msvcr120.dll"
+        ]
+      }
+    },
+    {
+      "ComponentName": "vcredist_vs2015_x86",
+      "ComponentType": "ExeInstall",
+      "Comment": "Required by rustc (tooltool artefact)",
+      "Url": "http://download.microsoft.com/download/f/3/9/f39b30ec-f8ef-4ba3-8cb4-e301fcf0e0aa/vc_redist.x86.exe",
+      "Arguments": [
+        "/install",
+        "/passive",
+        "/norestart",
+        "/log",
+        "C:\\log\\vcredist_vs2015_x86-install.log"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Windows\\SysWOW64\\msvcr140.dll"
+        ]
+      }
+    },
+    {
+      "ComponentName": "vcredist_vs2015_x64",
+      "ComponentType": "ExeInstall",
+      "Comment": "Required by rustc (tooltool artefact)",
+      "Url": "http://download.microsoft.com/download/4/c/b/4cbd5757-0dd4-43a7-bac0-2a492cedbacb/vc_redist.x64.exe",
+      "Arguments": [
+        "/install",
+        "/passive",
+        "/norestart",
+        "/log",
+        "C:\\log\\vcredist_vs2015_x64-install.log"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Windows\\System32\\msvcr140.dll"
         ]
       }
     },
