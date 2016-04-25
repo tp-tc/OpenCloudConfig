@@ -11,7 +11,21 @@ Configuration DiskConfig {
     DestinationPath = ('{0}\log' -f $env:SystemDrive)
     Ensure = 'Present'
   }
+  Script DisablePageFiles {
+    GetScript = "@{ DisablePageFiles = $true }"
+    SetScript = {
+      $sys = Get-WmiObject Win32_ComputerSystem -EnableAllPrivileges
+      $sys.AutomaticManagedPagefile = $False
+      $sys.Put()
+      Get-WmiObject Win32_PageFileSetting | % { $_.Delete() }
+      Get-ChildItem -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches' | % {
+        Set-ItemProperty -path $_.Name.Replace('HKEY_LOCAL_MACHINE', 'HKLM:') -name StateFlags0012 -type DWORD -Value 2
+      }
+    }
+    TestScript = { return ((-not (Get-WmiObject Win32_ComputerSystem).AutomaticManagedPagefile) -and (-not (Get-WmiObject win32_pagefilesetting))) }
+  }
   Script StripeDisks {
+    DependsOn = '[Script]DisablePageFiles'
     GetScript = "@{ StripeDisks = $true }"
     SetScript = {
       $outfile = ('{0}\log\{1}.diskpart.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
@@ -24,20 +38,6 @@ Configuration DiskConfig {
         "select disk 1`nclean`nconvert dynamic`nselect disk 2`n clean`nconvert dynamic`ncreate volume stripe disk=1,2`nformat quick fs=ntfs`nassign letter=X"
       )
       if (($ephemeralVolumeCount -gt 0) -and ($volumeOffset -gt 0) -and ($ephemeralVolumeCount -lt $diskpartscript.length)) {
-        $cs = gwmi Win32_ComputerSystem
-        if ($cs.AutomaticManagedPagefile) {
-          $cs.AutomaticManagedPagefile = $False
-          $cs.Put()
-          Start-Sleep -s 5
-        }
-        $pagefilesetting = gwmi win32_pagefilesetting
-        if ($pagefilesetting) {
-          $pagefilesetting.Delete()
-          Start-Sleep -s 5
-        }
-        Get-ChildItem -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches' | % {
-          Set-ItemProperty -path $_.Name.Replace('HKEY_LOCAL_MACHINE', 'HKLM:') -name StateFlags0012 -type DWORD -Value 2
-        }
         New-Item -path ('{0}\mnt.dp' -f $env:Temp) -value $diskpartscript[$ephemeralVolumeCount] -itemType file -force
         Start-Process 'diskpart' -ArgumentList @('/s', ('{0}\mnt.dp' -f $env:Temp)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput $outfile -RedirectStandardError $errfile
       }
