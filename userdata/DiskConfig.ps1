@@ -11,21 +11,7 @@ Configuration DiskConfig {
     DestinationPath = ('{0}\log' -f $env:SystemDrive)
     Ensure = 'Present'
   }
-  Script DisablePageFiles {
-    GetScript = "@{ DisablePageFiles = $true }"
-    SetScript = {
-      $sys = Get-WmiObject Win32_ComputerSystem -EnableAllPrivileges
-      $sys.AutomaticManagedPagefile = $False
-      $sys.Put()
-      Get-WmiObject Win32_PageFileSetting | % { $_.Delete() }
-      Get-ChildItem -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches' | % {
-        Set-ItemProperty -path $_.Name.Replace('HKEY_LOCAL_MACHINE', 'HKLM:') -name StateFlags0012 -type DWORD -Value 2
-      }
-    }
-    TestScript = { return ((-not (Get-WmiObject Win32_ComputerSystem).AutomaticManagedPagefile) -and (-not (Get-WmiObject win32_pagefilesetting))) }
-  }
   Script StripeDisks {
-    DependsOn = '[Script]DisablePageFiles'
     GetScript = "@{ StripeDisks = $true }"
     SetScript = {
       $outfile = ('{0}\log\{1}.diskpart.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
