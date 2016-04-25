@@ -28,10 +28,12 @@ Configuration DiskConfig {
         if ($cs.AutomaticManagedPagefile) {
           $cs.AutomaticManagedPagefile = $False
           $cs.Put()
+          Start-Sleep -s 5
         }
         $pagefilesetting = gwmi win32_pagefilesetting
         if ($pagefilesetting) {
           $pagefilesetting.Delete()
+          Start-Sleep -s 5
         }
         New-Item -path ('{0}\mnt.dp' -f $env:Temp) -value $diskpartscript[$ephemeralVolumeCount] -itemType file -force
         Start-Process 'diskpart' -ArgumentList @('/s', ('{0}\mnt.dp' -f $env:Temp)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput $outfile -RedirectStandardError $errfile
