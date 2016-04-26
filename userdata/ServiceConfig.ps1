@@ -7,4 +7,9 @@ Configuration ServiceConfig {
     State = 'Stopped'
     StartupType = 'Disabled'
   }
+  Service SuperFetchDisable {
+    Name = 'SysMain'
+    State = 'Stopped'
+    StartupType = 'Disabled'
+  }
 }
