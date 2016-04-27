@@ -39,8 +39,5 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
     & shutdown @('-r', '-t', '0', '-c', 'Userdata reboot required', '-f', '-d', 'p:4:1')
   } else {
     Run-RemoteDesiredStateConfig -url ('{0}/MaintenanceConfig.ps1' -f $url)
-    if ((Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { $_.Name.EndsWith('.userdata-run.zip') }).Count -eq 1) {
-      & shutdown @('-s', '-t', '0', '-c', 'Userdata run complete', '-f', '-d', 'p:4:1')
-    }
   }
 }
