@@ -832,20 +832,6 @@
       "Target": "Machine"
     },
     {
-      "ComponentName": "PSTools",
-      "ComponentType": "ZipInstall",
-      "Comment": "Required by TaskCluster Generic Worker",
-      "Url": "https://download.sysinternals.com/files/PSTools.zip",
-      "Destination": "C:\\PSTools"
-    },
-    {
-      "ComponentName": "NSSM",
-      "ComponentType": "ZipInstall",
-      "Comment": "Required by TaskCluster Generic Worker",
-      "Url": "http://www.nssm.cc/release/nssm-2.24.zip",
-      "Destination": "C:\\"
-    },
-    {
       "ComponentName": "GenericWorkerDirectory",
       "ComponentType": "DirectoryCreate",
       "Path": "C:\\generic-worker"
@@ -859,7 +845,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v2.0.0alpha19/generic-worker-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v2.0.0alpha25/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
@@ -873,31 +859,6 @@
       ],
       "Source": "https://github.com/taskcluster/livelog/releases/download/v0.0.6/livelog-windows-amd64.exe",
       "Target": "C:\\generic-worker\\livelog.exe"
-    },
-    {
-      "ComponentName": "GenericWorkerInstall",
-      "ComponentType": "CommandRun",
-      "Command": "C:\\generic-worker\\generic-worker.exe",
-      "Arguments": [
-        "install",
-        "--config",
-        "C:\\generic-worker\\generic-worker.config"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "ZipInstall",
-          "ComponentName": "PSTools"
-        },
-        {
-          "ComponentType": "ZipInstall",
-          "ComponentName": "NSSM"
-        }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\generic-worker\\generic-worker.config"
-        ]
-      }
     }
   ]
 }
