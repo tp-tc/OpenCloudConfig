@@ -14,14 +14,7 @@ function Run-RemoteDesiredStateConfig {
   . $target
   $mof = ('{0}\{1}' -f $env:Temp, $config)
   Invoke-Expression "$config -OutputPath $mof"
-  $configurationData = @{
-    AllNodes = @(
-      @{ 
-        PSDscAllowPlainTextPassword = $true
-      }
-    )
-  }
-  Start-DscConfiguration -ConfigurationData $configurationData -Path "$mof" -Wait -Verbose -Force
+  Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
 }
 $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
 New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)

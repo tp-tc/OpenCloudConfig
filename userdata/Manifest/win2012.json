@@ -845,7 +845,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v2.0.0alpha25/generic-worker-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v2.0.0alpha31/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
@@ -859,6 +859,22 @@
       ],
       "Source": "https://github.com/taskcluster/livelog/releases/download/v0.0.6/livelog-windows-amd64.exe",
       "Target": "C:\\generic-worker\\livelog.exe"
+    },
+    {
+      "ComponentName": "GenericWorkerInstall",
+      "ComponentType": "CommandRun",
+      "Command": "C:\\generic-worker\\generic-worker.exe",
+      "Arguments": [
+        "install",
+        "startup",
+        "--config",
+        "C:\\generic-worker\\generic-worker.config"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\generic-worker\\run-generic-worker.bat"
+        ]
+      }
     }
   ]
 }
