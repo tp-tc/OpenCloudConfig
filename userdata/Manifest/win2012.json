@@ -988,6 +988,24 @@
       "Path": "C:\\builds\\hg-shared"
     },
     {
+      "ComponentName": "HgSharedAccessRights",
+      "ComponentType": "CommandRun",
+      "Comment": "allows builds to use `hg share ...`",
+      "Command": "icacls.exe",
+      "Arguments": [
+        "C:\\builds\\hg-shared",
+        "/grant",
+        "Everyone:(OI)(CI)F",
+        "/inheritance:r"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "HgShared"
+        }
+      ]
+    },
+    {
       "ComponentName": "MozillaCentralCacheCreate",
       "ComponentType": "CommandRun",
       "Comment": "required by firefox builds",
