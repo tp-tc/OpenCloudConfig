@@ -40,6 +40,9 @@ Configuration FirefoxBuildResourcesConfig {
     SetScript = {
       #todo: change 'Everyone' to 'TCWorkers' when TC Worker has been updated to add new build service accounts to that group
       Start-Process ('icacls' -f ${env:ProgramFiles(x86)}) -ArgumentList @(('{0}\Users\worker' -f $env:SystemDrive), '/grant', 'Everyone:(OI)(CI)F', '/inheritance:r') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.grant-worker-access.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.grant-worker-access.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      
+      #required for `hg share`
+      Start-Process ('icacls' -f ${env:ProgramFiles(x86)}) -ArgumentList @(('{0}\builds\hg-shared' -f $env:SystemDrive), '/grant', 'Everyone:(OI)(CI)F', '/inheritance:r') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.grant-builds-access.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.grant-builds-access.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     }
     TestScript = { $false }
   }
