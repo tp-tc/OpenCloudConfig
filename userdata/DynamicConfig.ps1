@@ -46,6 +46,7 @@ Configuration DynamicConfig {
   $componentMap = @{
     'DirectoryCreate' = 'File';
     'DirectoryDelete' = 'Script';
+    'DirectoryCopy' = 'File';
     'CommandRun' = 'Script';
     'FileDownload' = 'Script';
     'SymbolicLink' = 'Script';
@@ -58,7 +59,8 @@ Configuration DynamicConfig {
     'EnvironmentVariableUniqueAppend' = 'Script';
     'EnvironmentVariableUniquePrepend' = 'Script';
     'RegistryKeySet' = 'Registry';
-    'RegistryValueSet' = 'Registry'
+    'RegistryValueSet' = 'Registry';
+    'FirewallRule' = 'Script'
   }
   Log Manifest {
     Message = ('Manifest: {0}' -f $manifest)
@@ -94,6 +96,19 @@ Configuration DynamicConfig {
         }
         Log ('Log-DirectoryDelete-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]DirectoryDelete-{0}' -f $($item.Path).Replace(':', '').Replace('\', '_'))
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
+        }
+      }
+      'DirectoryCopy' {
+        File ('DirectoryCopy-{0}' -f $item.ComponentName) {
+          Ensure = 'Present'
+          Type = 'Directory'
+          Recurse = $true
+          SourcePath = $item.Source
+          DestinationPath = $item.Target
+        }
+        Log ('Log-DirectoryCopy-{0}' -f $item.ComponentName) {
+          DependsOn = ('[File]DirectoryCopy-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
@@ -351,9 +366,9 @@ Configuration DynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ FirewallRule = $item.ComponentName }"
           SetScript = {
-            New-NetFirewallRule -DisplayName ('{0} ({1} {2} {3}): {4}' -f $item.ComponentName, $using:item.Protocol, $using:item.LocalPort, $using:item.Direction, $using:item.Action) -Protocol $using:item.Protocol -LocalPort $using:item.LocalPort -Direction $using:item.Direction -Action $using:item.Action
+            New-NetFirewallRule -DisplayName ('{0} ({1} {2} {3}): {4}' -f $using:item.ComponentName, $using:item.Protocol, $using:item.LocalPort, $using:item.Direction, $using:item.Action) -Protocol $using:item.Protocol -LocalPort $using:item.LocalPort -Direction $using:item.Direction -Action $using:item.Action
           }
-          TestScript = { return [bool](Get-NetFirewallRule -DisplayName ('{0} ({1} {2} {3}): {4}' -f $item.ComponentName, $using:item.Protocol, $using:item.LocalPort, $using:item.Direction, $using:item.Action) -ErrorAction SilentlyContinue) }
+          TestScript = { return [bool](Get-NetFirewallRule -DisplayName ('{0} ({1} {2} {3}): {4}' -f $using:item.ComponentName, $using:item.Protocol, $using:item.LocalPort, $using:item.Direction, $using:item.Action) -ErrorAction SilentlyContinue) }
         }
         Log ('Log-FirewallRule-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]FirewallRule-{0}' -f $item.ComponentName)

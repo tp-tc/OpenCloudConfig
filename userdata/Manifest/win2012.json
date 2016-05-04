@@ -284,6 +284,13 @@
       "ProductId": "692514A8-5484-45FC-B0AE-BE2DF7A75891"
     },
     {
+      "ComponentName": "VCForPythonShared",
+      "ComponentType": "DirectoryCopy",
+      "Comment": "VCForPython installs to an inaccessible location, this copies it to an accessible location.",
+      "Source": "C:\\Windows\\SysWOW64\\config\\systemprofile\\AppData\\Local\\Programs\\Common\\Microsoft\\Visual C++ for Python",
+      "Target": "C:\\Program Files (x86)\\Visual C++ for Python"
+    },
+    {
       "ComponentName": "MercurialPythonPatch",
       "ComponentType": "SymbolicLink",
       "Comment": "Required by hg extensions",
