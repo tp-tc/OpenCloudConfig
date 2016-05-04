@@ -221,6 +221,31 @@
       ]
     },
     {
+      "ComponentName": "VisualStudio2015AdminDeployment",
+      "ComponentType": "FileDownload",
+      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/VisualStudio2015/AdminDeployment.xml",
+      "Target": "C:\\Windows\\Temp\\VisualStudio2015AdminDeployment.xml"
+    },
+    {
+      "ComponentName": "VisualStudio2015Community",
+      "ComponentType": "ExeInstall",
+      "Url": "http://download.microsoft.com/download/0/B/C/0BC321A4-013F-479C-84E6-4A2F90B11269/vs_community.exe",
+      "Arguments": [
+        "/Passive",
+        "/NoRestart",
+        "/AdminFile",
+        "C:\\Windows\\Temp\\VisualStudio2015AdminDeployment.xml",
+        "/Log",
+        "C:\\log\\VisualStudio2015CommunityInstall.log"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "VisualStudio2015AdminDeployment"
+        }
+      ]
+    },
+    {
       "ComponentName": "MozillaBuildSetup",
       "ComponentType": "ExeInstall",
       "Comment": "Base Firefox on Windows build requirement",
