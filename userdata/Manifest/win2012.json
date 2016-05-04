@@ -918,6 +918,15 @@
       "Validate": {
         "PathsExist": [
           "C:\\generic-worker\\run-generic-worker.bat"
+        ],
+        "CommandsReturn": [
+          {
+            "Command": "C:\\generic-worker\\generic-worker.exe",
+            "Arguments": [
+              "--version"
+            ],
+            "Match": "generic-worker 2.0.0alpha32"
+          }
         ]
       }
     }
