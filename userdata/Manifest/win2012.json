@@ -1019,6 +1019,23 @@
       }
     },
     {
+      "ComponentName": "MozillaCentralCacheUpdate",
+      "ComponentType": "CommandRun",
+      "Comment": "keeps the cache up to date on subsequent runs/reboots",
+      "Command": "C:\\mozilla-build\\python\\Scripts\\hg.exe",
+      "Arguments": [
+        "pull",
+        "-R",
+        "C:\\builds\\hg-shared\\mozilla-central"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "MozillaCentralCacheCreate"
+        }
+      ]
+    },
+    {
       "ComponentName": "BuildToolsCacheCreate",
       "ComponentType": "CommandRun",
       "Comment": "required by firefox builds",
@@ -1048,6 +1065,23 @@
           "C:\\builds\\hg-shared\\build\\tools\\.hg"
         ]
       }
+    },
+    {
+      "ComponentName": "BuildToolsCacheUpdate",
+      "ComponentType": "CommandRun",
+      "Comment": "keeps the cache up to date on subsequent runs/reboots",
+      "Command": "C:\\mozilla-build\\python\\Scripts\\hg.exe",
+      "Arguments": [
+        "pull",
+        "-R",
+        "C:\\builds\\hg-shared\\build\\tools"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "BuildToolsCacheCreate"
+        }
+      ]
     }
   ]
 }
