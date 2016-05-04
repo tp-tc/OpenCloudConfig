@@ -108,40 +108,4 @@ Configuration FirefoxBuildResourcesConfig {
     }
     TestScript = { if ((Test-Path -Path ('{0}\home\worker\tooltool-cache\*' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (-not (Compare-Object -ReferenceObject (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/tooltool-artifacts.json' -UseBasicParsing | ConvertFrom-Json) -DifferenceObject (Get-ChildItem -Path ('{0}\home\worker\tooltool-cache' -f $env:SystemDrive) | % { $_.Name })))) { $true } else { $false } }
   }
-
-  File MozillaRepositoriesFolder {
-    DependsOn = @('[File]BuildsFolder')
-    Type = 'Directory'
-    DestinationPath = ('{0}\builds\hg-shared' -f $env:SystemDrive)
-    Ensure = 'Present'
-  }
-  Script MozillaRepositoriesCache {
-    DependsOn = @('[File]MozillaRepositoriesFolder')
-    GetScript = { @{ Result = $false } }
-    SetScript = {
-      $repos = @{
-        'https://hg.mozilla.org/build/mozharness' = ('{0}\builds\hg-shared\build\mozharness' -f $env:SystemDrive);
-        'https://hg.mozilla.org/build/tools' = ('{0}\builds\hg-shared\build\tools' -f $env:SystemDrive);
-        'https://hg.mozilla.org/integration/mozilla-inbound' = ('{0}\builds\hg-shared\integration\mozilla-inbound' -f $env:SystemDrive);
-        'https://hg.mozilla.org/integration/fx-team' = ('{0}\builds\hg-shared\integration\fx-team' -f $env:SystemDrive);
-        'https://hg.mozilla.org/mozilla-central' = ('{0}\builds\hg-shared\mozilla-central' -f $env:SystemDrive);
-        ('{0}\builds\hg-shared\mozilla-central' -f $env:SystemDrive) = ('{0}\builds\hg-shared\try' -f $env:SystemDrive)
-      }
-      if (Test-Path -Path ('{0}\mozilla-build\python\Scripts\hg.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
-        $hg = ('{0}\mozilla-build\python\Scripts\hg.exe' -f $env:SystemDrive)
-      } elseif (Test-Path -Path ('{0}\mozilla-build\hg\hg.exe' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
-        $hg = ('{0}\mozilla-build\hg\hg.exe' -f $env:SystemDrive)
-      } else {
-        $hg = 'hg.exe'
-      }
-      foreach ($repo in $repos.GetEnumerator()) {
-        if (Test-Path -Path ('{0}\.hg' -f $repo.Value) -PathType Container -ErrorAction SilentlyContinue) {
-          Start-Process $hg -ArgumentList @('pull', '-R', $repo.Value) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.hg-pull-{2}.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), (Split-Path $repo.Value -Leaf)) -RedirectStandardError ('{0}\log\{1}.hg-pull-{2}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), (Split-Path $repo.Value -Leaf))
-        } else {
-          Start-Process $hg -ArgumentList @('clone', '-U', $repo.Name, $repo.Value) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.hg-clone-{2}.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), (Split-Path $repo.Value -Leaf)) -RedirectStandardError ('{0}\log\{1}.hg-clone-{2}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), (Split-Path $repo.Value -Leaf))
-        }
-      }
-    }
-    TestScript = { $false }
-  }
 }

@@ -261,11 +261,15 @@
       "Url": "http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.2.0.exe",
       "Validate": {
         "PathsExist": [
+          "C:\\mozilla-build\\info-zip\\unzip.exe",
+          "C:\\mozilla-build\\info-zip\\zip.exe",
           "C:\\mozilla-build\\msys\\bin\\sh.exe",
           "C:\\mozilla-build\\msys\\local\\bin\\make.exe",
-          "C:\\mozilla-build\\msys\\local\\bin\\autoconf-2.13",
-          "C:\\mozilla-build\\info-zip\\unzip.exe",
-          "C:\\mozilla-build\\info-zip\\zip.exe"
+          "C:\\mozilla-build\\msys\\local\\bin\\autoconf-2.13",,
+          "C:\\mozilla-build\\python\\python.exe",
+          "C:\\mozilla-build\\python\\Scripts\\hg.exe",
+          "C:\\mozilla-build\\upx391w\\upx.exe",
+          "C:\\mozilla-build\\yasm\\yasm.exe"
         ],
         "FilesContain": [
           {
@@ -974,6 +978,74 @@
             ],
             "Match": "generic-worker 2.0.0alpha32"
           }
+        ]
+      }
+    },
+    {
+      "ComponentName": "HgShared",
+      "ComponentType": "DirectoryCreate",
+      "Comment": "required by hg caches",
+      "Path": "C:\\builds\\hg-shared"
+    },
+    {
+      "ComponentName": "MozillaCentralCacheCreate",
+      "ComponentType": "CommandRun",
+      "Comment": "required by firefox builds",
+      "Command": "C:\\mozilla-build\\python\\Scripts\\hg.exe",
+      "Arguments": [
+        "clone",
+        "-U",
+        "https://hg.mozilla.org/mozilla-central",
+        "C:\\builds\\hg-shared\\mozilla-central"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        },
+        {
+          "ComponentType": "SymbolicLink",
+          "ComponentName": "MercurialPythonPatch"
+        },
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "HgShared"
+        }
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\builds\\hg-shared\\mozilla-central\\.hg"
+        ]
+      }
+    },
+    {
+      "ComponentName": "BuildToolsCacheCreate",
+      "ComponentType": "CommandRun",
+      "Comment": "required by firefox builds",
+      "Command": "C:\\mozilla-build\\python\\Scripts\\hg.exe",
+      "Arguments": [
+        "clone",
+        "-U",
+        "https://hg.mozilla.org/build/tools",
+        "C:\\builds\\hg-shared\\build\\tools"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        },
+        {
+          "ComponentType": "SymbolicLink",
+          "ComponentName": "MercurialPythonPatch"
+        },
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "HgShared"
+        }
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\builds\\hg-shared\\build\\tools\\.hg"
         ]
       }
     }
