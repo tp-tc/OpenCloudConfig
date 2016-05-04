@@ -265,7 +265,7 @@
           "C:\\mozilla-build\\info-zip\\zip.exe",
           "C:\\mozilla-build\\msys\\bin\\sh.exe",
           "C:\\mozilla-build\\msys\\local\\bin\\make.exe",
-          "C:\\mozilla-build\\msys\\local\\bin\\autoconf-2.13",,
+          "C:\\mozilla-build\\msys\\local\\bin\\autoconf-2.13",
           "C:\\mozilla-build\\python\\python.exe",
           "C:\\mozilla-build\\python\\Scripts\\hg.exe",
           "C:\\mozilla-build\\upx391w\\upx.exe",
