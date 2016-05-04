@@ -819,6 +819,26 @@
       "Hex": true
     },
     {
+      "ComponentName": "reg-useLegacyJit",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "Disable JIT (bz1269809)",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\.NETFramework",
+      "ValueName": "useLegacyJit",
+      "ValueType": "Dword",
+      "ValueData": "0x00000001",
+      "Hex": true
+    },
+    {
+      "ComponentName": "reg-Wow6432Node-useLegacyJit",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "Disable JIT (bz1269809)",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Microsoft\\.NETFramework",
+      "ValueName": "useLegacyJit",
+      "ValueType": "Dword",
+      "ValueData": "0x00000001",
+      "Hex": true
+    },
+    {
       "ComponentName": "env-DXSDK_DIR",
       "ComponentType": "EnvironmentVariableSet",
       "DependsOn": [
