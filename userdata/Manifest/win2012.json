@@ -243,7 +243,12 @@
           "ComponentType": "FileDownload",
           "ComponentName": "VisualStudio2015AdminDeployment"
         }
-      ]
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\Common7\\IDE\\devenv.exe"
+        ]
+      }
     },
     {
       "ComponentName": "MozillaBuildSetup",
