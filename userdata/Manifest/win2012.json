@@ -969,8 +969,7 @@
       "Validate": {
         "PathsExist": [
           "C:\\generic-worker\\run-generic-worker.bat",
-          "C:\\generic-worker\\generic-worker.exe",
-          "C:\\generic-worker\\generic-worker.config"
+          "C:\\generic-worker\\generic-worker.exe"
         ],
         "CommandsReturn": [
           {

@@ -12,6 +12,21 @@ Configuration MaintenanceConfig {
     Ensure = 'Present'
   }
 
+  Script PersistantDscRunAtStartup {
+    # ensures that dsc runs even when userdata doesn't eg: on workers
+    # todo: remove this when everything is running under DynamicConfig and let the dsc engine handle it as part of the consistency check
+    GetScript = { @{ Result = ((Test-Path -Path ('{0}\System32\GroupPolicy\Machine\Scripts\Startup\dsc.ps1' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and (Get-ScheduledTask -TaskName 'RunDesiredStateConfigurationAtStartup' -ErrorAction SilentlyContinue)) } }
+    SetScript = {
+      switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+        'Microsoft Windows Server 2008*' { $s = 'win2008' }
+        default { $s = 'win2012' }
+      }
+      (New-Object Net.WebClient).DownloadFile(('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/{0}.ps1?{1}' -f $s, [Guid]::NewGuid()), ('{0}\System32\GroupPolicy\Machine\Scripts\Startup\dsc.ps1' -f $env:SystemRoot))
+      Register-ScheduledJob -Name 'RunDesiredStateConfigurationAtStartup' -Trigger (New-JobTrigger -AtStartup -RandomDelay '00:00:30') -FilePath ('{0}\System32\GroupPolicy\Machine\Scripts\Startup\dsc.ps1' -f $env:SystemRoot)
+    }
+    TestScript = { return [bool]((Test-Path -Path ('{0}\System32\GroupPolicy\Machine\Scripts\Startup\dsc.ps1' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and (Get-ScheduledTask -TaskName 'RunDesiredStateConfigurationAtStartup' -ErrorAction SilentlyContinue)) }
+  }
+
   Script GpgKeyImport {
     DependsOn = '[File]LogFolder'
     GetScript = { @{ Result = (((Test-Path -Path ('{0}\SysWOW64\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\SysWOW64\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot)).length -gt 0kb)) -or ((Test-Path -Path ('{0}\System32\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\System32\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot)).length -gt 0kb))) } }
@@ -44,20 +59,6 @@ Configuration MaintenanceConfig {
       Remove-Item -Path ('{0}\Temp\smtp.pass.gpg' -f $env:SystemRoot) -Force
       Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % {
         Remove-Item -Path $_.FullName -Force
-      }
-      $vs2013Log = (Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.Name.EndsWith('.vs_community_2013.exe.install.log') } | Sort-Object LastAccessTime -Descending | Select-Object -First 1).FullName
-      if ($vs2013Log) {
-        Start-Process ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ArgumentList @('a', $vs2013Log.Replace('.log', '.zip'), ('{0}*.log' -f $vs2013Log.Replace('.log', '_'))) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.zip-vs2013-logs.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.zip-vs2013-logs.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-        Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.FullName.StartsWith($vs2013Log.Replace('.log', '_')) -and $_.Name.EndsWith('.log') } | % {
-          Remove-Item -Path $_.FullName -Force
-        }
-      }
-      $vs2015Log = (Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.Name.EndsWith('.vs_community_2015.exe.install.log') } | Sort-Object LastAccessTime -Descending | Select-Object -First 1).FullName
-      if ($vs2015Log) {
-        Start-Process ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ArgumentList @('a', $vs2015Log.Replace('.log', '.zip'), ('{0}*.log' -f $vs2015Log.Replace('.log', '_'))) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.zip-vs2015-logs.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.zip-vs2015-logs.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-        Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.FullName.StartsWith($vs2015Log.Replace('.log', '_')) -and $_.Name.EndsWith('.log') } | % {
-          Remove-Item -Path $_.FullName -Force
-        }
       }
       $logFile = (Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.Name.EndsWith('.userdata-run.log') } | Sort-Object LastAccessTime -Descending | Select-Object -First 1).FullName
       Start-Process ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ArgumentList @('a', $logFile.Replace('.log', '.zip'), ('{0}\log\*.log' -f $env:SystemDrive)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.zip-logs.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.zip-logs.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
