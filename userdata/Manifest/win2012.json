@@ -126,7 +126,7 @@
       "DependsOn": [
         {
           "ComponentType": "FileDownload",
-          "ComponentName": "DiskPartStripeConfiguration"
+          "ComponentName": "DiskPartitionStripeConfiguration"
         }
       ],
       "Validate": {
