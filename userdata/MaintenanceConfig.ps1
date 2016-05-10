@@ -21,6 +21,7 @@ Configuration MaintenanceConfig {
         'Microsoft Windows Server 2008*' { $s = 'win2008' }
         default { $s = 'win2012' }
       }
+      New-Item -ItemType Directory -Force -Path ('{0}\System32\GroupPolicy\Machine\Scripts\Startup' -f $env:SystemRoot)
       (New-Object Net.WebClient).DownloadFile(('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/{0}.ps1?{1}' -f $s, [Guid]::NewGuid()), ('{0}\System32\GroupPolicy\Machine\Scripts\Startup\dsc.ps1' -f $env:SystemRoot))
       Register-ScheduledJob -Name 'RunDesiredStateConfigurationAtStartup' -Trigger (New-JobTrigger -AtStartup -RandomDelay '00:00:30') -FilePath ('{0}\System32\GroupPolicy\Machine\Scripts\Startup\dsc.ps1' -f $env:SystemRoot)
     }
