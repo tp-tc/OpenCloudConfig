@@ -7,6 +7,189 @@
       "Path": "C:\\log"
     },
     {
+      "ComponentName": "NxLog",
+      "ComponentType": "MsiInstall",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Url": "http://nxlog.org/system/files/products/files/1/nxlog-ce-2.9.1504.msi",
+      "Name": "NxLog-CE",
+      "ProductId": "5E1D25F5-647E-44CA-9223-387230EC02C6"
+    },
+    {
+      "ComponentName": "PaperTrailEncryptionCertificate",
+      "ComponentType": "FileDownload",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Source": "https://papertrailapp.com/tools/papertrail-bundle.pem",
+      "Target": "C:\\Program Files (x86)\\nxlog\\cert\\papertrail-bundle.pem",
+      "DependsOn": [
+        {
+          "ComponentType": "MsiInstall",
+          "ComponentName": "NxLog"
+        }
+      ]
+    },
+    {
+      "ComponentName": "NxLogPaperTrailConfiguration",
+      "ComponentType": "FileDownload",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/nxlog.conf",
+      "Target": "C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf",
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "PaperTrailEncryptionCertificate"
+        }
+      ]
+    },
+    {
+      "ComponentName": "GpgForWin",
+      "ComponentType": "ExeInstall",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Url": "http://files.gpg4win.org/gpg4win-2.3.0.exe",
+      "Arguments": [
+        "/S"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg.exe",
+          "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg2.exe"
+        ]
+      }
+    },
+    {
+      "ComponentName": "SevenZip",
+      "ComponentType": "ExeInstall",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Url": "http://7-zip.org/a/7z1514-x64.exe",
+      "Arguments": [
+        "/S"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files\\7-Zip\\7z.exe",
+          "C:\\Program Files\\7-Zip\\7z.dll"
+        ]
+      }
+    },
+    {
+      "ComponentName": "SublimeText3",
+      "ComponentType": "ExeInstall",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Url": "https://download.sublimetext.com/Sublime%20Text%20Build%203103%20x64%20Setup.exe",
+      "Arguments": [
+        "/VERYSILENT",
+        "/NORESTART",
+        "/TASKS=\"contextentry\""
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files\\Sublime Text 3\\subl.exe",
+          "C:\\Program Files\\Sublime Text 3\\sublime_text.exe"
+        ]
+      }
+    },
+    {
+      "ComponentName": "SublimeText3-PackageControl",
+      "ComponentType": "FileDownload",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Source": "http://sublime.wbond.net/Package%20Control.sublime-package",
+      "Target": "C:\\Users\\Administrator\\AppData\\Roaming\\Sublime Text 3\\Packages\\Package Control.sublime-package",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "SublimeText3"
+        }
+      ]
+    },
+    {
+      "ComponentName": "SystemPowerShellProfile",
+      "ComponentType": "FileDownload",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Microsoft.PowerShell_profile.ps1",
+      "Target": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Microsoft.PowerShell_profile.ps1"
+    },
+    {
+      "ComponentName": "DiskPartitionStripeConfiguration",
+      "ComponentType": "FileDownload",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/DiskPart/stripe-yz-x.dp",
+      "Target": "C:\\Windows\\Temp\\stripe-yz-x.dp"
+    },
+    {
+      "ComponentName": "DiskPartitionStripe",
+      "ComponentType": "CommandRun",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Command": "diskpart.exe",
+      "Arguments": [
+        "/s",
+        "C:\\Windows\\Temp\\stripe-yz-x.dp"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "DiskPartStripeConfiguration"
+        }
+      ],
+      "Validate": {
+        "PathsExist": [
+          "X:\\"
+        ],
+        "PathsNotExist": [
+          "Y:\\",
+          "Z:\\"
+        ]
+      }
+    },
+    {
+      "ComponentName": "FsutilDisable8Dot3",
+      "ComponentType": "CommandRun",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Command": "fsutil.exe",
+      "Arguments": [
+        "behavior",
+        "set",
+        "disable8dot3",
+        "1"
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "fsutil.exe",
+            "Arguments": [
+              "behavior",
+              "query",
+              "disable8dot3"
+            ],
+            "Match": "The registry state is: 1 (Disable 8dot3 name creation on all volumes)."
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "FsutilDisableLastAccess",
+      "ComponentType": "CommandRun",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Command": "fsutil.exe",
+      "Arguments": [
+        "behavior",
+        "set",
+        "disablelastaccess",
+        "1"
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "fsutil.exe",
+            "Arguments": [
+              "behavior",
+              "query",
+              "disablelastaccess"
+            ],
+            "Match": "DisableLastAccess = 1"
+          }
+        ]
+      }
+    },
+    {
       "ComponentName": "Start-wuauserv",
       "ComponentType": "ServiceControl",
       "Comment": "Required by NET-Framework-Core",

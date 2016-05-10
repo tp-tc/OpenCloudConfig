@@ -47,12 +47,9 @@ elseif ((Get-WmiObject Win32_ComputerSystem).AutomaticManagedPagefile -or @(Get-
 else {
   $url = 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata'
   $configs = @(
-    'UserConfig',
-    'Software/MaintenanceToolChainConfig',
     'DynamicConfig',
     'FirefoxBuildResourcesConfig',
-    'ServiceConfig',
-    'DiskConfig'
+    'ServiceConfig'
   )
   Start-Transcript -Path $logFile -Append
   foreach ($config in $configs) {
