@@ -88,6 +88,12 @@
       }
     },
     {
+      "ComponentName": "SublimeText3-PackagesFolder",
+      "ComponentType": "DirectoryCreate",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Path": "C:\\Users\\Administrator\\AppData\\Roaming\\Sublime Text 3\\Packages"
+    },
+    {
       "ComponentName": "SublimeText3-PackageControl",
       "ComponentType": "FileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
@@ -97,6 +103,10 @@
         {
           "ComponentType": "ExeInstall",
           "ComponentName": "SublimeText3"
+        },
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "SublimeText3-PackagesFolder"
         }
       ]
     },
