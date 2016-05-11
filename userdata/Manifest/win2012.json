@@ -1166,6 +1166,24 @@
       }
     },
     {
+      "ComponentName": "GenericWorkerHomeAccessRights",
+      "ComponentType": "CommandRun",
+      "Comment": "Temporary hack until generic worker install homedir permissions are patched",
+      "Command": "icacls.exe",
+      "Arguments": [
+        "C:\\genworkerhome",
+        "/grant",
+        "GenericWorker:(OI)(CI)F",
+        "/inheritance:r"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "GenericWorkerInstall"
+        }
+      ]
+    },
+    {
       "ComponentName": "HgShared",
       "ComponentType": "DirectoryCreate",
       "Comment": "required by hg caches",

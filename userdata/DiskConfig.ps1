@@ -21,7 +21,7 @@ Configuration DiskConfig {
       $diskpartscript = @(
         '',
         "select volume 1`nremove all dismount`nselect disk 1`nclean`nconvert gpt`ncreate partition primary`nformat quick fs=ntfs`nselect volume 1`nassign letter=X",
-        "select disk 1`nclean`nconvert dynamic`nselect disk 2`n clean`nconvert dynamic`ncreate volume stripe disk=1,2`nformat quick fs=ntfs`nassign letter=X"
+        "select disk 1`nclean`nconvert dynamic`nselect disk 2`nclean`nconvert dynamic`ncreate volume stripe disk=1,2`nformat quick fs=ntfs`nassign letter=X"
       )
       if (($ephemeralVolumeCount -gt 0) -and ($volumeOffset -gt 0) -and ($ephemeralVolumeCount -lt $diskpartscript.length)) {
         New-Item -path ('{0}\mnt.dp' -f $env:Temp) -value $diskpartscript[$ephemeralVolumeCount] -itemType file -force
