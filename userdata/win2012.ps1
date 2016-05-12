@@ -56,7 +56,7 @@ else {
     Run-RemoteDesiredStateConfig -url ('{0}/{1}.ps1' -f $url, $config)
   }
   Stop-Transcript
-  if (((Get-Content $logFile) | % { $_ -match 'A reboot is required to progress further' }) -contains $true) {
+  if (((Get-Content $logFile) | % { $_ -match 'reboot' }) -contains $true) {
     & shutdown @('-r', '-t', '0', '-c', 'Userdata reboot required', '-f', '-d', 'p:4:1')
   } else {
     Run-RemoteDesiredStateConfig -url ('{0}/MaintenanceConfig.ps1' -f $url)
