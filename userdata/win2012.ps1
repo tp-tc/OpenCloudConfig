@@ -48,7 +48,6 @@ else {
   $url = 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata'
   $configs = @(
     'DynamicConfig',
-    'FirefoxBuildResourcesConfig',
     'ServiceConfig'
   )
   Start-Transcript -Path $logFile -Append
