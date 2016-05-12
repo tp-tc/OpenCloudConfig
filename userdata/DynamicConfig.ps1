@@ -11,12 +11,15 @@ Configuration DynamicConfig {
   Script SetHostname {
     GetScript = "@{ Script = SetHostname }"
     SetScript = {
-      [Environment]::SetEnvironmentVariable('COMPUTERNAME', $using:hostname, 'Machine')
-      $env:COMPUTERNAME = $using:hostname
-      (Get-WmiObject Win32_ComputerSystem).Rename($using:hostname)
+      if (-not ([string]::IsNullOrWhiteSpace($using:hostname))) {
+        [Environment]::SetEnvironmentVariable('COMPUTERNAME', $using:hostname, 'Machine')
+        $env:COMPUTERNAME = $using:hostname
+        (Get-WmiObject Win32_ComputerSystem).Rename($using:hostname)
+      }
     }
-    TestScript = { return ([System.Net.Dns]::GetHostName() -ieq $using:hostname) }
+    TestScript = { return (([string]::IsNullOrWhiteSpace($using:hostname)) -or ([System.Net.Dns]::GetHostName() -ieq $using:hostname)) }
   }
+  
 
   $supportingModules = @(
     'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/OCC-Validate.psm1'
