@@ -9,9 +9,8 @@ Configuration DynamicConfig {
 
   $hostname = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-id'))
   Script SetHostname {
-    GetScript = ""
+    GetScript = "@{ Script = SetHostname }"
     SetScript = {
-      
       [Environment]::SetEnvironmentVariable('COMPUTERNAME', $using:hostname, 'Machine')
       $env:COMPUTERNAME = $using:hostname
       (Get-WmiObject Win32_ComputerSystem).Rename($using:hostname)
