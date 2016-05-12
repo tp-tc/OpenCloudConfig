@@ -1183,7 +1183,7 @@
       "Arguments": [
         "C:\\genworkerhome",
         "/grant",
-        "GenericWorker:(OI)(CI)F",
+        "Administrators:(OI)(CI)F",
         "/inheritance:r"
       ],
       "DependsOn": [

@@ -7,6 +7,18 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 Configuration DynamicConfig {
   Import-DscResource -ModuleName PSDesiredStateConfiguration
 
+  $hostname = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-id'))
+  Script SetHostname {
+    GetScript = ""
+    SetScript = {
+      
+      [Environment]::SetEnvironmentVariable('COMPUTERNAME', $using:hostname, 'Machine')
+      $env:COMPUTERNAME = $using:hostname
+      (Get-WmiObject Win32_ComputerSystem).Rename($using:hostname)
+    }
+    TestScript = { return ([System.Net.Dns]::GetHostName() -ieq $using:hostname) }
+  }
+
   $supportingModules = @(
     'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/OCC-Validate.psm1'
   )
