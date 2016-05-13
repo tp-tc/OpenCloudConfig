@@ -1241,8 +1241,7 @@
       "Arguments": [
         "C:\\builds\\hg-shared",
         "/grant",
-        "Everyone:(OI)(CI)F",
-        "/inheritance:r"
+        "Everyone:(OI)(CI)F"
       ],
       "DependsOn": [
         {
