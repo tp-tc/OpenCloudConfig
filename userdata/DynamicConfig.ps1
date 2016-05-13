@@ -116,6 +116,7 @@ Configuration DynamicConfig {
     'DirectoryCopy' = 'File';
     'CommandRun' = 'Script';
     'FileDownload' = 'Script';
+    'ChecksumFileDownload' = 'File';
     'SymbolicLink' = 'Script';
     'ExeInstall' = 'Script';
     'MsiInstall' = 'Package';
@@ -210,6 +211,21 @@ Configuration DynamicConfig {
         }
         Log ('Log-FileDownload-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]FileDownload-{0}' -f $item.ComponentName)
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
+        }
+      }
+      'ChecksumFileDownload' {
+        File ('ChecksumFileDownload-{0}' -f $item.ComponentName) {
+          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          Type = 'File'
+          Checksum = 'SHA-1'
+          SourcePath = $item.Source
+          DestinationPath = $item.Target
+          Ensure = 'Present'
+          Force = $true
+        }
+        Log ('Log-ChecksumFileDownload-{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]ChecksumFileDownload-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
