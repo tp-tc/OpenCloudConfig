@@ -1218,8 +1218,7 @@
       "Arguments": [
         "C:\\Users\\Default",
         "/grant",
-        "Everyone:(OI)(CI)(M)",
-        "/inheritance:r"
+        "Everyone:(OI)(CI)(M)"
       ],
       "DependsOn": [
         {
