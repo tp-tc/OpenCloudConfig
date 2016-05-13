@@ -26,20 +26,33 @@ function Send-ZippedLogs {
     [int] $smtpPort = 2587,
     [string] $smtpUsername = 'AKIAIPJEOD57YDLBF35Q'
   )
-
-  (New-Object Net.WebClient).DownloadFile('https://github.com/MozRelOps/OpenCloudConfig/blob/master/userdata/Configuration/smtp.pass.gpg?raw=true', ('{0}\Temp\smtp.pass.gpg' -f $env:SystemRoot))
-  # todo: lose the temp file
-  Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('-d', ('{0}\Temp\smtp.pass.gpg' -f $env:SystemRoot)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\Temp\smtp.pass' -f $env:SystemRoot) -RedirectStandardError ('{0}\log\{1}.gpg-decrypt.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-  $smtpPassword = Get-Content ('{0}\Temp\smtp.pass' -f $env:SystemRoot)
-  $credential = New-Object Management.Automation.PSCredential $smtpUsername, (ConvertTo-SecureString "$smtpPassword" -AsPlainText -Force)
-  Remove-Item -Path ('{0}\Temp\smtp.pass' -f $env:SystemRoot) -Force
-  Remove-Item -Path ('{0}\Temp\smtp.pass.gpg' -f $env:SystemRoot) -Force
   Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
   $logFile = (Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.userdata-run.log') } | Sort-Object LastAccessTime -Descending | Select-Object -First 1).FullName
   Start-Process ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ArgumentList @('a', $logFile.Replace('.log', '.zip'), ('{0}\log\*.log' -f $env:SystemDrive)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.zip-logs.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.zip-logs.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-  $attachments = @($logFile.Replace('.log', '.zip'))
-  $body = (Get-Content -Path @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.userdata-run.log') } | Sort-Object LastAccessTime | % { $_.FullName })) -join "`n"
-  Send-MailMessage -To $to -Subject $subject -Body $body -SmtpServer $smtpServer -Port $smtpPort -From $from -Attachments $attachments -UseSsl -Credential $credential
+  try {
+    # at ami creation smtp password is in userdata
+    $smtpPassword = [regex]::matches((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data'), '(?s)<smtpPassword>(.*)</smtpPassword>').Groups[1].Value
+  }
+  catch {
+    try {
+      # provisioned instances contain no userdata (yet)
+      (New-Object Net.WebClient).DownloadFile('https://github.com/MozRelOps/OpenCloudConfig/blob/master/userdata/Configuration/smtp.pass.gpg?raw=true', ('{0}\Temp\smtp.pass.gpg' -f $env:SystemRoot))
+      # todo: lose the temp file
+      Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('-d', ('{0}\Temp\smtp.pass.gpg' -f $env:SystemRoot)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\Temp\smtp.pass' -f $env:SystemRoot) -RedirectStandardError ('{0}\log\{1}.gpg-decrypt.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      $smtpPassword = Get-Content ('{0}\Temp\smtp.pass' -f $env:SystemRoot)
+      Remove-Item -Path ('{0}\Temp\smtp.pass' -f $env:SystemRoot) -Force
+      Remove-Item -Path ('{0}\Temp\smtp.pass.gpg' -f $env:SystemRoot) -Force
+    }
+    catch {
+      $smtpPassword = $null
+    }
+  }
+  if (-not ([string]::IsNullOrWhiteSpace($smtpPassword))) {
+    $credential = New-Object Management.Automation.PSCredential $smtpUsername, (ConvertTo-SecureString "$smtpPassword" -AsPlainText -Force)
+    $attachments = @($logFile.Replace('.log', '.zip'))
+    $body = (Get-Content -Path @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.userdata-run.log') } | Sort-Object LastAccessTime | % { $_.FullName })) -join "`n"
+    Send-MailMessage -To $to -Subject $subject -Body $body -SmtpServer $smtpServer -Port $smtpPort -From $from -Attachments $attachments -UseSsl -Credential $credential
+  }
   Remove-Item -Path ('{0}\log\*.log' -f $env:SystemDrive) -Force
 }
 
@@ -55,10 +68,6 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
   & choco @('upgrade', 'powershell', '-y') | Out-File -filePath $logFile -append
   & shutdown @('-r', '-t', '0', '-c', 'Powershell upgraded', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
 }
-
-# blow away any paging files we find, they reduce performance on ec2 instances with plenty of RAM (requires reboot, if found)
-# if they're on the ephemeral disks, they also prevent us from raid striping.
-
 # run dsc
 else {
   Start-Transcript -Path $logFile -Append

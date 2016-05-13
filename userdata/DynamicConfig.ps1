@@ -24,6 +24,8 @@ Configuration DynamicConfig {
   Script RemovePageFiles {
     GetScript = "@{ Script = RemovePageFiles }"
     SetScript = {
+      # blow away any paging files we find, they reduce performance on ec2 instances with plenty of RAM (requires reboot, if found)
+      # if they're on the ephemeral disks, they also prevent us from raid striping.
       if ((Get-WmiObject Win32_ComputerSystem).AutomaticManagedPagefile -or @(Get-WmiObject Win32_PageFileSetting).length) {
         $sys = Get-WmiObject Win32_ComputerSystem -EnableAllPrivileges
         $sys.AutomaticManagedPagefile = $False
