@@ -230,7 +230,7 @@ Configuration DynamicConfig {
           TestScript = { return (Test-Path -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)) -ErrorAction SilentlyContinue) }
         }
         File ('ChecksumFileCopy-{0}' -f $item.ComponentName) {
-          DependsOn = ('[File]ChecksumFileDownload-{0}' -f $item.ComponentName)
+          DependsOn = ('[Script]ChecksumFileDownload-{0}' -f $item.ComponentName)
           Type = 'File'
           Checksum = 'SHA-1'
           SourcePath = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($item.Target))
