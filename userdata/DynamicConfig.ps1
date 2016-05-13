@@ -490,14 +490,14 @@ Configuration DynamicConfig {
     }
     TestScript = { return (-not (Test-Path -Path ('{0}\Modules\OCC-*' -f $pshome) -ErrorAction SilentlyContinue)) }
   }
-  Script Reboot {
-    GetScript = "@{ Script = Reboot }"
+  Script RebootIfRequired {
+    GetScript = "@{ Script = RebootIfRequired }"
     SetScript = {
-      if ([Environment]::GetEnvironmentVariable('DscRebootRequired', 'Process') -ieq 'true') {
+      if ($env:DscRebootRequired -eq 'true') {
         [Environment]::SetEnvironmentVariable('DscRebootRequired', 'false', 'Process')
         Restart-Computer -Force
       }
     }
-    TestScript = { return (-not ([Environment]::GetEnvironmentVariable('DscRebootRequired', 'Process') -ieq 'true')) }
+    TestScript = { return ($env:DscRebootRequired -ne 'true')) }
   }
 }

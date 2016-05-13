@@ -64,7 +64,7 @@ else {
   Start-Transcript -Path $logFile -Append
   Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
   Stop-Transcript
-  if (((Get-Content $logFile) | % { $_ -match 'reboot' }) -contains $true) {
+  if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot required')) }) -contains $true) {
     & shutdown @('-r', '-t', '0', '-c', 'Userdata reboot required', '-f', '-d', 'p:4:1')
   } else {
     Send-ZippedLogs
