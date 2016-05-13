@@ -1128,7 +1128,7 @@
     },
     {
       "ComponentName": "GenericWorkerDownload",
-      "ComponentType": "FileDownload",
+      "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
         {
           "ComponentType": "DirectoryCreate",
@@ -1178,7 +1178,7 @@
       ],
       "DependsOn": [
         {
-          "ComponentType": "FileDownload",
+          "ComponentType": "ChecksumFileDownload",
           "ComponentName": "GenericWorkerDownload"
         },
         {
