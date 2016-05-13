@@ -1065,10 +1065,14 @@
         {
           "ComponentType": "MsiInstall",
           "ComponentName": "VCForPython"
+        },
+        {
+          "ComponentType": "DirectoryCopy",
+          "ComponentName": "VCForPythonShared"
         }
       ],
       "Name": "VCINSTALLDIR",
-      "Value": "C:\\Windows\\SysWOW64\\config\\systemprofile\\AppData\\Local\\Programs\\Common\\Microsoft\\Visual C++ for Python\\9.0\\VC",
+      "Value": "C:\\Program Files (x86)\\Visual C++ for Python\\9.0\\VC",
       "Target": "Machine"
     },
     {
