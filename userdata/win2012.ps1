@@ -34,6 +34,7 @@ else {
   Start-Transcript -Path $logFile -Append
   Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
   Stop-Transcript
+  Start-Sleep -Seconds 10 # give dsc time to reboot and rerun, if it needs to
   # shut down if there is exactly 1 log zip file (infer this is the ami creation instance)
   if ((Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.zip') }).Count -eq 1) {
     & shutdown @('-s', '-t', '0', '-c', 'Userdata run complete', '-f', '-d', 'p:4:1')
