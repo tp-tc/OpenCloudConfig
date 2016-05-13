@@ -495,11 +495,33 @@ Configuration DynamicConfig {
   Script RebootIfRequired {
     GetScript = "@{ Script = RebootIfRequired }"
     SetScript = {
+      if (-not ($env:DscRebootRequired -eq 'true')) {
+        $logFile = (Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.log') } | Sort-Object LastAccessTime -Descending | Select-Object -First 1).FullName
+        if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot required')) }) -contains $true) {
+          $env:DscRebootRequired = 'true'
+        }
+      }
       if ($env:DscRebootRequired -eq 'true') {
         [Environment]::SetEnvironmentVariable('DscRebootRequired', 'false', 'Process')
         Restart-Computer -Force
       }
     }
-    TestScript = { return ($env:DscRebootRequired -ne 'true') }
+    TestScript = { return $false }
+  }
+  Script ZipLogs {
+    # we should only get here after any required reboots
+    DependsOn = '[Script]RebootIfRequired'
+    GetScript = "@{ Script = ZipLogs }"
+    SetScript = {
+      # determine current log file (get latest)
+      $logFile = (Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.log') } | Sort-Object LastAccessTime -Descending | Select-Object -First 1).FullName
+      # delete empty log files
+      Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
+      # zip log files
+      Start-Process ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ArgumentList @('a', $logFile.Replace('.log', '.zip'), ('{0}\log\*.log' -f $env:SystemDrive)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.zip-logs.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.zip-logs.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      # delete all except current log file
+      Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { Remove-Item -Path $_.FullName -Force }
+    }
+    TestScript = { return $false }
   }
 }
