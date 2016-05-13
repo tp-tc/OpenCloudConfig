@@ -518,7 +518,7 @@ Configuration DynamicConfig {
       # zip log files
       New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item $includedFiles
       # delete all except current log file
-      $includedFiles | % { Remove-Item -Path $_ -Force }
+      Remove-Item -Path $includedFiles -Force
     }
     TestScript = { return $false }
   }
