@@ -41,6 +41,20 @@
       ]
     },
     {
+      "ComponentName": "Start-nxlog",
+      "ComponentType": "ServiceControl",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Name": "nxlog",
+      "StartupType": "Automatic",
+      "State": "Running",
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "NxLogPaperTrailConfiguration"
+        }
+      ]
+    },
+    {
       "ComponentName": "GpgForWin",
       "ComponentType": "ExeInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
