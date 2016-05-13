@@ -513,7 +513,7 @@ Configuration DynamicConfig {
       # delete empty log files
       Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
       
-      $includedFiles = @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | Select-Object FullName)
+      $includedFiles = @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % $_.FullName)
       
       # zip log files
       New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item $includedFiles
