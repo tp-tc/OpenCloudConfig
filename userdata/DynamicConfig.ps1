@@ -498,6 +498,6 @@ Configuration DynamicConfig {
         Restart-Computer -Force
       }
     }
-    TestScript = { return ($env:DscRebootRequired -ne 'true')) }
+    TestScript = { return ($env:DscRebootRequired -ne 'true') }
   }
 }
