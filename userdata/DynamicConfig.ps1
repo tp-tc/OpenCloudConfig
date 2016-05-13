@@ -116,7 +116,7 @@ Configuration DynamicConfig {
     'DirectoryCopy' = 'File';
     'CommandRun' = 'Script';
     'FileDownload' = 'Script';
-    'ChecksumFileDownload' = 'File';
+    'ChecksumFileDownload' = 'Script';
     'SymbolicLink' = 'Script';
     'ExeInstall' = 'Script';
     'MsiInstall' = 'Package';
@@ -215,17 +215,31 @@ Configuration DynamicConfig {
         }
       }
       'ChecksumFileDownload' {
-        File ('ChecksumFileDownload-{0}' -f $item.ComponentName) {
+        Script ('ChecksumFileDownload-{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          GetScript = "@{ FileDownload = $item.ComponentName }"
+          SetScript = {
+            try {
+              (New-Object Net.WebClient).DownloadFile($using:item.Source, ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)))
+            } catch {
+              # handle redirects (eg: sourceforge)
+              Invoke-WebRequest -Uri $using:item.Source -OutFile ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+            }
+            Unblock-File -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target))
+          }
+          TestScript = { return (Test-Path -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)) -ErrorAction SilentlyContinue) }
+        }
+        File ('ChecksumFileCopy-{0}' -f $item.ComponentName) {
+          DependsOn = ('[File]ChecksumFileDownload-{0}' -f $item.ComponentName)
           Type = 'File'
           Checksum = 'SHA-1'
-          SourcePath = $item.Source
+          SourcePath = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($item.Target))
           DestinationPath = $item.Target
           Ensure = 'Present'
           Force = $true
         }
         Log ('Log-ChecksumFileDownload-{0}' -f $item.ComponentName) {
-          DependsOn = ('[File]ChecksumFileDownload-{0}' -f $item.ComponentName)
+          DependsOn = ('[File]ChecksumFileCopy-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
