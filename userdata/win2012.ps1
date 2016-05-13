@@ -16,6 +16,32 @@ function Run-RemoteDesiredStateConfig {
   Invoke-Expression "$config -OutputPath $mof"
   Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
 }
+function Send-ZippedLogs {
+  param (
+    # todo: move all this config somewhere sensible
+    [string] $to = 'releng-puppet-mail@mozilla.com',
+    [string] $from = 'releng-puppet-mail@mozilla.com',
+    [string] $subject = ('UserData Run Report for TaskCluster worker: {0}' -f $env:ComputerName),
+    [string] $smtpServer = 'email-smtp.us-east-1.amazonaws.com',
+    [int] $smtpPort = 2587,
+    [string] $smtpUsername = 'AKIAIPJEOD57YDLBF35Q'
+  )
+
+  (New-Object Net.WebClient).DownloadFile('https://github.com/MozRelOps/OpenCloudConfig/blob/master/userdata/Configuration/smtp.pass.gpg?raw=true', ('{0}\Temp\smtp.pass.gpg' -f $env:SystemRoot))
+  # todo: lose the temp file
+  Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('-d', ('{0}\Temp\smtp.pass.gpg' -f $env:SystemRoot)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\Temp\smtp.pass' -f $env:SystemRoot) -RedirectStandardError ('{0}\log\{1}.gpg-decrypt.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+  $smtpPassword = Get-Content ('{0}\Temp\smtp.pass' -f $env:SystemRoot)
+  $credential = New-Object Management.Automation.PSCredential $smtpUsername, (ConvertTo-SecureString "$smtpPassword" -AsPlainText -Force)
+  Remove-Item -Path ('{0}\Temp\smtp.pass' -f $env:SystemRoot) -Force
+  Remove-Item -Path ('{0}\Temp\smtp.pass.gpg' -f $env:SystemRoot) -Force
+  Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
+  $logFile = (Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.userdata-run.log') } | Sort-Object LastAccessTime -Descending | Select-Object -First 1).FullName
+  Start-Process ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ArgumentList @('a', $logFile.Replace('.log', '.zip'), ('{0}\log\*.log' -f $env:SystemDrive)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.zip-logs.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.zip-logs.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+  $attachments = @($logFile.Replace('.log', '.zip'))
+  $body = (Get-Content -Path @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.userdata-run.log') } | Sort-Object LastAccessTime | % { $_.FullName })) -join "`n"
+  Send-MailMessage -To $to -Subject $subject -Body $body -SmtpServer $smtpServer -Port $smtpPort -From $from -Attachments $attachments -UseSsl -Credential $credential
+  Remove-Item -Path ('{0}\log\*.log' -f $env:SystemDrive) -Force
+}
 
 # set up a log folder, an execution policy that enables the dsc run and a winrm envelope size large enough for the dynamic dsc.
 $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
@@ -32,34 +58,17 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
 
 # blow away any paging files we find, they reduce performance on ec2 instances with plenty of RAM (requires reboot, if found)
 # if they're on the ephemeral disks, they also prevent us from raid striping.
-elseif ((Get-WmiObject Win32_ComputerSystem).AutomaticManagedPagefile -or @(Get-WmiObject win32_pagefilesetting).length) {
-  $sys = Get-WmiObject Win32_ComputerSystem -EnableAllPrivileges
-  $sys.AutomaticManagedPagefile = $False
-  $sys.Put()
-  Get-WmiObject Win32_PageFileSetting -EnableAllPrivileges | % { $_.Delete() }
-  Get-ChildItem -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches' | % {
-    Set-ItemProperty -path $_.Name.Replace('HKEY_LOCAL_MACHINE', 'HKLM:') -name StateFlags0012 -type DWORD -Value 2
-  }
-  & shutdown @('-r', '-t', '0', '-c', 'Pagefiles disabled', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
-}
 
 # run dsc
 else {
-  $url = 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata'
-  $configs = @(
-    'DynamicConfig',
-    'ServiceConfig'
-  )
   Start-Transcript -Path $logFile -Append
-  foreach ($config in $configs) {
-    Run-RemoteDesiredStateConfig -url ('{0}/{1}.ps1' -f $url, $config)
-  }
+  Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
   Stop-Transcript
   if (((Get-Content $logFile) | % { $_ -match 'reboot' }) -contains $true) {
     & shutdown @('-r', '-t', '0', '-c', 'Userdata reboot required', '-f', '-d', 'p:4:1')
   } else {
-    Run-RemoteDesiredStateConfig -url ('{0}/MaintenanceConfig.ps1' -f $url)
-    if ((Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { $_.Name.EndsWith('.userdata-run.zip') }).Count -eq 1) {
+    Send-ZippedLogs
+    if ((Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.zip') }).Count -eq 1) {
       & shutdown @('-s', '-t', '0', '-c', 'Userdata run complete', '-f', '-d', 'p:4:1')
     }
   }

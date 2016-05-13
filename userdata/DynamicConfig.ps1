@@ -11,13 +11,31 @@ Configuration DynamicConfig {
   Script SetHostname {
     GetScript = "@{ Script = SetHostname }"
     SetScript = {
-      if (-not ([string]::IsNullOrWhiteSpace($using:hostname))) {
+      if ((-not ([string]::IsNullOrWhiteSpace($using:hostname))) -and (-not ([System.Net.Dns]::GetHostName() -ieq $using:hostname))) {
         [Environment]::SetEnvironmentVariable('COMPUTERNAME', $using:hostname, 'Machine')
         $env:COMPUTERNAME = $using:hostname
         (Get-WmiObject Win32_ComputerSystem).Rename($using:hostname)
+        [Environment]::SetEnvironmentVariable('DscRebootRequired', 'true', 'Process')
       }
     }
     TestScript = { return (([string]::IsNullOrWhiteSpace($using:hostname)) -or ([System.Net.Dns]::GetHostName() -ieq $using:hostname)) }
+  }
+
+  Script RemovePageFiles {
+    GetScript = "@{ Script = RemovePageFiles }"
+    SetScript = {
+      if ((Get-WmiObject Win32_ComputerSystem).AutomaticManagedPagefile -or @(Get-WmiObject Win32_PageFileSetting).length) {
+        $sys = Get-WmiObject Win32_ComputerSystem -EnableAllPrivileges
+        $sys.AutomaticManagedPagefile = $False
+        $sys.Put()
+        Get-WmiObject Win32_PageFileSetting -EnableAllPrivileges | % { $_.Delete() }
+        Get-ChildItem -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches' | % {
+          Set-ItemProperty -path $_.Name.Replace('HKEY_LOCAL_MACHINE', 'HKLM:') -name StateFlags0012 -type DWORD -Value 2
+        }
+        [Environment]::SetEnvironmentVariable('DscRebootRequired', 'true', 'Process')
+      }
+    }
+    TestScript = { return ((-not ((Get-WmiObject Win32_ComputerSystem).AutomaticManagedPagefile)) -and (@(Get-WmiObject Win32_PageFileSetting).length -eq 0)) }
   }
 
   Script GpgKeyImport {
@@ -441,5 +459,15 @@ Configuration DynamicConfig {
       }
     }
     TestScript = { return (-not (Test-Path -Path ('{0}\Modules\OCC-*' -f $pshome) -ErrorAction SilentlyContinue)) }
+  }
+  Script Reboot {
+    GetScript = "@{ Script = Reboot }"
+    SetScript = {
+      if ([Environment]::GetEnvironmentVariable('DscRebootRequired', 'Process') -ieq 'true') {
+        [Environment]::SetEnvironmentVariable('DscRebootRequired', 'false', 'Process')
+        Restart-Computer -Force
+      }
+    }
+    TestScript = { return (-not ([Environment]::GetEnvironmentVariable('DscRebootRequired', 'Process') -ieq 'true')) }
   }
 }

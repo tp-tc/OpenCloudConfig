@@ -421,6 +421,19 @@
       ]
     },
     {
+      "ComponentName": "PdbStrPathHack",
+      "ComponentType": "SymbolicLink",
+      "Comment": "Required because of in-tree paths: https://dxr.mozilla.org/mozilla-central/search?q=%2Fc%2FProgram+Files+(x86)%2FWindows+Kits%2F8.0%2FDebuggers%2Fx64%2Fsrcsrv%2Fpdbstr.exe&redirect=false",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "windowssdksetup"
+        }
+      ],
+      "Target": "C:\\Program Files (x86)\\Windows Kits\\8.1",
+      "Link": "C:\\Program Files (x86)\\Windows Kits\\8.0"
+    },
+    {
       "ComponentName": "VisualStudio2015AdminDeployment",
       "ComponentType": "FileDownload",
       "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/VisualStudio2015/AdminDeployment.xml",

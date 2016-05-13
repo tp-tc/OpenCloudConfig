@@ -66,7 +66,9 @@ Configuration MaintenanceConfig {
       $attachments = @($logFile.Replace('.log', '.zip'))
       $body = (Get-Content -Path @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.Name.EndsWith('.userdata-run.log') } | Sort-Object LastAccessTime | % { $_.FullName })) -join "`n"
       Send-MailMessage -To $to -Subject $subject -Body $body -SmtpServer $smtpServer -Port $smtpPort -From $from -Attachments $attachments -UseSsl -Credential $credential
-      Remove-Item -Path ('{0}\log\*.log' -f $env:SystemDrive) -Force
+      Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % {
+        Remove-Item -Path $_.FullName -Force
+      }
     }
     TestScript = { $false }
   }
