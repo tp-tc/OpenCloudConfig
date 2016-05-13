@@ -476,21 +476,15 @@ Configuration DynamicConfig {
       }
     }
   }
-  Script RemoveSupportingModules {
-    GetScript = "@{ Script = RemoveSupportingModules }"
+  Script ScheduleJobRunDscAtStartup {
+    GetScript = "@{ Script = ScheduleJobRunDscAtStartup }"
     SetScript = {
-      $modulesPath = ('{0}\Modules' -f $pshome)
-      foreach ($url in $using:supportingModules) {
-        $filename = [IO.Path]::GetFileName($url)
-        $moduleName = [IO.Path]::GetFileNameWithoutExtension($filename)
-        $modulePath = ('{0}\{1}' -f $modulesPath, $moduleName)
-        if (Test-Path -Path $modulePath -ErrorAction SilentlyContinue) {
-          Remove-Module -Name $moduleName -Force -ErrorAction SilentlyContinue
-          Remove-Item -path $modulePath -recurse -force
-        }
+      # -ScheduledJobOption (New-ScheduledJobOption -RunElevated)
+      Register-ScheduledJob -Name RunDesiredStateConfigurationAtStartup -Trigger (New-JobTrigger -AtStartup -RandomDelay '00:00:30') -ScriptBlock {
+        Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2012.ps1')
       }
     }
-    TestScript = { return (-not (Test-Path -Path ('{0}\Modules\OCC-*' -f $pshome) -ErrorAction SilentlyContinue)) }
+    TestScript = { return [bool](Get-ScheduledTask -TaskName 'RunDesiredStateConfigurationAtStartup' -ErrorAction SilentlyContinue) }
   }
   Script RebootIfRequired {
     GetScript = "@{ Script = RebootIfRequired }"
@@ -517,10 +511,14 @@ Configuration DynamicConfig {
       $logFile = (Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.log') } | Sort-Object LastAccessTime -Descending | Select-Object -First 1).FullName
       # delete empty log files
       Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
+      
+      $includedFiles = @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | Select-Object FullName)
+      
       # zip log files
-      Start-Process ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ArgumentList @('a', $logFile.Replace('.log', '.zip'), ('{0}\log\*.log' -f $env:SystemDrive)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.zip-logs.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.zip-logs.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item $includedFiles
+      # Start-Process ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ArgumentList @('a', $logFile.Replace('.log', '.zip'), ('{0}\log\*.log' -f $env:SystemDrive)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.zip-logs.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.zip-logs.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
       # delete all except current log file
-      Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { Remove-Item -Path $_.FullName -Force }
+      $includedFiles | % { Remove-Item -Path $_.FullName -Force }
     }
     TestScript = { return $false }
   }
