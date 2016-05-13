@@ -225,7 +225,7 @@ Configuration DynamicConfig {
           Force = $true
         }
         Log ('Log-ChecksumFileDownload-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]ChecksumFileDownload-{0}' -f $item.ComponentName)
+          DependsOn = ('[File]ChecksumFileDownload-{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
