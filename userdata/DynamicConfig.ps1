@@ -517,9 +517,8 @@ Configuration DynamicConfig {
       
       # zip log files
       New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item $includedFiles
-      # Start-Process ('{0}\7-Zip\7z.exe' -f $env:ProgramFiles) -ArgumentList @('a', $logFile.Replace('.log', '.zip'), ('{0}\log\*.log' -f $env:SystemDrive)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.zip-logs.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.zip-logs.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
       # delete all except current log file
-      $includedFiles | % { Remove-Item -Path $_.FullName -Force }
+      $includedFiles | % { Remove-Item -Path $_ -Force }
     }
     TestScript = { return $false }
   }
