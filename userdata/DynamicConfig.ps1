@@ -444,16 +444,6 @@ Configuration DynamicConfig {
       }
     }
   }
-  Script ScheduleJobRunDscAtStartup {
-    GetScript = "@{ Script = ScheduleJobRunDscAtStartup }"
-    SetScript = {
-      # -ScheduledJobOption (New-ScheduledJobOption -RunElevated)
-      Register-ScheduledJob -Name RunDesiredStateConfigurationAtStartup -Trigger (New-JobTrigger -AtStartup -RandomDelay '00:00:30') -ScriptBlock {
-        Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2012.ps1')
-      }
-    }
-    TestScript = { return [bool](Get-ScheduledTask -TaskName 'RunDesiredStateConfigurationAtStartup' -ErrorAction SilentlyContinue) }
-  }
   Script RebootIfRequiredByInstallers {
     GetScript = "@{ Script = RebootIfRequiredByInstallers }"
     SetScript = {
