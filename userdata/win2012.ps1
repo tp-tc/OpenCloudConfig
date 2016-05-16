@@ -51,10 +51,7 @@ if($rebootReasons.length) {
   Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
 
   if (-not (Get-ScheduledTask -TaskName 'RunDesiredStateConfigurationAtStartup' -ErrorAction SilentlyContinue)) {
-    # -ScheduledJobOption (New-ScheduledJobOption -RunElevated)
-    Register-ScheduledJob -Name RunDesiredStateConfigurationAtStartup -Trigger (New-JobTrigger -AtStartup -RandomDelay '00:00:30') -ScriptBlock {
-      Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2012.ps1')
-    }
+    & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/tr', '"powershell.exe Invoke-Expression (New-Object Net.WebClient).DownloadString(https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2012.ps1)"', '/sc', 'onstart', '/ru', 'SYSTEM')
   }
   Stop-Transcript
   # shut down if there is exactly 1 log zip file (infer this is the ami creation instance)
