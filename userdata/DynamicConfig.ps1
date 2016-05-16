@@ -20,7 +20,6 @@ Configuration DynamicConfig {
     }
     TestScript = { return (([string]::IsNullOrWhiteSpace($using:hostname)) -or ([System.Net.Dns]::GetHostName() -ieq $using:hostname)) }
   }
-
   Script RemovePageFiles {
     GetScript = "@{ Script = RemovePageFiles }"
     SetScript = {
@@ -38,6 +37,17 @@ Configuration DynamicConfig {
       }
     }
     TestScript = { return ((-not ((Get-WmiObject Win32_ComputerSystem).AutomaticManagedPagefile)) -and (@(Get-WmiObject Win32_PageFileSetting).length -eq 0)) }
+  }
+  Script RebootIfRequiredBySetup {
+    DependsOn = @('[Script]SetHostname', '[Script]RemovePageFiles')
+    GetScript = "@{ Script = RebootIfRequiredBySetup }"
+    SetScript = {
+      if ($env:DscRebootRequired -eq 'true') {
+        [Environment]::SetEnvironmentVariable('DscRebootRequired', 'false', 'Process')
+        Restart-Computer -Force
+      }
+    }
+    TestScript = { return $false }
   }
 
   Script GpgKeyImport {
@@ -487,8 +497,8 @@ Configuration DynamicConfig {
     }
     TestScript = { return [bool](Get-ScheduledTask -TaskName 'RunDesiredStateConfigurationAtStartup' -ErrorAction SilentlyContinue) }
   }
-  Script RebootIfRequired {
-    GetScript = "@{ Script = RebootIfRequired }"
+  Script RebootIfRequiredByInstallers {
+    GetScript = "@{ Script = RebootIfRequiredByInstallers }"
     SetScript = {
       if (-not ($env:DscRebootRequired -eq 'true')) {
         $logFile = (Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.log') } | Sort-Object LastAccessTime -Descending | Select-Object -First 1).FullName
@@ -505,7 +515,7 @@ Configuration DynamicConfig {
   }
   Script ZipLogs {
     # we should only get here after any required reboots
-    DependsOn = '[Script]RebootIfRequired'
+    DependsOn = '[Script]RebootIfRequiredByInstallers'
     GetScript = "@{ Script = ZipLogs }"
     SetScript = {
       # determine current log file (get latest)
