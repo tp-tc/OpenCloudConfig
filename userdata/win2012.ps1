@@ -49,12 +49,18 @@ if($rebootReasons.length) {
 } else {
   Start-Transcript -Path $logFile -Append
   Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
-  if (-not (Get-ScheduledTask -TaskName 'RunDesiredStateConfigurationAtStartup' -ErrorAction SilentlyContinue)) {
-    & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/tr', '"powershell.exe Invoke-Expression (New-Object Net.WebClient).DownloadString(https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2012.ps1)"', '/sc', 'onstart', '/ru', 'SYSTEM')
-  }
   Stop-Transcript
-  # shut down if there is exactly 1 log zip file (infer this is the ami creation instance)
-  if ((Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.zip') }).Count -eq 1) {
-    & shutdown @('-s', '-t', '0', '-c', 'Userdata run complete', '-f', '-d', 'p:4:1')
+  if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
+    & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+  } else {
+    if (-not (Get-ScheduledTask -TaskName 'RunDesiredStateConfigurationAtStartup' -ErrorAction SilentlyContinue)) {
+      & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/tr', '"powershell.exe Invoke-Expression (New-Object Net.WebClient).DownloadString(https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2012.ps1)"', '/sc', 'onstart', '/ru', 'SYSTEM') | Out-File -filePath $logFile -append
+    }
+    Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
+    New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { $_.FullName })
+    Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { Remove-Item -Path $_.FullName -Force }
+    if ((Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.zip') }).Count -eq 1) {
+      & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+    }
   }
 }

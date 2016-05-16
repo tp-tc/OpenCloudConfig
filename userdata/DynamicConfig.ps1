@@ -439,36 +439,4 @@ Configuration DynamicConfig {
       }
     }
   }
-  Script RebootIfRequiredByInstallers {
-    GetScript = "@{ Script = RebootIfRequiredByInstallers }"
-    SetScript = {
-      if (-not ($env:DscRebootRequired -eq 'true')) {
-        $logFile = (Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.log') } | Sort-Object LastAccessTime -Descending | Select-Object -First 1).FullName
-        if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot required')) }) -contains $true) {
-          $env:DscRebootRequired = 'true'
-        }
-      }
-      if ($env:DscRebootRequired -eq 'true') {
-        [Environment]::SetEnvironmentVariable('DscRebootRequired', 'false', 'Process')
-        Restart-Computer -Force
-      }
-    }
-    TestScript = { return $false }
-  }
-  Script ZipLogs {
-    # we should only get here after any required reboots
-    DependsOn = '[Script]RebootIfRequiredByInstallers'
-    GetScript = "@{ Script = ZipLogs }"
-    SetScript = {
-      # determine current log file (get latest)
-      $logFile = (Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.log') } | Sort-Object LastAccessTime -Descending | Select-Object -First 1).FullName
-      # delete empty log files
-      Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
-      # zip all except current log file
-      New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { $_.FullName })
-      # delete all except current log file
-      Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { Remove-Item -Path $_.FullName -Force }
-    }
-    TestScript = { return $false }
-  }
 }
