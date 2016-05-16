@@ -49,7 +49,6 @@ if($rebootReasons.length) {
 } else {
   Start-Transcript -Path $logFile -Append
   Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
-
   if (-not (Get-ScheduledTask -TaskName 'RunDesiredStateConfigurationAtStartup' -ErrorAction SilentlyContinue)) {
     & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/tr', '"powershell.exe Invoke-Expression (New-Object Net.WebClient).DownloadString(https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2012.ps1)"', '/sc', 'onstart', '/ru', 'SYSTEM')
   }
