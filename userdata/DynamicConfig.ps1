@@ -7,50 +7,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 Configuration DynamicConfig {
   Import-DscResource -ModuleName PSDesiredStateConfiguration
 
-  $hostname = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-id'))
-  Script SetHostname {
-    GetScript = "@{ Script = SetHostname }"
-    SetScript = {
-      if ((-not ([string]::IsNullOrWhiteSpace($using:hostname))) -and (-not ([System.Net.Dns]::GetHostName() -ieq $using:hostname))) {
-        [Environment]::SetEnvironmentVariable('COMPUTERNAME', $using:hostname, 'Machine')
-        $env:COMPUTERNAME = $using:hostname
-        (Get-WmiObject Win32_ComputerSystem).Rename($using:hostname)
-        [Environment]::SetEnvironmentVariable('DscRebootRequired', 'true', 'Process')
-      }
-    }
-    TestScript = { return (([string]::IsNullOrWhiteSpace($using:hostname)) -or ([System.Net.Dns]::GetHostName() -ieq $using:hostname)) }
-  }
-  Script RemovePageFiles {
-    GetScript = "@{ Script = RemovePageFiles }"
-    SetScript = {
-      # blow away any paging files we find, they reduce performance on ec2 instances with plenty of RAM (requires reboot, if found)
-      # if they're on the ephemeral disks, they also prevent us from raid striping.
-      if ((Get-WmiObject Win32_ComputerSystem).AutomaticManagedPagefile -or @(Get-WmiObject Win32_PageFileSetting).length) {
-        $sys = Get-WmiObject Win32_ComputerSystem -EnableAllPrivileges
-        $sys.AutomaticManagedPagefile = $False
-        $sys.Put()
-        Get-WmiObject Win32_PageFileSetting -EnableAllPrivileges | % { $_.Delete() }
-        Get-ChildItem -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches' | % {
-          Set-ItemProperty -path $_.Name.Replace('HKEY_LOCAL_MACHINE', 'HKLM:') -name StateFlags0012 -type DWORD -Value 2
-        }
-        [Environment]::SetEnvironmentVariable('DscRebootRequired', 'true', 'Process')
-      }
-    }
-    TestScript = { return ((-not ((Get-WmiObject Win32_ComputerSystem).AutomaticManagedPagefile)) -and (@(Get-WmiObject Win32_PageFileSetting).length -eq 0)) }
-  }
-  Script RebootIfRequiredBySetup {
-    DependsOn = @('[Script]SetHostname', '[Script]RemovePageFiles')
-    GetScript = "@{ Script = RebootIfRequiredBySetup }"
-    SetScript = {
-      if ($env:DscRebootRequired -eq 'true') {
-        [Environment]::SetEnvironmentVariable('DscRebootRequired', 'false', 'Process')
-        Restart-Computer -Force
-      }
-    }
-    TestScript = { return $false }
-  }
-
   Script GpgKeyImport {
+    DependsOn = @('[Script]ExeInstall-GpgForWin')
     GetScript = { @{ Result = (((Test-Path -Path ('{0}\SysWOW64\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\SysWOW64\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot)).length -gt 0kb)) -or ((Test-Path -Path ('{0}\System32\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\System32\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot)).length -gt 0kb))) } }
     SetScript = {
       # todo: pipe key to gpg import, avoiding disk write

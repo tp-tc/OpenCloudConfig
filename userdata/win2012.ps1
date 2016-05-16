@@ -23,14 +23,30 @@ New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
 Set-ExecutionPolicy RemoteSigned -force | Tee-Object -filePath $logFile -append
 & winrm @('set', 'winrm/config', '@{MaxEnvelopeSizekb="8192"}')
 
+$rebootReasons = @()
 # install latest powershell from chocolatey if we don't have a recent version (required by DSC) (requires reboot)
 if ($PSVersionTable.PSVersion.Major -lt 4) {
   Invoke-Expression ((New-Object Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) | Tee-Object -filePath $logFile -append
   & choco @('upgrade', 'powershell', '-y') | Out-File -filePath $logFile -append
-  & shutdown @('-r', '-t', '0', '-c', 'Powershell upgraded', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+  $rebootReasons += 'powershell upgraded'
 }
-# run dsc
-else {
+$hostname = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-id'))
+if ((-not ([string]::IsNullOrWhiteSpace($hostname))) -and (-not ([System.Net.Dns]::GetHostName() -ieq $hostname))) {
+  (Get-WmiObject Win32_ComputerSystem).Rename($hostname)
+  $rebootReasons += 'host renamed'
+}
+# blow away any paging files we find, they reduce performance on ec2 instances with plenty of RAM (requires reboot, if found). if they're on the ephemeral disks, they also prevent us from raid striping.
+if ((Get-WmiObject Win32_ComputerSystem).AutomaticManagedPagefile -or @(Get-WmiObject Win32_PageFileSetting).length) {
+  $sys = Get-WmiObject Win32_ComputerSystem -EnableAllPrivileges
+  $sys.AutomaticManagedPagefile = $false
+  $sys.Put()
+  Get-WmiObject Win32_PageFileSetting -EnableAllPrivileges | % { $_.Delete() }
+  Get-ChildItem -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches' | % { Set-ItemProperty -path $_.Name.Replace('HKEY_LOCAL_MACHINE', 'HKLM:') -name StateFlags0012 -type DWORD -Value 2 }
+  $rebootReasons += 'pagefile(s) removed'
+}
+if($rebootReasons.length) {
+  & shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+} else {
   Start-Transcript -Path $logFile -Append
   Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
   Stop-Transcript
