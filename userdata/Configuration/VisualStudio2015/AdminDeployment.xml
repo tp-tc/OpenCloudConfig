@@ -28,9 +28,9 @@
     <SelectableItemCustomization Id="SDKTools3Hidden" Selected="yes" FriendlyName="SDKTools3Hidden" />
     <SelectableItemCustomization Id="SDKTools4Hidden" Selected="yes" FriendlyName="SDKTools4Hidden" />
     <SelectableItemCustomization Id="WCFDataServicesHidden" Selected="yes" FriendlyName="WCFDataServicesHidden" />
-    <SelectableItemCustomization Id="NativeLanguageSupport_VCV1" Hidden="no" Selected="no" FriendlyName="Common Tools for Visual C++ 2015" />
-    <SelectableItemCustomization Id="NativeLanguageSupport_MFCV1" Hidden="no" Selected="no" FriendlyName="Microsoft Foundation Classes for C++" />
-    <SelectableItemCustomization Id="NativeLanguageSupport_XPV1" Hidden="no" Selected="no" FriendlyName="Windows XP Support for C++" />
+    <SelectableItemCustomization Id="NativeLanguageSupport_VCV1" Hidden="no" Selected="yes" FriendlyName="Common Tools for Visual C++ 2015" />
+    <SelectableItemCustomization Id="NativeLanguageSupport_MFCV1" Hidden="no" Selected="yes" FriendlyName="Microsoft Foundation Classes for C++" />
+    <SelectableItemCustomization Id="NativeLanguageSupport_XPV1" Hidden="no" Selected="yes" FriendlyName="Windows XP Support for C++" />
     <SelectableItemCustomization Id="Win81SDK_HiddenV1" Hidden="no" Selected="no" FriendlyName="Windows 8.1 SDK and Universal CRT SDK" />
     <SelectableItemCustomization Id="FSharpV1" Hidden="no" Selected="no" FriendlyName="Visual F#" />
     <SelectableItemCustomization Id="PythonToolsForVisualStudioV4" Hidden="no" Selected="no" FriendlyName="Python Tools for Visual Studio (December 2015)" />

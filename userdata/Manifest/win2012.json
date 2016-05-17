@@ -459,7 +459,7 @@
     },
     {
       "ComponentName": "VisualStudio2015AdminDeployment",
-      "ComponentType": "FileDownload",
+      "ComponentType": "ChecksumFileDownload",
       "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/VisualStudio2015/AdminDeployment.xml",
       "Target": "C:\\Windows\\Temp\\VisualStudio2015AdminDeployment.xml"
     },
@@ -477,13 +477,15 @@
       ],
       "DependsOn": [
         {
-          "ComponentType": "FileDownload",
+          "ComponentType": "ChecksumFileDownload",
           "ComponentName": "VisualStudio2015AdminDeployment"
         }
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\Common7\\IDE\\devenv.exe"
+          "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\Common7\\IDE\\devenv.exe",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\mspdb140.dll",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\amd64\\mspdb140.dll"
         ]
       }
     },
