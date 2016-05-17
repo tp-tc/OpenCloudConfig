@@ -424,7 +424,7 @@
       }
     },
     {
-      "ComponentName": "windowssdksetup",
+      "ComponentName": "WindowsSDK10Setup",
       "ComponentType": "ExeInstall",
       "Url": "https://go.microsoft.com/fwlink/p/?LinkID=698771",
       "Arguments": [
@@ -451,7 +451,7 @@
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
-          "ComponentName": "windowssdksetup"
+          "ComponentName": "WindowsSDK10Setup"
         }
       ],
       "Target": "C:\\Program Files (x86)\\Windows Kits\\10",
