@@ -426,13 +426,23 @@
     {
       "ComponentName": "windowssdksetup",
       "ComponentType": "ExeInstall",
-      "Url": "http://download.microsoft.com/download/B/0/C/B0C80BA3-8AD6-4958-810B-6882485230B5/standalonesdk/sdksetup.exe",
+      "Url": "https://go.microsoft.com/fwlink/p/?LinkID=698771",
       "Arguments": [
-        "/Quiet",
-        "/NoRestart",
-        "/Log",
-        "C:\\log\\windowssdksetup.log"
-      ]
+        "/features",
+        "+",
+        "/quiet",
+        "/norestart",
+        "/ceip",
+        "off",
+        "/log",
+        "C:\\log\\windowssdk10setup.log"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x86\\srcsrv\\pdbstr.exe",
+          "C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x64\\srcsrv\\pdbstr.exe"
+        ]
+      }
     },
     {
       "ComponentName": "PdbStrPathHack",
@@ -444,7 +454,7 @@
           "ComponentName": "windowssdksetup"
         }
       ],
-      "Target": "C:\\Program Files (x86)\\Windows Kits\\8.1",
+      "Target": "C:\\Program Files (x86)\\Windows Kits\\10",
       "Link": "C:\\Program Files (x86)\\Windows Kits\\8.0"
     },
     {
