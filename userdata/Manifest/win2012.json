@@ -223,9 +223,15 @@
     {
       "ComponentName": "msys-home",
       "ComponentType": "SymbolicLink",
-      "Comment": "used by build upload mechanism which wants to write to task user home dir",
+      "Comment": "used by build upload mechanism which accesses task user ~/.ssh/ dir via sh.exe",
       "Target": "C:\\Users",
       "Link": "C:\\mozilla-build\\msys\\home"
+    },
+    {
+      "ComponentName": "KnownHosts",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://hg.mozilla.org/build/puppet/raw-file/tip/modules/ssh/templates/known_hosts.erb",
+      "Target": "C:\\builds\\known_hosts"
     },
     {
       "ComponentName": "Start-wuauserv",
