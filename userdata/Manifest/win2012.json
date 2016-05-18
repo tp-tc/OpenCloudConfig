@@ -458,6 +458,14 @@
       "Link": "C:\\Program Files (x86)\\Windows Kits\\8.0"
     },
     {
+      "ComponentName": "BinScope",
+      "ComponentType": "MsiInstall",
+      "Comment": "https://dxr.mozilla.org/mozilla-central/search?q=BinScope&redirect=false&case=false",
+      "Url": "https://download.microsoft.com/download/2/6/A/26AAA1DE-D060-4246-93B5-7D7C877E4F8F/BinScopeSetup.msi",
+      "Name": "SDL BinScope",
+      "ProductId": "B137EB8C-FA6C-4DA7-95F0-A9B6FFE67A64"
+    },
+    {
       "ComponentName": "VisualStudio2015AdminDeployment",
       "ComponentType": "ChecksumFileDownload",
       "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/VisualStudio2015/AdminDeployment.xml",
