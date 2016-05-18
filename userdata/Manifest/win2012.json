@@ -228,10 +228,23 @@
       "Link": "C:\\mozilla-build\\msys\\home"
     },
     {
+      "ComponentName": "SshDirectory",
+      "ComponentType": "DirectoryCreate",
+      "Comment": "used by build upload mechanism which accesses task user ~/.ssh/ dir via sh.exe",
+      "Path": "C:\\builds\\.ssh"
+    },
+    {
       "ComponentName": "KnownHosts",
       "ComponentType": "ChecksumFileDownload",
+      "Comment": "used by build upload mechanism which accesses task user ~/.ssh/ dir via sh.exe",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "SshDirectory"
+        }
+      ],
       "Source": "https://hg.mozilla.org/build/puppet/raw-file/tip/modules/ssh/templates/known_hosts.erb",
-      "Target": "C:\\builds\\known_hosts"
+      "Target": "C:\\builds\\.ssh\\known_hosts"
     },
     {
       "ComponentName": "Start-wuauserv",
