@@ -214,11 +214,18 @@
       }
     },
     {
-      "ComponentName": "Home",
+      "ComponentName": "home",
       "ComponentType": "SymbolicLink",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Target": "C:\\Users",
       "Link": "C:\\home"
+    },
+    {
+      "ComponentName": "msys-home",
+      "ComponentType": "SymbolicLink",
+      "Comment": "used by build upload mechanism which wants to write to task user home dir",
+      "Target": "C:\\Users",
+      "Link": "C:\\mozilla-build\\msys\\home"
     },
     {
       "ComponentName": "Start-wuauserv",
