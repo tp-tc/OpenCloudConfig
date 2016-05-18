@@ -807,14 +807,14 @@
       "ComponentName": "Win32ToolToolManifest",
       "ComponentType": "ChecksumFileDownload",
       "Comment": "Latest tooltool manifest from mozilla central",
-      "Source": "https://hg.mozilla.org/mozilla-central/raw-file/4a8ed77f6bb573f20980056bf8c1dadd125c1a85/browser/config/tooltool-manifests/win32/releng.manifest",
+      "Source": "https://hg.mozilla.org/mozilla-central/raw-file/tip/browser/config/tooltool-manifests/win32/releng.manifest",
       "Target": "C:\\Windows\\Temp\\releng.manifest.win32.tt"
     },
     {
       "ComponentName": "Win64ToolToolManifest",
       "ComponentType": "ChecksumFileDownload",
       "Comment": "Latest tooltool manifest from mozilla central",
-      "Source": "https://hg.mozilla.org/mozilla-central/raw-file/4a8ed77f6bb573f20980056bf8c1dadd125c1a85/browser/config/tooltool-manifests/win64/releng.manifest",
+      "Source": "https://hg.mozilla.org/mozilla-central/raw-file/tip/browser/config/tooltool-manifests/win64/releng.manifest",
       "Target": "C:\\Windows\\Temp\\releng.manifest.win64.tt"
     },
     {
