@@ -484,19 +484,6 @@
       }
     },
     {
-      "ComponentName": "PdbStrPathHack",
-      "ComponentType": "SymbolicLink",
-      "Comment": "Required because of in-tree paths: https://dxr.mozilla.org/mozilla-central/search?q=%2Fc%2FProgram+Files+(x86)%2FWindows+Kits%2F8.0%2FDebuggers%2Fx64%2Fsrcsrv%2Fpdbstr.exe&redirect=false",
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "WindowsSDK10Setup"
-        }
-      ],
-      "Target": "C:\\Program Files (x86)\\Windows Kits\\10",
-      "Link": "C:\\Program Files (x86)\\Windows Kits\\8.0"
-    },
-    {
       "ComponentName": "BinScope",
       "ComponentType": "MsiInstall",
       "Comment": "https://dxr.mozilla.org/mozilla-central/search?q=BinScope&redirect=false&case=false",
@@ -531,8 +518,10 @@
       "Validate": {
         "PathsExist": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\Common7\\IDE\\devenv.exe",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\amd64\\mspdb140.dll",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\amd64\\vcvars64.bat",
           "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\mspdb140.dll",
-          "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\amd64\\mspdb140.dll"
+          "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\amd64_x86\\vcvarsamd64_x86.bat"
         ]
       }
     },
