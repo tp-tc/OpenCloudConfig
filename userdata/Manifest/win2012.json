@@ -521,21 +521,6 @@
       }
     },
     {
-      "ComponentName": "VCForPython",
-      "ComponentType": "MsiInstall",
-      "Comment": "Required by BuildBot VirtualEnv used by Mozharness (c:/mozilla-build/buildbotve)",
-      "Url": "https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi",
-      "Name": "Microsoft Visual C++ Compiler Package for Python 2.7",
-      "ProductId": "692514A8-5484-45FC-B0AE-BE2DF7A75891"
-    },
-    {
-      "ComponentName": "VCForPythonShared",
-      "ComponentType": "DirectoryCopy",
-      "Comment": "VCForPython installs to an inaccessible location, this copies it to an accessible location.",
-      "Source": "C:\\Windows\\SysWOW64\\config\\systemprofile\\AppData\\Local\\Programs\\Common\\Microsoft\\Visual C++ for Python",
-      "Target": "C:\\Program Files (x86)\\Visual C++ for Python"
-    },
-    {
       "ComponentName": "MercurialPythonPatch",
       "ComponentType": "SymbolicLink",
       "Comment": "Required by hg extensions",
@@ -1145,23 +1130,6 @@
       ],
       "Name": "MOZ_TOOLS",
       "Value": "C:\\mozilla-build\\moztools-x64",
-      "Target": "Machine"
-    },
-    {
-      "ComponentName": "env-VCINSTALLDIR",
-      "ComponentType": "EnvironmentVariableSet",
-      "DependsOn": [
-        {
-          "ComponentType": "MsiInstall",
-          "ComponentName": "VCForPython"
-        },
-        {
-          "ComponentType": "DirectoryCopy",
-          "ComponentName": "VCForPythonShared"
-        }
-      ],
-      "Name": "VCINSTALLDIR",
-      "Value": "C:\\Program Files (x86)\\Visual C++ for Python\\9.0\\VC",
       "Target": "Machine"
     },
     {
