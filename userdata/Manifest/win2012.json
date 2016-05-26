@@ -1070,69 +1070,6 @@
       "Target": "Machine"
     },
     {
-      "ComponentName": "env-HOSTTYPE",
-      "ComponentType": "EnvironmentVariableSet",
-      "Comment": "Just matching bb slave successful build environment. No idea if this does anything.",
-      "Name": "HOSTTYPE",
-      "Value": "i686",
-      "Target": "Machine"
-    },
-    {
-      "ComponentName": "env-INPUTRC",
-      "ComponentType": "EnvironmentVariableSet",
-      "Comment": "Just matching bb slave successful build environment. No idea if this does anything.",
-      "Name": "INPUTRC",
-      "Value": "C:\\mozilla-build\\msys\\etc\\inputrc",
-      "Target": "Machine"
-    },
-    {
-      "ComponentName": "env-OSTYPE",
-      "ComponentType": "EnvironmentVariableSet",
-      "Comment": "Just matching bb slave successful build environment. No idea if this does anything.",
-      "Name": "OSTYPE",
-      "Value": "msys",
-      "Target": "Machine"
-    },
-    {
-      "ComponentName": "env-MOZBUILDDIR",
-      "ComponentType": "EnvironmentVariableSet",
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
-        }
-      ],
-      "Name": "MOZBUILDDIR",
-      "Value": "C:\\mozilla-build",
-      "Target": "Machine"
-    },
-    {
-      "ComponentName": "env-MOZILLABUILD",
-      "ComponentType": "EnvironmentVariableSet",
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
-        }
-      ],
-      "Name": "MOZILLABUILD",
-      "Value": "C:\\mozilla-build",
-      "Target": "Machine"
-    },
-    {
-      "ComponentName": "env-MOZ_TOOLS",
-      "ComponentType": "EnvironmentVariableSet",
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
-        }
-      ],
-      "Name": "MOZ_TOOLS",
-      "Value": "C:\\mozilla-build\\moztools-x64",
-      "Target": "Machine"
-    },
-    {
       "ComponentName": "reg-WindowsErrorReportingLocalDumps",
       "ComponentType": "RegistryKeySet",
       "Comment": "",
