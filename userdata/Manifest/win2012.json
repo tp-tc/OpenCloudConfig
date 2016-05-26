@@ -223,41 +223,9 @@
     {
       "ComponentName": "msys-home",
       "ComponentType": "SymbolicLink",
-      "Comment": "used by build upload mechanism which accesses task user ~/.ssh/ dir via sh.exe",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Target": "C:\\Users",
       "Link": "C:\\mozilla-build\\msys\\home"
-    },
-    {
-      "ComponentName": "SshDirectory",
-      "ComponentType": "DirectoryCreate",
-      "Comment": "used by build upload mechanism which accesses task user ~/.ssh/ dir via sh.exe",
-      "Path": "C:\\builds\\.ssh"
-    },
-    {
-      "ComponentName": "SshKnownHosts",
-      "ComponentType": "ChecksumFileDownload",
-      "Comment": "used by build upload mechanism which accesses task user ~/.ssh/ dir via sh.exe",
-      "DependsOn": [
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "SshDirectory"
-        }
-      ],
-      "Source": "https://hg.mozilla.org/build/puppet/raw-file/tip/modules/ssh/templates/known_hosts.erb",
-      "Target": "C:\\builds\\.ssh\\known_hosts"
-    },
-    {
-      "ComponentName": "SshConfig",
-      "ComponentType": "ChecksumFileDownload",
-      "Comment": "used by build upload mechanism which accesses task user ~/.ssh/ dir via sh.exe",
-      "DependsOn": [
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "SshDirectory"
-        }
-      ],
-      "Source": "https://hg.mozilla.org/build/puppet/raw-file/tip/modules/users/templates/builder-ssh-config.erb",
-      "Target": "C:\\builds\\.ssh\\config"
     },
     {
       "ComponentName": "Start-wuauserv",
