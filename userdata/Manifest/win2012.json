@@ -492,40 +492,6 @@
       "ProductId": "B137EB8C-FA6C-4DA7-95F0-A9B6FFE67A64"
     },
     {
-      "ComponentName": "VisualStudio2015AdminDeployment",
-      "ComponentType": "ChecksumFileDownload",
-      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/VisualStudio2015/AdminDeployment.xml",
-      "Target": "C:\\Windows\\Temp\\VisualStudio2015AdminDeployment.xml"
-    },
-    {
-      "ComponentName": "VisualStudio2015Community",
-      "ComponentType": "ExeInstall",
-      "Url": "http://download.microsoft.com/download/0/B/C/0BC321A4-013F-479C-84E6-4A2F90B11269/vs_community.exe",
-      "Arguments": [
-        "/Passive",
-        "/NoRestart",
-        "/AdminFile",
-        "C:\\Windows\\Temp\\VisualStudio2015AdminDeployment.xml",
-        "/Log",
-        "C:\\log\\VisualStudio2015CommunityInstall.log"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "ChecksumFileDownload",
-          "ComponentName": "VisualStudio2015AdminDeployment"
-        }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\Common7\\IDE\\devenv.exe",
-          "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\amd64\\mspdb140.dll",
-          "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\amd64\\vcvars64.bat",
-          "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\mspdb140.dll",
-          "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\bin\\amd64_x86\\vcvarsamd64_x86.bat"
-        ]
-      }
-    },
-    {
       "ComponentName": "MozillaBuildSetup",
       "ComponentType": "ExeInstall",
       "Comment": "Base Firefox on Windows build requirement",
