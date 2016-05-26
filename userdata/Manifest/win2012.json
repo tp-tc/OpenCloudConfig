@@ -1406,12 +1406,6 @@
           "ComponentName": "BuildToolsCacheCreate"
         }
       ]
-    },
-    {
-      "ComponentName": "BuildProps",
-      "ComponentType": "FileDownload",
-      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/FirefoxBuildResources/buildprops.json",
-      "Target": "C:\\builds\\buildprops.json"
     }
   ]
 }
