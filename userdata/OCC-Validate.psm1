@@ -37,7 +37,9 @@ function Validate-PathsExistOrNotRequested {
   param(
     [object[]] $items
   )
-  begin {}
+  begin {
+    Write-Verbose ('{0} :: {1} validation{2} specified.' -f $($MyInvocation.MyCommand.Name), $items.Length, ('s','')[($items.Length -eq 1)])
+  }
   process {
     # either no validation paths-exist are specified
     return ((-not ($items)) -or (
@@ -45,7 +47,13 @@ function Validate-PathsExistOrNotRequested {
       (($items) -and ($items.Length -gt 0)) -and
       # all validation paths-exist are satisfied (exist on the instance)
       (-not (@($items | % {
-        (Test-Path -Path $_ -ErrorAction SilentlyContinue)
+        if (Test-Path -Path $_ -ErrorAction SilentlyContinue) {
+          Write-Verbose ('Path present: {0}' -f $_)
+          $true
+        } else {
+          Write-Verbose ('Path absent: {0}' -f $_)
+          $false
+        }
       }) -contains $false))
     ))
   }
@@ -57,7 +65,9 @@ function Validate-PathsNotExistOrNotRequested {
   param(
     [object[]] $items
   )
-  begin {}
+  begin {
+    Write-Verbose ('{0} :: {1} validation{2} specified.' -f $($MyInvocation.MyCommand.Name), $items.Length, ('s','')[($items.Length -eq 1)])
+  }
   process {
     # either no validation paths-exist are specified
     return ((-not ($items)) -or (
@@ -65,7 +75,13 @@ function Validate-PathsNotExistOrNotRequested {
       (($items) -and ($items.Length -gt 0)) -and
       # all validation paths-exist are satisfied (exist on the instance)
       (-not (@($items | % {
-        (-not (Test-Path -Path $_ -ErrorAction SilentlyContinue))
+        if (-not (Test-Path -Path $_ -ErrorAction SilentlyContinue)) {
+          Write-Verbose ('Path absent: {0}' -f $_)
+          $true
+        } else {
+          Write-Verbose ('Path present: {0}' -f $_)
+          $false
+        }
       }) -contains $false))
     ))
   }
@@ -77,7 +93,9 @@ function Validate-CommandsReturnOrNotRequested {
   param(
     [object[]] $items
   )
-  begin {}
+  begin {
+    Write-Verbose ('{0} :: {1} validation{2} specified.' -f $($MyInvocation.MyCommand.Name), $items.Length, ('s','')[($items.Length -eq 1)])
+  }
   process {
     # either no validation commands-return are specified
     return ((-not ($items)) -or (
@@ -100,7 +118,9 @@ function Validate-FilesContainOrNotRequested {
   param(
     [object[]] $items
   )
-  begin {}
+  begin {
+    Write-Verbose ('{0} :: {1} validation{2} specified.' -f $($MyInvocation.MyCommand.Name), $items.Length, ('s','')[($items.Length -eq 1)])
+  }
   process {
     # either no validation files-contain are specified
     return ((-not ($items)) -or (
