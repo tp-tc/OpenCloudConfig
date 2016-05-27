@@ -140,7 +140,15 @@ Configuration DynamicConfig {
               # todo: another try catch block with move to recycle bin, empty recycle bin
             }
           }
-          TestScript = { (-not (Test-Path -Path $($using:item.Path) -ErrorAction SilentlyContinue)) }
+          TestScript = {
+            if (-not (Test-Path -Path $($using:item.Path) -ErrorAction SilentlyContinue)) {
+              Write-Verbose ('TestScript: DirectoryDelete-{0} validations satisfied' -f $using:item.ComponentName)
+              return $true
+            } else {
+              Write-Verbose ('TestScript: DirectoryDelete-{0} validations failed' -f $using:item.ComponentName)
+              return $false
+            }
+          }
         }
         Log ('Log-DirectoryDelete-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]DirectoryDelete-{0}' -f $($item.Path).Replace(':', '').Replace('\', '_'))
@@ -167,7 +175,15 @@ Configuration DynamicConfig {
           SetScript = {
             Start-Process $($using:item.Command) -ArgumentList @($using:item.Arguments | % { $($_) }) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName) -RedirectStandardError ('{0}\log\{1}-{2}-stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName)
           }
-          TestScript = { return Validate-All -validations $using:item.Validate }
+          TestScript = {
+            if (Validate-All -validations $using:item.Validate) {
+              Write-Verbose ('TestScript: CommandRun-{0} validations satisfied' -f $using:item.ComponentName)
+              return $true
+            } else {
+              Write-Verbose ('TestScript: CommandRun-{0} validations failed' -f $using:item.ComponentName)
+              return $false
+            }
+          }
         }
         Log ('Log-CommandRun-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]CommandRun-{0}' -f $item.ComponentName)
@@ -187,7 +203,15 @@ Configuration DynamicConfig {
             }
             Unblock-File -Path $using:item.Target
           }
-          TestScript = { return (Test-Path -Path $using:item.Target -ErrorAction SilentlyContinue) }
+          TestScript = {
+            if (Test-Path -Path $using:item.Target -ErrorAction SilentlyContinue) {
+              Write-Verbose ('TestScript: FileDownload-{0} validations satisfied' -f $using:item.ComponentName)
+              return $true
+            } else {
+              Write-Verbose ('TestScript: FileDownload-{0} validations failed' -f $using:item.ComponentName)
+              return $false
+            }
+          }
         }
         Log ('Log-FileDownload-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]FileDownload-{0}' -f $item.ComponentName)
@@ -234,7 +258,15 @@ Configuration DynamicConfig {
               & 'cmd' @('/c', 'mklink', $using:item.Link, $using:item.Target)
             }
           }
-          TestScript = { return ((Test-Path -Path $using:item.Link -ErrorAction SilentlyContinue) -and ((Get-Item $using:item.Link).Attributes.ToString() -match "ReparsePoint")) }
+          TestScript = {
+            if ((Test-Path -Path $using:item.Link -ErrorAction SilentlyContinue) -and ((Get-Item $using:item.Link).Attributes.ToString() -match "ReparsePoint")) {
+              Write-Verbose ('TestScript: SymbolicLink-{0} validations satisfied' -f $using:item.ComponentName)
+              return $true
+            } else {
+              Write-Verbose ('TestScript: SymbolicLink-{0} validations failed' -f $using:item.ComponentName)
+              return $false
+            }
+          }
         }
         Log ('Log-SymbolicLink-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]SymbolicLink-{0}' -f $item.ComponentName)
@@ -271,7 +303,15 @@ Configuration DynamicConfig {
               throw
             }
           }
-          TestScript = { return Validate-All -validations $using:item.Validate }
+          TestScript = {
+            if (Validate-All -validations $using:item.Validate) {
+              Write-Verbose ('TestScript: ExeInstall-{0} validations satisfied' -f $using:item.ComponentName)
+              return $true
+            } else {
+              Write-Verbose ('TestScript: ExeInstall-{0} validations failed' -f $using:item.ComponentName)
+              return $false
+            }
+          }
         }
         Log ('Log-ExeInstall-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]ExeInstall-{0}' -f $item.ComponentName)
@@ -372,7 +412,15 @@ Configuration DynamicConfig {
           SetScript = {
             [Environment]::SetEnvironmentVariable($using:item.Name, $using:item.Value, $using:item.Target)
           }
-          TestScript = { return ((Get-ChildItem env: | ? { $_.Name -ieq $using:item.Name } | Select-Object -first 1).Value -eq $using:item.Value) }
+          TestScript = {
+            if ((Get-ChildItem env: | ? { $_.Name -ieq $using:item.Name } | Select-Object -first 1).Value -eq $using:item.Value) {
+              Write-Verbose ('TestScript: EnvironmentVariableSet-{0} validations satisfied' -f $using:item.ComponentName)
+              return $true
+            } else {
+              Write-Verbose ('TestScript: EnvironmentVariableSet-{0} validations failed' -f $using:item.ComponentName)
+              return $false
+            }
+          }
         }
         Log ('Log-EnvironmentVariableSet-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]EnvironmentVariableSet-{0}' -f $item.ComponentName)
@@ -445,7 +493,15 @@ Configuration DynamicConfig {
           SetScript = {
             New-NetFirewallRule -DisplayName ('{0} ({1} {2} {3}): {4}' -f $using:item.ComponentName, $using:item.Protocol, $using:item.LocalPort, $using:item.Direction, $using:item.Action) -Protocol $using:item.Protocol -LocalPort $using:item.LocalPort -Direction $using:item.Direction -Action $using:item.Action
           }
-          TestScript = { return [bool](Get-NetFirewallRule -DisplayName ('{0} ({1} {2} {3}): {4}' -f $using:item.ComponentName, $using:item.Protocol, $using:item.LocalPort, $using:item.Direction, $using:item.Action) -ErrorAction SilentlyContinue) }
+          TestScript = {
+            if ([bool](Get-NetFirewallRule -DisplayName ('{0} ({1} {2} {3}): {4}' -f $using:item.ComponentName, $using:item.Protocol, $using:item.LocalPort, $using:item.Direction, $using:item.Action) -ErrorAction SilentlyContinue)) {
+              Write-Verbose ('TestScript: FirewallRule-{0} validations satisfied' -f $using:item.ComponentName)
+              return $true
+            } else {
+              Write-Verbose ('TestScript: FirewallRule-{0} validations failed' -f $using:item.ComponentName)
+              return $false
+            }
+          }
         }
         Log ('Log-FirewallRule-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]FirewallRule-{0}' -f $item.ComponentName)
