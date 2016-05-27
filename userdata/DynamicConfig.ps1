@@ -204,7 +204,7 @@ Configuration DynamicConfig {
             Unblock-File -Path $using:item.Target
           }
           TestScript = {
-            if (Test-Path -Path $using:item.Target -ErrorAction SilentlyContinue) {
+            if (Validate-PathsExistOrNotRequested -items @($using:item.Target) -verbose) {
               Write-Verbose ('TestScript: FileDownload-{0} validations satisfied' -f $using:item.ComponentName)
               return $true
             } else {
