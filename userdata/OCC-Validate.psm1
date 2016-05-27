@@ -9,7 +9,17 @@ function Validate-All {
   param(
     [object] $validations
   )
-  begin {}
+  begin {
+    if (-not $validations -or (
+        (-not ($validations.PathsExist)) -and
+        (-not ($validations.PathsNotExist)) -and
+        (-not ($validations.CommandsReturn)) -and
+        (-not ($validations.FilesContain))
+      )
+    ) {
+      Write-Verbose ('{0} :: No validations specified.' -f $($MyInvocation.MyCommand.Name))
+    }
+  }
   process {
     return (
       # if no validations are specified, this function will return $false and cause the calling resource's set script to be run
