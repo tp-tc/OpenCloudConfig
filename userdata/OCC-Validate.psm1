@@ -114,8 +114,15 @@ function Validate-CommandsReturnOrNotRequested {
       # all validation commands-return are satisfied
       (-not (@($items | % {
         $cr = $_
+        Write-Verbose ('Command: {0} {1}' -f $cr.Command, "$cr.Arguments")
+        Write-Verbose ('Search: {0}' -f $cr.Match)
         @(@(& $cr.Command $cr.Arguments) | ? {
-          $_ -match $cr.Match
+          if ($_ -match $cr.Match) {
+            Write-Verbose ('Output matched: {0}' -f $_)
+            $true
+          } else {
+            $false
+          }
         })
       }) -contains $false))
     ))
@@ -139,8 +146,15 @@ function Validate-FilesContainOrNotRequested {
       # all validation files-contain are satisfied
       (-not (@($items | % {
         $fc = $_
+        Write-Verbose ('Path: {0}' -f $fc.Path)
+        Write-Verbose ('Search: {0}' -f $fc.Match)
         (((Get-Content $fc.Path) | % {
-          $_ -match $fc.Match
+          if ($_ -match $fc.Match) {
+            Write-Verbose ('Contents matched: {0}' -f $_)
+            $true
+          } else {
+            $false
+          }
         }) -contains $true) # a line within the file contained a match
       }) -contains $false)) # no files failed to contain a match (see '-not' above)
     ))
