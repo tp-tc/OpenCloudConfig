@@ -5,7 +5,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
 
 function Validate-All {
-  #[CmdletBinding()]
+  [CmdletBinding()]
   param(
     [object] $validations
   )
@@ -29,13 +29,13 @@ function Validate-All {
         (($validations.CommandsReturn) -and ($validations.CommandsReturn.Length -gt 0)) -or
         (($validations.FilesContain) -and ($validations.FilesContain.Length -gt 0))
       ) -and (
-        Validate-PathsExistOrNotRequested -items $validations.PathsExist
+        Validate-PathsExistOrNotRequested -items $validations.PathsExist -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
       ) -and (
-        Validate-PathsNotExistOrNotRequested -items $validations.PathsNotExist
+        Validate-PathsNotExistOrNotRequested -items $validations.PathsNotExist -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
       ) -and (
-        Validate-CommandsReturnOrNotRequested -items $validations.CommandsReturn
+        Validate-CommandsReturnOrNotRequested -items $validations.CommandsReturn -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
       ) -and (
-        Validate-FilesContainOrNotRequested -items $validations.FilesContain
+        Validate-FilesContainOrNotRequested -items $validations.FilesContain -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
       )
     )
   }
@@ -43,7 +43,7 @@ function Validate-All {
 }
 
 function Validate-PathsExistOrNotRequested {
-  #[CmdletBinding()]
+  [CmdletBinding()]
   param(
     [object[]] $items
   )
@@ -71,7 +71,7 @@ function Validate-PathsExistOrNotRequested {
 }
 
 function Validate-PathsNotExistOrNotRequested {
-  #[CmdletBinding()]
+  [CmdletBinding()]
   param(
     [object[]] $items
   )
@@ -99,7 +99,7 @@ function Validate-PathsNotExistOrNotRequested {
 }
 
 function Validate-CommandsReturnOrNotRequested {
-  #[CmdletBinding()]
+  [CmdletBinding()]
   param(
     [object[]] $items
   )
@@ -124,7 +124,7 @@ function Validate-CommandsReturnOrNotRequested {
 }
 
 function Validate-FilesContainOrNotRequested {
-  #[CmdletBinding()]
+  [CmdletBinding()]
   param(
     [object[]] $items
   )
