@@ -123,7 +123,7 @@ function Validate-CommandsReturnOrNotRequested {
           } else {
             $false
           }
-        })
+        }).Length -gt 0
       }) -contains $false))
     ))
   }
