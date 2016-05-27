@@ -112,19 +112,17 @@ function Validate-CommandsReturnOrNotRequested {
       # validation commands-return are specified
       (($items) -and ($items.Length -gt 0)) -and
       # all validation commands-return are satisfied
-      (-not (@($items | % {
+      ((@($items | % {
         $cr = $_
         Write-Verbose ('Command: {0} {1}' -f $cr.Command, ($cr.Arguments -join ' '))
         Write-Verbose ('Search: {0}' -f $cr.Match)
-        @(@(& $cr.Command $cr.Arguments) | % {
-          if ($_ -match $cr.Match) {
-            Write-Verbose ('Output matched: {0}' -f $_)
-            $true
-          } else {
-            $false
-          }
-        }) -contains $true
-      }) -contains $false))
+        if (@(& $cr.Command $cr.Arguments) -contains $cr.Match) {
+          Write-Verbose ('Output matched: {0}' -f $_)
+          $true
+        } else {
+          $false
+        }
+      }) -notcontains $false))
     ))
   }
   end {}
