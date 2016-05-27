@@ -10,7 +10,7 @@ function Validate-All {
     [object] $validations
   )
   begin {
-    if (-not $validations -or (
+    if (-not ($validations) -or (
         (-not ($validations.PathsExist)) -and
         (-not ($validations.PathsNotExist)) -and
         (-not ($validations.CommandsReturn)) -and
