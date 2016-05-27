@@ -161,3 +161,17 @@ function Validate-FilesContainOrNotRequested {
   }
   end {}
 }
+
+function Log-Validation {
+  [CmdletBinding()]
+  param(
+    [bool] $validationsSatisfied
+  )
+  begin {
+    Write-Verbose @('Validations not satisfied','Validations satisfied')[$validationsSatisfied]
+  }
+  process {
+    return $validationsSatisfied
+  }
+  end {}
+}

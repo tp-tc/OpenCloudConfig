@@ -141,13 +141,7 @@ Configuration DynamicConfig {
             }
           }
           TestScript = {
-            if (-not (Test-Path -Path $($using:item.Path) -ErrorAction SilentlyContinue)) {
-              Write-Verbose ('TestScript: DirectoryDelete-{0} validations satisfied' -f $using:item.ComponentName)
-              return $true
-            } else {
-              Write-Verbose ('TestScript: DirectoryDelete-{0}-{0} validations not satisfied' -f $using:item.ComponentName)
-              return $false
-            }
+            return Log-Validation (Validate-PathsNotExistOrNotRequested -items @($using:item.Path) -verbose) -verbose
           }
         }
         Log ('Log-DirectoryDelete-{0}' -f $item.ComponentName) {
@@ -176,13 +170,7 @@ Configuration DynamicConfig {
             Start-Process $($using:item.Command) -ArgumentList @($using:item.Arguments | % { $($_) }) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName) -RedirectStandardError ('{0}\log\{1}-{2}-stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName)
           }
           TestScript = {
-            if (Validate-All -validations $using:item.Validate -verbose) {
-              Write-Verbose ('TestScript: CommandRun-{0} validations satisfied' -f $using:item.ComponentName)
-              return $true
-            } else {
-              Write-Verbose ('TestScript: CommandRun-{0}-{0} validations not satisfied' -f $using:item.ComponentName)
-              return $false
-            }
+            return Log-Validation (Validate-All -validations $using:item.Validate -verbose) -verbose
           }
         }
         Log ('Log-CommandRun-{0}' -f $item.ComponentName) {
@@ -204,13 +192,7 @@ Configuration DynamicConfig {
             Unblock-File -Path $using:item.Target
           }
           TestScript = {
-            if (Validate-PathsExistOrNotRequested -items @($using:item.Target) -verbose) {
-              Write-Verbose ('TestScript: FileDownload-{0} validations satisfied' -f $using:item.ComponentName)
-              return $true
-            } else {
-              Write-Verbose ('TestScript: FileDownload-{0}-{0} validations not satisfied' -f $using:item.ComponentName)
-              return $false
-            }
+            return Log-Validation (Validate-PathsExistOrNotRequested -items @($using:item.Target) -verbose) -verbose
           }
         }
         Log ('Log-FileDownload-{0}' -f $item.ComponentName) {
@@ -259,13 +241,7 @@ Configuration DynamicConfig {
             }
           }
           TestScript = {
-            if ((Test-Path -Path $using:item.Link -ErrorAction SilentlyContinue) -and ((Get-Item $using:item.Link).Attributes.ToString() -match "ReparsePoint")) {
-              Write-Verbose ('TestScript: SymbolicLink-{0} validations satisfied' -f $using:item.ComponentName)
-              return $true
-            } else {
-              Write-Verbose ('TestScript: SymbolicLink-{0}-{0} validations not satisfied' -f $using:item.ComponentName)
-              return $false
-            }
+            return Log-Validation ((Test-Path -Path $using:item.Link -ErrorAction SilentlyContinue) -and ((Get-Item $using:item.Link).Attributes.ToString() -match "ReparsePoint")) -verbose
           }
         }
         Log ('Log-SymbolicLink-{0}' -f $item.ComponentName) {
@@ -304,13 +280,7 @@ Configuration DynamicConfig {
             }
           }
           TestScript = {
-            if (Validate-All -validations $using:item.Validate -verbose) {
-              Write-Verbose ('TestScript: ExeInstall-{0} validations satisfied' -f $using:item.ComponentName)
-              return $true
-            } else {
-              Write-Verbose ('TestScript: ExeInstall-{0}-{0} validations not satisfied' -f $using:item.ComponentName)
-              return $false
-            }
+            return Log-Validation (Validate-All -validations $using:item.Validate -verbose) -verbose
           }
         }
         Log ('Log-ExeInstall-{0}' -f $item.ComponentName) {
@@ -413,13 +383,7 @@ Configuration DynamicConfig {
             [Environment]::SetEnvironmentVariable($using:item.Name, $using:item.Value, $using:item.Target)
           }
           TestScript = {
-            if ((Get-ChildItem env: | ? { $_.Name -ieq $using:item.Name } | Select-Object -first 1).Value -eq $using:item.Value) {
-              Write-Verbose ('TestScript: EnvironmentVariableSet-{0} validations satisfied' -f $using:item.ComponentName)
-              return $true
-            } else {
-              Write-Verbose ('TestScript: EnvironmentVariableSet-{0}-{0} validations not satisfied' -f $using:item.ComponentName)
-              return $false
-            }
+            return Log-Validation ((Get-ChildItem env: | ? { $_.Name -ieq $using:item.Name } | Select-Object -first 1).Value -eq $using:item.Value) -verbose
           }
         }
         Log ('Log-EnvironmentVariableSet-{0}' -f $item.ComponentName) {
@@ -494,13 +458,7 @@ Configuration DynamicConfig {
             New-NetFirewallRule -DisplayName ('{0} ({1} {2} {3}): {4}' -f $using:item.ComponentName, $using:item.Protocol, $using:item.LocalPort, $using:item.Direction, $using:item.Action) -Protocol $using:item.Protocol -LocalPort $using:item.LocalPort -Direction $using:item.Direction -Action $using:item.Action
           }
           TestScript = {
-            if ([bool](Get-NetFirewallRule -DisplayName ('{0} ({1} {2} {3}): {4}' -f $using:item.ComponentName, $using:item.Protocol, $using:item.LocalPort, $using:item.Direction, $using:item.Action) -ErrorAction SilentlyContinue)) {
-              Write-Verbose ('TestScript: FirewallRule-{0} validations satisfied' -f $using:item.ComponentName)
-              return $true
-            } else {
-              Write-Verbose ('TestScript: FirewallRule-{0}-{0} validations not satisfied' -f $using:item.ComponentName)
-              return $false
-            }
+            return Log-Validation (Get-NetFirewallRule -DisplayName ('{0} ({1} {2} {3}): {4}' -f $using:item.ComponentName, $using:item.Protocol, $using:item.LocalPort, $using:item.Direction, $using:item.Action) -ErrorAction SilentlyContinue) -verbose
           }
         }
         Log ('Log-FirewallRule-{0}' -f $item.ComponentName) {
