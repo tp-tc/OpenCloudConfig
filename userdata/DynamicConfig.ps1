@@ -458,7 +458,7 @@ Configuration DynamicConfig {
             New-NetFirewallRule -DisplayName ('{0} ({1} {2} {3}): {4}' -f $using:item.ComponentName, $using:item.Protocol, $using:item.LocalPort, $using:item.Direction, $using:item.Action) -Protocol $using:item.Protocol -LocalPort $using:item.LocalPort -Direction $using:item.Direction -Action $using:item.Action
           }
           TestScript = {
-            return Log-Validation (Get-NetFirewallRule -DisplayName ('{0} ({1} {2} {3}): {4}' -f $using:item.ComponentName, $using:item.Protocol, $using:item.LocalPort, $using:item.Direction, $using:item.Action) -ErrorAction SilentlyContinue) -verbose
+            return Log-Validation ([bool](Get-NetFirewallRule -DisplayName ('{0} ({1} {2} {3}): {4}' -f $using:item.ComponentName, $using:item.Protocol, $using:item.LocalPort, $using:item.Direction, $using:item.Action) -ErrorAction SilentlyContinue)) -verbose
           }
         }
         Log ('Log-FirewallRule-{0}' -f $item.ComponentName) {
