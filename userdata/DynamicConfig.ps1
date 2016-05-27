@@ -145,7 +145,7 @@ Configuration DynamicConfig {
               Write-Verbose ('TestScript: DirectoryDelete-{0} validations satisfied' -f $using:item.ComponentName)
               return $true
             } else {
-              Write-Verbose ('TestScript: DirectoryDelete-{0} validations failed' -f $using:item.ComponentName)
+              Write-Verbose ('TestScript: DirectoryDelete-{0}-{0} validations not satisfied' -f $using:item.ComponentName)
               return $false
             }
           }
@@ -176,11 +176,11 @@ Configuration DynamicConfig {
             Start-Process $($using:item.Command) -ArgumentList @($using:item.Arguments | % { $($_) }) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName) -RedirectStandardError ('{0}\log\{1}-{2}-stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName)
           }
           TestScript = {
-            if (Validate-All -validations $using:item.Validate) {
+            if (Validate-All -validations $using:item.Validate -verbose) {
               Write-Verbose ('TestScript: CommandRun-{0} validations satisfied' -f $using:item.ComponentName)
               return $true
             } else {
-              Write-Verbose ('TestScript: CommandRun-{0} validations failed' -f $using:item.ComponentName)
+              Write-Verbose ('TestScript: CommandRun-{0}-{0} validations not satisfied' -f $using:item.ComponentName)
               return $false
             }
           }
@@ -208,7 +208,7 @@ Configuration DynamicConfig {
               Write-Verbose ('TestScript: FileDownload-{0} validations satisfied' -f $using:item.ComponentName)
               return $true
             } else {
-              Write-Verbose ('TestScript: FileDownload-{0} validations failed' -f $using:item.ComponentName)
+              Write-Verbose ('TestScript: FileDownload-{0}-{0} validations not satisfied' -f $using:item.ComponentName)
               return $false
             }
           }
@@ -263,7 +263,7 @@ Configuration DynamicConfig {
               Write-Verbose ('TestScript: SymbolicLink-{0} validations satisfied' -f $using:item.ComponentName)
               return $true
             } else {
-              Write-Verbose ('TestScript: SymbolicLink-{0} validations failed' -f $using:item.ComponentName)
+              Write-Verbose ('TestScript: SymbolicLink-{0}-{0} validations not satisfied' -f $using:item.ComponentName)
               return $false
             }
           }
@@ -304,11 +304,11 @@ Configuration DynamicConfig {
             }
           }
           TestScript = {
-            if (Validate-All -validations $using:item.Validate) {
+            if (Validate-All -validations $using:item.Validate -verbose) {
               Write-Verbose ('TestScript: ExeInstall-{0} validations satisfied' -f $using:item.ComponentName)
               return $true
             } else {
-              Write-Verbose ('TestScript: ExeInstall-{0} validations failed' -f $using:item.ComponentName)
+              Write-Verbose ('TestScript: ExeInstall-{0}-{0} validations not satisfied' -f $using:item.ComponentName)
               return $false
             }
           }
@@ -417,7 +417,7 @@ Configuration DynamicConfig {
               Write-Verbose ('TestScript: EnvironmentVariableSet-{0} validations satisfied' -f $using:item.ComponentName)
               return $true
             } else {
-              Write-Verbose ('TestScript: EnvironmentVariableSet-{0} validations failed' -f $using:item.ComponentName)
+              Write-Verbose ('TestScript: EnvironmentVariableSet-{0}-{0} validations not satisfied' -f $using:item.ComponentName)
               return $false
             }
           }
@@ -498,7 +498,7 @@ Configuration DynamicConfig {
               Write-Verbose ('TestScript: FirewallRule-{0} validations satisfied' -f $using:item.ComponentName)
               return $true
             } else {
-              Write-Verbose ('TestScript: FirewallRule-{0} validations failed' -f $using:item.ComponentName)
+              Write-Verbose ('TestScript: FirewallRule-{0}-{0} validations not satisfied' -f $using:item.ComponentName)
               return $false
             }
           }
