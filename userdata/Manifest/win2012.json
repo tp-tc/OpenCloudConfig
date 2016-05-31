@@ -835,6 +835,24 @@
       ]
     },
     {
+      "ComponentName": "env-TOOLTOOL_CACHE",
+      "ComponentType": "EnvironmentVariableSet",
+      "Comment": "Tells the build system where to find the local tooltool cache",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "ToolToolPreCacheWin32"
+        },
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "ToolToolPreCacheWin64"
+        }
+      ],
+      "Name": "TOOLTOOL_CACHE",
+      "Value": "C:\\builds\\tooltool-cache",
+      "Target": "Machine"
+    },
+    {
       "ComponentName": "env-PATH",
       "ComponentType": "EnvironmentVariableUniquePrepend",
       "DependsOn": [
