@@ -205,26 +205,52 @@ Configuration DynamicConfig {
       'ChecksumFileDownload' {
         Script ('ChecksumFileDownload-{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
-          GetScript = "@{ FileDownload = $item.ComponentName }"
+          GetScript = "@{ ChecksumFileDownload = $item.ComponentName }"
           SetScript = {
-            if (Test-Path -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)) -ErrorAction SilentlyContinue) {
-              Remove-Item -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)) -Force
-              Write-Verbose ('Deleted {0}' -f ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)))
+            $tempTarget = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target))
+            if (Test-Path -Path $tempTarget -ErrorAction SilentlyContinue) {
+              Remove-Item -Path $tempTarget -Force
+              Write-Verbose ('Deleted {0}' -f $tempTarget)
             }
             try {
-              (New-Object Net.WebClient).DownloadFile($using:item.Source, ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)))
-              Write-Verbose ('Downloaded {0} to {1} on first attempt' -f $using:item.Source, ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)))
+              (New-Object Net.WebClient).DownloadFile($using:item.Source, $tempTarget)
+              Write-Verbose ('Downloaded {0} to {1} on first attempt' -f $using:item.Source, $tempTarget)
             } catch {
               # handle redirects (eg: sourceforge)
-              Invoke-WebRequest -Uri $using:item.Source -OutFile ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
-              Write-Verbose ('Downloaded {0} to {1} on second attempt' -f $using:item.Source, ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)))
+              Invoke-WebRequest -Uri $using:item.Source -OutFile $tempTarget -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+              Write-Verbose ('Downloaded {0} to {1} on second attempt' -f $using:item.Source, $tempTarget)
             }
-            Unblock-File -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target))
+            Unblock-File -Path $tempTarget
           }
           TestScript = { return $false }
         }
-        File ('ChecksumFileCopy-{0}' -f $item.ComponentName) {
+        Script ('ChecksumFileKillProcesses-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]ChecksumFileDownload-{0}' -f $item.ComponentName)
+          GetScript = "@{ ChecksumFileKillProcesses = $item.ComponentName }"
+          SetScript = {
+            $processName = [IO.Path]::GetFileNameWithoutExtension($using:item.Target)
+            try {
+              Stop-Process -name $processName -Force
+              Write-Verbose ('Process: {0} stopped' -f $processName)
+            } catch {
+              Write-Verbose ('Failed to stop process: {0}' -f $processName)
+            }
+          }
+          TestScript = {
+            $tempTarget = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target))
+            $processName = [IO.Path]::GetFileNameWithoutExtension($using:item.Target)
+            if (([IO.Path]::GetExtension($using:item.Target) -ieq '.exe') -and (
+              (Test-Path -Path $using:item.Target -ErrorAction SilentlyContinue)) -and (
+              (Get-FileHash -Path $tempTarget -Algorithm 'SHA1') -ne (Get-FileHash -Path $using:item.Target -Algorithm 'SHA1')) -and (
+              (@(Get-Process | ? { $_.ProcessName -eq $processName }).length -gt 0))) {
+              return $false
+            } else {
+              return $true
+            }
+          }
+        }
+        File ('ChecksumFileCopy-{0}' -f $item.ComponentName) {
+          DependsOn = @(('[Script]ChecksumFileDownload-{0}' -f $item.ComponentName), ('[Script]ChecksumFileKillProcesses-{0}' -f $item.ComponentName))
           Type = 'File'
           Checksum = 'SHA-1'
           SourcePath = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($item.Target))
