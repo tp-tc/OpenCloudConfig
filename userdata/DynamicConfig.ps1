@@ -185,9 +185,11 @@ Configuration DynamicConfig {
           SetScript = {
             try {
               (New-Object Net.WebClient).DownloadFile($using:item.Source, $using:item.Target)
+              Write-Verbose ('Downloaded {0} to {1} on first attempt' -f $using:item.Source, $using:item.Target)
             } catch {
               # handle redirects (eg: sourceforge)
               Invoke-WebRequest -Uri $using:item.Source -OutFile $using:item.Target -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+              Write-Verbose ('Downloaded {0} to {1} on second attempt' -f $using:item.Source, $using:item.Target)
             }
             Unblock-File -Path $using:item.Target
           }
@@ -205,11 +207,17 @@ Configuration DynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ FileDownload = $item.ComponentName }"
           SetScript = {
+            if (Test-Path -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)) -ErrorAction SilentlyContinue) {
+              Remove-Item -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)) -Force
+              Write-Verbose ('Deleted {0}' -f ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)))
+            }
             try {
               (New-Object Net.WebClient).DownloadFile($using:item.Source, ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)))
+              Write-Verbose ('Downloaded {0} to {1} on first attempt' -f $using:item.Source, ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)))
             } catch {
               # handle redirects (eg: sourceforge)
               Invoke-WebRequest -Uri $using:item.Source -OutFile ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+              Write-Verbose ('Downloaded {0} to {1} on second attempt' -f $using:item.Source, ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)))
             }
             Unblock-File -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target))
           }
