@@ -221,7 +221,7 @@ Configuration DynamicConfig {
             }
             Unblock-File -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target))
           }
-          TestScript = { return (Test-Path -Path ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)) -ErrorAction SilentlyContinue) }
+          TestScript = { return $false }
         }
         File ('ChecksumFileCopy-{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]ChecksumFileDownload-{0}' -f $item.ComponentName)
