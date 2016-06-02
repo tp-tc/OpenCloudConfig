@@ -53,6 +53,13 @@ if($rebootReasons.length) {
   if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
     & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
   } else {
+    # symlink mercurial to ec2 region config. todo: find a way to do this in the manifest (cmd)
+    $hgini = 'C:\mozilla-build\python\Scripts\mercurial.ini'
+    if (Test-Path -Path $hgini -ErrorAction SilentlyContinue) {
+      & del $hgini # use cmd del (not ps remove-item) here in order to preserve targets
+    }
+    & cmd @('/c', 'mklink', $hgini, ($hgini.Replace('.ini', ('.{0}.ini' -f ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone') -replace '.$')))))
+
     if (-not (Get-ScheduledTask -TaskName 'RunDesiredStateConfigurationAtStartup' -ErrorAction SilentlyContinue)) {
       New-Item -ItemType Directory -Force -Path 'C:\dsc'
       (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2012.ps1', 'C:\dsc\win2012.ps1')
