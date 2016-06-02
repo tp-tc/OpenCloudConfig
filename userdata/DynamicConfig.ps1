@@ -224,33 +224,34 @@ Configuration DynamicConfig {
           }
           TestScript = { return $false }
         }
-        Script ('ChecksumFileKillProcesses-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]ChecksumFileDownload-{0}' -f $item.ComponentName)
-          GetScript = "@{ ChecksumFileKillProcesses = $item.ComponentName }"
-          SetScript = {
-            $processName = [IO.Path]::GetFileNameWithoutExtension($using:item.Target)
-            try {
-              Stop-Process -name $processName -Force
-              Write-Verbose ('Process: {0} stopped' -f $processName)
-            } catch {
-              Write-Verbose ('Failed to stop process: {0}' -f $processName)
-            }
-          }
-          TestScript = {
-            $tempTarget = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target))
-            $processName = [IO.Path]::GetFileNameWithoutExtension($using:item.Target)
-            if (([IO.Path]::GetExtension($using:item.Target) -ieq '.exe') -and (
-              (Test-Path -Path $using:item.Target -ErrorAction SilentlyContinue)) -and (
-              (Get-FileHash -Path $tempTarget -Algorithm 'SHA1') -ne (Get-FileHash -Path $using:item.Target -Algorithm 'SHA1')) -and (
-              (@(Get-Process | ? { $_.ProcessName -eq $processName }).length -gt 0))) {
-              return $false
-            } else {
-              return $true
-            }
-          }
-        }
+        #Script ('ChecksumFileKillProcesses-{0}' -f $item.ComponentName) {
+        #  DependsOn = ('[Script]ChecksumFileDownload-{0}' -f $item.ComponentName)
+        #  GetScript = "@{ ChecksumFileKillProcesses = $item.ComponentName }"
+        #  SetScript = {
+        #    $processName = [IO.Path]::GetFileNameWithoutExtension($using:item.Target)
+        #    try {
+        #      Stop-Process -name $processName -Force
+        #      Write-Verbose ('Process: {0} stopped' -f $processName)
+        #    } catch {
+        #      Write-Verbose ('Failed to stop process: {0}' -f $processName)
+        #    }
+        #  }
+        #  TestScript = {
+        #    $tempTarget = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target))
+        #    $processName = [IO.Path]::GetFileNameWithoutExtension($using:item.Target)
+        #    if (([IO.Path]::GetExtension($using:item.Target) -ieq '.exe') -and (
+        #      (Test-Path -Path $using:item.Target -ErrorAction SilentlyContinue)) -and (
+        #      (Get-FileHash -Path $tempTarget -Algorithm 'SHA1') -ne (Get-FileHash -Path $using:item.Target -Algorithm 'SHA1')) -and (
+        #      (@(Get-Process | ? { $_.ProcessName -eq $processName }).length -gt 0))) {
+        #      return $false
+        #    } else {
+        #      return $true
+        #    }
+        #  }
+        #}
         File ('ChecksumFileCopy-{0}' -f $item.ComponentName) {
-          DependsOn = @(('[Script]ChecksumFileDownload-{0}' -f $item.ComponentName), ('[Script]ChecksumFileKillProcesses-{0}' -f $item.ComponentName))
+          #DependsOn = @(('[Script]ChecksumFileDownload-{0}' -f $item.ComponentName), ('[Script]ChecksumFileKillProcesses-{0}' -f $item.ComponentName))
+          DependsOn = ('[Script]ChecksumFileDownload-{0}' -f $item.ComponentName)
           Type = 'File'
           Checksum = 'SHA-1'
           SourcePath = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($item.Target))
