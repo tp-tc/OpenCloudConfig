@@ -735,7 +735,7 @@
         "pip",
         "install",
         "--upgrade",
-        "requests==2.9.1"
+        "requests==2.8.1"
       ],
       "Validate": {
         "CommandsReturn": [
@@ -747,7 +747,7 @@
               "show",
               "requests"
             ],
-            "Match": "Version: 2.9.1"
+            "Match": "Version: 2.8.1"
           }
         ]
       }
