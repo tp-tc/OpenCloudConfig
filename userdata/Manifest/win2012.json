@@ -151,38 +151,6 @@
       "Target": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Microsoft.PowerShell_profile.ps1"
     },
     {
-      "ComponentName": "DiskPartitionStripeConfiguration",
-      "ComponentType": "FileDownload",
-      "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/DiskPart/stripe-yz-x.dp",
-      "Target": "C:\\Windows\\Temp\\stripe-yz-x.dp"
-    },
-    {
-      "ComponentName": "DiskPartitionStripe",
-      "ComponentType": "CommandRun",
-      "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Command": "diskpart.exe",
-      "Arguments": [
-        "/s",
-        "C:\\Windows\\Temp\\stripe-yz-x.dp"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "FileDownload",
-          "ComponentName": "DiskPartitionStripeConfiguration"
-        }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "X:\\"
-        ],
-        "PathsNotExist": [
-          "Y:\\",
-          "Z:\\"
-        ]
-      }
-    },
-    {
       "ComponentName": "FsutilDisable8Dot3",
       "ComponentType": "CommandRun",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
