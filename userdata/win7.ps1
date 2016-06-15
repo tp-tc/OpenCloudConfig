@@ -27,6 +27,7 @@ $rebootReasons = @()
 # install latest powershell from chocolatey if we don't have a recent version (required by DSC) (requires reboot)
 if ($PSVersionTable.PSVersion.Major -lt 4) {
   Invoke-Expression ((New-Object Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) | Tee-Object -filePath $logFile -append
+  & choco @('install', 'dotnet4.5.1', '-y') | Out-File -filePath $logFile -append
   & choco @('upgrade', 'powershell', '-y') | Out-File -filePath $logFile -append
   $rebootReasons += 'powershell upgraded'
 }
