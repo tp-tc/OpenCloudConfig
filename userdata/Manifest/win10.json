@@ -64,8 +64,8 @@
       "ComponentName": "DscScript",
       "ComponentType": "ChecksumFileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2012.ps1",
-      "Target": "C:\\dsc\\win2012.ps1",
+      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win10.ps1",
+      "Target": "C:\\dsc\\win10.ps1",
       "DependsOn": [
         {
           "ComponentType": "DirectoryCreate",
@@ -221,238 +221,6 @@
       ]
     },
     {
-      "ComponentName": "Start-wuauserv",
-      "ComponentType": "ServiceControl",
-      "Comment": "Required by NET-Framework-Core",
-      "Name": "wuauserv",
-      "StartupType": "Manual",
-      "State": "Running"
-    },
-    {
-      "ComponentName": "NET-Framework-Core",
-      "ComponentType": "WindowsFeatureInstall",
-      "Comment": "Required by DXSDK_Jun10",
-      "Name": "NET-Framework-Core",
-      "DependsOn": [
-        {
-          "ComponentType": "ServiceControl",
-          "ComponentName": "Start-wuauserv"
-        }
-      ]
-    },
-    {
-      "ComponentName": "VisualC2010RedistributablePackageX86Uninstall",
-      "ComponentType": "CommandRun",
-      "Comment": "Required by DXSDK_Jun10 (https://blogs.msdn.microsoft.com/chuckw/2011/12/09/known-issue-directx-sdk-june-2010-setup-and-the-s1023-error)",
-      "Command": "msiexec.exe",
-      "Arguments": [
-        "/passive",
-        "/uninstall",
-        "{F0C3E5D1-1ADE-321E-8167-68EF0DE699A5}"
-      ],
-      "Validate": {
-        "PathsNotExist": [
-          "C:\\Windows\\System32\\msvcr100.dll"
-        ]
-      }
-    },
-    {
-      "ComponentName": "VisualC2010RedistributablePackageX86_64Uninstall",
-      "ComponentType": "CommandRun",
-      "Comment": "Required by DXSDK_Jun10 (https://blogs.msdn.microsoft.com/chuckw/2011/12/09/known-issue-directx-sdk-june-2010-setup-and-the-s1023-error)",
-      "Command": "msiexec.exe",
-      "Arguments": [
-        "/passive",
-        "/uninstall",
-        "{1D8E6291-B0D5-35EC-8441-6616F567A0F7}"
-      ],
-      "Validate": {
-        "PathsNotExist": [
-          "C:\\Windows\\SysWOW64\\msvcr100.dll"
-        ]
-      }
-    },
-    {
-      "ComponentName": "DXSDK_Jun10",
-      "ComponentType": "ExeInstall",
-      "Comment": "Provides D3D compilers required by 32 bit builds",
-      "Url": "http://download.microsoft.com/download/A/E/7/AE743F1F-632B-4809-87A9-AA1BB3458E31/DXSDK_Jun10.exe",
-      "Arguments": [
-        "/U"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "WindowsFeatureInstall",
-          "ComponentName": "NET-Framework-Core"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "VisualC2010RedistributablePackageX86Uninstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "VisualC2010RedistributablePackageX86_64Uninstall"
-        }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Program Files (x86)\\Microsoft DirectX SDK (June 2010)\\system\\uninstall\\DXSDK_Jun10.exe",
-          "C:\\Program Files (x86)\\Microsoft DirectX SDK (June 2010)\\Lib\\x86\\*.lib",
-          "C:\\Program Files (x86)\\Microsoft DirectX SDK (June 2010)\\Lib\\x64\\*.lib",
-          "C:\\Program Files (x86)\\Microsoft DirectX SDK (June 2010)\\Include\\*.h"
-        ]
-      }
-    },
-    {
-      "ComponentName": "vcredist_vs2010_x86",
-      "ComponentType": "ExeInstall",
-      "Comment": "Required by yasm (c:/mozilla-build/yasm/yasm.exe)",
-      "Url": "http://download.microsoft.com/download/C/6/D/C6D0FD4E-9E53-4897-9B91-836EBA2AACD3/vcredist_x86.exe",
-      "Arguments": [
-        "/install",
-        "/passive",
-        "/norestart",
-        "/log",
-        "C:\\log\\vcredist_vs2010_x86-install.log"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "DXSDK_Jun10"
-        }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Windows\\SysWOW64\\msvcr100.dll"
-        ]
-      }
-    },
-    {
-      "ComponentName": "vcredist_vs2010_x64",
-      "ComponentType": "ExeInstall",
-      "Comment": "Required by yasm (c:/mozilla-build/yasm/yasm.exe)",
-      "Url": "http://download.microsoft.com/download/A/8/0/A80747C3-41BD-45DF-B505-E9710D2744E0/vcredist_x64.exe",
-      "Arguments": [
-        "/install",
-        "/passive",
-        "/norestart",
-        "/log",
-        "C:\\log\\vcredist_vs2010_x64-install.log"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "DXSDK_Jun10"
-        }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Windows\\System32\\msvcr100.dll"
-        ]
-      }
-    },
-    {
-      "ComponentName": "vcredist_vs2013_x86",
-      "ComponentType": "ExeInstall",
-      "Comment": "Required by rustc (tooltool artefact)",
-      "Url": "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x86.exe",
-      "Arguments": [
-        "/install",
-        "/passive",
-        "/norestart",
-        "/log",
-        "C:\\log\\vcredist_vs2013_x86-install.log"
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Windows\\SysWOW64\\msvcr120.dll"
-        ]
-      }
-    },
-    {
-      "ComponentName": "vcredist_vs2013_x64",
-      "ComponentType": "ExeInstall",
-      "Comment": "Required by rustc (tooltool artefact)",
-      "Url": "http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe",
-      "Arguments": [
-        "/install",
-        "/passive",
-        "/norestart",
-        "/log",
-        "C:\\log\\vcredist_vs2013_x64-install.log"
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Windows\\System32\\msvcr120.dll"
-        ]
-      }
-    },
-    {
-      "ComponentName": "vcredist_vs2015_x86",
-      "ComponentType": "ExeInstall",
-      "Comment": "Required by rustc (tooltool artefact)",
-      "Url": "http://download.microsoft.com/download/f/3/9/f39b30ec-f8ef-4ba3-8cb4-e301fcf0e0aa/vc_redist.x86.exe",
-      "Arguments": [
-        "/install",
-        "/passive",
-        "/norestart",
-        "/log",
-        "C:\\log\\vcredist_vs2015_x86-install.log"
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Windows\\SysWOW64\\vcruntime140.dll"
-        ]
-      }
-    },
-    {
-      "ComponentName": "vcredist_vs2015_x64",
-      "ComponentType": "ExeInstall",
-      "Comment": "Required by rustc (tooltool artefact)",
-      "Url": "http://download.microsoft.com/download/4/c/b/4cbd5757-0dd4-43a7-bac0-2a492cedbacb/vc_redist.x64.exe",
-      "Arguments": [
-        "/install",
-        "/passive",
-        "/norestart",
-        "/log",
-        "C:\\log\\vcredist_vs2015_x64-install.log"
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Windows\\System32\\vcruntime140.dll"
-        ]
-      }
-    },
-    {
-      "ComponentName": "WindowsSDK10Setup",
-      "ComponentType": "ExeInstall",
-      "Url": "https://go.microsoft.com/fwlink/p/?LinkID=698771",
-      "Arguments": [
-        "/features",
-        "+",
-        "/quiet",
-        "/norestart",
-        "/ceip",
-        "off",
-        "/log",
-        "C:\\log\\windowssdk10setup.log"
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x86\\srcsrv\\pdbstr.exe",
-          "C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x64\\srcsrv\\pdbstr.exe"
-        ]
-      }
-    },
-    {
-      "ComponentName": "BinScope",
-      "ComponentType": "MsiInstall",
-      "Comment": "https://dxr.mozilla.org/mozilla-central/search?q=BinScope&redirect=false&case=false",
-      "Url": "https://download.microsoft.com/download/2/6/A/26AAA1DE-D060-4246-93B5-7D7C877E4F8F/BinScopeSetup.msi",
-      "Name": "SDL BinScope",
-      "ProductId": "B137EB8C-FA6C-4DA7-95F0-A9B6FFE67A64"
-    },
-    {
       "ComponentName": "MozillaBuildSetup",
       "ComponentType": "ExeInstall",
       "Comment": "Base Firefox on Windows build requirement",
@@ -466,12 +234,7 @@
           "C:\\mozilla-build\\info-zip\\unzip.exe",
           "C:\\mozilla-build\\info-zip\\zip.exe",
           "C:\\mozilla-build\\msys\\bin\\sh.exe",
-          "C:\\mozilla-build\\msys\\local\\bin\\make.exe",
-          "C:\\mozilla-build\\msys\\local\\bin\\autoconf-2.13",
-          "C:\\mozilla-build\\python\\python.exe",
-          "C:\\mozilla-build\\python\\Scripts\\hg.exe",
-          "C:\\mozilla-build\\upx391w\\upx.exe",
-          "C:\\mozilla-build\\yasm\\yasm.exe"
+          "C:\\mozilla-build\\python\\python.exe"
         ],
         "FilesContain": [
           {
@@ -494,45 +257,6 @@
       "Name": "MOZILLABUILD",
       "Value": "C:\\mozilla-build",
       "Target": "Machine"
-    },
-    {
-      "ComponentName": "MercurialPythonPatch",
-      "ComponentType": "SymbolicLink",
-      "Comment": "Required by hg extensions",
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
-        }
-      ],
-      "Target": "C:\\mozilla-build\\python\\python27.dll",
-      "Link": "C:\\mozilla-build\\python\\Scripts\\python27.dll"
-    },
-    {
-      "ComponentName": "MercurialUse1Config",
-      "ComponentType": "FileDownload",
-      "Comment": "Required by CloneBundles (hg extension)",
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
-        }
-      ],
-      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.us-east-1.ini",
-      "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.us-east-1.ini"
-    },
-    {
-      "ComponentName": "MercurialUsw2Config",
-      "ComponentType": "FileDownload",
-      "Comment": "Required by CloneBundles (hg extension)",
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
-        }
-      ],
-      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.us-west-2.ini",
-      "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.us-west-2.ini"
     },
     {
       "ComponentName": "pip-upgrade-pip",
@@ -881,8 +605,7 @@
         "C:\\mozilla-build\\python",
         "C:\\mozilla-build\\python\\Scripts",
         "C:\\mozilla-build\\upx391w",
-        "C:\\mozilla-build\\wget",
-        "C:\\mozilla-build\\yasm"
+        "C:\\mozilla-build\\wget"
       ],
       "Target": "Machine"
     },
@@ -1004,125 +727,6 @@
           }
         ]
       }
-    },
-    {
-      "ComponentName": "HgShared",
-      "ComponentType": "DirectoryCreate",
-      "Comment": "required by hg caches",
-      "Path": "C:\\builds\\hg-shared"
-    },
-    {
-      "ComponentName": "HgSharedAccessRights",
-      "ComponentType": "CommandRun",
-      "Comment": "allows builds to use `hg share ...`",
-      "Command": "icacls.exe",
-      "Arguments": [
-        "C:\\builds\\hg-shared",
-        "/grant",
-        "Everyone:(OI)(CI)F"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "HgShared"
-        }
-      ]
-    },
-    {
-      "ComponentName": "MozillaCentralCacheCreate",
-      "ComponentType": "CommandRun",
-      "Comment": "required by firefox builds",
-      "Command": "C:\\mozilla-build\\python\\Scripts\\hg.exe",
-      "Arguments": [
-        "clone",
-        "-U",
-        "https://hg.mozilla.org/mozilla-central",
-        "C:\\builds\\hg-shared\\mozilla-central"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
-        },
-        {
-          "ComponentType": "SymbolicLink",
-          "ComponentName": "MercurialPythonPatch"
-        },
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "HgShared"
-        }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\builds\\hg-shared\\mozilla-central\\.hg"
-        ]
-      }
-    },
-    {
-      "ComponentName": "MozillaCentralCacheUpdate",
-      "ComponentType": "CommandRun",
-      "Comment": "keeps the cache up to date on subsequent runs/reboots",
-      "Command": "C:\\mozilla-build\\python\\Scripts\\hg.exe",
-      "Arguments": [
-        "pull",
-        "-R",
-        "C:\\builds\\hg-shared\\mozilla-central"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "MozillaCentralCacheCreate"
-        }
-      ]
-    },
-    {
-      "ComponentName": "BuildToolsCacheCreate",
-      "ComponentType": "CommandRun",
-      "Comment": "required by firefox builds",
-      "Command": "C:\\mozilla-build\\python\\Scripts\\hg.exe",
-      "Arguments": [
-        "clone",
-        "-U",
-        "https://hg.mozilla.org/build/tools",
-        "C:\\builds\\hg-shared\\build\\tools"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
-        },
-        {
-          "ComponentType": "SymbolicLink",
-          "ComponentName": "MercurialPythonPatch"
-        },
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "HgShared"
-        }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\builds\\hg-shared\\build\\tools\\.hg"
-        ]
-      }
-    },
-    {
-      "ComponentName": "BuildToolsCacheUpdate",
-      "ComponentType": "CommandRun",
-      "Comment": "keeps the cache up to date on subsequent runs/reboots",
-      "Command": "C:\\mozilla-build\\python\\Scripts\\hg.exe",
-      "Arguments": [
-        "pull",
-        "-R",
-        "C:\\builds\\hg-shared\\build\\tools"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "BuildToolsCacheCreate"
-        }
-      ]
     }
   ]
 }
