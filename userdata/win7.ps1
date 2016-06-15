@@ -53,7 +53,7 @@ if($rebootReasons.length) {
   Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
   Stop-Transcript
   if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
-    #& shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+    & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
   } else {
     # symlink mercurial to ec2 region config. todo: find a way to do this in the manifest (cmd)
     $hgini = 'C:\mozilla-build\python\Scripts\mercurial.ini'
@@ -64,8 +64,8 @@ if($rebootReasons.length) {
 
     if (-not (Get-ScheduledTask -TaskName 'RunDesiredStateConfigurationAtStartup' -ErrorAction SilentlyContinue)) {
       New-Item -ItemType Directory -Force -Path 'C:\dsc'
-      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2012.ps1', 'C:\dsc\win2012.ps1')
-      & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/sc', 'onstart', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', 'powershell.exe -File C:\dsc\win2012.ps1') | Out-File -filePath $logFile -append
+      (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win7.ps1', 'C:\dsc\win7.ps1')
+      & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/sc', 'onstart', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', 'powershell.exe -File C:\dsc\win7.ps1') | Out-File -filePath $logFile -append
     }
     Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
     New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { $_.FullName })
@@ -75,7 +75,7 @@ if($rebootReasons.length) {
     } elseif (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
       Start-Sleep -seconds 30 # give g-w a moment to fire up, if it doesn't, boot loop.
       if (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0) {
-        #& shutdown @('-r', '-t', '0', '-c', 'starting generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+        & shutdown @('-r', '-t', '0', '-c', 'starting generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
       }
     }
   }
