@@ -36,15 +36,6 @@ if ((-not ([string]::IsNullOrWhiteSpace($hostname))) -and (-not ([System.Net.Dns
   (Get-WmiObject Win32_ComputerSystem).Rename($hostname)
   $rebootReasons += 'host renamed'
 }
-# blow away any paging files we find, they reduce performance on ec2 instances with plenty of RAM (requires reboot, if found). if they're on the ephemeral disks, they also prevent us from raid striping.
-#if ((Get-WmiObject Win32_ComputerSystem).AutomaticManagedPagefile -or @(Get-WmiObject Win32_PageFileSetting).length) {
-#  $sys = Get-WmiObject Win32_ComputerSystem -EnableAllPrivileges
-#  $sys.AutomaticManagedPagefile = $false
-#  $sys.Put()
-#  Get-WmiObject Win32_PageFileSetting -EnableAllPrivileges | % { $_.Delete() }
-#  Get-ChildItem -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches' | % { Set-ItemProperty -path $_.Name.Replace('HKEY_LOCAL_MACHINE', 'HKLM:') -name StateFlags0012 -type DWORD -Value 2 }
-#  $rebootReasons += 'pagefile(s) removed'
-#}
 if($rebootReasons.length) {
   #& shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
   ('skipping reboots: {0}' -f [string]::Join(', ', $rebootReasons)) | Out-File -filePath $logFile -append
@@ -53,15 +44,18 @@ if($rebootReasons.length) {
   Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
   Stop-Transcript
   if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
-    & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+    #& shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+    ('skipping reboots: {0}' -f 'a package installed by dsc requested a restart') | Out-File -filePath $logFile -append
   } else {
     # symlink mercurial to ec2 region config. todo: find a way to do this in the manifest (cmd)
-    $hgini = 'C:\mozilla-build\python\Scripts\mercurial.ini'
-    if (Test-Path -Path $hgini -ErrorAction SilentlyContinue) {
-      & del $hgini # use cmd del (not ps remove-item) here in order to preserve targets
+    $hgini = ('{0}\python\Scripts\mercurial.ini' $env:MozillaBuild)
+    if (Test-Path -Path [IO.Path]::GetDirectoryName($hgini) -ErrorAction SilentlyContinue) {
+      if (Test-Path -Path $hgini -ErrorAction SilentlyContinue) {
+        & del $hgini # use cmd del (not ps remove-item) here in order to preserve targets
+      }
+      & cmd @('/c', 'mklink', $hgini, ($hgini.Replace('.ini', ('.{0}.ini' -f ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone') -replace '.$')))))
     }
-    & cmd @('/c', 'mklink', $hgini, ($hgini.Replace('.ini', ('.{0}.ini' -f ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone') -replace '.$')))))
-
+    # create a scheduled task
     if (-not (Get-ScheduledTask -TaskName 'RunDesiredStateConfigurationAtStartup' -ErrorAction SilentlyContinue)) {
       New-Item -ItemType Directory -Force -Path 'C:\dsc'
       (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win7.ps1', 'C:\dsc\win7.ps1')
@@ -75,7 +69,8 @@ if($rebootReasons.length) {
     } elseif (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
       Start-Sleep -seconds 30 # give g-w a moment to fire up, if it doesn't, boot loop.
       if (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0) {
-        & shutdown @('-r', '-t', '0', '-c', 'starting generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+        #& shutdown @('-r', '-t', '0', '-c', 'starting generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+        ('skipping reboots: {0}' -f 'starting generic worker') | Out-File -filePath $logFile -append
       }
     }
   }
