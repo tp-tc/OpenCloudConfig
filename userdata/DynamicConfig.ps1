@@ -85,6 +85,12 @@ Configuration DynamicConfig {
     'Microsoft Windows Server 2008*' {
       $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/win2008.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
     }
+    'Microsoft Windows 10*' {
+      $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/win10.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
+    }
+    'Microsoft Windows 7*' {
+      $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/win7.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
+    }
     default {
       $manifest = ('{"Items":[{"ComponentType":"DirectoryCreate","Path":"$env:SystemDrive\\log"}]}' | ConvertFrom-Json)
     }
