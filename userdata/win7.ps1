@@ -45,7 +45,8 @@ if ((-not ([string]::IsNullOrWhiteSpace($hostname))) -and (-not ([System.Net.Dns
 #  $rebootReasons += 'pagefile(s) removed'
 #}
 if($rebootReasons.length) {
-  & shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+  #& shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+  ('skipping reboots: {0}' -f [string]::Join(', ', $rebootReasons)) | Out-File -filePath $logFile -append
 } else {
   Start-Transcript -Path $logFile -Append
   Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
