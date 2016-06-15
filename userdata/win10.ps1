@@ -48,7 +48,7 @@ if($rebootReasons.length) {
     ('skipping reboots: {0}' -f 'a package installed by dsc requested a restart') | Out-File -filePath $logFile -append
   } else {
     # symlink mercurial to ec2 region config. todo: find a way to do this in the manifest (cmd)
-    $hgini = ('{0}\python\Scripts\mercurial.ini' $env:MozillaBuild)
+    $hgini = ('{0}\python\Scripts\mercurial.ini' -f $env:MozillaBuild)
     if (Test-Path -Path [IO.Path]::GetDirectoryName($hgini) -ErrorAction SilentlyContinue) {
       if (Test-Path -Path $hgini -ErrorAction SilentlyContinue) {
         & del $hgini # use cmd del (not ps remove-item) here in order to preserve targets
