@@ -54,16 +54,9 @@ if($rebootReasons.length) {
       & cmd @('/c', 'mklink', $hgini, ($hgini.Replace('.ini', ('.{0}.ini' -f ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone') -replace '.$')))))
     }
     # create a scheduled task
-    $script = 'win7.ps1'
-    if (Test-Path -Path ('C:\dsc\{0}' -f $script) -ErrorAction SilentlyContinue) {
-      Remove-Item -Path ('C:\dsc\{0}' -f $script) -Force
-    }
-    New-Item -ItemType Directory -Force -Path 'C:\dsc'
-      (New-Object Net.WebClient).DownloadFile(('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/{0}' -f $script), ('C:\dsc\{0}' -f $script))
     if (-not (Get-ScheduledTask -TaskName 'RunDesiredStateConfigurationAtStartup' -ErrorAction SilentlyContinue)) {
-      & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/sc', 'onstart', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', ('powershell.exe -File C:\dsc\{0}' -f $script)) | Out-File -filePath $logFile -append
+      & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/sc', 'onstart', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', 'powershell.exe -File C:\dsc\win7.ps1') | Out-File -filePath $logFile -append
     }
-    
     Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
     New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { $_.FullName })
     Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { Remove-Item -Path $_.FullName -Force }
