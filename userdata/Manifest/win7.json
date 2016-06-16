@@ -83,8 +83,8 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg.exe",
-          "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg2.exe"
+          "C:\\Program Files\\GNU\\GnuPG\\pub\\gpg.exe",
+          "C:\\Program Files\\GNU\\GnuPG\\pub\\gpg2.exe"
         ]
       }
     },
@@ -92,7 +92,7 @@
       "ComponentName": "SevenZip",
       "ComponentType": "ExeInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Url": "http://7-zip.org/a/7z1514-x64.exe",
+      "Url": "http://7-zip.org/a/7z1602.exe",
       "Arguments": [
         "/S"
       ],
@@ -107,7 +107,7 @@
       "ComponentName": "SublimeText3",
       "ComponentType": "ExeInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Url": "https://download.sublimetext.com/Sublime%20Text%20Build%203114%20x64%20Setup.exe",
+      "Url": "https://download.sublimetext.com/Sublime%20Text%20Build%203114%20Setup.exe",
       "Arguments": [
         "/VERYSILENT",
         "/NORESTART",
