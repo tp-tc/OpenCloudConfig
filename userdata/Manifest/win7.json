@@ -19,7 +19,7 @@
       "ComponentType": "FileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Source": "https://papertrailapp.com/tools/papertrail-bundle.pem",
-      "Target": "C:\\Program Files (x86)\\nxlog\\cert\\papertrail-bundle.pem",
+      "Target": "C:\\Program Files\\nxlog\\cert\\papertrail-bundle.pem",
       "DependsOn": [
         {
           "ComponentType": "MsiInstall",
@@ -32,7 +32,7 @@
       "ComponentType": "ChecksumFileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/nxlog.conf",
-      "Target": "C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf",
+      "Target": "C:\\Program Files\\nxlog\\conf\\nxlog.conf",
       "DependsOn": [
         {
           "ComponentType": "FileDownload",
