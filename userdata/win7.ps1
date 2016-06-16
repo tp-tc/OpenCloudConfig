@@ -37,15 +37,15 @@ if ((-not ([string]::IsNullOrWhiteSpace($hostname))) -and (-not ([System.Net.Dns
   $rebootReasons += 'host renamed'
 }
 if($rebootReasons.length) {
-  #& shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
-  ('skipping reboots: {0}' -f [string]::Join(', ', $rebootReasons)) | Out-File -filePath $logFile -append
+  & shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+  #('skipping reboots: {0}' -f [string]::Join(', ', $rebootReasons)) | Out-File -filePath $logFile -append
 } else {
   Start-Transcript -Path $logFile -Append
   Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
   Stop-Transcript
   if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
-    #& shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
-    ('skipping reboots: {0}' -f 'a package installed by dsc requested a restart') | Out-File -filePath $logFile -append
+    & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+    #('skipping reboots: {0}' -f 'a package installed by dsc requested a restart') | Out-File -filePath $logFile -append
   } else {
     # symlink mercurial to ec2 region config. todo: find a way to do this in the manifest (cmd)
     $hgini = ('{0}\python\Scripts\mercurial.ini' -f $env:MozillaBuild)
@@ -69,8 +69,8 @@ if($rebootReasons.length) {
     } elseif (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
       Start-Sleep -seconds 30 # give g-w a moment to fire up, if it doesn't, boot loop.
       if (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0) {
-        #& shutdown @('-r', '-t', '0', '-c', 'starting generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
-        ('skipping reboots: {0}' -f 'starting generic worker') | Out-File -filePath $logFile -append
+        & shutdown @('-r', '-t', '0', '-c', 'starting generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+        #('skipping reboots: {0}' -f 'starting generic worker') | Out-File -filePath $logFile -append
       }
     }
   }
