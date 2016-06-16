@@ -64,8 +64,8 @@
       "ComponentName": "DscScript",
       "ComponentType": "ChecksumFileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win10.ps1",
-      "Target": "C:\\dsc\\win10.ps1",
+      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win7.ps1",
+      "Target": "C:\\dsc\\win7.ps1",
       "DependsOn": [
         {
           "ComponentType": "DirectoryCreate",
