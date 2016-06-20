@@ -31,7 +31,7 @@ if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -matc
 } else {
   # symlink mercurial to ec2 region config. todo: find a way to do this in the manifest (cmd)
   $hgini = ('{0}\python\Scripts\mercurial.ini' -f $env:MozillaBuild)
-  if (Test-Path -Path [IO.Path]::GetDirectoryName($hgini) -ErrorAction SilentlyContinue) {
+  if (Test-Path -Path ([IO.Path]::GetDirectoryName($hgini)) -ErrorAction SilentlyContinue) {
     if (Test-Path -Path $hgini -ErrorAction SilentlyContinue) {
       & del $hgini # use cmd del (not ps remove-item) here in order to preserve targets
     }
