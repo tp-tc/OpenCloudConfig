@@ -122,19 +122,19 @@ Configuration DynamicConfig {
   foreach ($item in $manifest.Components) {
     switch ($item.ComponentType) {
       'DirectoryCreate' {
-        File ('DirectoryCreate-{0}' -f $item.ComponentName) {
+        File ('DirectoryCreate_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           Ensure = 'Present'
           Type = 'Directory'
           DestinationPath = $($item.Path)
         }
-        Log ('Log-DirectoryCreate-{0}' -f $item.ComponentName) {
-          DependsOn = ('[File]DirectoryCreate-{0}' -f $item.ComponentName)
+        Log ('Log_DirectoryCreate_{0}' -f $item.ComponentName) {
+          DependsOn = ('[File]DirectoryCreate_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'DirectoryDelete' {
-        Script ('DirectoryDelete-{0}' -f $item.ComponentName) {
+        Script ('DirectoryDelete_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ DirectoryDelete = $($item.Path) }"
           SetScript = {
@@ -150,26 +150,26 @@ Configuration DynamicConfig {
             return Log-Validation (Validate-PathsNotExistOrNotRequested -items @($using:item.Path) -verbose) -verbose
           }
         }
-        Log ('Log-DirectoryDelete-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]DirectoryDelete-{0}' -f $($item.Path).Replace(':', '').Replace('\', '_'))
+        Log ('Log_DirectoryDelete_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]DirectoryDelete_{0}' -f $($item.Path).Replace(':', '').Replace('\', '_'))
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'DirectoryCopy' {
-        File ('DirectoryCopy-{0}' -f $item.ComponentName) {
+        File ('DirectoryCopy_{0}' -f $item.ComponentName) {
           Ensure = 'Present'
           Type = 'Directory'
           Recurse = $true
           SourcePath = $item.Source
           DestinationPath = $item.Target
         }
-        Log ('Log-DirectoryCopy-{0}' -f $item.ComponentName) {
-          DependsOn = ('[File]DirectoryCopy-{0}' -f $item.ComponentName)
+        Log ('Log_DirectoryCopy_{0}' -f $item.ComponentName) {
+          DependsOn = ('[File]DirectoryCopy_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'CommandRun' {
-        Script ('CommandRun-{0}' -f $item.ComponentName) {
+        Script ('CommandRun_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ CommandRun = $item.ComponentName }"
           SetScript = {
@@ -179,13 +179,13 @@ Configuration DynamicConfig {
             return Log-Validation (Validate-All -validations $using:item.Validate -verbose) -verbose
           }
         }
-        Log ('Log-CommandRun-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]CommandRun-{0}' -f $item.ComponentName)
+        Log ('Log_CommandRun_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]CommandRun_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'FileDownload' {
-        Script ('FileDownload-{0}' -f $item.ComponentName) {
+        Script ('FileDownload_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ FileDownload = $item.ComponentName }"
           SetScript = {
@@ -203,13 +203,13 @@ Configuration DynamicConfig {
             return Log-Validation (Validate-PathsExistOrNotRequested -items @($using:item.Target) -verbose) -verbose
           }
         }
-        Log ('Log-FileDownload-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]FileDownload-{0}' -f $item.ComponentName)
+        Log ('Log_FileDownload_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]FileDownload_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'ChecksumFileDownload' {
-        Script ('ChecksumFileDownload-{0}' -f $item.ComponentName) {
+        Script ('ChecksumFileDownload_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ ChecksumFileDownload = $item.ComponentName }"
           SetScript = {
@@ -230,8 +230,8 @@ Configuration DynamicConfig {
           }
           TestScript = { return $false }
         }
-        #Script ('ChecksumFileKillProcesses-{0}' -f $item.ComponentName) {
-        #  DependsOn = ('[Script]ChecksumFileDownload-{0}' -f $item.ComponentName)
+        #Script ('ChecksumFileKillProcesses_{0}' -f $item.ComponentName) {
+        #  DependsOn = ('[Script]ChecksumFileDownload_{0}' -f $item.ComponentName)
         #  GetScript = "@{ ChecksumFileKillProcesses = $item.ComponentName }"
         #  SetScript = {
         #    $processName = [IO.Path]::GetFileNameWithoutExtension($using:item.Target)
@@ -255,9 +255,9 @@ Configuration DynamicConfig {
         #    }
         #  }
         #}
-        File ('ChecksumFileCopy-{0}' -f $item.ComponentName) {
-          #DependsOn = @(('[Script]ChecksumFileDownload-{0}' -f $item.ComponentName), ('[Script]ChecksumFileKillProcesses-{0}' -f $item.ComponentName))
-          DependsOn = ('[Script]ChecksumFileDownload-{0}' -f $item.ComponentName)
+        File ('ChecksumFileCopy_{0}' -f $item.ComponentName) {
+          #DependsOn = @(('[Script]ChecksumFileDownload_{0}' -f $item.ComponentName), ('[Script]ChecksumFileKillProcesses_{0}' -f $item.ComponentName))
+          DependsOn = ('[Script]ChecksumFileDownload_{0}' -f $item.ComponentName)
           Type = 'File'
           Checksum = 'SHA-1'
           SourcePath = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($item.Target))
@@ -265,13 +265,13 @@ Configuration DynamicConfig {
           Ensure = 'Present'
           Force = $true
         }
-        Log ('Log-ChecksumFileDownload-{0}' -f $item.ComponentName) {
-          DependsOn = ('[File]ChecksumFileCopy-{0}' -f $item.ComponentName)
+        Log ('Log_ChecksumFileDownload_{0}' -f $item.ComponentName) {
+          DependsOn = ('[File]ChecksumFileCopy_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'SymbolicLink' {
-        Script ('SymbolicLink-{0}' -f $item.ComponentName) {
+        Script ('SymbolicLink_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ SymbolicLink = $item.ComponentName }"
           SetScript = {
@@ -285,13 +285,13 @@ Configuration DynamicConfig {
             return Log-Validation ((Test-Path -Path $using:item.Link -ErrorAction SilentlyContinue) -and ((Get-Item $using:item.Link).Attributes.ToString() -match "ReparsePoint")) -verbose
           }
         }
-        Log ('Log-SymbolicLink-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]SymbolicLink-{0}' -f $item.ComponentName)
+        Log ('Log_SymbolicLink_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]SymbolicLink_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'ExeInstall' {
-        Script ('ExeDownload-{0}' -f $item.ComponentName) {
+        Script ('ExeDownload_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ ExeDownload = $item.ComponentName }"
           SetScript = {
@@ -306,12 +306,12 @@ Configuration DynamicConfig {
           }
           TestScript = { return (Test-Path -Path ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName) -ErrorAction SilentlyContinue) }
         }
-        Log ('Log-ExeDownload-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]ExeDownload-{0}' -f $item.ComponentName)
+        Log ('Log_ExeDownload_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]ExeDownload_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, download completed' -f $item.ComponentType, $item.ComponentName)
         }
-        Script ('ExeInstall-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]ExeDownload-{0}' -f $item.ComponentName)
+        Script ('ExeInstall_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]ExeDownload_{0}' -f $item.ComponentName)
           GetScript = "@{ ExeInstall = $item.ComponentName }"
           SetScript = {
             $exe = ('{0}\Temp\{1}' -f $env:SystemRoot, $using:item.ComponentName)
@@ -324,13 +324,13 @@ Configuration DynamicConfig {
             return Log-Validation (Validate-All -validations $using:item.Validate -verbose) -verbose
           }
         }
-        Log ('Log-ExeInstall-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]ExeInstall-{0}' -f $item.ComponentName)
+        Log ('Log_ExeInstall_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]ExeInstall_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'MsiInstall' {
-        Script ('MsiDownload-{0}' -f $item.ComponentName) {
+        Script ('MsiDownload_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ MsiDownload = $item.ComponentName }"
           SetScript = {
@@ -345,11 +345,11 @@ Configuration DynamicConfig {
           }
           TestScript = { return (Test-Path -Path ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $using:item.ComponentName) -ErrorAction SilentlyContinue) }
         }
-        Log ('Log-MsiDownload-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]MsiDownload-{0}' -f $item.ComponentName)
+        Log ('Log_MsiDownload_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]MsiDownload_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, download completed' -f $item.ComponentType, $item.ComponentName)
         }
-        Package ('MsiInstall-{0}' -f $item.ComponentName) {
+        Package ('MsiInstall_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           Name = $item.Name
           Path = ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $item.ComponentName)
@@ -357,24 +357,24 @@ Configuration DynamicConfig {
           Ensure = 'Present'
           LogPath = ('{0}\log\{1}-{2}.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $item.ComponentName)
         }
-        Log ('Log-MsiInstall-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Package]MsiInstall-{0}' -f $item.ComponentName)
+        Log ('Log_MsiInstall_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Package]MsiInstall_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'WindowsFeatureInstall' {
-        WindowsFeature ('WindowsFeatureInstall-{0}' -f $item.ComponentName) {
+        WindowsFeature ('WindowsFeatureInstall_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           Name = $item.Name
           Ensure = 'Present'
         }
-        Log ('Log-WindowsFeatureInstall-{0}' -f $item.ComponentName) {
-          DependsOn = ('[WindowsFeature]WindowsFeatureInstall-{0}' -f $item.ComponentName)
+        Log ('Log_WindowsFeatureInstall_{0}' -f $item.ComponentName) {
+          DependsOn = ('[WindowsFeature]WindowsFeatureInstall_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'ZipInstall' {
-        Script ('ZipDownload-{0}' -f $item.ComponentName) {
+        Script ('ZipDownload_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ ZipDownload = $item.ComponentName }"
           SetScript = {
@@ -389,35 +389,35 @@ Configuration DynamicConfig {
           }
           TestScript = { return (Test-Path -Path ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName) -ErrorAction SilentlyContinue) }
         }
-        Log ('Log-ZipDownload-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]ZipDownload-{0}' -f $item.ComponentName)
+        Log ('Log_ZipDownload_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]ZipDownload_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, download completed' -f $item.ComponentType, $item.ComponentName)
         }
-        Archive ('ZipInstall-{0}' -f $item.ComponentName) {
+        Archive ('ZipInstall_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           Path = ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $item.ComponentName)
           Destination = $item.Destination
           Ensure = 'Present'
         }
-        Log ('Log-ZipInstall-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Archive]ZipInstall-{0}' -f $item.ComponentName)
+        Log ('Log_ZipInstall_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Archive]ZipInstall_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'ServiceControl' {
-        Service ('ServiceControl-{0}' -f $item.ComponentName) {
+        Service ('ServiceControl_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           Name = $item.Name
           State = $item.State
           StartupType = $item.StartupType
         }
-        Log ('Log-ServiceControl-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Service]ServiceControl-{0}' -f $item.ComponentName)
+        Log ('Log_ServiceControl_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Service]ServiceControl_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'EnvironmentVariableSet' {
-        Script ('EnvironmentVariableSet-{0}' -f $item.ComponentName) {
+        Script ('EnvironmentVariableSet_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ EnvironmentVariableSet = $item.ComponentName }"
           SetScript = {
@@ -427,13 +427,13 @@ Configuration DynamicConfig {
             return Log-Validation ((Get-ChildItem env: | ? { $_.Name -ieq $using:item.Name } | Select-Object -first 1).Value -eq $using:item.Value) -verbose
           }
         }
-        Log ('Log-EnvironmentVariableSet-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]EnvironmentVariableSet-{0}' -f $item.ComponentName)
+        Log ('Log_EnvironmentVariableSet_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]EnvironmentVariableSet_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'EnvironmentVariableUniqueAppend' {
-        Script ('EnvironmentVariableUniqueAppend-{0}' -f $item.ComponentName) {
+        Script ('EnvironmentVariableUniqueAppend_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ EnvironmentVariableUniqueAppend = $item.ComponentName }"
           SetScript = {
@@ -442,13 +442,13 @@ Configuration DynamicConfig {
           }
           TestScript = { return $false }
         }
-        Log ('Log-EnvironmentVariableUniqueAppend-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]EnvironmentVariableUniqueAppend-{0}' -f $item.ComponentName)
+        Log ('Log_EnvironmentVariableUniqueAppend_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]EnvironmentVariableUniqueAppend_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'EnvironmentVariableUniquePrepend' {
-        Script ('EnvironmentVariableUniquePrepend-{0}' -f $item.ComponentName) {
+        Script ('EnvironmentVariableUniquePrepend_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ EnvironmentVariableUniquePrepend = $item.ComponentName }"
           SetScript = {
@@ -457,26 +457,26 @@ Configuration DynamicConfig {
           }
           TestScript = { return $false }
         }
-        Log ('Log-EnvironmentVariableUniquePrepend-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]EnvironmentVariableUniquePrepend-{0}' -f $item.ComponentName)
+        Log ('Log_EnvironmentVariableUniquePrepend_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]EnvironmentVariableUniquePrepend_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'RegistryKeySet' {
-        Registry ('RegistryKeySet-{0}' -f $item.ComponentName) {
+        Registry ('RegistryKeySet_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           Ensure = 'Present'
           Force = $true
           Key = $item.Key
           ValueName = $item.ValueName
         }
-        Log ('Log-RegistryKeySet-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Registry]RegistryKeySet-{0}' -f $item.ComponentName)
+        Log ('Log_RegistryKeySet_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Registry]RegistryKeySet_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'RegistryValueSet' {
-        Registry ('RegistryValueSet-{0}' -f $item.ComponentName) {
+        Registry ('RegistryValueSet_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           Ensure = 'Present'
           Force = $true
@@ -486,13 +486,13 @@ Configuration DynamicConfig {
           Hex = $item.Hex
           ValueData = $item.ValueData
         }
-        Log ('Log-RegistryValueSet-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Registry]RegistryValueSet-{0}' -f $item.ComponentName)
+        Log ('Log_RegistryValueSet_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Registry]RegistryValueSet_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
       'FirewallRule' {
-        Script ('FirewallRule-{0}' -f $item.ComponentName) {
+        Script ('FirewallRule_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}-{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ FirewallRule = $item.ComponentName }"
           SetScript = {
@@ -502,8 +502,8 @@ Configuration DynamicConfig {
             return Log-Validation ([bool](Get-NetFirewallRule -DisplayName ('{0} ({1} {2} {3}): {4}' -f $using:item.ComponentName, $using:item.Protocol, $using:item.LocalPort, $using:item.Direction, $using:item.Action) -ErrorAction SilentlyContinue)) -verbose
           }
         }
-        Log ('Log-FirewallRule-{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]FirewallRule-{0}' -f $item.ComponentName)
+        Log ('Log_FirewallRule_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]FirewallRule_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }

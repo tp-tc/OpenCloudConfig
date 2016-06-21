@@ -41,7 +41,7 @@
       ]
     },
     {
-      "ComponentName": "Start-nxlog",
+      "ComponentName": "Start_nxlog",
       "ComponentType": "ServiceControl",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Name": "nxlog",
@@ -121,13 +121,13 @@
       }
     },
     {
-      "ComponentName": "SublimeText3-PackagesFolder",
+      "ComponentName": "SublimeText3_PackagesFolder",
       "ComponentType": "DirectoryCreate",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Path": "C:\\Users\\Administrator\\AppData\\Roaming\\Sublime Text 3\\Packages"
     },
     {
-      "ComponentName": "SublimeText3-PackageControl",
+      "ComponentName": "SublimeText3_PackageControl",
       "ComponentType": "FileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Source": "http://sublime.wbond.net/Package%20Control.sublime-package",
@@ -139,7 +139,7 @@
         },
         {
           "ComponentType": "DirectoryCreate",
-          "ComponentName": "SublimeText3-PackagesFolder"
+          "ComponentName": "SublimeText3_PackagesFolder"
         }
       ]
     },
@@ -208,7 +208,7 @@
       "Link": "C:\\home"
     },
     {
-      "ComponentName": "msys-home",
+      "ComponentName": "msys_home",
       "ComponentType": "SymbolicLink",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Target": "C:\\Users",
@@ -302,7 +302,7 @@
       "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.us-west-2.ini"
     },
     {
-      "ComponentName": "env-MOZILLABUILD",
+      "ComponentName": "env_MOZILLABUILD",
       "ComponentType": "EnvironmentVariableSet",
       "Comment": "Absolutely required for mozharness builds. Python will fall in a heap, throwing misleading exceptions without this. :)",
       "DependsOn": [
@@ -316,7 +316,7 @@
       "Target": "Machine"
     },
     {
-      "ComponentName": "env-PATH",
+      "ComponentName": "env_PATH",
       "ComponentType": "EnvironmentVariableUniquePrepend",
       "DependsOn": [
         {
@@ -343,14 +343,14 @@
       "Target": "Machine"
     },
     {
-      "ComponentName": "reg-WindowsErrorReportingLocalDumps",
+      "ComponentName": "reg_WindowsErrorReportingLocalDumps",
       "ComponentType": "RegistryKeySet",
       "Comment": "",
       "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting",
       "ValueName": "LocalDumps"
     },
     {
-      "ComponentName": "reg-WindowsErrorReportingDontShowUI",
+      "ComponentName": "reg_WindowsErrorReportingDontShowUI",
       "ComponentType": "RegistryValueSet",
       "Comment": "",
       "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting",
@@ -389,7 +389,7 @@
       "Target": "C:\\generic-worker\\livelog.exe"
     },
     {
-      "ComponentName": "LiveLog-Get",
+      "ComponentName": "LiveLog_Get",
       "ComponentType": "FirewallRule",
       "Protocol": "TCP",
       "LocalPort": 60022,
@@ -397,7 +397,7 @@
       "Action": "Allow"
     },
     {
-      "ComponentName": "LiveLog-Put",
+      "ComponentName": "LiveLog_Put",
       "ComponentType": "FirewallRule",
       "Protocol": "TCP",
       "LocalPort": 60023,
@@ -425,11 +425,11 @@
         },
         {
           "ComponentType": "FirewallRule",
-          "ComponentName": "LiveLog-Get"
+          "ComponentName": "LiveLog_Get"
         },
         {
           "ComponentType": "FirewallRule",
-          "ComponentName": "LiveLog-Put"
+          "ComponentName": "LiveLog_Put"
         }
       ],
       "Validate": {
