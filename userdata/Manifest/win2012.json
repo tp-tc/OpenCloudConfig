@@ -482,20 +482,6 @@
       }
     },
     {
-      "ComponentName": "env-MOZILLABUILD",
-      "ComponentType": "EnvironmentVariableSet",
-      "Comment": "Absolutely required for mozharness builds. Python will fall in a heap, throwing misleading exceptions without this. :)",
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
-        }
-      ],
-      "Name": "MOZILLABUILD",
-      "Value": "C:\\mozilla-build",
-      "Target": "Machine"
-    },
-    {
       "ComponentName": "MercurialPythonPatch",
       "ComponentType": "SymbolicLink",
       "Comment": "Required by hg extensions",
@@ -546,6 +532,20 @@
       ],
       "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.us-west-2.ini",
       "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.us-west-2.ini"
+    },
+    {
+      "ComponentName": "env-MOZILLABUILD",
+      "ComponentType": "EnvironmentVariableSet",
+      "Comment": "Absolutely required for mozharness builds. Python will fall in a heap, throwing misleading exceptions without this. :)",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        }
+      ],
+      "Name": "MOZILLABUILD",
+      "Value": "C:\\mozilla-build",
+      "Target": "Machine"
     },
     {
       "ComponentName": "pip-upgrade-pip",
