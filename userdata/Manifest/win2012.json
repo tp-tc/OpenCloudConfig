@@ -522,6 +522,19 @@
       "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.us-east-1.ini"
     },
     {
+      "ComponentName": "MercurialUsw1Config",
+      "ComponentType": "FileDownload",
+      "Comment": "Required by CloneBundles (hg extension)",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        }
+      ],
+      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.us-west-1.ini",
+      "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.us-west-1.ini"
+    },
+    {
       "ComponentName": "MercurialUsw2Config",
       "ComponentType": "FileDownload",
       "Comment": "Required by CloneBundles (hg extension)",
