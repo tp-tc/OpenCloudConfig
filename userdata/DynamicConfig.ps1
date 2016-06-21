@@ -8,7 +8,7 @@ Configuration DynamicConfig {
   Import-DscResource -ModuleName PSDesiredStateConfiguration
 
   Script GpgKeyImport {
-    DependsOn = @('[Script]InstallSupportingModules', '[Script]ExeInstall-GpgForWin')
+    DependsOn = @('[Script]InstallSupportingModules', '[Script]ExeInstall_GpgForWin')
     GetScript = { @{ Result = (((Test-Path -Path ('{0}\SysWOW64\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\SysWOW64\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot)).length -gt 0kb)) -or ((Test-Path -Path ('{0}\System32\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\System32\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot)).length -gt 0kb))) } }
     SetScript = {
       # todo: pipe key to gpg import, avoiding disk write
@@ -38,7 +38,7 @@ Configuration DynamicConfig {
     TestScript = { if ((Test-Path -Path ('{0}\builds\*.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (-not (Compare-Object -ReferenceObject (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/releng-secrets.json' -UseBasicParsing | ConvertFrom-Json) -DifferenceObject (Get-ChildItem -Path ('{0}\builds' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer } | % { $_.Name })))) { $true } else { $false } }
   }
   Script FirefoxUploadSecrets {
-    DependsOn = @('[Script]CommandRun-GenericWorkerInstall')
+    DependsOn = @('[Script]CommandRun_GenericWorkerInstall')
     GetScript = "@{ Script = FirefoxUploadSecrets }"
     SetScript = {
       $userdata = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')

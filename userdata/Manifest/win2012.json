@@ -41,7 +41,7 @@
       ]
     },
     {
-      "ComponentName": "Start-nxlog",
+      "ComponentName": "Start_nxlog",
       "ComponentType": "ServiceControl",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Name": "nxlog",
@@ -121,13 +121,13 @@
       }
     },
     {
-      "ComponentName": "SublimeText3-PackagesFolder",
+      "ComponentName": "SublimeText3_PackagesFolder",
       "ComponentType": "DirectoryCreate",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Path": "C:\\Users\\Administrator\\AppData\\Roaming\\Sublime Text 3\\Packages"
     },
     {
-      "ComponentName": "SublimeText3-PackageControl",
+      "ComponentName": "SublimeText3_PackageControl",
       "ComponentType": "FileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Source": "http://sublime.wbond.net/Package%20Control.sublime-package",
@@ -139,7 +139,7 @@
         },
         {
           "ComponentType": "DirectoryCreate",
-          "ComponentName": "SublimeText3-PackagesFolder"
+          "ComponentName": "SublimeText3_PackagesFolder"
         }
       ]
     },
@@ -208,7 +208,7 @@
       "Link": "C:\\home"
     },
     {
-      "ComponentName": "msys-home",
+      "ComponentName": "msys_home",
       "ComponentType": "SymbolicLink",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Target": "C:\\Users",
@@ -221,7 +221,7 @@
       ]
     },
     {
-      "ComponentName": "Start-wuauserv",
+      "ComponentName": "Start_wuauserv",
       "ComponentType": "ServiceControl",
       "Comment": "Required by NET-Framework-Core",
       "Name": "wuauserv",
@@ -229,14 +229,14 @@
       "State": "Running"
     },
     {
-      "ComponentName": "NET-Framework-Core",
+      "ComponentName": "NET_Framework_Core",
       "ComponentType": "WindowsFeatureInstall",
       "Comment": "Required by DXSDK_Jun10",
       "Name": "NET-Framework-Core",
       "DependsOn": [
         {
           "ComponentType": "ServiceControl",
-          "ComponentName": "Start-wuauserv"
+          "ComponentName": "Start_wuauserv"
         }
       ]
     },
@@ -283,7 +283,7 @@
       "DependsOn": [
         {
           "ComponentType": "WindowsFeatureInstall",
-          "ComponentName": "NET-Framework-Core"
+          "ComponentName": "NET_Framework_Core"
         },
         {
           "ComponentType": "CommandRun",
@@ -534,7 +534,7 @@
       "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.us-west-2.ini"
     },
     {
-      "ComponentName": "env-MOZILLABUILD",
+      "ComponentName": "env_MOZILLABUILD",
       "ComponentType": "EnvironmentVariableSet",
       "Comment": "Absolutely required for mozharness builds. Python will fall in a heap, throwing misleading exceptions without this. :)",
       "DependsOn": [
@@ -548,7 +548,7 @@
       "Target": "Machine"
     },
     {
-      "ComponentName": "pip-upgrade-pip",
+      "ComponentName": "pip_upgrade_pip",
       "ComponentType": "CommandRun",
       "DependsOn": [
         {
@@ -580,12 +580,12 @@
       }
     },
     {
-      "ComponentName": "pip-upgrade-setuptools",
+      "ComponentName": "pip_upgrade_setuptools",
       "ComponentType": "CommandRun",
       "DependsOn": [
         {
           "ComponentType": "CommandRun",
-          "ComponentName": "pip-upgrade-pip"
+          "ComponentName": "pip_upgrade_pip"
         }
       ],
       "Command": "C:\\mozilla-build\\python\\python.exe",
@@ -612,12 +612,12 @@
       }
     },
     {
-      "ComponentName": "pip-upgrade-virtualenv",
+      "ComponentName": "pip_upgrade_virtualenv",
       "ComponentType": "CommandRun",
       "DependsOn": [
         {
           "ComponentType": "CommandRun",
-          "ComponentName": "pip-upgrade-pip"
+          "ComponentName": "pip_upgrade_pip"
         }
       ],
       "Command": "C:\\mozilla-build\\python\\python.exe",
@@ -644,12 +644,12 @@
       }
     },
     {
-      "ComponentName": "pip-upgrade-wheel",
+      "ComponentName": "pip_upgrade_wheel",
       "ComponentType": "CommandRun",
       "DependsOn": [
         {
           "ComponentType": "CommandRun",
-          "ComponentName": "pip-upgrade-pip"
+          "ComponentName": "pip_upgrade_pip"
         }
       ],
       "Command": "C:\\mozilla-build\\python\\python.exe",
@@ -676,12 +676,12 @@
       }
     },
     {
-      "ComponentName": "pip-upgrade-pypiwin32",
+      "ComponentName": "pip_upgrade_pypiwin32",
       "ComponentType": "CommandRun",
       "DependsOn": [
         {
           "ComponentType": "CommandRun",
-          "ComponentName": "pip-upgrade-pip"
+          "ComponentName": "pip_upgrade_pip"
         }
       ],
       "Command": "C:\\mozilla-build\\python\\python.exe",
@@ -708,12 +708,12 @@
       }
     },
     {
-      "ComponentName": "pip-upgrade-requests",
+      "ComponentName": "pip_upgrade_requests",
       "ComponentType": "CommandRun",
       "DependsOn": [
         {
           "ComponentType": "CommandRun",
-          "ComponentName": "pip-upgrade-pip"
+          "ComponentName": "pip_upgrade_pip"
         }
       ],
       "Command": "C:\\mozilla-build\\python\\python.exe",
@@ -740,12 +740,12 @@
       }
     },
     {
-      "ComponentName": "pip-upgrade-psutil",
+      "ComponentName": "pip_upgrade_psutil",
       "ComponentType": "CommandRun",
       "DependsOn": [
         {
           "ComponentType": "CommandRun",
-          "ComponentName": "pip-upgrade-pip"
+          "ComponentName": "pip_upgrade_pip"
         }
       ],
       "Command": "C:\\mozilla-build\\python\\python.exe",
@@ -854,7 +854,7 @@
       ]
     },
     {
-      "ComponentName": "env-TOOLTOOL_CACHE",
+      "ComponentName": "env_TOOLTOOL_CACHE",
       "ComponentType": "EnvironmentVariableSet",
       "Comment": "Tells the build system where to find the local tooltool cache",
       "DependsOn": [
@@ -872,7 +872,7 @@
       "Target": "Machine"
     },
     {
-      "ComponentName": "env-PATH",
+      "ComponentName": "env_PATH",
       "ComponentType": "EnvironmentVariableUniquePrepend",
       "DependsOn": [
         {
@@ -900,14 +900,14 @@
       "Target": "Machine"
     },
     {
-      "ComponentName": "reg-WindowsErrorReportingLocalDumps",
+      "ComponentName": "reg_WindowsErrorReportingLocalDumps",
       "ComponentType": "RegistryKeySet",
       "Comment": "",
       "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting",
       "ValueName": "LocalDumps"
     },
     {
-      "ComponentName": "reg-WindowsErrorReportingDontShowUI",
+      "ComponentName": "reg_WindowsErrorReportingDontShowUI",
       "ComponentType": "RegistryValueSet",
       "Comment": "",
       "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting",
@@ -917,7 +917,7 @@
       "Hex": true
     },
     {
-      "ComponentName": "env-DXSDK_DIR",
+      "ComponentName": "env_DXSDK_DIR",
       "ComponentType": "EnvironmentVariableSet",
       "DependsOn": [
         {
@@ -959,7 +959,7 @@
       "Target": "C:\\generic-worker\\livelog.exe"
     },
     {
-      "ComponentName": "LiveLog-Get",
+      "ComponentName": "LiveLog_Get",
       "ComponentType": "FirewallRule",
       "Protocol": "TCP",
       "LocalPort": 60022,
@@ -967,7 +967,7 @@
       "Action": "Allow"
     },
     {
-      "ComponentName": "LiveLog-Put",
+      "ComponentName": "LiveLog_Put",
       "ComponentType": "FirewallRule",
       "Protocol": "TCP",
       "LocalPort": 60023,
@@ -995,11 +995,11 @@
         },
         {
           "ComponentType": "FirewallRule",
-          "ComponentName": "LiveLog-Get"
+          "ComponentName": "LiveLog_Get"
         },
         {
           "ComponentType": "FirewallRule",
-          "ComponentName": "LiveLog-Put"
+          "ComponentName": "LiveLog_Put"
         }
       ],
       "Validate": {
