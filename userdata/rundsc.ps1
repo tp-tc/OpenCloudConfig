@@ -31,6 +31,11 @@ function Remove-LegacyStuff {
     [string[]] $services = @(
       'puppet',
       'uvnc_service'
+    ),
+    [string[]] $scheduledTasks = @(
+      'enabel-userdata-execution',
+      'Make sure userdata runs',
+      'timesync'
     )
   )
   foreach ($user in $users) {
@@ -53,6 +58,14 @@ function Remove-LegacyStuff {
     try {
       Get-Service -Name $service | Stop-Service -PassThru
       (Get-WmiObject -Class Win32_Service -Filter "Name='$service'").delete()
+    }
+    catch {
+      # todo: give a damn
+    }
+  }
+  foreach ($scheduledTask in $scheduledTasks) {
+    try {
+      Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
     }
     catch {
       # todo: give a damn
