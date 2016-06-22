@@ -8,7 +8,7 @@ Powershell [Desired State Configuration](https://msdn.microsoft.com/en-us/powers
 
 An instance can be configured to use the [win2012.json](https://github.com/MozRelOps/OpenCloudConfig/blob/master/userdata/Manifest/win2012.json) manifest in this repository by running the following command at an elevated powershell prompt (or providing it as EC2 userdata):
 
-    Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win2012.ps1')
+    Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/rundsc.ps1')
 
 Instance configuration is defined in json format and currently includes implementations for these instance configuration mechanisms (most source parameters are expected to be a URL):
 
