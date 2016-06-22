@@ -55,25 +55,6 @@
       ]
     },
     {
-      "ComponentName": "DscDirectory",
-      "ComponentType": "DirectoryCreate",
-      "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Path": "C:\\dsc"
-    },
-    {
-      "ComponentName": "DscScript",
-      "ComponentType": "ChecksumFileDownload",
-      "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/win7.ps1",
-      "Target": "C:\\dsc\\win7.ps1",
-      "DependsOn": [
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "DscDirectory"
-        }
-      ]
-    },
-    {
       "ComponentName": "GpgForWin",
       "ComponentType": "ExeInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
@@ -439,6 +420,69 @@
               "--version"
             ],
             "Match": "generic-worker 2.0.0"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "DscDirectory",
+      "ComponentType": "DirectoryCreate",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Path": "C:\\dsc"
+    },
+    {
+      "ComponentName": "DscScript",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/rundsc.ps1",
+      "Target": "C:\\dsc\\rundsc.ps1",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "DscDirectory"
+        }
+      ]
+    },
+    {
+      "ComponentName": "CreateDscScheduledTask",
+      "ComponentType": "CommandRun",
+      "Command": "schtasks.exe",
+      "Arguments": [
+        "/create",
+        "/tn",
+        "RunDesiredStateConfigurationAtStartup",
+        "/sc",
+        "onstart",
+        "/ru",
+        "SYSTEM",
+        "/rl",
+        "HIGHEST",
+        "/tr",
+        "powershell.exe -File C:\\dsc\\rundsc.ps1"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "DscScript"
+        },
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "DscDirectory"
+        }
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\dsc\\rundsc.ps1"
+        ],
+        "CommandsReturn": [
+          {
+            "Command": "schtasks.exe",
+            "Arguments": [
+              "/query",
+              "/tn",
+              "RunDesiredStateConfigurationAtStartup"
+            ],
+            "Match": "RunDesiredStateConfigurationAtStartup"
           }
         ]
       }

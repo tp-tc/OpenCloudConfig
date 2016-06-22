@@ -104,16 +104,6 @@ if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -matc
     }
     & cmd @('/c', 'mklink', $mbhgini, ($hgini.Replace('.ini', ('.{0}.ini' -f $ec2region))))
   }
-  
-  # create a scheduled task to run dsc at startup
-  if (Test-Path -Path ('C:\dsc\{0}.ps1' -f $workerType) -ErrorAction SilentlyContinue) {
-    Remove-Item -Path ('C:\dsc\{0}.ps1' -f $workerType) -Force
-  }
-  New-Item -ItemType Directory -Force -Path 'C:\dsc'
-    (New-Object Net.WebClient).DownloadFile(('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/{0}.ps1' -f $workerType), ('C:\dsc\{0}.ps1' -f $workerType))
-  if (-not (Get-ScheduledTask -TaskName 'RunDesiredStateConfigurationAtStartup' -ErrorAction SilentlyContinue)) {
-    & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/sc', 'onstart', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', ('powershell.exe -File C:\dsc\{0}.ps1' -f $workerType)) | Out-File -filePath $logFile -append
-  }
 
   # archive dsc logs
   Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
