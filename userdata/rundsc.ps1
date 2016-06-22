@@ -101,7 +101,7 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
 if ($PSVersionTable.PSVersion.Major -lt 4) {
   Invoke-Expression ((New-Object Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) | Tee-Object -filePath $logFile -append
   & choco @('install', 'dotnet4.5.1', '-y') | Out-File -filePath $logFile -append
-  & sc @('config', 'wuauserv', 'start=', 'manual')
+  & sc.exe @('config', 'wuauserv', 'start=', 'demand')
   & net @('start', 'wuauserv')
   & choco @('upgrade', 'powershell', '-y') | Out-File -filePath $logFile -append
   $rebootReasons += 'powershell upgraded'
