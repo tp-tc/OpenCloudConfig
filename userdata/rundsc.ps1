@@ -112,7 +112,7 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
 
 # rename the instance if it's based on a releng ami
 $instanceId = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-id'))
-if ($renameInstance -and (-not ([string]::IsNullOrWhiteSpace($instanceId))) -and (-not ([System.Net.Dns]::GetHostName() -ieq $instanceId))) {
+if ($renameInstance -and ([bool]($instanceId)) -and (-not ([System.Net.Dns]::GetHostName() -ieq $instanceId))) {
   (Get-WmiObject Win32_ComputerSystem).Rename($instanceId)
   $rebootReasons += 'host renamed'
 }
