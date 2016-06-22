@@ -76,7 +76,7 @@ function Remove-LegacyStuff {
 # set up a log folder, an execution policy that enables the dsc run and a winrm envelope size large enough for the dynamic dsc.
 $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
 New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
-Set-ExecutionPolicy RemoteSigned -force | Tee-Object -filePath $logFile -append
+Set-ExecutionPolicy RemoteSigned -force | Out-File -filePath $logFile -append
 & winrm @('set', 'winrm/config', '@{MaxEnvelopeSizekb="8192"}')
 
 # if importing releng amis, do a little housekeeping
@@ -103,8 +103,13 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
   & net @('start', 'wuauserv')
   switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     'Microsoft Windows 7*' {
+      ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % {$_.GetNetwork().SetCategory(1)}
+      Enable-PSRemoting -Force
       (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win7-KB3134760-x86.msu', ('{0}\Temp\Win7-KB3134760-x86.msu' -f $env:SystemRoot))
       & wusa @('/install', ('{0}\Temp\Win7-KB3134760-x86.msu' -f $env:SystemRoot), '/quiet', '/norestart')
+    }
+    default {
+      Enable-PSRemoting -SkipNetworkProfileCheck -Force
     }
   }
   #$rebootReasons += 'powershell upgraded'
