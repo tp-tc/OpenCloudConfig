@@ -84,50 +84,72 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
   'Microsoft Windows 10*' {
     $workerType = 'win10'
     Remove-LegacyStuff
+    $renameInstance = $true
   }
   'Microsoft Windows 7*' {
     $workerType = 'win7'
     Remove-LegacyStuff
+    $renameInstance = $true
   }
   default {
     $workerType = 'win2012'
+    $renameInstance = $false
   }
 }
 
-Start-Transcript -Path $logFile -Append
-Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
-Stop-Transcript
-if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
-  & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
-} else {
-  # symlink mercurial to ec2 region config. todo: find a way to do this in the manifest (cmd)
-  # if the hg call is NOT wrapped by python (hg.exe), the ini file below is used
-  $hgini = ('{0}\python\Scripts\mercurial.ini' -f $env:MozillaBuild)
-  if (Test-Path -Path ([IO.Path]::GetDirectoryName($hgini)) -ErrorAction SilentlyContinue) {
-    if (Test-Path -Path $hgini -ErrorAction SilentlyContinue) {
-      & del $hgini # use cmd del (not ps remove-item) here in order to preserve targets
-    }
-    $ec2region = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone') -replace '.$')
-    & cmd @('/c', 'mklink', $hgini, ($hgini.Replace('.ini', ('.{0}.ini' -f $ec2region))))
-    # also replace built in (MozillaBuild) mercurial.ini
-    # if the hg call is wrapped by python (python.exe hg), the ini file below is used
-    $mbhgini = ('{0}\python\mercurial.ini' -f $env:MozillaBuild)
-    if (Test-Path -Path $mbhgini -ErrorAction SilentlyContinue) {
-      & del $mbhgini # use cmd del (not ps remove-item) here in order to preserve targets
-    }
-    & cmd @('/c', 'mklink', $mbhgini, ($hgini.Replace('.ini', ('.{0}.ini' -f $ec2region))))
-  }
+# install latest powershell from chocolatey if we don't have a recent version (required by DSC) (requires reboot)
+if ($PSVersionTable.PSVersion.Major -lt 4) {
+  Invoke-Expression ((New-Object Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) | Tee-Object -filePath $logFile -append
+  & choco @('install', 'dotnet4.5.1', '-y') | Out-File -filePath $logFile -append
+  & choco @('upgrade', 'powershell', '-y') | Out-File -filePath $logFile -append
+  $rebootReasons += 'powershell upgraded'
+}
 
-  # archive dsc logs
-  Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
-  New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { $_.FullName })
-  Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { Remove-Item -Path $_.FullName -Force }
-  if ((Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.zip') }).Count -eq 1) {
-    & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
-  } elseif (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
-    Start-Sleep -seconds 30 # give g-w a moment to fire up, if it doesn't, boot loop.
-    if (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0) {
-      #& shutdown @('-r', '-t', '0', '-c', 'restarting to rouse the generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+# rename the instance if it's based on a releng ami
+$instanceId = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-id'))
+if ($renameInstance -and (-not ([string]::IsNullOrWhiteSpace($instanceId))) -and (-not ([System.Net.Dns]::GetHostName() -ieq $instanceId))) {
+  (Get-WmiObject Win32_ComputerSystem).Rename($instanceId)
+  $rebootReasons += 'host renamed'
+}
+
+if ($rebootReasons.length) {
+  & shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+} else {
+  Start-Transcript -Path $logFile -Append
+  Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
+  Stop-Transcript
+  if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
+    & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+  } else {
+    # symlink mercurial to ec2 region config. todo: find a way to do this in the manifest (cmd)
+    # if the hg call is NOT wrapped by python (hg.exe), the ini file below is used
+    $hgini = ('{0}\python\Scripts\mercurial.ini' -f $env:MozillaBuild)
+    if (Test-Path -Path ([IO.Path]::GetDirectoryName($hgini)) -ErrorAction SilentlyContinue) {
+      if (Test-Path -Path $hgini -ErrorAction SilentlyContinue) {
+        & del $hgini # use cmd del (not ps remove-item) here in order to preserve targets
+      }
+      $ec2region = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone') -replace '.$')
+      & cmd @('/c', 'mklink', $hgini, ($hgini.Replace('.ini', ('.{0}.ini' -f $ec2region))))
+      # also replace built in (MozillaBuild) mercurial.ini
+      # if the hg call is wrapped by python (python.exe hg), the ini file below is used
+      $mbhgini = ('{0}\python\mercurial.ini' -f $env:MozillaBuild)
+      if (Test-Path -Path $mbhgini -ErrorAction SilentlyContinue) {
+        & del $mbhgini # use cmd del (not ps remove-item) here in order to preserve targets
+      }
+      & cmd @('/c', 'mklink', $mbhgini, ($hgini.Replace('.ini', ('.{0}.ini' -f $ec2region))))
+    }
+
+    # archive dsc logs
+    Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
+    New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { $_.FullName })
+    Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { Remove-Item -Path $_.FullName -Force }
+    if ((Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.zip') }).Count -eq 1) {
+      & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+    } elseif (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
+      Start-Sleep -seconds 30 # give g-w a moment to fire up, if it doesn't, boot loop.
+      if (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0) {
+        #& shutdown @('-r', '-t', '0', '-c', 'restarting to rouse the generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+      }
     }
   }
 }
