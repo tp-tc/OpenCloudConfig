@@ -97,14 +97,17 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
   }
 }
 
-# install latest powershell from chocolatey if we don't have a recent version (required by DSC) (requires reboot)
+# install recent powershell (required by DSC) (requires reboot)
 if ($PSVersionTable.PSVersion.Major -lt 4) {
-  Invoke-Expression ((New-Object Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')) | Tee-Object -filePath $logFile -append
-  & choco @('install', 'dotnet4.5.1', '-y') | Out-File -filePath $logFile -append
   & sc.exe @('config', 'wuauserv', 'start=', 'demand')
   & net @('start', 'wuauserv')
-  & choco @('upgrade', 'powershell', '-y') | Out-File -filePath $logFile -append
-  $rebootReasons += 'powershell upgraded'
+  switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+    'Microsoft Windows 7*' {
+      (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win7-KB3134760-x86.msu', ('{0}\Temp\Win7-KB3134760-x86.msu' -f $env:SystemRoot))
+      & wusa @('/install', ('{0}\Temp\Win7-KB3134760-x86.msu' -f $env:SystemRoot), '/quiet', '/norestart')
+    }
+  }
+  #$rebootReasons += 'powershell upgraded'
 }
 
 # rename the instance if it's based on a releng ami
