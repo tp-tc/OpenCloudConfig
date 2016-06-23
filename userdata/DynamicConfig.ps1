@@ -513,7 +513,7 @@ Configuration DynamicConfig {
             if (Get-Command 'Get-NetFirewallRule' -errorAction SilentlyContinue) {
               return Log-Validation ([bool](Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue)) -verbose
             } else {
-              & 'netsh.exe' @('advfirewall', 'firewall', 'show', 'rule', $ruleName)
+              return ((& 'netsh.exe' @('advfirewall', 'firewall', 'show', 'rule', $ruleName)) -notcontains 'No rules match the specified criteria.')
             }
           }
         }
