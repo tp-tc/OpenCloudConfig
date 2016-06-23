@@ -142,7 +142,7 @@ if ($rebootReasons.length) {
   Start-Transcript -Path $logFile -Append
   switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     'Microsoft Windows 7*' {
-      # set network interface to private (reverted after dsc run)
+      # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
       ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) }
       # this setting persists only for the current session
       Enable-PSRemoting -Force
