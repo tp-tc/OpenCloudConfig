@@ -116,10 +116,15 @@ function Validate-CommandsReturnOrNotRequested {
         $cr = $_
         Write-Verbose ('Command: {0} {1}' -f $cr.Command, ($cr.Arguments -join ' '))
         Write-Verbose ('Search: {0}' -f $cr.Match)
-        if (@(& $cr.Command $cr.Arguments) -contains $cr.Match) {
-          Write-Verbose ('Output matched: {0}' -f $_)
-          $true
-        } else {
+        try {
+          if (@(& $cr.Command $cr.Arguments) -contains $cr.Match) {
+            Write-Verbose ('Output matched: {0}' -f $_)
+            $true
+          } else {
+            $false
+          }
+        }
+        catch {
           $false
         }
       }) -notcontains $false))
