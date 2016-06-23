@@ -30,6 +30,7 @@ function Remove-LegacyStuff {
       ('{0}\slave' -f $env:SystemDrive),
       ('{0}\installservice.bat' -f $env:SystemDrive),
       ('{0}\timeset.bat' -f $env:SystemDrive),
+      ('{0}\mozilla-build-bak' -f $env:SystemDrive),
       ('{0}\mozilla-buildbuildbotve' -f $env:SystemDrive),
       ('{0}\mozilla-buildpython27' -f $env:SystemDrive),
       ('{0}\PuppetLabs' -f $env:ProgramData),
