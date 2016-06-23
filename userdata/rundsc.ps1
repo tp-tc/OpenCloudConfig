@@ -22,6 +22,7 @@ function Remove-LegacyStuff {
     [string[]] $paths = @(
       ('{0}\default_browser' -f $env:SystemDrive),
       ('{0}\etc' -f $env:SystemDrive),
+      ('{0}\gpo_files' -f $env:SystemDrive),
       ('{0}\inetpub' -f $env:SystemDrive),
       ('{0}\installersource' -f $env:SystemDrive),
       ('{0}\installservice.bat' -f $env:SystemDrive),
@@ -41,7 +42,8 @@ function Remove-LegacyStuff {
       ('{0}\Users\Administrator\Desktop\TESTER RUNNER' -f $env:SystemDrive),
       ('{0}\Users\Administrator\Desktop\PyYAML-3.11' -f $env:SystemDrive),
       ('{0}\Users\Administrator\Desktop\PyYAML-3.11.zip' -f $env:SystemDrive),
-      ('{0}\Users\Public\Desktop\*.lnk' -f $env:SystemDrive)
+      ('{0}\Users\Public\Desktop\*.lnk' -f $env:SystemDrive),
+      ('{0}\Users\root\Desktop\*.reg' -f $env:SystemDrive)
     ),
     [string[]] $services = @(
       'puppet',
