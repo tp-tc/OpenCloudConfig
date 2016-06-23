@@ -34,6 +34,7 @@ function Remove-LegacyStuff {
       ('{0}\mozilla-buildpython27' -f $env:SystemDrive),
       ('{0}\PuppetLabs' -f $env:ProgramData),
       ('{0}\puppetagain' -f $env:ProgramData),
+      ('{0}\Puppet Labs' -f $env:ProgramFiles),
       ('{0}\installersource' -f $env:SystemDrive),
       ('{0}\Users\Administrator\Desktop\TESTER RUNNER' -f $env:SystemDrive),
       ('{0}\Users\Administrator\Desktop\PyYAML-3.11' -f $env:SystemDrive),
@@ -46,7 +47,7 @@ function Remove-LegacyStuff {
     ),
     [string[]] $scheduledTasks = @(
       'enabel-userdata-execution',
-      'Make sure userdata runs',
+      '"Make sure userdata runs"',
       'timesync'
     )
   )
@@ -67,12 +68,9 @@ function Remove-LegacyStuff {
     Remove-Item ('{0}\mozilla-build' -f $env:SystemDrive) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
   }
   foreach ($service in $services) {
-    try {
+    if (Get-Service -Name $service -ErrorAction SilentlyContinue) {
       Get-Service -Name $service | Stop-Service -PassThru
       (Get-WmiObject -Class Win32_Service -Filter "Name='$service'").delete()
-    }
-    catch {
-      # todo: give a damn
     }
   }
   foreach ($scheduledTask in $scheduledTasks) {
