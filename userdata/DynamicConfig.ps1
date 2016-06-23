@@ -11,7 +11,7 @@ Configuration DynamicConfig {
     DependsOn = @('[Script]InstallSupportingModules', '[Script]ExeInstall_GpgForWin')
     GetScript = { @{ Result = (((Test-Path -Path ('{0}\SysWOW64\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\SysWOW64\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot)).length -gt 0kb)) -or ((Test-Path -Path ('{0}\System32\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\System32\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot)).length -gt 0kb))) } }
     SetScript = {
-      if (Test-Path -Path ${env:ProgramFiles(x86)} -ErrorAction SilentlyContinue) {
+      if ("${env:ProgramFiles(x86)}") {
         $gpg = ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)})
       } else{
         $gpg = ('{0}\GNU\GnuPG\pub\gpg.exe' -f $env:ProgramFiles)
@@ -33,7 +33,7 @@ Configuration DynamicConfig {
     DependsOn = @('[Script]GpgKeyImport', '[File]BuildsFolder')
     GetScript = "@{ Script = FirefoxBuildSecrets }"
     SetScript = {
-      if (Test-Path -Path ${env:ProgramFiles(x86)} -ErrorAction SilentlyContinue) {
+      if ("${env:ProgramFiles(x86)}") {
         $gpg = ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)})
       } else{
         $gpg = ('{0}\GNU\GnuPG\pub\gpg.exe' -f $env:ProgramFiles)
