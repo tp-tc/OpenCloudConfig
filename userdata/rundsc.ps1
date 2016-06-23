@@ -48,7 +48,8 @@ function Remove-LegacyStuff {
     [string[]] $scheduledTasks = @(
       'enabel-userdata-execution',
       '"Make sure userdata runs"',
-      'timesync'
+      #'timesync',
+      'runner'
     )
   )
   foreach ($user in $users) {
