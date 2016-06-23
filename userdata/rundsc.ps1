@@ -22,11 +22,23 @@ function Remove-LegacyStuff {
     [string[]] $paths = @(
       ('{0}\etc' -f $env:SystemDrive),
       ('{0}\opt' -f $env:SystemDrive),
+      ('{0}\opt.zip' -f $env:SystemDrive),
+      ('{0}\inetpub' -f $env:SystemDrive),
+      ('{0}\quickedit' -f $env:SystemDrive),
+      ('{0}\updateservice' -f $env:SystemDrive),
+      ('{0}\sys-scripts' -f $env:SystemDrive),
+      ('{0}\slave' -f $env:SystemDrive),
+      ('{0}\installservice.bat' -f $env:SystemDrive),
+      ('{0}\timeset.bat' -f $env:SystemDrive),
       ('{0}\mozilla-buildbuildbotve' -f $env:SystemDrive),
       ('{0}\mozilla-buildpython27' -f $env:SystemDrive),
       ('{0}\PuppetLabs' -f $env:ProgramData),
       ('{0}\puppetagain' -f $env:ProgramData),
-      ('{0}\installersource' -f $env:SystemDrive)
+      ('{0}\installersource' -f $env:SystemDrive),
+      ('{0}\Users\Administrator\Desktop\TESTER RUNNER' -f $env:SystemDrive),
+      ('{0}\Users\Administrator\Desktop\PyYAML-3.11' -f $env:SystemDrive),
+      ('{0}\Users\Administrator\Desktop\PyYAML-3.11.zip' -f $env:SystemDrive),
+      ('{0}\Users\Public\Desktop\*.lnk' -f $env:SystemDrive)
     ),
     [string[]] $services = @(
       'puppet',
@@ -103,8 +115,10 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
   & net @('start', 'wuauserv')
   switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     'Microsoft Windows 7*' {
-      ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % {$_.GetNetwork().SetCategory(1)}
-      Enable-PSRemoting -Force
+      # install .net 4.5.2
+      (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/E/2/1/E21644B5-2DF2-47C2-91BD-63C560427900/NDP452-KB2901907-x86-x64-AllOS-ENU.exe', ('{0}\Temp\NDP452-KB2901907-x86-x64-AllOS-ENU.exe' -f $env:SystemRoot))
+      & ('{0}\Temp\NDP452-KB2901907-x86-x64-AllOS-ENU.exe' -f $env:SystemRoot) @('Setup', '/q', '/log', ('{0}\log\{1}.NDP452-KB2901907-x86-x64-AllOS-ENU.exe.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")))
+      # install wmf 5
       (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win7-KB3134760-x86.msu', ('{0}\Temp\Win7-KB3134760-x86.msu' -f $env:SystemRoot))
       & wusa @(('{0}\Temp\Win7-KB3134760-x86.msu' -f $env:SystemRoot), '/quiet', '/norestart', ('/log:{0}\log\{1}.Win7-KB3134760-x86.msu.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")))
     }
@@ -126,7 +140,25 @@ if ($rebootReasons.length) {
   & shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
 } else {
   Start-Transcript -Path $logFile -Append
+  switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+    'Microsoft Windows 7*' {
+      # set network interface to private (reverted after dsc run)
+      ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) }
+      # this setting persists only for the current session
+      Enable-PSRemoting -Force
+    }
+    default {
+      # this setting persists only for the current session
+      Enable-PSRemoting -SkipNetworkProfileCheck -Force
+    }
+  }
   Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
+  switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+    'Microsoft Windows 7*' {
+      # set network interface to public
+      ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(0) }
+    }
+  }
   Stop-Transcript
   if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
     & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
