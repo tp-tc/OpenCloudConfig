@@ -170,6 +170,8 @@ if ($rebootReasons.length) {
   if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
     & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
   } else {
+    $ec2region = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone') -replace '.$')
+
     # symlink mercurial to ec2 region config. todo: find a way to do this in the manifest (cmd)
     # if the hg call is NOT wrapped by python (hg.exe), the ini file below is used
     $hgini = ('{0}\python\Scripts\mercurial.ini' -f $env:MozillaBuild)
@@ -177,7 +179,6 @@ if ($rebootReasons.length) {
       if (Test-Path -Path $hgini -ErrorAction SilentlyContinue) {
         & del $hgini # use cmd del (not ps remove-item) here in order to preserve targets
       }
-      $ec2region = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone') -replace '.$')
       & cmd @('/c', 'mklink', $hgini, ($hgini.Replace('.ini', ('.{0}.ini' -f $ec2region))))
       # also replace built in (MozillaBuild) mercurial.ini
       # if the hg call is wrapped by python (python.exe hg), the ini file below is used
@@ -186,6 +187,19 @@ if ($rebootReasons.length) {
         & del $mbhgini # use cmd del (not ps remove-item) here in order to preserve targets
       }
       & cmd @('/c', 'mklink', $mbhgini, ($hgini.Replace('.ini', ('.{0}.ini' -f $ec2region))))
+    }
+
+    # create a region specific buildprops file
+    switch ($ec2region) {
+      'us-east-1' {
+        '{"properties":{"master": "bz1278990.use1.mozilla.com"}}' | Out-File -filePath 'C:\builds\buildprops.json' -force
+      }
+      'us-west-1' {
+        '{"properties":{"master": "bz1278990.usw1.mozilla.com"}}' | Out-File -filePath 'C:\builds\buildprops.json' -force
+      }
+      'us-west-2' {
+        '{"properties":{"master": "bz1278990.usw2.mozilla.com"}}' | Out-File -filePath 'C:\builds\buildprops.json' -force
+      }
     }
 
     # archive dsc logs
