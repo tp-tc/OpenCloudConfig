@@ -189,19 +189,6 @@ if ($rebootReasons.length) {
       & cmd @('/c', 'mklink', $mbhgini, ($hgini.Replace('.ini', ('.{0}.ini' -f $ec2region))))
     }
 
-    # create a region specific buildprops file
-    switch ($ec2region) {
-      'us-east-1' {
-        '{"properties":{"master": "bz1278990.use1.mozilla.com"}}' | Out-File -filePath 'C:\builds\buildprops.json' -force
-      }
-      'us-west-1' {
-        '{"properties":{"master": "bz1278990.usw1.mozilla.com"}}' | Out-File -filePath 'C:\builds\buildprops.json' -force
-      }
-      'us-west-2' {
-        '{"properties":{"master": "bz1278990.usw2.mozilla.com"}}' | Out-File -filePath 'C:\builds\buildprops.json' -force
-      }
-    }
-
     # archive dsc logs
     Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
     New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { $_.FullName })
