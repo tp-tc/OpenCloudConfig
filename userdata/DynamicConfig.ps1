@@ -47,21 +47,6 @@ Configuration DynamicConfig {
     }
     TestScript = { if ((Test-Path -Path ('{0}\builds\*.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (-not (Compare-Object -ReferenceObject (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Manifest/releng-secrets.json' -UseBasicParsing | ConvertFrom-Json) -DifferenceObject (Get-ChildItem -Path ('{0}\builds' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer } | % { $_.Name })))) { $true } else { $false } }
   }
-  Script FirefoxUploadSecrets {
-    DependsOn = @('[Script]CommandRun_GenericWorkerInstall')
-    GetScript = "@{ Script = FirefoxUploadSecrets }"
-    SetScript = {
-      $userdata = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')
-      if ($userdata -and $userdata.Contains('<secrets>')) {
-        New-Item -ItemType Directory -Force -Path ('{0}\Users\GenericWorker\.ssh' -f $env:SystemDrive)
-        foreach ($keyfile in @('trybld_dsa', 'b2gtry_dsa')) {
-          $key = [Regex]::Matches($userdata, ('(?smi)<{0}>(.*)</{0}>' -f $keyfile)).Groups[1].Value
-          [IO.File]::WriteAllLines(('{0}\Users\GenericWorker\.ssh\{1}' -f $env:SystemDrive, $keyfile), $key)
-        }
-      }
-    }
-    TestScript = { if ((Test-Path -Path ('{0}\Users\GenericWorker\.ssh\trybld_dsa' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (Test-Path -Path ('{0}\Users\GenericWorker\.ssh\b2gtry_dsa' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) { $true } else { $false } }
-  }
 
   $supportingModules = @(
     'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/OCC-Validate.psm1',
