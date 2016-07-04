@@ -835,6 +835,14 @@
       ]
     },
     {
+      "ComponentName": "env_AWS_CREDENTIAL_FILE",
+      "ComponentType": "EnvironmentVariableSet",
+      "Comment": "Tells boto where to find sccache credentials",
+      "Name": "AWS_CREDENTIAL_FILE",
+      "Value": "C:\\builds\\tc-sccache.boto",
+      "Target": "Machine"
+    },
+    {
       "ComponentName": "env_TOOLTOOL_CACHE",
       "ComponentType": "EnvironmentVariableSet",
       "Comment": "Tells the build system where to find the local tooltool cache",
