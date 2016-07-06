@@ -152,7 +152,7 @@ if ($rebootReasons.length) {
       Enable-PSRemoting -SkipNetworkProfileCheck -Force
     }
   }
-  Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
+  Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
   switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     'Microsoft Windows 7*' {
       # set network interface to public
@@ -163,7 +163,7 @@ if ($rebootReasons.length) {
   # create a scheduled task to run dsc at startup
   Remove-Item -Path 'C:\dsc' -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
   New-Item -Path 'C:\dsc' -ItemType Directory -force
-  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/rundsc.ps1', 'C:\dsc\rundsc.ps1')
+  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/rundsc.ps1', 'C:\dsc\rundsc.ps1')
   & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/sc', 'onstart', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', 'powershell.exe -File C:\dsc\rundsc.ps1', '/f')
 
   Stop-Transcript

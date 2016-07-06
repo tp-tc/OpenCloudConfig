@@ -31,7 +31,7 @@
       "ComponentName": "NxLogPaperTrailConfiguration",
       "ComponentType": "ChecksumFileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/nxlog64.conf",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog64.conf",
       "Target": "C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf",
       "DependsOn": [
         {
@@ -128,7 +128,7 @@
       "ComponentName": "SystemPowerShellProfile",
       "ComponentType": "FileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Microsoft.PowerShell_profile.ps1",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Microsoft.PowerShell_profile.ps1",
       "Target": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Microsoft.PowerShell_profile.ps1"
     },
     {
@@ -485,7 +485,7 @@
           "ComponentName": "MozillaBuildSetup"
         }
       ],
-      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.us-east-1.ini",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.us-east-1.ini",
       "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.us-east-1.ini"
     },
     {
@@ -498,7 +498,7 @@
           "ComponentName": "MozillaBuildSetup"
         }
       ],
-      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.us-west-1.ini",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.us-west-1.ini",
       "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.us-west-1.ini"
     },
     {
@@ -511,7 +511,7 @@
           "ComponentName": "MozillaBuildSetup"
         }
       ],
-      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.us-west-2.ini",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.us-west-2.ini",
       "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.us-west-2.ini"
     },
     {
