@@ -6,7 +6,9 @@ OCC has no dependencies other than powershell so you shouldn't have to install a
 
 Powershell [Desired State Configuration](https://msdn.microsoft.com/en-us/powershell/dsc/overview) (DSC) is used as the provider.
 
-An instance can be configured to use the [win2012.json](https://github.com/MozRelOps/OpenCloudConfig/blob/master/userdata/Manifest/win2012.json) manifest in this repository by running the following command at an elevated powershell prompt (or providing it as EC2 userdata):
+Which manifest to run is determined by which operating system OCC is running on. There are currently manifests for [Windows 7 - 32 bit](https://github.com/MozRelOps/OpenCloudConfig/blob/master/userdata/Manifest/win7.json), [Winndows 10 - 64 bit](https://github.com/MozRelOps/OpenCloudConfig/blob/master/userdata/Manifest/win10.json) and [Windows Server 2012 r2 - 64 bit](https://github.com/MozRelOps/OpenCloudConfig/blob/master/userdata/Manifest/win2012.json).
+
+Running the following command at an elevated powershell prompt (or providing it as EC2 userdata) will start OCC on an instance:
 
     Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/rundsc.ps1')
 
