@@ -1,12 +1,12 @@
 version: 0
 metadata: 
     name: 'OpenCloudConfig'
-    description: 'Validate updates and regenerate AMIs'
+    description: 'OpenCloudConfig CI Tasks'
     owner: '{{ event.head.user.email }}'
     source: '{{ event.head.repo.url }}'
 tasks:
     - provisionerId: '{{ taskcluster.docker.provisionerId }}'
-      workerType: '{{taskcluster.docker.workerType }}'
+      workerType: '{{ taskcluster.docker.workerType }}'
       extra:
           github:
               env: true
@@ -16,17 +16,36 @@ tasks:
                   - pull_request.reopened
                   - push
       payload:
-          maxRunTime: 7200
-          image:
-            type: 'task-image'
-            path: 'public/image.tar'
-            taskId:
-              task-reference: '<docker-image>'
+          maxRunTime: 600
+          image: 'grenade/opencloudconfig'
           command:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone $GITHUB_HEAD_REPO_URL repo && cd repo && git checkout $GITHUB_HEAD_BRANCH && echo "do stuff here"'
+              - 'git clone $GITHUB_HEAD_REPO_URL repo && cd repo && git checkout $GITHUB_HEAD_BRANCH && echo "do lint stuff here"'
+      metadata:
+          name: 'Validate submission'
+          description: 'run a linter against json and powershell files'
+          owner: '{{ event.head.user.email }}'
+          source: '{{ event.head.repo.url }}'
+
+    - provisionerId: '{{ taskcluster.docker.provisionerId }}'
+      workerType: '{{ taskcluster.docker.workerType }}'
+      extra:
+          github:
+              env: true
+              events:
+                  - push
+              branches:
+                - master
+      payload:
+          maxRunTime: 7200
+          image: 'grenade/opencloudconfig'
+          command:
+              - '/bin/bash'
+              - '--login'
+              - '-c'
+              - 'git clone $GITHUB_HEAD_REPO_URL repo && cd repo && git checkout $GITHUB_HEAD_BRANCH && echo "do ami creation stuff here"'
       metadata:
           name: 'Update OpenCloudConfig AMIs'
           description: 'recreate base worker type AMIs which use OpenCloudConfig for configuration and dependency installation'
