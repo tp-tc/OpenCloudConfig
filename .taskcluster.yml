@@ -11,9 +11,7 @@ tasks:
           github:
               env: true
               events:
-                  - pull_request.opened
-                  - pull_request.synchronize
-                  - pull_request.reopened
+                  - pull_request.*
                   - push
       payload:
           maxRunTime: 600
@@ -22,7 +20,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone $GITHUB_HEAD_REPO_URL repo && cd repo && git checkout $GITHUB_HEAD_BRANCH && echo "do lint stuff here"'
+              - 'git clone {{ event.head.repo.url }} && cd OpenCloudConfig && git checkout {{ event.head.repo.branch }} && echo "do lint stuff here"'
       metadata:
           name: 'Validate submission'
           description: 'run a linter against json and powershell files'
@@ -45,7 +43,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone $GITHUB_HEAD_REPO_URL repo && cd repo && git checkout $GITHUB_HEAD_BRANCH && echo "do ami creation stuff here"'
+              - 'git clone {{ event.head.repo.url }} && cd OpenCloudConfig && git checkout {{ event.head.repo.branch }} && echo "do ami creation stuff here"'
       metadata:
           name: 'Update OpenCloudConfig AMIs'
           description: 'recreate base worker type AMIs which use OpenCloudConfig for configuration and dependency installation'
