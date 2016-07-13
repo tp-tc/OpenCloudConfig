@@ -7,7 +7,7 @@ metadata:
 tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       routes:
-          - 'index.opencloudconfig.v1.revision.{{event.head.sha}}.validation'
+          - 'index.garbage.opencloudconfig.v1.revision.{{event.head.sha}}.validation'
       workerType: '{{taskcluster.docker.workerType}}'
       extra:
           github:
@@ -31,7 +31,7 @@ tasks:
 
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       routes:
-          - 'index.opencloudconfig.v1.revision.{{event.head.sha}}.ami'
+          - 'index.garbage.opencloudconfig.v1.revision.{{event.head.sha}}.ami'
       workerType: '{{taskcluster.docker.workerType}}'
       extra:
           github:
