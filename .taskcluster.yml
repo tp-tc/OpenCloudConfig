@@ -1,12 +1,14 @@
 version: 0
-metadata: 
+metadata:
     name: 'OpenCloudConfig'
     description: 'OpenCloudConfig CI Tasks'
-    owner: '{{ event.head.user.email }}'
-    source: '{{ event.head.repo.url }}'
+    owner: '{{event.head.user.email}}'
+    source: '{{event.head.repo.url}}'
 tasks:
-    - provisionerId: '{{ taskcluster.docker.provisionerId }}'
-      workerType: '{{ taskcluster.docker.workerType }}'
+    - provisionerId: '{{taskcluster.docker.provisionerId}}'
+      routes:
+          - 'index.opencloudconfig.v1.revision.{{event.head.sha}}.validation'
+      workerType: '{{taskcluster.docker.workerType}}'
       extra:
           github:
               env: true
@@ -20,15 +22,17 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone {{ event.head.repo.url }} && cd OpenCloudConfig && git checkout {{ event.head.repo.branch }} && echo "do lint stuff here"'
+              - 'git clone {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && echo "do lint stuff here"'
       metadata:
           name: 'Validate submission'
           description: 'run a linter against json and powershell files'
-          owner: '{{ event.head.user.email }}'
-          source: '{{ event.head.repo.url }}'
+          owner: '{{event.head.user.email}}'
+          source: '{{event.head.repo.url}}'
 
-    - provisionerId: '{{ taskcluster.docker.provisionerId }}'
-      workerType: '{{ taskcluster.docker.workerType }}'
+    - provisionerId: '{{taskcluster.docker.provisionerId}}'
+      routes:
+          - 'index.opencloudconfig.v1.revision.{{event.head.sha}}.ami'
+      workerType: '{{taskcluster.docker.workerType}}'
       extra:
           github:
               env: true
@@ -43,9 +47,9 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone {{ event.head.repo.url }} && cd OpenCloudConfig && git checkout {{ event.head.repo.branch }} && echo "do ami creation stuff here"'
+              - 'git clone {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && echo "do ami creation stuff here"'
       metadata:
           name: 'Update OpenCloudConfig AMIs'
           description: 'recreate base worker type AMIs which use OpenCloudConfig for configuration and dependency installation'
-          owner: '{{ event.head.user.email }}'
-          source: '{{ event.head.repo.url }}'
+          owner: '{{event.head.user.email}}'
+          source: '{{event.head.repo.url}}'
