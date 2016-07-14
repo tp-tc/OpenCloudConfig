@@ -51,7 +51,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && ci/update-workertype.sh'
+              - 'git clone {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && ci/update-workertype.sh win2012-level-1'
       metadata:
           name: 'Update OpenCloudConfig AMIs'
           description: 'recreate base worker type AMIs which use OpenCloudConfig for configuration and dependency installation'
