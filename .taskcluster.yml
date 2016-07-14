@@ -30,6 +30,8 @@ tasks:
           source: '{{event.head.repo.url}}'
 
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
+      scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
       routes:
           - 'index.garbage.opencloudconfig.v1.revision.{{event.head.sha}}.ami'
       workerType: '{{taskcluster.docker.workerType}}'
