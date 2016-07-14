@@ -49,7 +49,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && echo "do ami creation stuff here"'
+              - 'git clone {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && ci/update-workertype.sh'
       metadata:
           name: 'Update OpenCloudConfig AMIs'
           description: 'recreate base worker type AMIs which use OpenCloudConfig for configuration and dependency installation'
