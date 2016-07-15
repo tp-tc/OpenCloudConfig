@@ -3,7 +3,7 @@
 # get some secrets from tc
 updateworkertype_secrets_url="taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype"
 read TASKCLUSTER_AWS_ACCESS_KEY TASKCLUSTER_AWS_SECRET_KEY TASKCLUSTER_CLIENT_ID TASKCLUSTER_ACCESS_TOKEN aws_tc_account_id userdata<<EOF
-$(curl -s -N ${updateworkertype_secrets_url} | python -c 'import json, sys; a = json.load(sys.stdin)["secret"]; print a["TASKCLUSTER_AWS_ACCESS_KEY"], a["TASKCLUSTER_AWS_SECRET_KEY"], a["TASKCLUSTER_CLIENT_ID"], a["TASKCLUSTER_ACCESS_TOKEN"], a["aws_tc_account_id"], a["userdata"]' 2> /dev/null)
+$(curl -s -N ${updateworkertype_secrets_url} | python -c 'import json, sys; a = json.load(sys.stdin)["secret"]; print a["TASKCLUSTER_AWS_ACCESS_KEY"], a["TASKCLUSTER_AWS_SECRET_KEY"], a["TASKCLUSTER_CLIENT_ID"], a["TASKCLUSTER_ACCESS_TOKEN"], a["aws_tc_account_id"], ("%s" % a["userdata"].replace("\n", "\\\\n"));' 2> /dev/null)
 EOF
 
 : ${TASKCLUSTER_AWS_ACCESS_KEY:?"TASKCLUSTER_AWS_ACCESS_KEY is not set"}
@@ -82,7 +82,7 @@ for region in "${aws_regions[@]}"; do
 done
 
 # create instance, apply user-data, filter output, get instance id, tag instance, wait for shutdown
-aws_instance_id="$(aws ec2 run-instances --region ${aws_region} --image-id "${aws_base_ami_id}" --key-name ${aws_key_name} --security-groups "ssh-only" "rdp-only" --user-data "${userdata}" --instance-type ${aws_instance_type} --block-device-mappings DeviceName=/dev/sda1,Ebs="{VolumeSize=$aws_instance_hdd_size,DeleteOnTermination=true,VolumeType=gp2}" --instance-initiated-shutdown-behavior stop --client-token "${aws_client_token}" | sed -n 's/^ *"InstanceId": "\(.*\)", */\1/p')"
+aws_instance_id="$(aws ec2 run-instances --region ${aws_region} --image-id "${aws_base_ami_id}" --key-name ${aws_key_name} --security-groups "ssh-only" "rdp-only" --user-data "$(echo -e ${userdata})" --instance-type ${aws_instance_type} --block-device-mappings DeviceName=/dev/sda1,Ebs="{VolumeSize=$aws_instance_hdd_size,DeleteOnTermination=true,VolumeType=gp2}" --instance-initiated-shutdown-behavior stop --client-token "${aws_client_token}" | sed -n 's/^ *"InstanceId": "\(.*\)", */\1/p')"
 aws ec2 create-tags --region ${aws_region} --resources "${aws_instance_id}" --tags "Key=WorkerType,Value=${tc_worker_type}"
 echo "$(date -Iseconds): instance: ${aws_instance_id} instantiated and tagged: WorkerType=${tc_worker_type}"
 sleep 30 # give aws 30 seconds to start the instance
