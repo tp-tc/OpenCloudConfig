@@ -84,7 +84,7 @@ done
 # create instance, apply user-data, filter output, get instance id, tag instance, wait for shutdown
 aws_instance_id="$(aws ec2 run-instances --region ${aws_region} --image-id "${aws_base_ami_id}" --key-name ${aws_key_name} --security-groups "ssh-only" "rdp-only" --user-data "$(echo -e ${userdata})" --instance-type ${aws_instance_type} --block-device-mappings DeviceName=/dev/sda1,Ebs="{VolumeSize=$aws_instance_hdd_size,DeleteOnTermination=true,VolumeType=gp2}" --instance-initiated-shutdown-behavior stop --client-token "${aws_client_token}" | sed -n 's/^ *"InstanceId": "\(.*\)", */\1/p')"
 aws ec2 create-tags --region ${aws_region} --resources "${aws_instance_id}" --tags "Key=WorkerType,Value=${tc_worker_type}"
-echo "$(date -Iseconds): instance: ${aws_instance_id} instantiated and tagged: WorkerType=${tc_worker_type}"
+echo "$(date -Iseconds): instance: ${aws_instance_id} instantiated and tagged: WorkerType=${tc_worker_type} (https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Instances:instanceId=${aws_instance_id})"
 sleep 30 # give aws 30 seconds to start the instance
 echo "$(date -Iseconds): userdata logging to: https://papertrailapp.com/systems/${aws_instance_id}/events"
 aws_instance_public_ip="$(aws ec2 describe-instances --region ${aws_region} --instance-id "${aws_instance_id}" --query 'Reservations[*].Instances[*].NetworkInterfaces[*].Association.PublicIp' --output text)"
@@ -97,7 +97,7 @@ do
 done
 
 aws_ami_id=`aws ec2 create-image --region ${aws_region} --instance-id ${aws_instance_id} --name "${tc_worker_type} version ${aws_client_token}" --description "Firefox desktop builds for Windows - TaskCluster ${tc_worker_type} worker - version ${aws_client_token}" | sed -n 's/^ *"ImageId": *"\(.*\)" *$/\1/p'`
-echo "$(date -Iseconds): ami: ${aws_ami_id} creation in progress: https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Images:visibility=owned-by-me;search=${aws_ami_id};sort=desc:creationDate"
+echo "$(date -Iseconds): ami: ${aws_ami_id} creation in progress: https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Images:visibility=owned-by-me;search=${aws_ami_id}"
 aws ec2 create-tags --region ${aws_region} --resources "${aws_ami_id}" --tags "Key=WorkerType,Value=${tc_worker_type}"
 sleep 30
 until `aws ec2 wait image-available --region ${aws_region} --image-ids "${aws_ami_id}" >/dev/null 2>&1`;
@@ -108,7 +108,7 @@ touch ${aws_region}.${aws_ami_id}.latest-ami
 
 for region in "${aws_copy_regions[@]}"; do
   aws_copied_ami_id=`aws ec2 copy-image --region ${region} --source-region ${aws_region} --source-image-id ${aws_ami_id} --name "${tc_worker_type} version ${aws_client_token}" --description "Firefox desktop builds for Windows - TaskCluster ${tc_worker_type} worker - version ${aws_client_token}" | sed -n 's/^ *"ImageId": *"\(.*\)" *$/\1/p'`
-  echo "$(date -Iseconds): ami: ${aws_region} ${aws_ami_id} copy to ${region} ${aws_copied_ami_id} in progress: https://${region}.console.aws.amazon.com/ec2/v2/home?region=${region}#Images:visibility=owned-by-me;search=${aws_copied_ami_id};sort=desc:creationDate"
+  echo "$(date -Iseconds): ami: ${aws_region} ${aws_ami_id} copy to ${region} ${aws_copied_ami_id} in progress: https://${region}.console.aws.amazon.com/ec2/v2/home?region=${region}#Images:visibility=owned-by-me;search=${aws_copied_ami_id}"
   aws ec2 create-tags --region ${region} --resources "${aws_copied_ami_id}" --tags "Key=WorkerType,Value=${tc_worker_type}"
   sleep 30
   until `aws ec2 wait image-available --region ${region} --image-ids "${aws_copied_ami_id}" >/dev/null 2>&1`;
