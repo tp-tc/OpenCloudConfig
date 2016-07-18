@@ -2,8 +2,8 @@
 
 # get some secrets from tc
 updateworkertype_secrets_url="taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype"
-read TASKCLUSTER_AWS_ACCESS_KEY TASKCLUSTER_AWS_SECRET_KEY TASKCLUSTER_CLIENT_ID TASKCLUSTER_ACCESS_TOKEN aws_tc_account_id userdata<<EOF
-$(curl -s -N ${updateworkertype_secrets_url} | python -c 'import json, sys; a = json.load(sys.stdin)["secret"]; print a["TASKCLUSTER_AWS_ACCESS_KEY"], a["TASKCLUSTER_AWS_SECRET_KEY"], a["TASKCLUSTER_CLIENT_ID"], a["TASKCLUSTER_ACCESS_TOKEN"], a["aws_tc_account_id"], ("%s" % a["userdata"].replace("\n", "\\\\n"));' 2> /dev/null)
+read TASKCLUSTER_AWS_ACCESS_KEY TASKCLUSTER_AWS_SECRET_KEY aws_tc_account_id userdata<<EOF
+$(curl -s -N ${updateworkertype_secrets_url} | python -c 'import json, sys; a = json.load(sys.stdin)["secret"]; print a["TASKCLUSTER_AWS_ACCESS_KEY"], a["TASKCLUSTER_AWS_SECRET_KEY"], a["aws_tc_account_id"], ("%s" % a["userdata"].replace("\n", "\\\\n"));' 2> /dev/null)
 EOF
 
 : ${TASKCLUSTER_AWS_ACCESS_KEY:?"TASKCLUSTER_AWS_ACCESS_KEY is not set"}
@@ -11,8 +11,6 @@ EOF
 export AWS_ACCESS_KEY_ID=${TASKCLUSTER_AWS_ACCESS_KEY}
 export AWS_SECRET_ACCESS_KEY=${TASKCLUSTER_AWS_SECRET_KEY}
 
-: ${TASKCLUSTER_CLIENT_ID:?"TASKCLUSTER_CLIENT_ID is not set"}
-: ${TASKCLUSTER_ACCESS_TOKEN:?"TASKCLUSTER_ACCESS_TOKEN is not set"}
 : ${aws_tc_account_id:?"aws_tc_account_id is not set"}
 
 aws_region=${aws_region:='us-west-2'}
