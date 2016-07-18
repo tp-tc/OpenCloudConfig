@@ -36,7 +36,7 @@ aws_client_token=${GITHUB_HEAD_SHA:0:12}
 echo "$(date -Iseconds): git sha: ${aws_client_token} used for aws client token"
 
 case "${tc_worker_type}" in
-  win2012*)
+  *win2012*)
     aws_instance_hdd_size=${aws_instance_hdd_size:=60}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners amazon --filters "Name=platform,Values=windows" "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term_win2012}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     echo "$(date -Iseconds): latest base ami for: ${aws_base_ami_search_term_win2012}, in: ${aws_region}, is: ${aws_base_ami_id}"
