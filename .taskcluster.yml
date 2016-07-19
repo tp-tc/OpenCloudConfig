@@ -82,7 +82,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && ci/update-workertype.sh gecko-L-t-win7-32'
+              - 'git clone --quiet {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && ci/update-workertype.sh gecko-L-t-win7-32'
       metadata:
           name: 'Update gecko-L-t-win7-32 AMIs'
           description: 'recreate base worker type AMIs which use OpenCloudConfig for configuration and dependency installation'
