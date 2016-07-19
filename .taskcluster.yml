@@ -22,7 +22,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && echo "do lint stuff here"'
+              - 'git clone --quiet {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && echo "do lint stuff here"'
       metadata:
           name: 'Validate submission'
           description: 'run a linter against json and powershell files'
@@ -52,7 +52,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && ci/update-workertype.sh gecko-L-b-win2012'
+              - 'git clone --quiet {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && ci/update-workertype.sh gecko-L-b-win2012'
       metadata:
           name: 'Update gecko-L-b-win2012 AMIs'
           description: 'recreate base worker type AMIs which use OpenCloudConfig for configuration and dependency installation'
