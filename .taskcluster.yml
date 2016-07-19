@@ -32,6 +32,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
+          - aws-provisioner:manage-worker-type:gecko-L-b-win2012
       routes:
           - 'index.garbage.opencloudconfig.v1.revision.{{event.head.sha}}.ami'
       workerType: '{{taskcluster.docker.workerType}}'
@@ -61,6 +62,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
+          - aws-provisioner:manage-worker-type:gecko-L-t-win7-32
       routes:
           - 'index.garbage.opencloudconfig.v1.revision.{{event.head.sha}}.ami'
       workerType: '{{taskcluster.docker.workerType}}'
