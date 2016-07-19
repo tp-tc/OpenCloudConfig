@@ -53,7 +53,36 @@ tasks:
               - '-c'
               - 'git clone {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && ci/update-workertype.sh gecko-L-b-win2012'
       metadata:
-          name: 'Update OpenCloudConfig AMIs'
+          name: 'Update gecko-L-b-win2012 AMIs'
+          description: 'recreate base worker type AMIs which use OpenCloudConfig for configuration and dependency installation'
+          owner: '{{event.head.user.email}}'
+          source: '{{event.head.repo.url}}'
+
+    - provisionerId: '{{taskcluster.docker.provisionerId}}'
+      scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
+      routes:
+          - 'index.garbage.opencloudconfig.v1.revision.{{event.head.sha}}.ami'
+      workerType: '{{taskcluster.docker.workerType}}'
+      extra:
+          github:
+              env: true
+              events:
+                  - push
+              branches:
+                - master
+      payload:
+          maxRunTime: 7200
+          image: 'grenade/opencloudconfig'
+          features:
+            taskclusterProxy: true
+          command:
+              - '/bin/bash'
+              - '--login'
+              - '-c'
+              - 'git clone {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && ci/update-workertype.sh gecko-L-t-win7-32'
+      metadata:
+          name: 'Update gecko-L-t-win7-32 AMIs'
           description: 'recreate base worker type AMIs which use OpenCloudConfig for configuration and dependency installation'
           owner: '{{event.head.user.email}}'
           source: '{{event.head.repo.url}}'
