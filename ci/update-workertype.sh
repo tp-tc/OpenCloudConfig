@@ -27,10 +27,10 @@ fi
 tc_worker_type="${1}"
 
 aws_key_name="mozilla-taskcluster-worker-${tc_worker_type}"
-echo "$(date -Iseconds): aws_key_name: ${aws_key_name}"
+echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] aws_key_name: ${aws_key_name}"
 
 aws_client_token=${GITHUB_HEAD_SHA:0:12}
-echo "$(date -Iseconds): git sha: ${aws_client_token} used for aws client token"
+echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] git sha: ${aws_client_token} used for aws client token"
 
 case "${tc_worker_type}" in
   *-win7-32)
@@ -52,31 +52,31 @@ case "${tc_worker_type}" in
     exit 67
     ;;
 esac
-echo "$(date -Iseconds): latest base ami for: ${aws_base_ami_search_term}, in region: ${aws_region}, is: ${aws_base_ami_id}"
+echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] latest base ami for: ${aws_base_ami_search_term}, in region: ${aws_region}, is: ${aws_base_ami_id}"
 
 # create instance, apply user-data, filter output, get instance id, tag instance, wait for shutdown
 aws_instance_id="$(aws ec2 run-instances --region ${aws_region} --image-id "${aws_base_ami_id}" --key-name ${aws_key_name} --security-groups "ssh-only" "rdp-only" --user-data "$(echo -e ${userdata})" --instance-type ${aws_instance_type} --block-device-mappings DeviceName=/dev/sda1,Ebs="{VolumeSize=$aws_instance_hdd_size,DeleteOnTermination=true,VolumeType=gp2}" --instance-initiated-shutdown-behavior stop --client-token "${tc_worker_type}-${aws_client_token}" | sed -n 's/^ *"InstanceId": "\(.*\)", */\1/p')"
 aws ec2 create-tags --region ${aws_region} --resources "${aws_instance_id}" --tags "Key=WorkerType,Value=${tc_worker_type}"
-echo "$(date -Iseconds): instance: ${aws_instance_id} instantiated and tagged: WorkerType=${tc_worker_type} (https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Instances:instanceId=${aws_instance_id})"
+echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] instance: ${aws_instance_id} instantiated and tagged: WorkerType=${tc_worker_type} (https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Instances:instanceId=${aws_instance_id})"
 sleep 30 # give aws 30 seconds to start the instance
-echo "$(date -Iseconds): userdata logging to: https://papertrailapp.com/systems/${aws_instance_id}/events"
+echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] userdata logging to: https://papertrailapp.com/systems/${aws_instance_id}/events"
 aws_instance_public_ip="$(aws ec2 describe-instances --region ${aws_region} --instance-id "${aws_instance_id}" --query 'Reservations[*].Instances[*].NetworkInterfaces[*].Association.PublicIp' --output text)"
-echo "$(date -Iseconds): instance public ip: ${aws_instance_public_ip}"
+echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] instance public ip: ${aws_instance_public_ip}"
 
 # poll for a stopped state
 until `aws ec2 wait instance-stopped --region ${aws_region} --instance-ids "${aws_instance_id}" >/dev/null 2>&1`;
 do
-  echo "$(date -Iseconds): waiting for instance to shut down"
+  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for instance to shut down"
 done
 
 # create ami, get ami id, tag ami, wait for ami availability
 aws_ami_id=`aws ec2 create-image --region ${aws_region} --instance-id ${aws_instance_id} --name "${tc_worker_type} version ${aws_client_token}" --description "${ami_description}" | sed -n 's/^ *"ImageId": *"\(.*\)" *$/\1/p'`
-echo "$(date -Iseconds): ami: ${aws_ami_id} creation in progress: https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Images:visibility=owned-by-me;search=${aws_ami_id}"
+echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ami: ${aws_ami_id} creation in progress: https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Images:visibility=owned-by-me;search=${aws_ami_id}"
 aws ec2 create-tags --region ${aws_region} --resources "${aws_ami_id}" --tags "Key=WorkerType,Value=${tc_worker_type}"
 sleep 30
 until `aws ec2 wait image-available --region ${aws_region} --image-ids "${aws_ami_id}" >/dev/null 2>&1`;
 do
-  echo "$(date -Iseconds): waiting for ami availability (${aws_region} ${aws_ami_id})"
+  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for ami availability (${aws_region} ${aws_ami_id})"
 done
 touch ${aws_region}.${aws_ami_id}.latest-ami
 curl http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq -c 'del(.workerType, .lastModified) | (.regions[] | select(.region == "${aws_region}") | .launchSpec.ImageId) = "${aws_ami_id}"' | curl -H 'Content-Type: application/json' -X POST -d @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > /dev/null 2>&1
@@ -84,15 +84,15 @@ curl http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq -c
 # copy ami to each configured region, get copied ami id, tag copied ami, wait for copied ami availability
 for region in "${aws_copy_regions[@]}"; do
   aws_copied_ami_id=`aws ec2 copy-image --region ${region} --source-region ${aws_region} --source-image-id ${aws_ami_id} --name "${tc_worker_type} version ${aws_client_token}" --description "${ami_description}" | sed -n 's/^ *"ImageId": *"\(.*\)" *$/\1/p'`
-  echo "$(date -Iseconds): ami: ${aws_region} ${aws_ami_id} copy to ${region} ${aws_copied_ami_id} in progress: https://${region}.console.aws.amazon.com/ec2/v2/home?region=${region}#Images:visibility=owned-by-me;search=${aws_copied_ami_id}"
+  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ami: ${aws_region} ${aws_ami_id} copy to ${region} ${aws_copied_ami_id} in progress: https://${region}.console.aws.amazon.com/ec2/v2/home?region=${region}#Images:visibility=owned-by-me;search=${aws_copied_ami_id}"
   aws ec2 create-tags --region ${region} --resources "${aws_copied_ami_id}" --tags "Key=WorkerType,Value=${tc_worker_type}"
   sleep 30
   until `aws ec2 wait image-available --region ${region} --image-ids "${aws_copied_ami_id}" >/dev/null 2>&1`;
   do
-    echo "$(date -Iseconds): waiting for ami availability (${region} ${aws_copied_ami_id})"
+    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for ami availability (${region} ${aws_copied_ami_id})"
   done
   touch ${region}.${aws_copied_ami_id}.latest-ami
   curl http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq -c 'del(.workerType, .lastModified) | (.regions[] | select(.region == "${region}") | .launchSpec.ImageId) = "${aws_copied_ami_id}"' | curl -H 'Content-Type: application/json' -X POST -d @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > /dev/null 2>&1
 done
 
-echo "$(date -Iseconds): worker type updated: https://tools.taskcluster.net/aws-provisioner/#${tc_worker_type}/view"
+echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] worker type updated: https://tools.taskcluster.net/aws-provisioner/#${tc_worker_type}/view"
