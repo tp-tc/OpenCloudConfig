@@ -52,10 +52,10 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && ci/update-workertype.sh gecko-L-b-win2012'
+              - 'git clone --quiet {{event.head.repo.url}} && cd OpenCloudConfig && ci/update-workertype.sh gecko-L-b-win2012'
       metadata:
           name: 'Update gecko-L-b-win2012 AMIs'
-          description: 'recreate base worker type AMIs which use OpenCloudConfig for configuration and dependency installation'
+          description: 'recreate Firefox Windows try build AMIs using OpenCloudConfig for configuration and dependency installation'
           owner: '{{event.head.user.email}}'
           source: '{{event.head.repo.url}}'
 
@@ -82,9 +82,9 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && ci/update-workertype.sh gecko-L-t-win7-32'
+              - 'git clone --quiet {{event.head.repo.url}} && cd OpenCloudConfig && ci/update-workertype.sh gecko-L-t-win7-32'
       metadata:
           name: 'Update gecko-L-t-win7-32 AMIs'
-          description: 'recreate base worker type AMIs which use OpenCloudConfig for configuration and dependency installation'
+          description: 'recreate Firefox Windows 7 (32 bit) try test AMIs using OpenCloudConfig for configuration and dependency installation'
           owner: '{{event.head.user.email}}'
           source: '{{event.head.repo.url}}'
