@@ -15,6 +15,15 @@ tasks:
               events:
                   - pull_request.*
                   - push
+          data:
+              base:
+                  sha: '{{event.base.sha}}'
+                  user:
+                      login: '{{event.base.user.login}}'
+              head:
+                  sha: '{{event.head.sha}}'
+                  user:
+                      email: '{{event.head.user.email}}'
       payload:
           maxRunTime: 600
           image: 'grenade/opencloudconfig'
@@ -43,6 +52,11 @@ tasks:
                   - push
               branches:
                 - master
+          data:
+              head:
+                  sha: '{{event.head.sha}}'
+                  user:
+                      email: '{{event.head.user.email}}'
       payload:
           maxRunTime: 7200
           image: 'grenade/opencloudconfig'
@@ -83,6 +97,11 @@ tasks:
                   - push
               branches:
                 - master
+          data:
+              head:
+                  sha: '{{event.head.sha}}'
+                  user:
+                      email: '{{event.head.user.email}}'
       payload:
           maxRunTime: 7200
           image: 'grenade/opencloudconfig'
