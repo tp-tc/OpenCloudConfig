@@ -79,7 +79,7 @@ do
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for ami availability (${aws_region} ${aws_ami_id})"
 done
 touch ${aws_region}.${aws_ami_id}.latest-ami
-curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | tee ./${tc_worker_type}-pre.json | jq -c 'del(.workerType, .lastModified) | (.regions[] | select(.region == "${aws_region}") | .launchSpec.ImageId) = "${aws_ami_id}"' | curl --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ./provisioner-update-response.json
+curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | tee ../${tc_worker_type}-pre.json | jq -c 'del(.workerType, .lastModified) | (.regions[] | select(.region == "${aws_region}") | .launchSpec.ImageId) = "${aws_ami_id}"' | curl --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ../provisioner-update-response-${aws_region}.json
 
 # copy ami to each configured region, get copied ami id, tag copied ami, wait for copied ami availability
 for region in "${aws_copy_regions[@]}"; do
@@ -92,7 +92,7 @@ for region in "${aws_copy_regions[@]}"; do
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for ami availability (${region} ${aws_copied_ami_id})"
   done
   touch ${region}.${aws_copied_ami_id}.latest-ami
-  curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq -c 'del(.workerType, .lastModified) | (.regions[] | select(.region == "${region}") | .launchSpec.ImageId) = "${aws_copied_ami_id}"' | tee ./${tc_worker_type}-post.json | curl --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ./provisioner-update-response.json
+  curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq -c 'del(.workerType, .lastModified) | (.regions[] | select(.region == "${region}") | .launchSpec.ImageId) = "${aws_copied_ami_id}"' | tee ../${tc_worker_type}-post.json | curl --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ../provisioner-update-response-${region}.json
 done
 
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] worker type updated: https://tools.taskcluster.net/aws-provisioner/#${tc_worker_type}/view"

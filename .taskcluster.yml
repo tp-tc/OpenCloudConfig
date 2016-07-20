@@ -100,9 +100,15 @@ tasks:
               'project/releng/opencloudconfig/workertypes/gecko-L-t-win7-32-post.json':
                   type: file
                   path: './gecko-L-t-win7-32-post.json'
-              'project/releng/opencloudconfig/workertypes/provisioner-update-response.json':
+              'project/releng/opencloudconfig/workertypes/provisioner-update-response-us-east-1.json':
                   type: file
-                  path: './provisioner-update-response.json'
+                  path: './provisioner-update-response-us-east-1.json'
+              'project/releng/opencloudconfig/workertypes/provisioner-update-response-us-west-1.json':
+                  type: file
+                  path: './provisioner-update-response-us-west-1.json'
+              'project/releng/opencloudconfig/workertypes/provisioner-update-response-us-west-2.json':
+                  type: file
+                  path: './provisioner-update-response-us-west-2.json'
       metadata:
           name: 'Update gecko-L-t-win7-32 AMIs'
           description: 'recreate Firefox Windows 7 (32 bit) try test AMIs using OpenCloudConfig for configuration and dependency installation'
