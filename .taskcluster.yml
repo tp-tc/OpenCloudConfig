@@ -7,7 +7,7 @@ metadata:
 tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       routes:
-          - 'index.garbage.opencloudconfig.v1.revision.{{event.head.sha}}.validation'
+          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.validation'
       workerType: '{{taskcluster.docker.workerType}}'
       extra:
           github:
@@ -34,7 +34,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - aws-provisioner:manage-worker-type:gecko-L-b-win2012
       routes:
-          - 'index.garbage.opencloudconfig.v1.revision.{{event.head.sha}}.ami'
+          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-L-b-win2012'
       workerType: '{{taskcluster.docker.workerType}}'
       extra:
           github:
@@ -64,7 +64,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - aws-provisioner:manage-worker-type:gecko-L-t-win7-32
       routes:
-          - 'index.garbage.opencloudconfig.v1.revision.{{event.head.sha}}.ami'
+          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-L-t-win7-32'
       workerType: '{{taskcluster.docker.workerType}}'
       extra:
           github:
