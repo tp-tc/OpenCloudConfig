@@ -39,6 +39,7 @@ case "${tc_worker_type}" in
     aws_instance_hdd_size=${aws_instance_hdd_size:=120}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko try tester for Windows 7 32 bit; TaskCluster worker: ${tc_worker_type}, version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
+    occ_manifest="https://github.com/mozilla-releng/OpenCloudConfig/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/win7.json"
     ;;
   *-win2012)
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_Server-2012-R2_RTM-English-64Bit-Base*'}
@@ -46,6 +47,7 @@ case "${tc_worker_type}" in
     aws_instance_hdd_size=${aws_instance_hdd_size:=60}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners amazon --filters "Name=platform,Values=windows" "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko try builder for Windows; TaskCluster worker: ${tc_worker_type}, version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
+    occ_manifest="https://github.com/mozilla-releng/OpenCloudConfig/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/win2012.json"
     ;;
   *)
     echo "ERROR: unknown worker type: '${tc_worker_type}'"
@@ -78,8 +80,7 @@ until `aws ec2 wait image-available --region ${aws_region} --image-ids "${aws_am
 do
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for ami availability (${aws_region} ${aws_ami_id})"
 done
-touch ${aws_region}.${aws_ami_id}.latest-ami
-curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | tee ../${tc_worker_type}-pre.json | jq -c 'del(.workerType, .lastModified) | (.regions[] | select(.region == "${aws_region}") | .launchSpec.ImageId) = "${aws_ami_id}"' | curl --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ../provisioner-update-response-${aws_region}.json
+curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | tee ./${tc_worker_type}-pre.json | jq -c 'del(.workerType, .lastModified) | .secrets.generic-worker.config.workerTypeMetadata.machine-setup.manifest = "${occ_manifest}" | (.regions[] | select(.region == "${aws_region}") | .launchSpec.ImageId) = "${aws_ami_id}"' | curl --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ./provisioner-update-response-${aws_region}.json
 
 # copy ami to each configured region, get copied ami id, tag copied ami, wait for copied ami availability
 for region in "${aws_copy_regions[@]}"; do
@@ -91,8 +92,7 @@ for region in "${aws_copy_regions[@]}"; do
   do
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for ami availability (${region} ${aws_copied_ami_id})"
   done
-  touch ${region}.${aws_copied_ami_id}.latest-ami
-  curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq -c 'del(.workerType, .lastModified) | (.regions[] | select(.region == "${region}") | .launchSpec.ImageId) = "${aws_copied_ami_id}"' | tee ../${tc_worker_type}-post.json | curl --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ../provisioner-update-response-${region}.json
+  curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq -c 'del(.workerType, .lastModified) | .secrets.generic-worker.config.workerTypeMetadata.machine-setup.manifest = "${occ_manifest}" | (.regions[] | select(.region == "${region}") | .launchSpec.ImageId) = "${aws_copied_ami_id}"' | tee ./${tc_worker_type}-post.json | curl --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ./provisioner-update-response-${region}.json
 done
 
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] worker type updated: https://tools.taskcluster.net/aws-provisioner/#${tc_worker_type}/view"

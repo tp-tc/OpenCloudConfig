@@ -52,7 +52,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && cd OpenCloudConfig && ci/update-workertype.sh gecko-L-b-win2012'
+              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-L-b-win2012'
           artifacts:
               'project/releng/opencloudconfig/workertypes/gecko-L-b-win2012-pre.json':
                   type: file
@@ -92,7 +92,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && cd OpenCloudConfig && ci/update-workertype.sh gecko-L-t-win7-32'
+              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-L-t-win7-32'
           artifacts:
               'project/releng/opencloudconfig/workertypes/gecko-L-t-win7-32-pre.json':
                   type: file
