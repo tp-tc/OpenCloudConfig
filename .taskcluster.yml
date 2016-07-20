@@ -57,18 +57,12 @@ tasks:
               'project/releng/opencloudconfig/workertypes/gecko-L-b-win2012-pre.json':
                   type: file
                   path: './gecko-L-b-win2012-pre.json'
-                  expires:
-                      relative-datestamp: '1 year'
               'project/releng/opencloudconfig/workertypes/gecko-L-b-win2012-post.json':
                   type: file
                   path: './gecko-L-b-win2012-post.json'
-                  expires:
-                      relative-datestamp: '1 year'
               'project/releng/opencloudconfig/workertypes/provisioner-update-response.json':
                   type: file
                   path: './provisioner-update-response.json'
-                  expires:
-                      relative-datestamp: '1 year'
       metadata:
           name: 'Update gecko-L-b-win2012 AMIs'
           description: 'recreate Firefox Windows try build AMIs using OpenCloudConfig for configuration and dependency installation'
@@ -103,18 +97,12 @@ tasks:
               'project/releng/opencloudconfig/workertypes/gecko-L-t-win7-32-pre.json':
                   type: file
                   path: './gecko-L-t-win7-32-pre.json'
-                  expires:
-                      relative-datestamp: '1 year'
               'project/releng/opencloudconfig/workertypes/gecko-L-t-win7-32-post.json':
                   type: file
                   path: './gecko-L-t-win7-32-post.json'
-                  expires:
-                      relative-datestamp: '1 year'
               'project/releng/opencloudconfig/workertypes/provisioner-update-response.json':
                   type: file
                   path: './provisioner-update-response.json'
-                  expires:
-                      relative-datestamp: '1 year'
       metadata:
           name: 'Update gecko-L-t-win7-32 AMIs'
           description: 'recreate Firefox Windows 7 (32 bit) try test AMIs using OpenCloudConfig for configuration and dependency installation'
