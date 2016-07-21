@@ -41,9 +41,9 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
-          - aws-provisioner:manage-worker-type:gecko-L-b-win2012
+          - aws-provisioner:manage-worker-type:gecko-1-b-win2012
       routes:
-          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-L-b-win2012'
+          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-1-b-win2012'
       workerType: '{{taskcluster.docker.workerType}}'
       extra:
           github:
@@ -66,18 +66,18 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-L-b-win2012'
+              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-1-b-win2012'
           artifacts:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
-                  path: './gecko-L-b-win2012.json'
+                  path: './gecko-1-b-win2012.json'
                   expires: "{{ '2 hours' | $fromNow }}"
               'project/releng/opencloudconfig/update-response.json':
                   type: file
                   path: './update-response.json'
                   expires: "{{ '2 hours' | $fromNow }}"
       metadata:
-          name: 'Update gecko-L-b-win2012 AMIs'
+          name: 'Update gecko-1-b-win2012 AMIs'
           description: 'recreate Firefox Windows try build AMIs using OpenCloudConfig for configuration and dependency installation'
           owner: '{{event.head.user.email}}'
           source: '{{event.head.repo.url}}'
@@ -85,9 +85,9 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
-          - aws-provisioner:manage-worker-type:gecko-L-t-win7-32
+          - aws-provisioner:manage-worker-type:gecko-1-t-win7-32
       routes:
-          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-L-t-win7-32'
+          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-1-t-win7-32'
       workerType: '{{taskcluster.docker.workerType}}'
       extra:
           github:
@@ -110,18 +110,18 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-L-t-win7-32'
+              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-1-t-win7-32'
           artifacts:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
-                  path: './gecko-L-t-win7-32.json'
+                  path: './gecko-1-t-win7-32.json'
                   expires: "{{ '2 hours' | $fromNow }}"
               'project/releng/opencloudconfig/update-response.json':
                   type: file
                   path: './update-response.json'
                   expires: "{{ '2 hours' | $fromNow }}"
       metadata:
-          name: 'Update gecko-L-t-win7-32 AMIs'
+          name: 'Update gecko-1-t-win7-32 AMIs'
           description: 'recreate Firefox Windows 7 (32 bit) try test AMIs using OpenCloudConfig for configuration and dependency installation'
           owner: '{{event.head.user.email}}'
           source: '{{event.head.repo.url}}'

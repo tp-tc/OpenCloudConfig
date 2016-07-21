@@ -36,6 +36,7 @@ case "${tc_worker_type}" in
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko try tester for Windows 7 32 bit; TaskCluster worker: ${tc_worker_type}, version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
     occ_manifest="https://github.com/mozilla-releng/OpenCloudConfig/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/win7.json"
+    gw_users_dir='C:\Users'
     ;;
   *-win2012)
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_Server-2012-R2_RTM-English-64Bit-Base*'}
@@ -44,13 +45,14 @@ case "${tc_worker_type}" in
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners amazon --filters "Name=platform,Values=windows" "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko try builder for Windows; TaskCluster worker: ${tc_worker_type}, version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
     occ_manifest="https://github.com/mozilla-releng/OpenCloudConfig/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/win2012.json"
+    gw_users_dir='Z:\'
     ;;
   *)
     echo "ERROR: unknown worker type: '${tc_worker_type}'"
     exit 67
     ;;
 esac
-curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq -c 'del(.workerType, .lastModified) | .secrets."generic-worker".config.workerTypeMetadata."machine-setup".manifest = "${occ_manifest}"' > ./${tc_worker_type}.json
+curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq -c "del(.workerType, .lastModified) | .secrets.\"generic-worker\".config.usersDir = \"${gw_users_dir}\" | .secrets.\"generic-worker\".config.workerTypeMetadata.\"machine-setup\".manifest = \"${occ_manifest}\"" > ./${tc_worker_type}.json
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] active amis (pre-update): $(cat ./${tc_worker_type}.json | jq -c '[.regions[] | {region: .region, ami: .launchSpec.ImageId}]')"
 
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] latest base ami for: ${aws_base_ami_search_term}, in region: ${aws_region}, is: ${aws_base_ami_id}"
@@ -64,7 +66,7 @@ echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] userdata logging to: https:/
 aws_instance_public_ip="$(aws ec2 describe-instances --region ${aws_region} --instance-id "${aws_instance_id}" --query 'Reservations[*].Instances[*].NetworkInterfaces[*].Association.PublicIp' --output text)"
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] instance public ip: ${aws_instance_public_ip}"
 
-# poll for a stopped state
+# wait for instance stopped state
 until `aws ec2 wait instance-stopped --region ${aws_region} --instance-ids "${aws_instance_id}" >/dev/null 2>&1`;
 do
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for instance to shut down"
