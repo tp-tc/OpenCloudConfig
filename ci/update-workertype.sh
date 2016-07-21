@@ -14,11 +14,7 @@ export AWS_SECRET_ACCESS_KEY=${TASKCLUSTER_AWS_SECRET_KEY}
 : ${aws_tc_account_id:?"aws_tc_account_id is not set"}
 
 aws_region=${aws_region:='us-west-2'}
-aws_copy_regions[0]='us-east-1'
-aws_copy_regions[1]='us-west-1'
-aws_regions[0]=${aws_region}
-aws_regions[1]=${aws_copy_regions[0]}
-aws_regions[2]=${aws_copy_regions[1]}
+aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
 
 if [ "${#}" -lt 1 ]; then
   echo "workertype argument missing; usage: ./update-workertype.sh workertype" >&2
