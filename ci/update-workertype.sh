@@ -52,7 +52,8 @@ case "${tc_worker_type}" in
     exit 67
     ;;
 esac
-curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq --arg gwusersdir $gw_users_dir --arg occmanifest $occ_manifest -c 'del(.workerType, .lastModified) | .secrets."generic-worker".config.usersDir = $gwusersdir | .secrets."generic-worker".config.workerTypeMetadata."machine-setup".manifest = $occmanifest' > ./${tc_worker_type}.json
+curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq '.' > ./${tc_worker_type}-pre.json
+cat ./${tc_worker_type}-pre.json | jq --arg gwusersdir $gw_users_dir --arg occmanifest $occ_manifest -c 'del(.workerType, .lastModified) | .secrets."generic-worker".config.usersDir = $gwusersdir | .secrets."generic-worker".config.workerTypeMetadata."machine-setup".manifest = $occmanifest' > ./${tc_worker_type}.json
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] active amis (pre-update): $(cat ./${tc_worker_type}.json | jq -c '[.regions[] | {region: .region, ami: .launchSpec.ImageId}]')"
 
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] latest base ami for: ${aws_base_ami_search_term}, in region: ${aws_region}, is: ${aws_base_ami_id}"
@@ -99,3 +100,6 @@ done
 cat ./${tc_worker_type}.json | curl --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ./update-response.json
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] worker type updated: https://tools.taskcluster.net/aws-provisioner/#${tc_worker_type}/view"
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] active amis (post-update): $(curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq -c '[.regions[] | {region: .region, ami: .launchSpec.ImageId}]')"
+
+cat ./update-response.json | jq '.' > ./${tc_worker_type}-post.json
+git diff --no-index -- ./${tc_worker_type}-pre.json ./${tc_worker_type}-post.json > ./${tc_worker_type}.diff || true

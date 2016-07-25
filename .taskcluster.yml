@@ -76,6 +76,10 @@ tasks:
                   type: file
                   path: './update-response.json'
                   expires: "{{ '2 hours' | $fromNow }}"
+              'project/releng/opencloudconfig/gecko-1-b-win2012.diff':
+                  type: file
+                  path: './gecko-1-b-win2012.diff'
+                  expires: "{{ '1 year' | $fromNow }}"
       metadata:
           name: 'Update gecko-1-b-win2012 AMIs'
           description: 'recreate Firefox Windows try build AMIs using OpenCloudConfig for configuration and dependency installation'
@@ -120,6 +124,10 @@ tasks:
                   type: file
                   path: './update-response.json'
                   expires: "{{ '2 hours' | $fromNow }}"
+              'project/releng/opencloudconfig/gecko-1-t-win7-32.diff':
+                  type: file
+                  path: './gecko-1-t-win7-32.diff'
+                  expires: "{{ '1 year' | $fromNow }}"
       metadata:
           name: 'Update gecko-1-t-win7-32 AMIs'
           description: 'recreate Firefox Windows 7 (32 bit) try test AMIs using OpenCloudConfig for configuration and dependency installation'
