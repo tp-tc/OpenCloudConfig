@@ -81,7 +81,7 @@ until `aws ec2 wait image-available --region ${aws_region} --image-ids "${aws_am
 do
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for ami availability (${aws_region} ${aws_ami_id})"
 done
-cat ./${tc_worker_type}.json | jq -c '(.regions[] | select(.region == "${aws_region}") | .launchSpec.ImageId) = "${aws_ami_id}"' > ./.${tc_worker_type}.json && rm ./${tc_worker_type}.json && mv ./.${tc_worker_type}.json ./${tc_worker_type}.json
+cat ./${tc_worker_type}.json | jq --arg ec2region $aws_region --arg amiid $aws_ami_id -c '(.regions[] | select(.region == $ec2region) | .launchSpec.ImageId) = $amiid' > ./.${tc_worker_type}.json && rm ./${tc_worker_type}.json && mv ./.${tc_worker_type}.json ./${tc_worker_type}.json
 
 # copy ami to each configured region, get copied ami id, tag copied ami, wait for copied ami availability
 for region in "${aws_copy_regions[@]}"; do
@@ -93,7 +93,7 @@ for region in "${aws_copy_regions[@]}"; do
   do
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for ami availability (${region} ${aws_copied_ami_id})"
   done
-  cat ./${tc_worker_type}.json | jq -c '(.regions[] | select(.region == "${region}") | .launchSpec.ImageId) = "${aws_copied_ami_id}"' > ./.${tc_worker_type}.json && rm ./${tc_worker_type}.json && mv ./.${tc_worker_type}.json ./${tc_worker_type}.json
+  cat ./${tc_worker_type}.json | jq --arg ec2region $region --arg amiid $aws_copied_ami_id -c '(.regions[] | select(.region == $ec2region) | .launchSpec.ImageId) = $amiid' > ./.${tc_worker_type}.json && rm ./${tc_worker_type}.json && mv ./.${tc_worker_type}.json ./${tc_worker_type}.json
 done
 
 cat ./${tc_worker_type}.json | curl --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ./update-response.json
