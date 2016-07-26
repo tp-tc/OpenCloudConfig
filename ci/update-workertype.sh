@@ -84,6 +84,18 @@ do
 done
 cat ./${tc_worker_type}.json | jq --arg ec2region $aws_region --arg amiid $aws_ami_id -c '(.regions[] | select(.region == $ec2region) | .launchSpec.ImageId) = $amiid' > ./.${tc_worker_type}.json && rm ./${tc_worker_type}.json && mv ./.${tc_worker_type}.json ./${tc_worker_type}.json
 
+# purge all but 10 newest workertype amis in region
+aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=name,Values=${tc_worker_type} version*" | jq '[ .Images[] | { ImageId, CreationDate, SnapshotId: .BlockDeviceMappings[0].Ebs.SnapshotId } ] | sort_by(.CreationDate) [ 0 : -10 ]' > ./delete-queue-${aws_region}.json
+jq '.|keys[]' ./delete-queue-${aws_region}.json | while read i; do
+  old_ami=$(jq -r ".[$i].ImageId" ./delete-queue-${aws_region}.json)
+  old_snap=$(jq -r ".[$i].SnapshotId" ./delete-queue-${aws_region}.json)
+  old_cd=$(jq ".[$i].CreationDate" ./delete-queue-${aws_region}.json)
+  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deregistering old ami: ${old_ami}, created: ${old_cd}, in ${aws_region}"
+  aws ec2 deregister-image --region ${aws_region} --image-id ${old_ami}
+  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deleting old snapshot: ${old_snap}, for ami: ${old_ami}"
+  aws ec2 delete-snapshot --region ${aws_region} --snapshot-id ${old_snap}
+done
+
 # copy ami to each configured region, get copied ami id, tag copied ami, wait for copied ami availability
 for region in "${aws_copy_regions[@]}"; do
   aws_copied_ami_id=`aws ec2 copy-image --region ${region} --source-region ${aws_region} --source-image-id ${aws_ami_id} --name "${tc_worker_type} version ${aws_client_token}" --description "${ami_description}" | sed -n 's/^ *"ImageId": *"\(.*\)" *$/\1/p'`
@@ -95,6 +107,18 @@ for region in "${aws_copy_regions[@]}"; do
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for ami availability (${region} ${aws_copied_ami_id})"
   done
   cat ./${tc_worker_type}.json | jq --arg ec2region $region --arg amiid $aws_copied_ami_id -c '(.regions[] | select(.region == $ec2region) | .launchSpec.ImageId) = $amiid' > ./.${tc_worker_type}.json && rm ./${tc_worker_type}.json && mv ./.${tc_worker_type}.json ./${tc_worker_type}.json
+
+  # purge all but 10 newest workertype amis in region
+  aws ec2 describe-images --region ${region} --owners self --filters "Name=name,Values=${tc_worker_type} version*" | jq '[ .Images[] | { ImageId, CreationDate, SnapshotId: .BlockDeviceMappings[0].Ebs.SnapshotId } ] | sort_by(.CreationDate) [ 0 : -10 ]' > ./delete-queue-${region}.json
+  jq '.|keys[]' ./delete-queue-${region}.json | while read i; do
+    old_ami=$(jq -r ".[$i].ImageId" ./delete-queue-${region}.json)
+    old_snap=$(jq -r ".[$i].SnapshotId" ./delete-queue-${region}.json)
+    old_cd=$(jq ".[$i].CreationDate" ./delete-queue-${region}.json)
+    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deregistering old ami: ${old_ami}, created: ${old_cd}, in ${region}"
+    aws ec2 deregister-image --region ${region} --image-id ${old_ami}
+    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deleting old snapshot: ${old_snap}, for ami: ${old_ami}"
+    aws ec2 delete-snapshot --region ${region} --snapshot-id ${old_snap}
+  done
 done
 
 cat ./${tc_worker_type}.json | curl --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ./update-response.json
