@@ -54,7 +54,11 @@ function Remove-LegacyStuff {
       '"Make sure userdata runs"',
       #'timesync',
       'runner'
-    )
+    ),
+    [hashtable] $driveLetterMap = @{
+      'D:' = 'Y:';
+      'E:' = 'Z:'
+    }
   )
   foreach ($user in $users) {
     if (@(Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq $user }).length -gt 0) {
@@ -84,6 +88,18 @@ function Remove-LegacyStuff {
     }
     catch {
       # todo: give a damn
+    }
+  }
+  # remap drive letters (if required)
+  $driveLetterMap.Keys | % {
+    $old = $_
+    $new = $driveLetterMap.Item($_)
+    if (Test-Path -Path ('{0}\' -f $old) -ErrorAction SilentlyContinue) {
+      $volume = Get-WmiObject -Class win32_volume -Filter "DriveLetter='$old'"
+      if ($null -ne $volume) {
+        $volume.DriveLetter = $new
+        $volume.Put()
+      }
     }
   }
 }
