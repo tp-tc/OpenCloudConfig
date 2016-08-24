@@ -120,7 +120,7 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
   'Microsoft Windows 7*' {
     $workerType = 'win7'
     Remove-LegacyStuff
-    $renameInstance = $true
+    $renameInstance = $false
   }
   default {
     $workerType = 'win2012'
