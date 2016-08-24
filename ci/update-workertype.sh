@@ -30,7 +30,7 @@ echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] git sha: ${aws_client_token}
 
 case "${tc_worker_type}" in
   *-win7-32)
-    aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-1-t-win7-32-base'}
+    aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-1-t-win7-32-base*'}
     aws_instance_type=${aws_instance_type:='c3.2xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=120}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
