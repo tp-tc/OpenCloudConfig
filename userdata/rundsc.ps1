@@ -190,14 +190,26 @@ if ($rebootReasons.length) {
     Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
     New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { $_.FullName })
     Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { Remove-Item -Path $_.FullName -Force }
-    if ((Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.zip') }).Count -eq 1) {
+
+    # userdata that contains json, indicates a taskcluster-provisioned worker/spot instance.
+    # userdata that contains pseudo-xml indicates a base instance or one created during ami generation.
+    try {
+      $isWorker = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')).StartsWith('{')
+    } catch {
+      $isWorker = $false
+    }
+
+    if ((-not ($isWorker)) -and ((Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.zip') }).Count -eq 1)) {
       & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
-    } elseif (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
-      Start-Sleep -seconds 30 # give g-w a moment to fire up, if it doesn't, or the Z: drive isn't mapped, boot loop.
-      if (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0) {
-        & shutdown @('-r', '-t', '0', '-c', 'reboot to rouse the generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
-      } elseif (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) {
+    } elseif ($isWorker) {
+      if (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) { # if the Z: drive isn't mapped, boot loop.
         & shutdown @('-r', '-t', '0', '-c', 'reboot to map working drive', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+      }
+      if (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
+        Start-Sleep -seconds 30 # give g-w a moment to fire up, if it doesn't, boot loop.
+        if (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0) {
+          & shutdown @('-r', '-t', '0', '-c', 'reboot to rouse the generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+        }
       }
     }
   }
