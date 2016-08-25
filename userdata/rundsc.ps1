@@ -212,9 +212,11 @@ if ($rebootReasons.length) {
     if ((Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.zip') }).Count -eq 1) {
       & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
     } elseif (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
-      Start-Sleep -seconds 30 # give g-w a moment to fire up, if it doesn't, boot loop.
-      if (($workerType -ieq 'win2012') -and (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0)) {
-        & shutdown @('-r', '-t', '0', '-c', 'restarting to rouse the generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+      Start-Sleep -seconds 30 # give g-w a moment to fire up, if it doesn't, or the Z: drive isn't mapped, boot loop.
+      if (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0) {
+        & shutdown @('-r', '-t', '0', '-c', 'reboot to rouse the generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+      } elseif (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) {
+        & shutdown @('-r', '-t', '0', '-c', 'reboot to map working drive', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
       }
     }
   }
