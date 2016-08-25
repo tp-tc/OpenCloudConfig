@@ -476,43 +476,29 @@
       "Link": "C:\\mozilla-build\\python\\Scripts\\python27.dll"
     },
     {
-      "ComponentName": "MercurialUse1Config",
-      "ComponentType": "FileDownload",
-      "Comment": "Required by CloneBundles (hg extension)",
+      "ComponentName": "MercurialConfig",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "Required by clonebundle and share hg extensions",
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
           "ComponentName": "MozillaBuildSetup"
         }
       ],
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.us-east-1.ini",
-      "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.us-east-1.ini"
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.ini",
+      "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.ini"
     },
     {
-      "ComponentName": "MercurialUsw1Config",
-      "ComponentType": "FileDownload",
-      "Comment": "Required by CloneBundles (hg extension)",
+      "ComponentName": "MercurialConfigSymLink",
+      "ComponentType": "SymbolicLink",
       "DependsOn": [
         {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "MercurialConfig"
         }
       ],
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.us-west-1.ini",
-      "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.us-west-1.ini"
-    },
-    {
-      "ComponentName": "MercurialUsw2Config",
-      "ComponentType": "FileDownload",
-      "Comment": "Required by CloneBundles (hg extension)",
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
-        }
-      ],
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.us-west-2.ini",
-      "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.us-west-2.ini"
+      "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.ini",
+      "Link": "C:\\mozilla-build\\python\\mercurial.ini"
     },
     {
       "ComponentName": "env_MOZILLABUILD",

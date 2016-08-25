@@ -186,25 +186,6 @@ if ($rebootReasons.length) {
   if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
     & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
   } else {
-    $ec2region = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone') -replace '.$')
-
-    # symlink mercurial to ec2 region config. todo: find a way to do this in the manifest (cmd)
-    # if the hg call is NOT wrapped by python (hg.exe), the ini file below is used
-    $hgini = ('{0}\python\Scripts\mercurial.ini' -f $env:MozillaBuild)
-    if (Test-Path -Path ([IO.Path]::GetDirectoryName($hgini)) -ErrorAction SilentlyContinue) {
-      if (Test-Path -Path $hgini -ErrorAction SilentlyContinue) {
-        & del $hgini # use cmd del (not ps remove-item) here in order to preserve targets
-      }
-      & cmd @('/c', 'mklink', $hgini, ($hgini.Replace('.ini', ('.{0}.ini' -f $ec2region))))
-      # also replace built in (MozillaBuild) mercurial.ini
-      # if the hg call is wrapped by python (python.exe hg), the ini file below is used
-      $mbhgini = ('{0}\python\mercurial.ini' -f $env:MozillaBuild)
-      if (Test-Path -Path $mbhgini -ErrorAction SilentlyContinue) {
-        & del $mbhgini # use cmd del (not ps remove-item) here in order to preserve targets
-      }
-      & cmd @('/c', 'mklink', $mbhgini, ($hgini.Replace('.ini', ('.{0}.ini' -f $ec2region))))
-    }
-
     # archive dsc logs
     Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
     New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { $_.FullName })
