@@ -57,11 +57,7 @@ function Remove-LegacyStuff {
       '"Run Generic Worker on login"',
       #'timesync',
       'runner'
-    ),
-    [hashtable] $driveLetterMap = @{
-      'D:' = 'Y:';
-      'E:' = 'Z:'
-    }
+    )
   )
 
   # clear the event log
@@ -105,8 +101,14 @@ function Remove-LegacyStuff {
       # todo: give a damn
     }
   }
-
-  # remap drive letters (if required)
+}
+function Map-DriveLetters {
+  param (
+    [hashtable] $driveLetterMap = @{
+      'D:' = 'Y:';
+      'E:' = 'Z:'
+    }
+  )
   $driveLetterMap.Keys | % {
     $old = $_
     $new = $driveLetterMap.Item($_)
@@ -141,6 +143,8 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     $renameInstance = $true
     if (-not ($isWorker)) {
       Remove-LegacyStuff
+    } else {
+      Map-DriveLetters
     }
   }
   'Microsoft Windows 7*' {
@@ -148,6 +152,8 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     $renameInstance = $false
     if (-not ($isWorker)) {
       Remove-LegacyStuff
+    } else {
+      Map-DriveLetters
     }
   }
   default {
