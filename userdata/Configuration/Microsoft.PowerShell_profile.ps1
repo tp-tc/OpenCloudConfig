@@ -1,8 +1,18 @@
 
-# show file extensions in explorer
-Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' -Type 'DWord' -Name 'HideFileExt' -Value '0x00000002' # off
-Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' -Type 'DWord' -Name 'Hidden' -Value '0x00000001'
-Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' -Type 'DWord' -Name 'ShowSuperHidden' -Value '0x00000001'
+# show file extensions, show hidden files, hide os files in explorer
+$explorerRegKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'
+switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+  'Microsoft Windows 7*' {
+    Set-ItemProperty $explorerRegKey -Type 'DWord' -Name 'Hidden' -Value 1
+    Set-ItemProperty $explorerRegKey -Type 'DWord' -Name 'HideFileExt' -Value 0
+    Set-ItemProperty $explorerRegKey -Type 'DWord' -Name 'ShowSuperHidden' -Value 0
+  }
+  default {
+    Set-ItemProperty $explorerRegKey -Type 'DWord' -Name 'HideFileExt' -Value '0x00000002' # off
+    Set-ItemProperty $explorerRegKey -Type 'DWord' -Name 'Hidden' -Value '0x00000001'
+    Set-ItemProperty $explorerRegKey -Type 'DWord' -Name 'ShowSuperHidden' -Value '0x00000000'
+  }
+}
 
 # a large console, with a large screen buffer (for reading build logs)
 Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'QuickEdit' -Value '0x00000001' # on
@@ -18,7 +28,7 @@ Set-ItemProperty 'HKCU:\Console\' -Type 'String' -Name 'FaceName' -Value 'Lucida
 # a visible cursor on dark backgrounds (as well as light)
 Set-ItemProperty 'HKCU:\Control Panel\Cursors\' -Type 'String' -Name 'IBeam' -Value '%SYSTEMROOT%\Cursors\beam_r.cur'
 
-# powershell, cmd and subl pinned to taskbar
+# powershell, cmd, event viewer and subl pinned to taskbar
 ((New-Object -c Shell.Application).Namespace('{0}\System32\WindowsPowerShell\v1.0' -f $env:SystemRoot).parsename('powershell.exe')).InvokeVerb('taskbarpin')
 ((New-Object -c Shell.Application).Namespace('{0}\System32' -f $env:SystemRoot).parsename('cmd.exe')).InvokeVerb('taskbarpin')
 ((New-Object -c Shell.Application).Namespace('{0}\System32' -f $env:SystemRoot).parsename('eventvwr.msc')).InvokeVerb('taskbarpin')

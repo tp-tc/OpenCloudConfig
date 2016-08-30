@@ -22,10 +22,12 @@ function Remove-LegacyStuff {
     [string[]] $paths = @(
       ('{0}\default_browser' -f $env:SystemDrive),
       ('{0}\etc' -f $env:SystemDrive),
+      ('{0}\generic-worker' -f $env:SystemDrive),
       ('{0}\gpo_files' -f $env:SystemDrive),
       ('{0}\inetpub' -f $env:SystemDrive),
       ('{0}\installersource' -f $env:SystemDrive),
       ('{0}\installservice.bat' -f $env:SystemDrive),
+      ('{0}\log\*.zip' -f $env:SystemDrive),
       ('{0}\mozilla-build-bak' -f $env:SystemDrive),
       ('{0}\mozilla-buildbuildbotve' -f $env:SystemDrive),
       ('{0}\mozilla-buildpython27' -f $env:SystemDrive),
@@ -52,6 +54,7 @@ function Remove-LegacyStuff {
     [string[]] $scheduledTasks = @(
       'enabel-userdata-execution',
       '"Make sure userdata runs"',
+      '"Run Generic Worker on login"',
       #'timesync',
       'runner'
     ),
@@ -60,6 +63,11 @@ function Remove-LegacyStuff {
       'E:' = 'Z:'
     }
   )
+
+  # clear the event log
+  wevtutil el | % { wevtutil cl $_ }
+
+  # remove user accounts
   foreach ($user in $users) {
     if (@(Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq $user }).length -gt 0) {
       Start-Process 'logoff' -ArgumentList @((((quser /server:. | ? { $_ -match $user }) -split ' +')[2]), '/server:.') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-logoff.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $user) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-logoff.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $user)
@@ -69,19 +77,26 @@ function Remove-LegacyStuff {
       Remove-Item ('{0}\Users\{1}' -f $env:SystemDrive, $user) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
     }
   }
+
+  # delete paths
   foreach ($path in $paths) {
     Remove-Item $path -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
   }
-  # presence of python27 indicates old mozilla-build
+
+  # delete old mozilla-build. presence of python27 indicates old mozilla-build
   if (Test-Path -Path ('{0}\mozilla-build\python27' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
     Remove-Item ('{0}\mozilla-build' -f $env:SystemDrive) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
   }
+
+  # delete services
   foreach ($service in $services) {
     if (Get-Service -Name $service -ErrorAction SilentlyContinue) {
       Get-Service -Name $service | Stop-Service -PassThru
       (Get-WmiObject -Class Win32_Service -Filter "Name='$service'").delete()
     }
   }
+
+  # remove scheduled tasks
   foreach ($scheduledTask in $scheduledTasks) {
     try {
       Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
@@ -90,6 +105,7 @@ function Remove-LegacyStuff {
       # todo: give a damn
     }
   }
+
   # remap drive letters (if required)
   $driveLetterMap.Keys | % {
     $old = $_
@@ -110,17 +126,29 @@ New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
 Set-ExecutionPolicy RemoteSigned -force | Out-File -filePath $logFile -append
 & winrm @('set', 'winrm/config', '@{MaxEnvelopeSizekb="8192"}')
 
+# userdata that contains json, indicates a taskcluster-provisioned worker/spot instance.
+# userdata that contains pseudo-xml indicates a base instance or one created during ami generation.
+try {
+  $isWorker = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')).StartsWith('{')
+} catch {
+  $isWorker = $false
+}
+
 # if importing releng amis, do a little housekeeping
 switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
   'Microsoft Windows 10*' {
     $workerType = 'win10'
-    Remove-LegacyStuff
     $renameInstance = $true
+    if (-not ($isWorker)) {
+      Remove-LegacyStuff
+    }
   }
   'Microsoft Windows 7*' {
     $workerType = 'win7'
-    Remove-LegacyStuff
     $renameInstance = $false
+    if (-not ($isWorker)) {
+      Remove-LegacyStuff
+    }
   }
   default {
     $workerType = 'win2012'
@@ -190,14 +218,6 @@ if ($rebootReasons.length) {
     Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
     New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { $_.FullName })
     Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { Remove-Item -Path $_.FullName -Force }
-
-    # userdata that contains json, indicates a taskcluster-provisioned worker/spot instance.
-    # userdata that contains pseudo-xml indicates a base instance or one created during ami generation.
-    try {
-      $isWorker = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')).StartsWith('{')
-    } catch {
-      $isWorker = $false
-    }
 
     if ((-not ($isWorker)) -and ((Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.zip') }).Count -eq 1)) {
       & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
