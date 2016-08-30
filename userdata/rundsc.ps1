@@ -18,7 +18,10 @@ function Run-RemoteDesiredStateConfig {
 }
 function Remove-LegacyStuff {
   param (
-    [string[]] $users = @('cltbld'),
+    [string[]] $users = @(
+      'cltbld',
+      'GenericWorker'
+    ),
     [string[]] $paths = @(
       ('{0}\default_browser' -f $env:SystemDrive),
       ('{0}\etc' -f $env:SystemDrive),
