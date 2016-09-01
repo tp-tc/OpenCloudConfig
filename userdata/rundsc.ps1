@@ -237,6 +237,7 @@ if ($rebootReasons.length) {
       if (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
         Start-Sleep -seconds 30 # give g-w a moment to fire up, if it doesn't, boot loop.
         if (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0) {
+          & net @('user', 'GenericWorker', (Get-ItemProperty -path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -name 'DefaultPassword').DefaultPassword)
           & shutdown @('-r', '-t', '0', '-c', 'reboot to rouse the generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
         }
       }
