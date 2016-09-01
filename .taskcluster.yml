@@ -58,7 +58,7 @@ tasks:
                   user:
                       email: '{{event.head.user.email}}'
       payload:
-          maxRunTime: 7200
+          maxRunTime: 10800
           image: 'grenade/opencloudconfig'
           features:
               taskclusterProxy: true
@@ -106,7 +106,7 @@ tasks:
                   user:
                       email: '{{event.head.user.email}}'
       payload:
-          maxRunTime: 7200
+          maxRunTime: 10800
           image: 'grenade/opencloudconfig'
           features:
               taskclusterProxy: true
@@ -154,7 +154,7 @@ tasks:
                   user:
                       email: '{{event.head.user.email}}'
       payload:
-          maxRunTime: 7200
+          maxRunTime: 10800
           image: 'grenade/opencloudconfig'
           features:
               taskclusterProxy: true
