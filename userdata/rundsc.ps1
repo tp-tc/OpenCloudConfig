@@ -60,11 +60,6 @@ function Remove-LegacyStuff {
       '"Run Generic Worker on login"',
       #'timesync',
       'runner'
-    ),
-    [string[]] $registryKeys = @(
-      # g-w will fail to set new autologin password if this key pre-exists
-      # https://github.com/taskcluster/generic-worker/blob/fb74177141c39afaa1daae53b6fb2a01edd8f32d/plat_windows.go#L440
-      'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
     )
   )
 
@@ -107,13 +102,6 @@ function Remove-LegacyStuff {
     }
     catch {
       # todo: give a damn
-    }
-  }
-
-  # remove registry keys
-  foreach ($registryKey in $registryKeys) {
-    if (Test-Path -Path $registryKey -ErrorAction SilentlyContinue) {
-      Remove-Item -Path $registryKey -Recurse -Force
     }
   }
 }
