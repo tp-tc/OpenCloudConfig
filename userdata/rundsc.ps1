@@ -152,7 +152,7 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
   }
   'Microsoft Windows 7*' {
     $workerType = 'win7'
-    $renameInstance = $false
+    $renameInstance = $true
     if (-not ($isWorker)) {
       Remove-LegacyStuff
     } else {
@@ -161,7 +161,7 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
   }
   default {
     $workerType = 'win2012'
-    $renameInstance = $false
+    $renameInstance = $true
   }
 }
 
@@ -182,9 +182,11 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
   $rebootReasons += 'powershell upgraded'
 }
 
-# rename the instance if it's based on a releng ami
+# rename the instance
 $instanceId = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-id'))
 if ($renameInstance -and ([bool]($instanceId)) -and (-not ([System.Net.Dns]::GetHostName() -ieq $instanceId))) {
+  [Environment]::SetEnvironmentVariable("COMPUTERNAME", "$instanceId", "Machine")
+  $env:COMPUTERNAME = $instanceId
   (Get-WmiObject Win32_ComputerSystem).Rename($instanceId)
   $rebootReasons += 'host renamed'
 }
