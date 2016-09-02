@@ -60,7 +60,14 @@ function Remove-LegacyStuff {
       '"Run Generic Worker on login"',
       #'timesync',
       'runner'
-    )
+    ),
+    [hashtable] $registryEntries = @{
+      # g-w won't set autologin password if these keys pre-exist
+      # https://github.com/taskcluster/generic-worker/blob/fb74177141c39afaa1daae53b6fb2a01edd8f32d/plat_windows.go#L440
+      'DefaultUserName' = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon';
+      'DefaultPassword' = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon';
+      'AutoAdminLogon' = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
+    }
   )
 
   # clear the event log
@@ -102,6 +109,15 @@ function Remove-LegacyStuff {
     }
     catch {
       # todo: give a damn
+    }
+  }
+
+  # remove registry entries
+  foreach ($name in $registryEntries.Keys) {
+    $path = $registryEntries.Item($name)
+    $item = (Get-Item -Path $path)
+    if (($item -ne $null) -and ($item.GetValue($name) -ne $null)) {
+      Remove-ItemProperty -path $path -name $name
     }
   }
 }
@@ -146,18 +162,16 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     $renameInstance = $true
     if (-not ($isWorker)) {
       Remove-LegacyStuff
-    } else {
-      Map-DriveLetters
     }
+    Map-DriveLetters
   }
   'Microsoft Windows 7*' {
     $workerType = 'win7'
     $renameInstance = $true
     if (-not ($isWorker)) {
       Remove-LegacyStuff
-    } else {
-      Map-DriveLetters
     }
+    Map-DriveLetters
   }
   default {
     $workerType = 'win2012'
@@ -233,8 +247,8 @@ if ($rebootReasons.length) {
     if ((-not ($isWorker)) -and ((Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.zip') }).Count -eq 1)) {
       & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
     } elseif ($isWorker) {
-      if (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) { # if the Z: drive isn't mapped, boot loop.
-        & shutdown @('-r', '-t', '0', '-c', 'reboot to map working drive', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+      if (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) { # if the Z: drive isn't mapped, map it.
+        Map-DriveLetters
       }
       if (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
         Start-Sleep -seconds 30 # give g-w a moment to fire up, if it doesn't, boot loop.
