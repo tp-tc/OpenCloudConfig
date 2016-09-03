@@ -71,11 +71,11 @@ tasks:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
                   path: './gecko-1-b-win2012.json'
-                  expires: "{{ '2 hours' | $fromNow }}"
+                  expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/update-response.json':
                   type: file
                   path: './update-response.json'
-                  expires: "{{ '2 hours' | $fromNow }}"
+                  expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/gecko-1-b-win2012.diff':
                   type: file
                   path: './gecko-1-b-win2012.diff'
@@ -119,11 +119,11 @@ tasks:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
                   path: './gecko-3-b-win2012.json'
-                  expires: "{{ '2 hours' | $fromNow }}"
+                  expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/update-response.json':
                   type: file
                   path: './update-response.json'
-                  expires: "{{ '2 hours' | $fromNow }}"
+                  expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/gecko-3-b-win2012.diff':
                   type: file
                   path: './gecko-3-b-win2012.diff'
@@ -167,11 +167,11 @@ tasks:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
                   path: './gecko-1-t-win7-32.json'
-                  expires: "{{ '2 hours' | $fromNow }}"
+                  expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/update-response.json':
                   type: file
                   path: './update-response.json'
-                  expires: "{{ '2 hours' | $fromNow }}"
+                  expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/gecko-1-t-win7-32.diff':
                   type: file
                   path: './gecko-1-t-win7-32.diff'
@@ -215,11 +215,11 @@ tasks:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
                   path: './gecko-3-t-win7-32.json'
-                  expires: "{{ '2 hours' | $fromNow }}"
+                  expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/update-response.json':
                   type: file
                   path: './update-response.json'
-                  expires: "{{ '2 hours' | $fromNow }}"
+                  expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/gecko-3-t-win7-32.diff':
                   type: file
                   path: './gecko-3-t-win7-32.diff'
@@ -263,11 +263,11 @@ tasks:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
                   path: './gecko-1-t-win10-64.json'
-                  expires: "{{ '2 hours' | $fromNow }}"
+                  expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/update-response.json':
                   type: file
                   path: './update-response.json'
-                  expires: "{{ '2 hours' | $fromNow }}"
+                  expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/gecko-1-t-win10-64.diff':
                   type: file
                   path: './gecko-1-t-win10-64.diff'
@@ -311,11 +311,11 @@ tasks:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
                   path: './gecko-3-t-win10-64.json'
-                  expires: "{{ '2 hours' | $fromNow }}"
+                  expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/update-response.json':
                   type: file
                   path: './update-response.json'
-                  expires: "{{ '2 hours' | $fromNow }}"
+                  expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/gecko-3-t-win10-64.diff':
                   type: file
                   path: './gecko-3-t-win10-64.diff'
