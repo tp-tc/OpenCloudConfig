@@ -172,6 +172,11 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
       Remove-LegacyStuff
     }
     Map-DriveLetters
+    # absence of the bat file indicates incomplete install. re-install will fail if the scheduled task pre-exists
+    if (-not (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
+      $scheduledTask = '"Run Generic Worker on login"'
+      Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
+    }
   }
   default {
     $workerType = 'win2012'
