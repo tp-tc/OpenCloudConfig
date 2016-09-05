@@ -73,6 +73,14 @@ function Remove-LegacyStuff {
   # clear the event log
   wevtutil el | % { wevtutil cl $_ }
 
+  # remove scheduled tasks
+  foreach ($scheduledTask in $scheduledTasks) {
+    try {
+      Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
+    }
+    catch {}
+  }
+
   # remove user accounts
   foreach ($user in $users) {
     if (@(Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq $user }).length -gt 0) {
@@ -99,16 +107,6 @@ function Remove-LegacyStuff {
     if (Get-Service -Name $service -ErrorAction SilentlyContinue) {
       Get-Service -Name $service | Stop-Service -PassThru
       (Get-WmiObject -Class Win32_Service -Filter "Name='$service'").delete()
-    }
-  }
-
-  # remove scheduled tasks
-  foreach ($scheduledTask in $scheduledTasks) {
-    try {
-      Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
-    }
-    catch {
-      # todo: give a damn
     }
   }
 
@@ -175,7 +173,10 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     # absence of the bat file indicates incomplete install. re-install will fail if the scheduled task pre-exists
     if (-not (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
       $scheduledTask = '"Run Generic Worker on login"'
-      Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
+      try {
+        Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
+      }
+      catch {}
     }
   }
   default {
