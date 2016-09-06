@@ -58,7 +58,7 @@ function Remove-LegacyStuff {
       'enabel-userdata-execution',
       '"Make sure userdata runs"',
       '"Run Generic Worker on login"',
-      #'timesync',
+      'timesync',
       'runner'
     ),
     [hashtable] $registryEntries = @{
@@ -212,7 +212,9 @@ if ($renameInstance -and ([bool]($instanceId)) -and (-not ([System.Net.Dns]::Get
 }
 
 if ($rebootReasons.length) {
-  & shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+  if ($rebootReasons[0] -ne 'powershell upgraded') {
+    & shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+  }
 } else {
   Start-Transcript -Path $logFile -Append
   switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
