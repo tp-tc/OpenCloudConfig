@@ -31,7 +31,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && echo "do lint stuff here"'
+              - 'git clone --quiet {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && echo "do lint stuff here" && echo "taskGroupId: {{taskcluster.docker.taskGroupId}}"'
       metadata:
           name: 'Validate submission'
           description: 'run a linter against json and powershell files'
@@ -75,6 +75,10 @@ tasks:
               'project/releng/opencloudconfig/update-response.json':
                   type: file
                   path: './update-response.json'
+                  expires: "{{ '4 hours' | $fromNow }}"
+              'project/releng/opencloudconfig/secret-update-response.json':
+                  type: file
+                  path: './secret-update-response.json'
                   expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/gecko-1-b-win2012.diff':
                   type: file
@@ -124,6 +128,10 @@ tasks:
                   type: file
                   path: './update-response.json'
                   expires: "{{ '4 hours' | $fromNow }}"
+              'project/releng/opencloudconfig/secret-update-response.json':
+                  type: file
+                  path: './secret-update-response.json'
+                  expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/gecko-3-b-win2012.diff':
                   type: file
                   path: './gecko-3-b-win2012.diff'
@@ -171,6 +179,10 @@ tasks:
               'project/releng/opencloudconfig/update-response.json':
                   type: file
                   path: './update-response.json'
+                  expires: "{{ '4 hours' | $fromNow }}"
+              'project/releng/opencloudconfig/secret-update-response.json':
+                  type: file
+                  path: './secret-update-response.json'
                   expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/gecko-1-t-win7-32.diff':
                   type: file
@@ -220,6 +232,10 @@ tasks:
                   type: file
                   path: './update-response.json'
                   expires: "{{ '4 hours' | $fromNow }}"
+              'project/releng/opencloudconfig/secret-update-response.json':
+                  type: file
+                  path: './secret-update-response.json'
+                  expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/gecko-3-t-win7-32.diff':
                   type: file
                   path: './gecko-3-t-win7-32.diff'
@@ -268,6 +284,10 @@ tasks:
                   type: file
                   path: './update-response.json'
                   expires: "{{ '4 hours' | $fromNow }}"
+              'project/releng/opencloudconfig/secret-update-response.json':
+                  type: file
+                  path: './secret-update-response.json'
+                  expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/gecko-1-t-win10-64.diff':
                   type: file
                   path: './gecko-1-t-win10-64.diff'
@@ -315,6 +335,10 @@ tasks:
               'project/releng/opencloudconfig/update-response.json':
                   type: file
                   path: './update-response.json'
+                  expires: "{{ '4 hours' | $fromNow }}"
+              'project/releng/opencloudconfig/secret-update-response.json':
+                  type: file
+                  path: './secret-update-response.json'
                   expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/gecko-3-t-win10-64.diff':
                   type: file
