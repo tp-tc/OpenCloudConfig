@@ -70,8 +70,8 @@ echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] latest base ami for: ${aws_b
 
 # create instance, apply user-data, filter output, get instance id, tag instance, wait for shutdown
 aws_instance_id="$(aws ec2 run-instances --region ${aws_region} --image-id "${aws_base_ami_id}" --key-name ${aws_key_name} --security-groups "ssh-only" "rdp-only" --user-data "$(echo -e ${userdata})" --instance-type ${aws_instance_type} --block-device-mappings DeviceName=/dev/sda1,Ebs="{VolumeSize=$aws_instance_hdd_size,DeleteOnTermination=true,VolumeType=gp2}" --instance-initiated-shutdown-behavior stop --client-token "${tc_worker_type}-${aws_client_token}" | sed -n 's/^ *"InstanceId": "\(.*\)", */\1/p')"
-aws ec2 create-tags --region ${aws_region} --resources "${aws_instance_id}" --tags "Key=WorkerType,Value=${tc_worker_type}"
-echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] instance: ${aws_instance_id} instantiated and tagged: WorkerType=${tc_worker_type} (https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Instances:instanceId=${aws_instance_id})"
+aws ec2 create-tags --region ${aws_region} --resources "${aws_instance_id}" --tags "Key=WorkerType,Value=golden-${tc_worker_type}"
+echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] instance: ${aws_instance_id} instantiated and tagged: WorkerType=golden-${tc_worker_type} (https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Instances:instanceId=${aws_instance_id})"
 sleep 30 # give aws 30 seconds to start the instance
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] userdata logging to: https://papertrailapp.com/systems/${aws_instance_id}/events"
 aws_instance_public_ip="$(aws ec2 describe-instances --region ${aws_region} --instance-id "${aws_instance_id}" --query 'Reservations[*].Instances[*].NetworkInterfaces[*].Association.PublicIp' --output text)"
@@ -105,6 +105,15 @@ jq '.|keys[]' ./delete-queue-${aws_region}.json | while read i; do
   aws ec2 deregister-image --region ${aws_region} --image-id ${old_ami}
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deleting old snapshot: ${old_snap}, for ami: ${old_ami}"
   aws ec2 delete-snapshot --region ${aws_region} --snapshot-id ${old_snap}
+done
+
+# purge all but 3 newest workertype golden instances (only needed in the base region where goldens are instantiated)
+aws ec2 describe-instances --region ${aws_region} --filters Name=tag-key,Values=WorkerType "Name=tag-value,Values=golden-${tc_worker_type}" | jq '[ .Reservations[].Instances[] | { InstanceId, LaunchTime } ] | sort_by(.LaunchTime) [ 0 : -3 ]' > ./instance-delete-queue-${aws_region}.json
+jq '.|keys[]' ./instance-delete-queue-${aws_region}.json | while read i; do
+  old_instance=$(jq -r ".[$i].InstanceId" ./instance-delete-queue-${aws_region}.json)
+  old_lt=$(jq ".[$i].LaunchTime" ./instance-delete-queue-${aws_region}.json)
+  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] terminating old instance: ${old_instance}, launched: ${old_lt}, in ${aws_region}"
+  aws ec2 terminate-instances --region ${aws_region} --instance-ids ${old_instance}
 done
 
 # copy ami to each configured region, get copied ami id, tag copied ami, wait for copied ami availability
