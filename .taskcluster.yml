@@ -31,10 +31,10 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && echo "do lint stuff here" && echo "taskGroupId: {{taskcluster.docker.taskGroupId}}"'
+              - 'git clone --quiet {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && echo "do lint stuff here"'
       metadata:
-          name: 'Validate submission'
-          description: 'run a linter against json and powershell files'
+          name: 'Validate submission (not implemented)'
+          description: 'todo: run a linter against json and powershell files'
           owner: '{{event.head.user.email}}'
           source: '{{event.head.repo.url}}'
 
