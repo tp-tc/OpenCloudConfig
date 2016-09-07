@@ -3,7 +3,7 @@
 # get some secrets from tc
 updateworkertype_secrets_url="taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype"
 read TASKCLUSTER_AWS_ACCESS_KEY TASKCLUSTER_AWS_SECRET_KEY aws_tc_account_id userdata<<EOF
-$(curl -s -N ${updateworkertype_secrets_url} | python -c 'import json, sys; a = json.load(sys.stdin)["secret"]; print a["TASKCLUSTER_AWS_ACCESS_KEY"], a["TASKCLUSTER_AWS_SECRET_KEY"], a["aws_tc_account_id"], ("%s" % a["userdata"].replace("\n", "\\\\n"));' 2> /dev/null)
+$(curl -s -N ${updateworkertype_secrets_url} | python -c 'import json, sys; a = json.load(sys.stdin)["secret"]; print a["TASKCLUSTER_AWS_ACCESS_KEY"], a["TASKCLUSTER_AWS_SECRET_KEY"], a["aws_tc_account_id"], ("<powershell>\n$url = ('https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/rundsc.ps1?{0}' -f [Guid]::NewGuid())\nInvoke-Expression (New-Object Net.WebClient).DownloadString($url)\n</powershell>\n<persist>true</persist>\n<secrets>\n  <rootPassword>ROOTPASSWORDTOKEN</rootPassword>\n  <rootGpgKey>\n%s\n</rootGpgKey>\n  <workerPassword>WORKERPASSWORDTOKEN</workerPassword>\n  <workerGpgKey>\n%s\n</workerGpgKey>\n</secrets>" % (a["rootGpgKey"], a["workerGpgKey"])).replace("\n", "\\\\n");' 2> /dev/null)
 EOF
 
 : ${TASKCLUSTER_AWS_ACCESS_KEY:?"TASKCLUSTER_AWS_ACCESS_KEY is not set"}
@@ -36,8 +36,10 @@ case "${tc_worker_type}" in
     aws_instance_hdd_size=${aws_instance_hdd_size:=120}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko try tester for Windows 7 32 bit; TaskCluster worker: ${tc_worker_type}, version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
-    export occ_manifest="https://github.com/mozilla-releng/OpenCloudConfig/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/win7.json"
-    export gw_users_dir='Z:\'
+    occ_manifest="https://github.com/mozilla-releng/OpenCloudConfig/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/win7.json"
+    gw_users_dir='Z:\'
+    root_username=root
+    worker_username=GenericWorker
     ;;
   *-win10-64)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-1-t-win10-64-base*'}
@@ -45,8 +47,10 @@ case "${tc_worker_type}" in
     aws_instance_hdd_size=${aws_instance_hdd_size:=120}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko try tester for Windows 10 64 bit; TaskCluster worker: ${tc_worker_type}, version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
-    export occ_manifest="https://github.com/mozilla-releng/OpenCloudConfig/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/win10.json"
-    export gw_users_dir='Z:\'
+    occ_manifest="https://github.com/mozilla-releng/OpenCloudConfig/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/win10.json"
+    gw_users_dir='Z:\'
+    root_username=root
+    worker_username=GenericWorker
     ;;
   *-win2012)
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_Server-2012-R2_RTM-English-64Bit-Base*'}
@@ -54,14 +58,22 @@ case "${tc_worker_type}" in
     aws_instance_hdd_size=${aws_instance_hdd_size:=60}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners amazon --filters "Name=platform,Values=windows" "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko try builder for Windows; TaskCluster worker: ${tc_worker_type}, version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
-    export occ_manifest="https://github.com/mozilla-releng/OpenCloudConfig/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/win2012.json"
-    export gw_users_dir='Z:\'
+    occ_manifest="https://github.com/mozilla-releng/OpenCloudConfig/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/win2012.json"
+    gw_users_dir='Z:\'
+    root_username=Administrator
+    worker_username=GenericWorker
     ;;
   *)
     echo "ERROR: unknown worker type: '${tc_worker_type}'"
     exit 67
     ;;
 esac
+
+root_password="$(pwgen -1syBnc 16)"
+worker_password="$(pwgen -1syBnc 16)"
+userdata=${userdata/ROOTPASSWORDTOKEN/$root_password}
+userdata=${userdata/WORKERPASSWORDTOKEN/$worker_password}
+
 curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq '.' > ./${tc_worker_type}-pre.json
 cat ./${tc_worker_type}-pre.json | jq --arg gwusersdir $gw_users_dir --arg occmanifest $occ_manifest -c 'del(.workerType, .lastModified) | .secrets."generic-worker".config.usersDir = $gwusersdir | .secrets."generic-worker".config.workerTypeMetadata."machine-setup".manifest = $occmanifest' > ./${tc_worker_type}.json
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] active amis (pre-update): $(cat ./${tc_worker_type}.json | jq -c '[.regions[] | {region: .region, ami: .launchSpec.ImageId}]')"
@@ -149,4 +161,5 @@ echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] active amis (post-update): $
 cat ./update-response.json | jq '.' > ./${tc_worker_type}-post.json
 git diff --no-index -- ./${tc_worker_type}-pre.json ./${tc_worker_type}-post.json > ./${tc_worker_type}.diff || true
 
+cat ./workertype-secrets.json | jq --arg timestamp $(date -u +"%Y-%m-%dT%H:%M:%SZ") --arg rootusername $root_username --arg rootpassword "$root_password" --arg workerusername $worker_username --arg workerpassword "$worker_password" -c '.secret.latest.timestamp = $timestamp | .secret.latest.users.root.username = $rootusername | .secret.latest.users.root.password = $rootpassword | .secret.latest.users.worker.username = "GenericWorker" | .secret.latest.users.worker.password = $workerpassword' > ./.workertype-secrets.json && rm ./workertype-secrets.json && mv ./.workertype-secrets.json ./workertype-secrets.json
 cat ./workertype-secrets.json | curl --silent --header 'Content-Type: application/json' --request PUT --data @- http://taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig:${tc_worker_type} > ./secret-update-response.json
