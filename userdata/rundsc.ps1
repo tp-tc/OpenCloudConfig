@@ -42,6 +42,7 @@ function Remove-LegacyStuff {
       ('{0}\quickedit' -f $env:SystemDrive),
       ('{0}\slave' -f $env:SystemDrive),
       ('{0}\sys-scripts' -f $env:SystemDrive),
+      ('{0}\System32\Configuration\Current.mof' -f $env:SystemRoot),
       ('{0}\timeset.bat' -f $env:SystemDrive),
       ('{0}\updateservice' -f $env:SystemDrive),
       ('{0}\Users\Administrator\Desktop\TESTER RUNNER' -f $env:SystemDrive),
