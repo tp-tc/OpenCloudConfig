@@ -116,9 +116,9 @@ jq '.|keys[]' ./delete-queue-${aws_region}.json | while read i; do
   old_snap=$(jq -r ".[$i].SnapshotId" ./delete-queue-${aws_region}.json)
   old_cd=$(jq ".[$i].CreationDate" ./delete-queue-${aws_region}.json)
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deregistering old ami: ${old_ami}, created: ${old_cd}, in ${aws_region}"
-  aws ec2 deregister-image --region ${aws_region} --image-id ${old_ami}
+  aws ec2 deregister-image --region ${aws_region} --image-id ${old_ami} || true
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deleting old snapshot: ${old_snap}, for ami: ${old_ami}"
-  aws ec2 delete-snapshot --region ${aws_region} --snapshot-id ${old_snap}
+  aws ec2 delete-snapshot --region ${aws_region} --snapshot-id ${old_snap} || true
 done
 
 # purge all but 3 newest workertype golden instances (only needed in the base region where goldens are instantiated)
@@ -127,7 +127,7 @@ jq '.|keys[]' ./instance-delete-queue-${aws_region}.json | while read i; do
   old_instance=$(jq -r ".[$i].InstanceId" ./instance-delete-queue-${aws_region}.json)
   old_lt=$(jq ".[$i].LaunchTime" ./instance-delete-queue-${aws_region}.json)
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] terminating old instance: ${old_instance}, launched: ${old_lt}, in ${aws_region}"
-  aws ec2 terminate-instances --region ${aws_region} --instance-ids ${old_instance}
+  aws ec2 terminate-instances --region ${aws_region} --instance-ids ${old_instance} || true
 done
 
 # copy ami to each configured region, get copied ami id, tag copied ami, wait for copied ami availability
@@ -150,9 +150,9 @@ for region in "${aws_copy_regions[@]}"; do
     old_snap=$(jq -r ".[$i].SnapshotId" ./delete-queue-${region}.json)
     old_cd=$(jq ".[$i].CreationDate" ./delete-queue-${region}.json)
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deregistering old ami: ${old_ami}, created: ${old_cd}, in ${region}"
-    aws ec2 deregister-image --region ${region} --image-id ${old_ami}
+    aws ec2 deregister-image --region ${region} --image-id ${old_ami} || true
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deleting old snapshot: ${old_snap}, for ami: ${old_ami}"
-    aws ec2 delete-snapshot --region ${region} --snapshot-id ${old_snap}
+    aws ec2 delete-snapshot --region ${region} --snapshot-id ${old_snap} || true
   done
 done
 
