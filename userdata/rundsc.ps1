@@ -91,6 +91,9 @@ function Remove-LegacyStuff {
     if (Test-Path -Path ('{0}\Users\{1}' -f $env:SystemDrive, $user) -ErrorAction SilentlyContinue) {
       Remove-Item ('{0}\Users\{1}' -f $env:SystemDrive, $user) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
     }
+    if (Test-Path -Path ('{0}\Users\{1}.V2' -f $env:SystemDrive, $user) -ErrorAction SilentlyContinue) {
+      Remove-Item ('{0}\Users\{1}.V2' -f $env:SystemDrive, $user) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+    }
   }
 
   # delete paths
