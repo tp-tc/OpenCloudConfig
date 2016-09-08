@@ -144,7 +144,7 @@ function Map-DriveLetters {
 }
 
 $lock = 'C:\dsc\in-progress.lock'
-if (Test-Path -Path $lockFile -ErrorAction SilentlyContinue) {
+if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
   exit
 } else {
   $lockDir = [IO.Path]::GetDirectoryName($lock)
