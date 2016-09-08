@@ -41,6 +41,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-b-win2012
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-b-win2012
           - aws-provisioner:manage-worker-type:gecko-1-b-win2012
       routes:
@@ -94,6 +95,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-3-b-win2012
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-3-b-win2012
           - aws-provisioner:manage-worker-type:gecko-3-b-win2012
       routes:
@@ -147,6 +149,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-t-win7-32
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-t-win7-32
           - aws-provisioner:manage-worker-type:gecko-1-t-win7-32
       routes:
@@ -200,6 +203,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-3-t-win7-32
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-3-t-win7-32
           - aws-provisioner:manage-worker-type:gecko-3-t-win7-32
       routes:
@@ -253,6 +257,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-t-win10-64
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-t-win10-64
           - aws-provisioner:manage-worker-type:gecko-1-t-win10-64
       routes:
@@ -306,6 +311,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-3-t-win10-64
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-3-t-win10-64
           - aws-provisioner:manage-worker-type:gecko-3-t-win10-64
       routes:

@@ -163,5 +163,12 @@ echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] active amis (post-update): $
 cat ./update-response.json | jq '.' > ./${tc_worker_type}-post.json
 git diff --no-index -- ./${tc_worker_type}-pre.json ./${tc_worker_type}-post.json > ./${tc_worker_type}.diff || true
 
+# set latest timestamp and new credentials
 cat ./workertype-secrets.json | jq --arg timestamp $(date -u +"%Y-%m-%dT%H:%M:%SZ") --arg rootusername $root_username --arg rootpassword "$root_password" --arg workerusername $worker_username --arg workerpassword "$worker_password" -c '.secret.latest.timestamp = $timestamp | .secret.latest.users.root.username = $rootusername | .secret.latest.users.root.password = $rootpassword | .secret.latest.users.worker.username = "GenericWorker" | .secret.latest.users.worker.password = $workerpassword' > ./.workertype-secrets.json && rm ./workertype-secrets.json && mv ./.workertype-secrets.json ./workertype-secrets.json
-cat ./workertype-secrets.json | curl --silent --header 'Content-Type: application/json' --request PUT --data @- http://taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig:${tc_worker_type} > ./secret-update-response.json
+# get previous secrets, move old "latest" to "previous" (list) and discard all but 10 newest records
+curl --silent http://taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig:${tc_worker_type} | jq '.secret.previous = (.secret.previous + [.secret.latest] | sort_by(.timestamp) | reverse [0:10]) | del(.secret.latest)' > ./old-workertype-secrets.json
+# combine old and new secrets and update tc secret service
+jq -c -s '{secret:{latest:.[1].secret.latest,previous:.[0].secret.previous},expires:.[1].secret.expires}' ./old-workertype-secrets.json ./workertype-secrets.json | curl --silent --header 'Content-Type: application/json' --request PUT --data @- http://taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig:${tc_worker_type} > ./secret-update-response.json
+# clean up
+shred -u ./workertype-secrets.json
+shred -u ./old-workertype-secrets.json
