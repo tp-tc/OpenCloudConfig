@@ -26,7 +26,7 @@ aws_key_name="mozilla-taskcluster-worker-${tc_worker_type}"
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] aws_key_name: ${aws_key_name}"
 
 aws_client_token=${GITHUB_HEAD_SHA:0:12}
-echo "{\"secret\":{\"latest\":{\"timestamp\":\"\",\"git-sha\":\"${GITHUB_HEAD_SHA:0:12}\"}},\"expires\":\"$(date -u +"%Y-%m-%dT%H:%M:%SZ" -d "+1 year")\"}" | jq '.' > ./workertype-secrets.json
+echo "{\"secret\":{\"latest\":{\"timestamp\":\"\",\"git-sha\":\"${GITHUB_HEAD_SHA:0:12}\"}}}" | jq '.' > ./workertype-secrets.json
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] git sha: ${aws_client_token} used for aws client token"
 
 case "${tc_worker_type}" in
@@ -168,7 +168,7 @@ cat ./workertype-secrets.json | jq --arg timestamp $(date -u +"%Y-%m-%dT%H:%M:%S
 # get previous secrets, move old "latest" to "previous" (list) and discard all but 10 newest records
 curl --silent http://taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig:${tc_worker_type} | jq '.secret.previous = (.secret.previous + [.secret.latest] | sort_by(.timestamp) | reverse [0:10]) | del(.secret.latest)' > ./old-workertype-secrets.json
 # combine old and new secrets and update tc secret service
-jq -c -s '{secret:{latest:.[1].secret.latest,previous:.[0].secret.previous},expires:.[1].secret.expires}' ./old-workertype-secrets.json ./workertype-secrets.json | curl --silent --header 'Content-Type: application/json' --request PUT --data @- http://taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig:${tc_worker_type} > ./secret-update-response.json
+jq --arg expires $(date -u +"%Y-%m-%dT%H:%M:%SZ" -d "+1 year") -c -s '{secret:{latest:.[1].secret.latest,previous:.[0].secret.previous},expires: $expires}' ./old-workertype-secrets.json ./workertype-secrets.json | curl --silent --header 'Content-Type: application/json' --request PUT --data @- http://taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig:${tc_worker_type} > ./secret-update-response.json
 # clean up
 shred -u ./workertype-secrets.json
 shred -u ./old-workertype-secrets.json
