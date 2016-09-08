@@ -139,6 +139,17 @@ function Map-DriveLetters {
   }
 }
 
+$lock = 'C:\dsc\in-progress.lock'
+if (Test-Path -Path $lockFile -ErrorAction SilentlyContinue) {
+  exit
+} else {
+  $lockDir = [IO.Path]::GetDirectoryName($lock)
+  if (-not (Test-Path -Path $lockDir -ErrorAction SilentlyContinue)) {
+    New-Item -Path $lockDir -ItemType directory -force
+  }
+  New-Item $lock -type file -force
+}
+
 # set up a log folder, an execution policy that enables the dsc run and a winrm envelope size large enough for the dynamic dsc.
 $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
 New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
@@ -213,6 +224,7 @@ if ($renameInstance -and ([bool]($instanceId)) -and (-not ([System.Net.Dns]::Get
 
 if ($rebootReasons.length) {
   if ($rebootReasons[0] -ne 'powershell upgraded') {
+    Remove-Item -Path $lock -force
     & shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
   }
 } else {
@@ -238,13 +250,15 @@ if ($rebootReasons.length) {
   }
 
   # create a scheduled task to run dsc at startup
-  Remove-Item -Path 'C:\dsc' -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
-  New-Item -Path 'C:\dsc' -ItemType Directory -force
-  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/rundsc.ps1', 'C:\dsc\rundsc.ps1')
+  if (Test-Path -Path 'C:\dsc\rundsc.ps1' -ErrorAction SilentlyContinue) {
+    Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
+  }
+  (New-Object Net.WebClient).DownloadFile(('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/rundsc.ps1?{0}' -f [Guid]::NewGuid()), 'C:\dsc\rundsc.ps1')
   & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/sc', 'onstart', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', 'powershell.exe -File C:\dsc\rundsc.ps1', '/f')
 
   Stop-Transcript
   if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
+    Remove-Item -Path $lock -force
     & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
   } else {
     # archive dsc logs
@@ -253,6 +267,7 @@ if ($rebootReasons.length) {
     Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { Remove-Item -Path $_.FullName -Force }
 
     if ((-not ($isWorker)) -and ((Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.zip') }).Count -eq 1) -and (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
+      Remove-Item -Path $lock -force
       & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
     } elseif ($isWorker) {
       if (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) { # if the Z: drive isn't mapped, map it.
@@ -262,9 +277,11 @@ if ($rebootReasons.length) {
         Start-Sleep -seconds 30 # give g-w a moment to fire up, if it doesn't, boot loop.
         if ((@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0) -and (@(Get-Process | ? { $_.ProcessName -eq 'powershell' }).length -eq 1)) {
           & net @('user', 'GenericWorker', (Get-ItemProperty -path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -name 'DefaultPassword').DefaultPassword)
+          Remove-Item -Path $lock -force
           & shutdown @('-r', '-t', '0', '-c', 'reboot to rouse the generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
         }
       }
     }
   }
 }
+Remove-Item -Path $lock -force
