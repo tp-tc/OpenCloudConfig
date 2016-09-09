@@ -371,6 +371,24 @@
           }
         ]
       }
+    },
+    {
+      "ComponentName": "PipConfDirectory",
+      "ComponentType": "DirectoryCreate",
+      "Comment": "https://pip.pypa.io/en/stable/user_guide/#config-file",
+      "Path": "C:\\ProgramData\\pip"
+    },
+    {
+      "ComponentName": "PipConf",
+      "ComponentType": "ChecksumFileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "PipConfDirectory"
+        }
+      ],
+      "Source": "http://hg.mozilla.org/mozilla-central/raw-file/tip/testing/docker/desktop-test/dot-files/config/pip/pip.conf",
+      "Target": "C:\\ProgramData\\pip\\pip.ini"
     }
   ]
 }
