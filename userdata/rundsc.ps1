@@ -315,6 +315,18 @@ if ($rebootReasons.length) {
           #& net @('user', 'GenericWorker', (Get-ItemProperty -path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -name 'DefaultPassword').DefaultPassword)
           Remove-Item -Path $lock -force
           & shutdown @('-r', '-t', '0', '-c', 'reboot to rouse the generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+        } else {
+          # generic-worker is running. our job is done. kill userdata and dsc process triggers.
+          try {
+            Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
+          }
+          catch {
+            $_.Exception.Message | Out-File -filePath $logFile -append
+          }
+          Remove-Item -Path ('{0}\System32\Configuration\Current.mof' -f $env:SystemRoot) -confirm:$false -force
+          Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
+          Remove-Item -Path $lock -force
+          exit
         }
       }
     }

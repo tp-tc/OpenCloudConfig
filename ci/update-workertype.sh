@@ -40,6 +40,7 @@ case "${tc_worker_type}" in
     gw_users_dir='Z:\'
     root_username=root
     worker_username=GenericWorker
+    pt_prefix='win7'
     ;;
   *-win10-64)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-1-t-win10-64-base*'}
@@ -51,6 +52,7 @@ case "${tc_worker_type}" in
     gw_users_dir='Z:\'
     root_username=root
     worker_username=GenericWorker
+    pt_prefix='win10'
     ;;
   *-win2012)
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_Server-2012-R2_RTM-English-64Bit-Base*'}
@@ -62,6 +64,7 @@ case "${tc_worker_type}" in
     gw_users_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
+    pt_prefix='win2012'
     ;;
   *)
     echo "ERROR: unknown worker type: '${tc_worker_type}'"
@@ -87,7 +90,7 @@ aws_instance_id="$(aws ec2 run-instances --region ${aws_region} --image-id "${aw
 aws ec2 create-tags --region ${aws_region} --resources "${aws_instance_id}" --tags "Key=WorkerType,Value=golden-${tc_worker_type}"
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] instance: ${aws_instance_id} instantiated and tagged: WorkerType=golden-${tc_worker_type} (https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Instances:instanceId=${aws_instance_id})"
 sleep 30 # give aws 30 seconds to start the instance
-echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] userdata logging to: https://papertrailapp.com/systems/${aws_instance_id}/events"
+echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] userdata logging to: https://papertrailapp.com/systems/${pt_prefix}-${aws_instance_id}/events"
 aws_instance_public_ip="$(aws ec2 describe-instances --region ${aws_region} --instance-id "${aws_instance_id}" --query 'Reservations[*].Instances[*].NetworkInterfaces[*].Association.PublicIp' --output text)"
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] instance public ip: ${aws_instance_public_ip}"
 
