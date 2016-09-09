@@ -18,6 +18,7 @@ function Run-RemoteDesiredStateConfig {
 }
 function Remove-LegacyStuff {
   param (
+    [string] $logFile,
     [string[]] $users = @(
       'cltbld',
       'GenericWorker'
@@ -68,6 +69,19 @@ function Remove-LegacyStuff {
       'DefaultUserName' = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon';
       'DefaultPassword' = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon';
       'AutoAdminLogon' = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
+    },
+    [hashtable] $ec2ConfigSettings = @{
+      'Ec2HandleUserData' = 'Enabled';
+      'Ec2InitializeDrives' = 'Enabled';
+      'Ec2EventLog' = 'Enabled';
+      'Ec2OutputRDPCert' = 'Enabled';
+      'Ec2SetDriveLetter' = 'Enabled';
+      'Ec2WindowsActivate' = 'Enabled';
+      'Ec2SetPassword' = 'Disabled';
+      'Ec2SetComputerName' = 'Disabled';
+      'Ec2ConfigureRDP' = 'Disabled';
+      'Ec2DynamicBootVolumeSize' = 'Disabled';
+      'AWS.EC2.Windows.CloudWatch.PlugIn' = 'Disabled'
     }
   )
 
@@ -122,6 +136,25 @@ function Remove-LegacyStuff {
       Remove-ItemProperty -path $path -name $name
     }
   }
+
+  # reset ec2 config settings
+  $ec2ConfigSettingsFile = 'C:\Program Files\Amazon\Ec2ConfigService\Settings\Config.xml'
+  $ec2ConfigSettingsFileModified = $false;
+  [xml]$xml = (Get-Content $ec2ConfigSettingsFile)
+  foreach ($plugin in $xml.DocumentElement.Plugins.Plugin) {
+    if ($ec2ConfigSettings.ContainsKey($plugin.Name)) {
+      if ($plugin.State -ne $ec2ConfigSettings[$plugin.Name]) {
+        $plugin.State = $ec2ConfigSettings[$plugin.Name]
+        $ec2ConfigSettingsFileModified = $true
+        ('Ec2Config {0} set to: {1}, in: {2}' -f $plugin.Name, $plugin.State, $ec2ConfigSettingsFile) | Out-File -filePath $logFile -append
+      }
+    }
+  }
+  if ($ec2ConfigSettingsFileModified) {
+    & 'icacls' @($ec2ConfigSettingsFile, '/grant', 'Administrators:F') | Out-File -filePath $logFile -append
+    & 'icacls' @($ec2ConfigSettingsFile, '/grant', 'System:F') | Out-File -filePath $logFile -append
+    $xml.Save($ec2ConfigSettingsFile) | Out-File -filePath $logFile -append
+  }
 }
 function Map-DriveLetters {
   param (
@@ -174,7 +207,7 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     $workerType = 'win10'
     $renameInstance = $true
     if (-not ($isWorker)) {
-      Remove-LegacyStuff
+      Remove-LegacyStuff -logFile $logFile
     }
     Map-DriveLetters
   }
@@ -182,17 +215,9 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     $workerType = 'win7'
     $renameInstance = $true
     if (-not ($isWorker)) {
-      Remove-LegacyStuff
+      Remove-LegacyStuff -logFile $logFile
     }
     Map-DriveLetters
-    # absence of the bat file indicates incomplete install. re-install will fail if the scheduled task pre-exists
-    if (-not (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
-      $scheduledTask = '"Run Generic Worker on login"'
-      try {
-        Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
-      }
-      catch {}
-    }
   }
   default {
     $workerType = 'win2012'
@@ -270,7 +295,7 @@ if ($rebootReasons.length) {
     New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { $_.FullName })
     Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { Remove-Item -Path $_.FullName -Force }
 
-    if ((-not ($isWorker)) -and ((Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.zip') }).Count -eq 1) -and (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
+    if ((-not ($isWorker)) -and ((Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { $_.Name.EndsWith('.userdata-run.zip') }).Count -eq 1) -and (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) -and (@(Get-Process | ? { $_.ProcessName -eq 'powershell' }).length -eq 1)) {
       Remove-Item -Path $lock -force
       & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
     } elseif ($isWorker) {
