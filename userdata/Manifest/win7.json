@@ -226,44 +226,6 @@
       }
     },
     {
-      "ComponentName": "MercurialPythonPatch",
-      "ComponentType": "SymbolicLink",
-      "Comment": "Required by hg extensions",
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
-        }
-      ],
-      "Target": "C:\\mozilla-build\\python\\python27.dll",
-      "Link": "C:\\mozilla-build\\python\\Scripts\\python27.dll"
-    },
-    {
-      "ComponentName": "MercurialConfig",
-      "ComponentType": "ChecksumFileDownload",
-      "Comment": "Required by clonebundle and share hg extensions",
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
-        }
-      ],
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.ini",
-      "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.ini"
-    },
-    {
-      "ComponentName": "MercurialConfigSymLink",
-      "ComponentType": "SymbolicLink",
-      "DependsOn": [
-        {
-          "ComponentType": "ChecksumFileDownload",
-          "ComponentName": "MercurialConfig"
-        }
-      ],
-      "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.ini",
-      "Link": "C:\\mozilla-build\\python\\mercurial.ini"
-    },
-    {
       "ComponentName": "env_MOZILLABUILD",
       "ComponentType": "EnvironmentVariableSet",
       "Comment": "Absolutely required for mozharness builds. Python will fall in a heap, throwing misleading exceptions without this. :)",
@@ -409,77 +371,6 @@
           }
         ]
       }
-    },
-    {
-      "ComponentName": "HgShared",
-      "ComponentType": "DirectoryCreate",
-      "Comment": "required by hg caches",
-      "Path": "C:\\builds\\hg-shared"
-    },
-    {
-      "ComponentName": "HgSharedAccessRights",
-      "ComponentType": "CommandRun",
-      "Comment": "allows builds to use `hg share ...`",
-      "Command": "icacls.exe",
-      "Arguments": [
-        "C:\\builds\\hg-shared",
-        "/grant",
-        "Everyone:(OI)(CI)F"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "HgShared"
-        }
-      ]
-    },
-    {
-      "ComponentName": "MozillaCentralCacheCreate",
-      "ComponentType": "CommandRun",
-      "Comment": "required by firefox builds",
-      "Command": "C:\\mozilla-build\\python\\Scripts\\hg.exe",
-      "Arguments": [
-        "clone",
-        "-U",
-        "https://hg.mozilla.org/mozilla-central",
-        "C:\\builds\\hg-shared\\mozilla-central"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
-        },
-        {
-          "ComponentType": "SymbolicLink",
-          "ComponentName": "MercurialPythonPatch"
-        },
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "HgShared"
-        }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\builds\\hg-shared\\mozilla-central\\.hg"
-        ]
-      }
-    },
-    {
-      "ComponentName": "MozillaCentralCacheUpdate",
-      "ComponentType": "CommandRun",
-      "Comment": "keeps the cache up to date on subsequent runs/reboots",
-      "Command": "C:\\mozilla-build\\python\\Scripts\\hg.exe",
-      "Arguments": [
-        "pull",
-        "-R",
-        "C:\\builds\\hg-shared\\mozilla-central"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "MozillaCentralCacheCreate"
-        }
-      ]
     }
   ]
 }
