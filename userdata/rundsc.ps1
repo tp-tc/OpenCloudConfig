@@ -174,6 +174,13 @@ function Map-DriveLetters {
       }
     }
   }
+  if ((Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue) -and (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue))) {
+    $volume = Get-WmiObject -Class win32_volume -Filter "DriveLetter='Y:'"
+    if ($null -ne $volume) {
+      $volume.DriveLetter = 'Z:'
+      $volume.Put()
+    }
+  }
 }
 
 $lock = 'C:\dsc\in-progress.lock'
