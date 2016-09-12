@@ -57,6 +57,13 @@ function Remove-LegacyStuff {
       'uvnc_service'
     ),
     [string[]] $scheduledTasks = @(
+      'Disable_maintain',
+      'Disable_Notifications',
+      '"INSTALL on startup"',
+      'rm_reboot_semaphore',
+      'RunDesiredStateConfigurationAtStartup',
+      '"START RUNNER"',
+      'Update_Logon_Count.xml',
       'enabel-userdata-execution',
       '"Make sure userdata runs"',
       '"Run Generic Worker on login"',
@@ -318,6 +325,7 @@ if ($rebootReasons.length) {
         } else {
           # generic-worker is running. our job is done. kill userdata and dsc process triggers.
           try {
+            $scheduledTask = 'RunDesiredStateConfigurationAtStartup'
             Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
           }
           catch {
