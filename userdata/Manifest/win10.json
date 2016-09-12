@@ -272,6 +272,18 @@
       "Target": "Machine"
     },
     {
+      "ComponentName": "ToolToolInstall",
+      "ComponentType": "FileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        }
+      ],
+      "Source": "https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py",
+      "Target": "C:\\mozilla-build\\tooltool.py"
+    },
+    {
       "ComponentName": "reg_WindowsErrorReportingLocalDumps",
       "ComponentType": "RegistryKeySet",
       "Comment": "",
