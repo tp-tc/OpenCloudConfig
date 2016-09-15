@@ -2,7 +2,7 @@ function Write-Log {
   param (
     [string] $message,
     [string] $severity = 'INFO',
-    [string] $source = 'userdata',
+    [string] $source = 'OpenCloudConfig',
     [string] $logName = 'Application'
   )
   if (!([Diagnostics.EventLog]::Exists($logName)) -or !([Diagnostics.EventLog]::SourceExists($source))) {
