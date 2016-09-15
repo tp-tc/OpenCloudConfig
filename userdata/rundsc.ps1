@@ -62,7 +62,6 @@ function Remove-LegacyStuff {
       ('{0}\etc' -f $env:SystemDrive),
       ('{0}\generic-worker' -f $env:SystemDrive),
       ('{0}\gpo_files' -f $env:SystemDrive),
-      ('{0}\inetpub' -f $env:SystemDrive),
       ('{0}\installersource' -f $env:SystemDrive),
       ('{0}\installservice.bat' -f $env:SystemDrive),
       ('{0}\log\*.zip' -f $env:SystemDrive),
@@ -250,9 +249,10 @@ if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
 Write-Log -message 'userdata run starting.' -severity 'INFO'
 
 tzutil /s UTC
+Write-Log -message 'system timezone set to UTC.' -severity 'INFO'
 W32tm /register
 W32tm /resync /force
-Write-Log -message 'clock synchronised.' -severity 'INFO'
+Write-Log -message 'system clock synchronised.' -severity 'INFO'
 
 # set up a log folder, an execution policy that enables the dsc run and a winrm envelope size large enough for the dynamic dsc.
 $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
