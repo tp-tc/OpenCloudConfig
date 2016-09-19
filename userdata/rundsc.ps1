@@ -363,6 +363,16 @@ if ($rebootReasons.length) {
   & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/sc', 'onstart', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', 'powershell.exe -File C:\dsc\rundsc.ps1', '/f')
   Write-Log -message 'scheduled task: RunDesiredStateConfigurationAtStartup, created.' -severity 'INFO'
 
+  # create a scheduled task to run HaltOnIdle continuously
+  if (Test-Path -Path 'C:\dsc\HaltOnIdle.ps1' -ErrorAction SilentlyContinue) {
+    Remove-Item -Path 'C:\dsc\HaltOnIdle.ps1' -confirm:$false -force
+    Write-Log -message 'C:\dsc\HaltOnIdle.ps1 deleted.' -severity 'INFO'
+  }
+  (New-Object Net.WebClient).DownloadFile(('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/HaltOnIdle.ps1?{0}' -f [Guid]::NewGuid()), 'C:\dsc\HaltOnIdle.ps1')
+  Write-Log -message 'C:\dsc\HaltOnIdle.ps1 downloaded.' -severity 'INFO'
+  & schtasks @('/create', '/tn', 'HaltOnIdle', '/sc', 'minute', '/mo', '5', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', 'powershell.exe -File C:\dsc\HaltOnIdle.ps1', '/f')
+  Write-Log -message 'scheduled task: HaltOnIdle, created.' -severity 'INFO'
+
   Stop-Transcript
   if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
     Remove-Item -Path $lock -force
