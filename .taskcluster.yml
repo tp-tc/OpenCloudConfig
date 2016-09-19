@@ -149,11 +149,11 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
-          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-t-win7-32
-          - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-t-win7-32
-          - aws-provisioner:manage-worker-type:gecko-1-t-win7-32
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32
+          - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32
+          - aws-provisioner:manage-worker-type:gecko-t-win7-32
       routes:
-          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-1-t-win7-32'
+          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win7-32'
       workerType: '{{taskcluster.docker.workerType}}'
       extra:
           github:
@@ -176,11 +176,11 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-1-t-win7-32'
+              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win7-32'
           artifacts:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
-                  path: './gecko-1-t-win7-32.json'
+                  path: './gecko-t-win7-32.json'
                   expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/update-response.json':
                   type: file
@@ -190,12 +190,12 @@ tasks:
                   type: file
                   path: './secret-update-response.json'
                   expires: "{{ '4 hours' | $fromNow }}"
-              'project/releng/opencloudconfig/gecko-1-t-win7-32.diff':
+              'project/releng/opencloudconfig/gecko-t-win7-32.diff':
                   type: file
-                  path: './gecko-1-t-win7-32.diff'
+                  path: './gecko-t-win7-32.diff'
                   expires: "{{ '1 year' | $fromNow }}"
       metadata:
-          name: 'Update gecko-1-t-win7-32 AMIs'
+          name: 'Update gecko-t-win7-32 AMIs'
           description: 'recreate Firefox Windows 7 (32 bit) try test AMIs using OpenCloudConfig for configuration and dependency installation'
           owner: '{{event.head.user.email}}'
           source: '{{event.head.repo.url}}'
@@ -203,11 +203,11 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
-          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-3-t-win7-32
-          - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-3-t-win7-32
-          - aws-provisioner:manage-worker-type:gecko-3-t-win7-32
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-g-win7-32
+          - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-g-win7-32
+          - aws-provisioner:manage-worker-type:gecko-g-win7-32
       routes:
-          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-3-t-win7-32'
+          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-g-win7-32'
       workerType: '{{taskcluster.docker.workerType}}'
       extra:
           github:
@@ -230,11 +230,11 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-3-t-win7-32'
+              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-g-win7-32'
           artifacts:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
-                  path: './gecko-3-t-win7-32.json'
+                  path: './gecko-g-win7-32.json'
                   expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/update-response.json':
                   type: file
@@ -244,12 +244,12 @@ tasks:
                   type: file
                   path: './secret-update-response.json'
                   expires: "{{ '4 hours' | $fromNow }}"
-              'project/releng/opencloudconfig/gecko-3-t-win7-32.diff':
+              'project/releng/opencloudconfig/gecko-g-win7-32.diff':
                   type: file
-                  path: './gecko-3-t-win7-32.diff'
+                  path: './gecko-g-win7-32.diff'
                   expires: "{{ '1 year' | $fromNow }}"
       metadata:
-          name: 'Update gecko-3-t-win7-32 AMIs'
+          name: 'Update gecko-g-win7-32 AMIs'
           description: 'recreate Firefox Windows 7 (32 bit) prod test AMIs using OpenCloudConfig for configuration and dependency installation'
           owner: '{{event.head.user.email}}'
           source: '{{event.head.repo.url}}'
@@ -257,11 +257,11 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
-          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-t-win10-64
-          - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-t-win10-64
-          - aws-provisioner:manage-worker-type:gecko-1-t-win10-64
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64
+          - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64
+          - aws-provisioner:manage-worker-type:gecko-t-win10-64
       routes:
-          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-1-t-win10-64'
+          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64'
       workerType: '{{taskcluster.docker.workerType}}'
       extra:
           github:
@@ -284,11 +284,11 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-1-t-win10-64'
+              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win10-64'
           artifacts:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
-                  path: './gecko-1-t-win10-64.json'
+                  path: './gecko-t-win10-64.json'
                   expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/update-response.json':
                   type: file
@@ -298,12 +298,12 @@ tasks:
                   type: file
                   path: './secret-update-response.json'
                   expires: "{{ '4 hours' | $fromNow }}"
-              'project/releng/opencloudconfig/gecko-1-t-win10-64.diff':
+              'project/releng/opencloudconfig/gecko-t-win10-64.diff':
                   type: file
-                  path: './gecko-1-t-win10-64.diff'
+                  path: './gecko-t-win10-64.diff'
                   expires: "{{ '1 year' | $fromNow }}"
       metadata:
-          name: 'Update gecko-1-t-win10-64 AMIs'
+          name: 'Update gecko-t-win10-64 AMIs'
           description: 'recreate Firefox Windows 10 (64 bit) try test AMIs using OpenCloudConfig for configuration and dependency installation'
           owner: '{{event.head.user.email}}'
           source: '{{event.head.repo.url}}'
@@ -311,11 +311,11 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
-          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-3-t-win10-64
-          - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-3-t-win10-64
-          - aws-provisioner:manage-worker-type:gecko-3-t-win10-64
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-g-win10-64
+          - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-g-win10-64
+          - aws-provisioner:manage-worker-type:gecko-g-win10-64
       routes:
-          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-3-t-win10-64'
+          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-g-win10-64'
       workerType: '{{taskcluster.docker.workerType}}'
       extra:
           github:
@@ -338,11 +338,11 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-3-t-win10-64'
+              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-g-win10-64'
           artifacts:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
-                  path: './gecko-3-t-win10-64.json'
+                  path: './gecko-g-win10-64.json'
                   expires: "{{ '4 hours' | $fromNow }}"
               'project/releng/opencloudconfig/update-response.json':
                   type: file
@@ -352,12 +352,12 @@ tasks:
                   type: file
                   path: './secret-update-response.json'
                   expires: "{{ '4 hours' | $fromNow }}"
-              'project/releng/opencloudconfig/gecko-3-t-win10-64.diff':
+              'project/releng/opencloudconfig/gecko-g-win10-64.diff':
                   type: file
-                  path: './gecko-3-t-win10-64.diff'
+                  path: './gecko-g-win10-64.diff'
                   expires: "{{ '1 year' | $fromNow }}"
       metadata:
-          name: 'Update gecko-3-t-win10-64 AMIs'
+          name: 'Update gecko-g-win10-64 AMIs'
           description: 'recreate Firefox Windows 10 (64 bit) prod test AMIs using OpenCloudConfig for configuration and dependency installation'
           owner: '{{event.head.user.email}}'
           source: '{{event.head.repo.url}}'
