@@ -50,12 +50,11 @@ function Is-Running {
     [bool] $predicate
   )
   if ($predicate) {
-    $isRunning = $true
-    Write-Log -message ('{0} :: {1} is not running.' -f $($MyInvocation.MyCommand.Name), $process) -severity 'INFO'
+    Write-Log -message ('{0} :: {1} is running.' -f $($MyInvocation.MyCommand.Name), $proc) -severity 'INFO'
   } else {
-    $isRunning = $false
-    Write-Log -message ('{0} :: {1} is not running.' -f $($MyInvocation.MyCommand.Name), $process) -severity 'WARN'
+    Write-Log -message ('{0} :: {1} is not running.' -f $($MyInvocation.MyCommand.Name), $proc) -severity 'WARN'
   }
+  return $predicate
 }
 
 if (-not (Is-Running -proc 'generic-worker' -predicate (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -gt 0))) {
@@ -73,8 +72,6 @@ if (-not (Is-Running -proc 'generic-worker' -predicate (@(Get-Process | ? { $_.P
 } else {
   Write-Log -message 'instance appears to be productive.' -severity 'DEBUG'
 }
-
-# todo: extract reboot reason comments from the event log 
 if ([IO.Directory]::GetFiles('C:\log', '*.zip').Count -gt 5) {
   Write-Log -message 'instance appears to be boot-looping and will be halted.' -severity 'ERROR'
   & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: boot-loop detected', '-f', '-d', 'p:4:1')
