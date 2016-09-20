@@ -30,7 +30,7 @@ echo "{\"secret\":{\"latest\":{\"timestamp\":\"\",\"git-sha\":\"${GITHUB_HEAD_SH
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] git sha: ${aws_client_token} used for aws client token"
 
 case "${tc_worker_type}" in
-  *-win7-32)
+  *-win7-32*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-1-t-win7-32-base*'}
     aws_instance_type=${aws_instance_type:='c3.2xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=120}
@@ -42,7 +42,7 @@ case "${tc_worker_type}" in
     worker_username=GenericWorker
     pt_prefix='win7'
     ;;
-  *-win10-64)
+  *-win10-64*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-1-t-win10-64-base*'}
     aws_instance_type=${aws_instance_type:='c3.2xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=120}
@@ -54,7 +54,7 @@ case "${tc_worker_type}" in
     worker_username=GenericWorker
     pt_prefix='win10'
     ;;
-  *-win2012)
+  *-win2012*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_Server-2012-R2_RTM-English-64Bit-Base*'}
     aws_instance_type=${aws_instance_type:='c3.2xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=60}
