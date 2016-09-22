@@ -234,6 +234,37 @@ function Map-DriveLetters {
     }
   }
 }
+function Set-Credentials {
+  param (
+    [string] $userdata,
+    [switch] $root
+  )
+  if ($userdata) {
+    if ($root) {
+      try {
+        $password = [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value
+        if ($password) {
+          & net @('user', 'root', $password)
+          Write-Log -message ('{0} :: credentials set for root.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+        }
+      }
+      catch {
+        Write-Log -message ('{0} :: failed to set credentials for root. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+      }
+    }
+    try {
+      $password = [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value
+      if ($password) {
+        & net @('user', 'GenericWorker', $password)
+        Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Type 'String' -Name 'DefaultPassword' -Value $password
+        Write-Log -message ('{0} :: credentials set for GenericWorker.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+      }
+    }
+    catch {
+      Write-Log -message ('{0} :: failed to set credentials for GenericWorker. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+    }
+  }
+}
 
 $lock = 'C:\dsc\in-progress.lock'
 if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
@@ -263,7 +294,8 @@ Set-ExecutionPolicy RemoteSigned -force | Out-File -filePath $logFile -append
 # userdata that contains json, indicates a taskcluster-provisioned worker/spot instance.
 # userdata that contains pseudo-xml indicates a base instance or one created during ami generation.
 try {
-  $isWorker = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')).StartsWith('{')
+  $userdata = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')
+  $isWorker = $userdata.StartsWith('{')
 } catch {
   $isWorker = $false
 }
@@ -276,6 +308,7 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     $renameInstance = $true
     if (-not ($isWorker)) {
       Remove-LegacyStuff -logFile $logFile
+      Set-Credentials -userdata $userdata -root
     }
     Map-DriveLetters
   }
@@ -284,6 +317,7 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     $renameInstance = $true
     if (-not ($isWorker)) {
       Remove-LegacyStuff -logFile $logFile
+      Set-Credentials -userdata $userdata -root
     }
     Map-DriveLetters
   }
