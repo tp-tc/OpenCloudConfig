@@ -490,7 +490,7 @@
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1298976",
       "Url": "https://www.mercurial-scm.org/release/windows/Mercurial-3.9.1-x64.exe",
       "Arguments": [
-        "/SP-"
+        "/SP-",
         "/VERYSILENT",
         "/NORESTART",
         "/LOG=\"C:\\log\\Mercurial-3.9.1-x64.exe.install.log\""
