@@ -513,6 +513,19 @@
       "Target": "C:\\Program Files\\Mercurial\\Mercurial.ini"
     },
     {
+      "ComponentName": "robustcheckout",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "Required by robustcheckout hg extension",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        }
+      ],
+      "Source": "https://hg.mozilla.org/hgcustom/version-control-tools/file/tip/hgext/robustcheckout/__init__.py",
+      "Target": "C:\\mozilla-build\\robustcheckout.py"
+    },
+    {
       "ComponentName": "MercurialCerts",
       "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
