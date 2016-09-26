@@ -215,7 +215,11 @@
           "C:\\mozilla-build\\info-zip\\unzip.exe",
           "C:\\mozilla-build\\info-zip\\zip.exe",
           "C:\\mozilla-build\\msys\\bin\\sh.exe",
-          "C:\\mozilla-build\\python\\python.exe"
+          "C:\\mozilla-build\\msys\\local\\bin\\make.exe",
+          "C:\\mozilla-build\\msys\\local\\bin\\autoconf-2.13",
+          "C:\\mozilla-build\\python\\python.exe",
+          "C:\\mozilla-build\\upx391w\\upx.exe",
+          "C:\\mozilla-build\\yasm\\yasm.exe"
         ],
         "FilesContain": [
           {
@@ -226,17 +230,45 @@
       }
     },
     {
-      "ComponentName": "MercurialPythonPatch",
-      "ComponentType": "SymbolicLink",
-      "Comment": "Required by hg extensions",
+      "ComponentName": "DeprecateMozillaBuildMercurial",
+      "ComponentType": "CommandRun",
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
           "ComponentName": "MozillaBuildSetup"
         }
       ],
-      "Target": "C:\\mozilla-build\\python\\python27.dll",
-      "Link": "C:\\mozilla-build\\python\\Scripts\\python27.dll"
+      "Command": "move",
+      "Arguments": [
+        "C:\\mozilla-build\\python\\Scripts\\hg.exe",
+        "C:\\mozilla-build\\python\\Scripts\\hg.exe.deprecated"
+      ],
+      "Validate": {
+        "PathsNotExist": [
+          "C:\\mozilla-build\\python\\hg.exe"
+        ],
+        "PathsExist": [
+          "C:\\mozilla-build\\python\\hg.exe.deprecated"
+        ]
+      }
+    },
+    {
+      "ComponentName": "Mercurial",
+      "ComponentType": "ExeInstall",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1298976",
+      "Url": "https://www.mercurial-scm.org/release/windows/Mercurial-3.9.1.exe",
+      "Arguments": [
+        "/SP-"
+        "/VERYSILENT",
+        "/NORESTART",
+        "/LOG=\"C:\\log\\Mercurial-3.9.1.exe.install.log\""
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files\\Mercurial\\hg.exe",
+          "C:\\Program Files\\Mercurial\\python27.dll"
+        ]
+      }
     },
     {
       "ComponentName": "MercurialConfig",
@@ -245,23 +277,11 @@
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
+          "ComponentName": "Mercurial"
         }
       ],
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.ini",
-      "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.ini"
-    },
-    {
-      "ComponentName": "MercurialConfigSymLink",
-      "ComponentType": "SymbolicLink",
-      "DependsOn": [
-        {
-          "ComponentType": "ChecksumFileDownload",
-          "ComponentName": "MercurialConfig"
-        }
-      ],
-      "Target": "C:\\mozilla-build\\python\\Scripts\\mercurial.ini",
-      "Link": "C:\\mozilla-build\\python\\mercurial.ini"
+      "Target": "C:\\Program Files\\Mercurial\\Mercurial.ini"
     },
     {
       "ComponentName": "env_MOZILLABUILD",
@@ -300,7 +320,9 @@
         "C:\\mozilla-build\\python",
         "C:\\mozilla-build\\python\\Scripts",
         "C:\\mozilla-build\\upx391w",
-        "C:\\mozilla-build\\wget"
+        "C:\\mozilla-build\\wget",
+        "C:\\mozilla-build\\yasm",
+        "C:\\Program Files\\Mercurial"
       ],
       "Target": "Machine"
     },
