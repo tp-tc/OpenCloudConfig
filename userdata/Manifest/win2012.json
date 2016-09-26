@@ -462,7 +462,7 @@
       }
     },
     {
-      "ComponentName": "DeprecateMozillaBuildMercurial",
+      "ComponentName": "DeleteMozillaBuildMercurial",
       "ComponentType": "CommandRun",
       "DependsOn": [
         {
@@ -470,17 +470,14 @@
           "ComponentName": "MozillaBuildSetup"
         }
       ],
-      "Command": "move",
+      "Command": "del",
       "Arguments": [
-        "C:\\mozilla-build\\python\\Scripts\\hg.exe",
-        "C:\\mozilla-build\\python\\Scripts\\hg.exe.deprecated"
+        "C:\\mozilla-build\\python\\Scripts\\hg*"
       ],
       "Validate": {
         "PathsNotExist": [
+          "C:\\mozilla-build\\python\\hg",
           "C:\\mozilla-build\\python\\hg.exe"
-        ],
-        "PathsExist": [
-          "C:\\mozilla-build\\python\\hg.exe.deprecated"
         ]
       }
     },
