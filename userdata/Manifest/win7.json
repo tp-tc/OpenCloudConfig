@@ -284,6 +284,18 @@
       "Target": "C:\\Program Files\\Mercurial\\Mercurial.ini"
     },
     {
+      "ComponentName": "MercurialCerts",
+      "ComponentType": "ChecksumFileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "Mercurial"
+        }
+      ],
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/cacert.pem",
+      "Target": "C:\\mozilla-build\\msys\\etc\\cacert.pem"
+    },
+    {
       "ComponentName": "env_MOZILLABUILD",
       "ComponentType": "EnvironmentVariableSet",
       "Comment": "Absolutely required for mozharness builds. Python will fall in a heap, throwing misleading exceptions without this. :)",
