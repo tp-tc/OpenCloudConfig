@@ -430,8 +430,8 @@
       "ComponentType": "MsiInstall",
       "Comment": "https://dxr.mozilla.org/mozilla-central/search?q=BinScope&redirect=false&case=false",
       "Url": "https://github.com/mozilla-releng/OpenCloudConfig/raw/master/userdata/Configuration/FirefoxBuildResources/BinScope_x64.msi",
-      "Name": "SDL BinScope",
-      "ProductId": "B137EB8C-FA6C-4DA7-95F0-A9B6FFE67A64"
+      "Name": "Microsoft BinScope 2014",
+      "ProductId": "C7F11A71-09AA-43CC-9DFC-8CB12E678F21"
     },
     {
       "ComponentName": "MozillaBuildSetup",
