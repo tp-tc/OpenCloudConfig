@@ -437,22 +437,31 @@ if ($rebootReasons.length) {
           & shutdown @('-r', '-t', '0', '-c', 'reboot to rouse the generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
         } else {
           Write-Log -message 'generic-worker running process detected.' -severity 'INFO'
-          # generic-worker is running. our job is done. kill userdata and dsc process triggers.
-          try {
-            $scheduledTask = 'RunDesiredStateConfigurationAtStartup'
-            Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
-            Write-Log -message 'scheduled task: RunDesiredStateConfigurationAtStartup, deleted.' -severity 'INFO'
+          switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+            'Microsoft Windows Server 2012*' {
+              # since builds are not susceptible to performance penalties from bacground occ processes, continue running to enable faster maintenance responses
+              Write-Log -message 'OCC will continue background dsc maintenance.' -severity 'DEBUG'
+            }
+            default {
+              # since tests are susceptible to performance penalties from bacground occ processes, kill userdata and dsc process triggers to prevent skewing test results
+              Write-Log -message 'OCC will now terminate. generic-worker has control.' -severity 'DEBUG'
+              try {
+                $scheduledTask = 'RunDesiredStateConfigurationAtStartup'
+                Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
+                Write-Log -message 'scheduled task: RunDesiredStateConfigurationAtStartup, deleted.' -severity 'INFO'
+              }
+              catch {
+                Write-Log -message ('failed to delete scheduled task: {0}. {1}' -f $scheduledTask, $_.Exception.Message) -severity 'ERROR'
+              }
+              Remove-Item -Path ('{0}\System32\Configuration\Current.mof' -f $env:SystemRoot) -confirm:$false -force
+              Write-Log -message ('{0}\System32\Configuration\Current.mof deleted' -f $env:SystemRoot) -severity 'INFO'
+              Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
+              Write-Log -message 'C:\dsc\rundsc.ps1 deleted' -severity 'INFO'
+              Remove-Item -Path $lock -force
+              Write-Log -message ('{0} deleted' -f $lock) -severity 'INFO'
+              exit
+            }
           }
-          catch {
-            Write-Log -message ('failed to delete scheduled task: {0}. {1}' -f $scheduledTask, $_.Exception.Message) -severity 'ERROR'
-          }
-          Remove-Item -Path ('{0}\System32\Configuration\Current.mof' -f $env:SystemRoot) -confirm:$false -force
-          Write-Log -message ('{0}\System32\Configuration\Current.mof deleted' -f $env:SystemRoot) -severity 'INFO'
-          Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
-          Write-Log -message 'C:\dsc\rundsc.ps1 deleted' -severity 'INFO'
-          Remove-Item -Path $lock -force
-          Write-Log -message ('{0} deleted' -f $lock) -severity 'INFO'
-          exit
         }
       }
     }
