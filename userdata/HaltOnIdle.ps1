@@ -76,8 +76,3 @@ if ([IO.Directory]::GetFiles('C:\log', '*.zip').Count -gt 5) {
   Write-Log -message 'instance appears to be boot-looping and will be halted.' -severity 'ERROR'
   & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: boot-loop detected', '-f', '-d', 'p:4:1')
 }
-
-# temp hack to remove old mercurial and config
-Remove-Item -Path 'C:\mozilla-build\python\Scripts\hg' -force
-Remove-Item -Path 'C:\mozilla-build\python\Scripts\hg.exe' -force
-Remove-Item -Path 'C:\mozilla-build\python\mercurial.ini' -force
