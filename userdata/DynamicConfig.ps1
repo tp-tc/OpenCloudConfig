@@ -5,6 +5,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
 
 Configuration DynamicConfig {
+  param (
+    [string] $workerType = $null
+  )
   Import-DscResource -ModuleName PSDesiredStateConfiguration
 
   Script GpgKeyImport {
@@ -73,23 +76,28 @@ Configuration DynamicConfig {
     TestScript = { return $false }
   }
 
-  switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
-    'Microsoft Windows Server 2012*' {
-      $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/win2012.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
-    }
-    'Microsoft Windows Server 2008*' {
-      $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/win2008.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
-    }
-    'Microsoft Windows 10*' {
-      $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/win10.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
-    }
-    'Microsoft Windows 7*' {
-      $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/win7.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
-    }
-    default {
-      $manifest = ('{"Items":[{"ComponentType":"DirectoryCreate","Path":"$env:SystemDrive\\log"}]}' | ConvertFrom-Json)
+  if ($workerType) {
+    $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/{0}.json?{1}' -f $workerType, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
+  } else {
+    switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+      'Microsoft Windows Server 2012*' {
+        $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/win2012.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
+      }
+      'Microsoft Windows Server 2008*' {
+        $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/win2008.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
+      }
+      'Microsoft Windows 10*' {
+        $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/win10.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
+      }
+      'Microsoft Windows 7*' {
+        $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/win7.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
+      }
+      default {
+        $manifest = ('{"Items":[{"ComponentType":"DirectoryCreate","Path":"$env:SystemDrive\\log"}]}' | ConvertFrom-Json)
+      }
     }
   }
+
   # this hashtable maps json manifest component types to DSC component types for dependency mapping
   $componentMap = @{
     'DirectoryCreate' = 'File';

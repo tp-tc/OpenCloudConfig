@@ -34,7 +34,8 @@ function Write-Log {
 }
 function Run-RemoteDesiredStateConfig {
   param (
-    [string] $url
+    [string] $url,
+    [string] $workerType
   )
   # terminate any running dsc process
   $dscpid = (Get-WmiObject msft_providers | ? {$_.provider -like 'dsccore'} | Select-Object -ExpandProperty HostProcessIdentifier)
@@ -47,7 +48,7 @@ function Run-RemoteDesiredStateConfig {
   Unblock-File -Path $target
   . $target
   $mof = ('{0}\{1}' -f $env:Temp, $config)
-  Invoke-Expression "$config -OutputPath $mof"
+  Invoke-Expression "$config -workerType $workerType -OutputPath $mof"
   Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
 }
 function Remove-LegacyStuff {
@@ -304,7 +305,6 @@ Write-Log -message ('isWorker: {0}.' -f $isWorker) -severity 'INFO'
 # if importing releng amis, do a little housekeeping
 switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
   'Microsoft Windows 10*' {
-    $workerType = 'win10'
     $renameInstance = $true
     if (-not ($isWorker)) {
       Remove-LegacyStuff -logFile $logFile
@@ -313,7 +313,6 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     Map-DriveLetters
   }
   'Microsoft Windows 7*' {
-    $workerType = 'win7'
     $renameInstance = $true
     if (-not ($isWorker)) {
       Remove-LegacyStuff -logFile $logFile
@@ -322,9 +321,14 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     Map-DriveLetters
   }
   default {
-    $workerType = 'win2012'
     $renameInstance = $true
   }
+}
+
+if ($isWorker) {
+  $workerType = ($userdata | ConvertFrom-Json).workerType
+} else {
+  $workerType = ((Invoke-WebRequest -Uri 'http://169.254.169.254/latest/meta-data/public-keys' -UseBasicParsing).Content).Replace('0=mozilla-taskcluster-worker-', '')
 }
 Write-Log -message ('workerType: {0}.' -f $workerType) -severity 'INFO'
 
@@ -379,7 +383,7 @@ if ($rebootReasons.length) {
       Enable-PSRemoting -SkipNetworkProfileCheck -Force
     }
   }
-  Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
+  Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/DynamicConfig.ps1' -workerType $workerType
   switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     'Microsoft Windows 7*' {
       # set network interface to public
