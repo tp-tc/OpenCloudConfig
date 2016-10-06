@@ -72,10 +72,10 @@ case "${tc_worker_type}" in
     ;;
 esac
 
-root_password="$(pwgen -1syBnc 16)"
-root_password="${root_password//[<>]/_}"
-worker_password="$(pwgen -1syBnc 16)"
-worker_password="${worker_password//[<>]/_}"
+root_password="$(pwgen -1sBync 16)"
+root_password="${root_password//[<>\"\'\`\\\/]/_}"
+worker_password="$(pwgen -1sBync 16)"
+worker_password="${worker_password//[<>\"\'\`\\\/]/_}"
 userdata=${userdata/ROOTPASSWORDTOKEN/$root_password}
 userdata=${userdata/WORKERPASSWORDTOKEN/$worker_password}
 
