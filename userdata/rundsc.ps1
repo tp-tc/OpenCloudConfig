@@ -306,6 +306,7 @@ Write-Log -message ('isWorker: {0}.' -f $isWorker) -severity 'INFO'
 switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
   'Microsoft Windows 10*' {
     $renameInstance = $true
+    $setFqdn = $true
     if (-not ($isWorker)) {
       Remove-LegacyStuff -logFile $logFile
       Set-Credentials -userdata $userdata -root
@@ -314,6 +315,7 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
   }
   'Microsoft Windows 7*' {
     $renameInstance = $true
+    $setFqdn = $true
     if (-not ($isWorker)) {
       Remove-LegacyStuff -logFile $logFile
       Set-Credentials -userdata $userdata -root
@@ -322,15 +324,34 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
   }
   default {
     $renameInstance = $true
+    $setFqdn = $true
   }
 }
 
 if ($isWorker) {
-  $workerType = ($userdata | ConvertFrom-Json).workerType
+  $u = ($userdata | ConvertFrom-Json)
+  $workerType = $u.workerType
+  $az = $u.availabilityZone
 } else {
   $workerType = ((Invoke-WebRequest -Uri 'http://169.254.169.254/latest/meta-data/public-keys' -UseBasicParsing).Content).Replace('0=mozilla-taskcluster-worker-', '')
+  $az = ((Invoke-WebRequest -Uri 'http://169.254.169.254/latest/meta-data/placement/availability-zone' -UseBasicParsing).Content)
 }
 Write-Log -message ('workerType: {0}.' -f $workerType) -severity 'INFO'
+switch -wildcard ($az) {
+  'eu-central-1*'{
+    $dnsRegion = 'euc1'
+  }
+  'us-east-1*'{
+    $dnsRegion = 'use1'
+  }
+  'us-west-1*'{
+    $dnsRegion = 'usw1'
+  }
+  'us-west-2*'{
+    $dnsRegion = 'usw2'
+  }
+}
+Write-Log -message ('availabilityZone: {0}, dnsRegion: {1}.' -f $az, $dnsRegion) -severity 'INFO'
 
 # install recent powershell (required by DSC) (requires reboot)
 if ($PSVersionTable.PSVersion.Major -lt 4) {
@@ -363,6 +384,25 @@ if ($renameInstance -and ([bool]($instanceId)) -and (-not ($dnsHostname -ieq $in
   $rebootReasons += 'host renamed'
   Write-Log -message ('host renamed from: {0} to {1}.' -f $dnsHostname, $instanceId) -severity 'INFO'
 }
+# set fqdn
+if ($setFqdn) {
+  if (Test-Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\NV Domain") {
+    $currentDomain = (Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\" -Name "NV Domain")."NV Domain"
+  } elseif (Test-Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Domain") {
+    $currentDomain = (Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\" -Name "Domain")."Domain"
+  } else {
+    $currentDomain = $env:USERDOMAIN
+  }
+  $domain = ('{0}.{1}.mozilla.com' -f $workerType, $dnsRegion)
+  if (-not ($currentDomain -ieq $domain)) {
+    [Environment]::SetEnvironmentVariable("USERDOMAIN", "$domain", "Machine")
+    $env:USERDOMAIN = $domain
+    Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\' -Name 'Domain' -Value "$domain"
+    Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\' -Name 'NV Domain' -Value "$domain"
+    Write-Log -message ('domain set to: {0}' -f $domain) -severity 'INFO'
+  }
+}
+
 
 if ($rebootReasons.length) {
   if ($rebootReasons[0] -ne 'powershell upgraded') {
