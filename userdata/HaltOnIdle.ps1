@@ -57,6 +57,25 @@ function Is-Running {
   return $predicate
 }
 
+function Is-Terminating {
+  try {
+    $response = (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/meta-data/spot/termination-time' -UseBasicParsing).Content
+  }
+  catch {
+    $response = $_.Exception.Message
+  }
+  if (-not ($response.Contains('(404)'))) {
+    Write-Log -message ('{0} :: spot termination notice received: {1}.' -f $($MyInvocation.MyCommand.Name), $response) -severity 'WARN'
+    return $true
+  } else {
+    Write-Log -message ('{0} :: spot termination notice not detected.' -f $($MyInvocation.MyCommand.Name), $proc) -severity 'DEBUG'
+    return $false
+  }
+}
+
+if (Is-Terminating) {
+  exit
+}
 if (-not (Is-Running -proc 'generic-worker' -predicate (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -gt 0))) {
   if (-not (Is-Running -proc 'OpenCloudConfig' -predicate (Test-Path -Path 'C:\dsc\in-progress.lock' -ErrorAction SilentlyContinue))) {
     $uptime = (Get-Uptime)
