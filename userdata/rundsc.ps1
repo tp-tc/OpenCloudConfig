@@ -78,6 +78,7 @@ function Remove-LegacyStuff {
       ('{0}\slave' -f $env:SystemDrive),
       ('{0}\sys-scripts' -f $env:SystemDrive),
       ('{0}\System32\Configuration\Current.mof' -f $env:SystemRoot),
+      ('{0}\System32\Tasks\runner' -f $env:SystemRoot),
       ('{0}\timeset.bat' -f $env:SystemDrive),
       ('{0}\updateservice' -f $env:SystemDrive),
       ('{0}\Users\Administrator\Desktop\TESTER RUNNER' -f $env:SystemDrive),
@@ -237,33 +238,20 @@ function Map-DriveLetters {
 }
 function Set-Credentials {
   param (
-    [string] $userdata,
-    [switch] $root
+    [string] $username,
+    [string] $password,
+    [switch] $setautologon
   )
-  if ($userdata) {
-    if ($root) {
-      try {
-        $password = [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value
-        if ($password) {
-          & net @('user', 'root', $password)
-          Write-Log -message ('{0} :: credentials set for root.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-        }
-      }
-      catch {
-        Write-Log -message ('{0} :: failed to set credentials for root. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
-      }
+  try {
+    & net @('user', $username, $password)
+    Write-Log -message ('{0} :: credentials set for user: {1}.' -f $($MyInvocation.MyCommand.Name), $username) -severity 'INFO'
+    if ($setautologon) {
+      Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Type 'String' -Name 'DefaultPassword' -Value $password
+      Write-Log -message ('{0} :: autologon set for user: {1}.' -f $($MyInvocation.MyCommand.Name), $username) -severity 'INFO'
     }
-    try {
-      $password = [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value
-      if ($password) {
-        & net @('user', 'GenericWorker', $password)
-        Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Type 'String' -Name 'DefaultPassword' -Value $password
-        Write-Log -message ('{0} :: credentials set for GenericWorker.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-      }
-    }
-    catch {
-      Write-Log -message ('{0} :: failed to set credentials for GenericWorker. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
-    }
+  }
+  catch {
+    Write-Log -message ('{0} :: failed to set credentials for user: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $username, $_.Exception.Message) -severity 'ERROR'
   }
 }
 
@@ -309,7 +297,8 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     $setFqdn = $true
     if (-not ($isWorker)) {
       Remove-LegacyStuff -logFile $logFile
-      Set-Credentials -userdata $userdata -root
+      Set-Credentials -username 'root' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
+      Set-Credentials -username 'GenericWorker' -password ('{0}' -f [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value) -setautologon
     }
     Map-DriveLetters
   }
@@ -318,7 +307,8 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     $setFqdn = $true
     if (-not ($isWorker)) {
       Remove-LegacyStuff -logFile $logFile
-      Set-Credentials -userdata $userdata -root
+      Set-Credentials -username 'root' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
+      Set-Credentials -username 'GenericWorker' -password ('{0}' -f [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value) -setautologon
     }
     Map-DriveLetters
   }
