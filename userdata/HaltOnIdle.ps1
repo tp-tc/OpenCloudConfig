@@ -76,6 +76,11 @@ function Is-Terminating {
 if (Is-Terminating) {
   exit
 }
+if (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue) {
+  Write-Log -message 'drive z: exists' -severity 'DEBUG'
+} else {
+  Write-Log -message 'drive z: does not exist' -severity 'DEBUG'
+}
 if (-not (Is-Running -proc 'generic-worker' -predicate (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -gt 0))) {
   if (-not (Is-Running -proc 'OpenCloudConfig' -predicate (Test-Path -Path 'C:\dsc\in-progress.lock' -ErrorAction SilentlyContinue))) {
     $uptime = (Get-Uptime)
