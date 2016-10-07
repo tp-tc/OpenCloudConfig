@@ -53,7 +53,8 @@ Configuration DynamicConfig {
 
   $supportingModules = @(
     'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/OCC-Validate.psm1',
-    'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/OCC-Archive.psm1'
+    'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/OCC-Archive.psm1',
+    'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/OCC-Log.psm1'
   )
   Script InstallSupportingModules {
     GetScript = "@{ Script = InstallSupportingModules }"
