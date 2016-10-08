@@ -48,7 +48,7 @@ function Run-RemoteDesiredStateConfig {
   Unblock-File -Path $target
   . $target
   $mof = ('{0}\{1}' -f $env:Temp, $config)
-  Invoke-Expression "$config -workerType $workerType -OutputPath $mof"
+  Invoke-Expression "$config -OutputPath $mof -Parameters @{'workerType'='$workerType'}"
   Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
 }
 function Remove-LegacyStuff {
