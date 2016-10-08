@@ -320,6 +320,230 @@
       "Target": "Machine"
     },
     {
+      "ComponentName": "pip_upgrade_pip",
+      "ComponentType": "CommandRun",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        }
+      ],
+      "Command": "C:\\mozilla-build\\python\\python.exe",
+      "Arguments": [
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        "pip==8.1.2"
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "C:\\mozilla-build\\python\\python.exe",
+            "Arguments": [
+              "-m",
+              "pip",
+              "show",
+              "pip"
+            ],
+            "Match": "Version: 8.1.2"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "pip_upgrade_setuptools",
+      "ComponentType": "CommandRun",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "pip_upgrade_pip"
+        }
+      ],
+      "Command": "C:\\mozilla-build\\python\\python.exe",
+      "Arguments": [
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        "setuptools==20.7.0"
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "C:\\mozilla-build\\python\\python.exe",
+            "Arguments": [
+              "-m",
+              "pip",
+              "show",
+              "setuptools"
+            ],
+            "Match": "Version: 20.7.0"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "pip_upgrade_virtualenv",
+      "ComponentType": "CommandRun",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "pip_upgrade_pip"
+        }
+      ],
+      "Command": "C:\\mozilla-build\\python\\python.exe",
+      "Arguments": [
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        "virtualenv==15.0.1"
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "C:\\mozilla-build\\python\\python.exe",
+            "Arguments": [
+              "-m",
+              "pip",
+              "show",
+              "virtualenv"
+            ],
+            "Match": "Version: 15.0.1"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "pip_upgrade_wheel",
+      "ComponentType": "CommandRun",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "pip_upgrade_pip"
+        }
+      ],
+      "Command": "C:\\mozilla-build\\python\\python.exe",
+      "Arguments": [
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        "wheel==0.29.0"
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "C:\\mozilla-build\\python\\python.exe",
+            "Arguments": [
+              "-m",
+              "pip",
+              "show",
+              "wheel"
+            ],
+            "Match": "Version: 0.29.0"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "pip_upgrade_pypiwin32",
+      "ComponentType": "CommandRun",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "pip_upgrade_pip"
+        }
+      ],
+      "Command": "C:\\mozilla-build\\python\\python.exe",
+      "Arguments": [
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        "pypiwin32==219"
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "C:\\mozilla-build\\python\\python.exe",
+            "Arguments": [
+              "-m",
+              "pip",
+              "show",
+              "pypiwin32"
+            ],
+            "Match": "Version: 219"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "pip_upgrade_requests",
+      "ComponentType": "CommandRun",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "pip_upgrade_pip"
+        }
+      ],
+      "Command": "C:\\mozilla-build\\python\\python.exe",
+      "Arguments": [
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        "requests==2.8.1"
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "C:\\mozilla-build\\python\\python.exe",
+            "Arguments": [
+              "-m",
+              "pip",
+              "show",
+              "requests"
+            ],
+            "Match": "Version: 2.8.1"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "pip_upgrade_psutil",
+      "ComponentType": "CommandRun",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "pip_upgrade_pip"
+        }
+      ],
+      "Command": "C:\\mozilla-build\\python\\python.exe",
+      "Arguments": [
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        "psutil==4.1.0"
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "C:\\mozilla-build\\python\\python.exe",
+            "Arguments": [
+              "-m",
+              "pip",
+              "show",
+              "psutil"
+            ],
+            "Match": "Version: 4.1.0"
+          }
+        ]
+      }
+    },
+    {
       "ComponentName": "env_PATH",
       "ComponentType": "EnvironmentVariableUniquePrepend",
       "DependsOn": [
@@ -391,7 +615,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v6.0.0/generic-worker-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v6.0.1/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
@@ -461,7 +685,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 6.0.0"
+            "Match": "generic-worker 6.0.1"
           }
         ]
       }
