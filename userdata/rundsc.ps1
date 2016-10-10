@@ -34,8 +34,7 @@ function Write-Log {
 }
 function Run-RemoteDesiredStateConfig {
   param (
-    [string] $url,
-    [string] $workerType
+    [string] $url
   )
   # terminate any running dsc process
   $dscpid = (Get-WmiObject msft_providers | ? {$_.provider -like 'dsccore'} | Select-Object -ExpandProperty HostProcessIdentifier)
@@ -51,9 +50,9 @@ function Run-RemoteDesiredStateConfig {
   Unblock-File -Path $target
   . $target
   $mof = ('{0}\{1}' -f $env:Temp, $config)
-  Remove-Item $mof -confirm:$false -force -ErrorAction SilentlyContinue
-  Invoke-Expression "$config -OutputPath $mof -Parameters @{'workerType'='$workerType'}"
-  Write-Log -message ('{0} :: compiled mof {1}, from {2}, for worker type: {3}.' -f $($MyInvocation.MyCommand.Name), $mof, $config, $workerType) -severity 'DEBUG'
+  Remove-Item $mof -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+  Invoke-Expression "$config -OutputPath $mof"
+  Write-Log -message ('{0} :: compiled mof {1}, from {2}.' -f $($MyInvocation.MyCommand.Name), $mof, $config) -severity 'DEBUG'
   Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
 }
 function Remove-LegacyStuff {

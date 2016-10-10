@@ -5,9 +5,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
 
 Configuration DynamicConfig {
-  param (
-    [string] $workerType = $null
-  )
   Import-DscResource -ModuleName PSDesiredStateConfiguration
 
   Script GpgKeyImport {
@@ -76,6 +73,12 @@ Configuration DynamicConfig {
     TestScript = { return $false }
   }
 
+  $userdata = (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/user-data' -UseBasicParsing).RawContent
+  if ($userdata.StartsWith('{')) {
+    $workerType = ($userdata | ConvertFrom-Json).workerType
+  } else {
+    $workerType = ((Invoke-WebRequest -Uri 'http://169.254.169.254/latest/meta-data/public-keys' -UseBasicParsing).Content).Replace('0=mozilla-taskcluster-worker-', '')
+  }
   if ($workerType) {
     $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/{0}.json?{1}' -f $workerType, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
   } else {
