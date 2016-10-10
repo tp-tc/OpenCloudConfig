@@ -298,7 +298,6 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     if (-not ($isWorker)) {
       Remove-LegacyStuff -logFile $logFile
       Set-Credentials -username 'root' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
-      Set-Credentials -username 'GenericWorker' -password ('{0}' -f [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value) -setautologon
     }
     Map-DriveLetters
   }
@@ -308,7 +307,6 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     if (-not ($isWorker)) {
       Remove-LegacyStuff -logFile $logFile
       Set-Credentials -username 'root' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
-      Set-Credentials -username 'GenericWorker' -password ('{0}' -f [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value) -setautologon
     }
     Map-DriveLetters
   }
@@ -403,6 +401,7 @@ if ($rebootReasons.length) {
   Start-Transcript -Path $logFile -Append
   switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     'Microsoft Windows 7*' {
+      Map-DriveLetters
       # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
       ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) }
       # this setting persists only for the current session
@@ -418,6 +417,14 @@ if ($rebootReasons.length) {
     'Microsoft Windows 7*' {
       # set network interface to public
       ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(0) }
+      if (-not ($isWorker)) {
+        Set-Credentials -username 'GenericWorker' -password ('{0}' -f [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value) -setautologon
+      }
+    }
+    'Microsoft Windows 10*' {
+      if (-not ($isWorker)) {
+        Set-Credentials -username 'GenericWorker' -password ('{0}' -f [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value) -setautologon
+      }
     }
   }
 
@@ -449,7 +456,7 @@ if ($rebootReasons.length) {
     # archive dsc logs
     Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
     New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { $_.FullName })
-    Write-Log -message 'log archive created.' -severity 'INFO'
+    Write-Log -message ('log archive {0} created.' -f $logFile.Replace('.log', '.zip')) -severity 'INFO'
     Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { Remove-Item -Path $_.FullName -Force }
 
     if ((-not ($isWorker)) -and (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
