@@ -41,14 +41,19 @@ function Run-RemoteDesiredStateConfig {
   $dscpid = (Get-WmiObject msft_providers | ? {$_.provider -like 'dsccore'} | Select-Object -ExpandProperty HostProcessIdentifier)
   if ($dscpid) {
     Get-Process -Id $dscpid | Stop-Process -f
+    Write-Log -message ('{0} :: dsc process with pid {1}, stopped.' -f $($MyInvocation.MyCommand.Name), $dscpid) -severity 'DEBUG'
   }
   $config = [IO.Path]::GetFileNameWithoutExtension($url)
   $target = ('{0}\{1}.ps1' -f $env:Temp, $config)
+  Remove-Item $target -confirm:$false -force -ErrorAction SilentlyContinue
   (New-Object Net.WebClient).DownloadFile(('{0}?{1}' -f $url, [Guid]::NewGuid()), $target)
+  Write-Log -message ('{0} :: downloaded {1}, from {2}.' -f $($MyInvocation.MyCommand.Name), $target, $url) -severity 'DEBUG'
   Unblock-File -Path $target
   . $target
   $mof = ('{0}\{1}' -f $env:Temp, $config)
+  Remove-Item $mof -confirm:$false -force -ErrorAction SilentlyContinue
   Invoke-Expression "$config -OutputPath $mof -Parameters @{'workerType'='$workerType'}"
+  Write-Log -message ('{0} :: compiled mof {1}, from {2}, for worker type: {3}.' -f $($MyInvocation.MyCommand.Name), $mof, $config, $workerType) -severity 'DEBUG'
   Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
 }
 function Remove-LegacyStuff {

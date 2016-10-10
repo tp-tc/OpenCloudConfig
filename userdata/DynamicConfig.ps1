@@ -53,8 +53,7 @@ Configuration DynamicConfig {
 
   $supportingModules = @(
     'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/OCC-Validate.psm1',
-    'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/OCC-Archive.psm1',
-    'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/OCC-Log.psm1'
+    'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/OCC-Archive.psm1'
   )
   Script InstallSupportingModules {
     GetScript = "@{ Script = InstallSupportingModules }"
@@ -80,12 +79,10 @@ Configuration DynamicConfig {
   if ($workerType) {
     $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/{0}.json?{1}' -f $workerType, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
   } else {
-    switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+    $os = (Get-WmiObject -class Win32_OperatingSystem).Caption
+    switch -wildcard ($os) {
       'Microsoft Windows Server 2012*' {
         $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/win2012.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
-      }
-      'Microsoft Windows Server 2008*' {
-        $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/win2008.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
       }
       'Microsoft Windows 10*' {
         $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/win10.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
