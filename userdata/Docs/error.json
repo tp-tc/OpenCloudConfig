@@ -5,7 +5,7 @@
       "comment": "This error shows up in Firefox build logs during the tooltool artifact download step."
     },
     "diagnosis": {
-      "summary": "In Mozilla Firefox Windows builds, this error occurs when the loacal system python (or the virtual environment where python is running) does not have pypiwin32 installed."
+      "summary": "In Mozilla Firefox Windows builds, this error occurs when the local system python (or the virtual environment where python is running) does not have pypiwin32 installed."
     },
     "resolution": {
       "instructions": [

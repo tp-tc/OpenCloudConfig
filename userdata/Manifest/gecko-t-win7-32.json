@@ -483,6 +483,41 @@
       ],
       "Source": "http://hg.mozilla.org/mozilla-central/raw-file/aa3e7ff72452/testing/docker/desktop-test/dot-files/config/pip/pip.conf",
       "Target": "C:\\ProgramData\\pip\\pip.ini"
+    },
+    {
+      "ComponentName": "virtualenv_support",
+      "ComponentType": "DirectoryCreate",
+      "Path": "C:\\mozilla-build\\python\\Lib\\site-packages\\virtualenv_support",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        }
+      ]
+    },
+    {
+      "ComponentName": "virtualenv_support_pywin32",
+      "ComponentType": "FileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "virtualenv_support"
+        }
+      ],
+      "Source": "https://pypi.python.org/packages/cp27/p/pypiwin32/pypiwin32-219-cp27-none-win32.whl#md5=a8b0c1b608c1afeb18cd38d759ee5e29",
+      "Target": "C:\\mozilla-build\\python\\Lib\\site-packages\\virtualenv_support\\pypiwin32-219-cp27-none-win32.whl"
+    },
+    {
+      "ComponentName": "virtualenv_support_pywin32_amd64",
+      "ComponentType": "FileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "virtualenv_support"
+        }
+      ],
+      "Source": "https://pypi.python.org/packages/cp27/p/pypiwin32/pypiwin32-219-cp27-none-win_amd64.whl#md5=d7bafcf3cce72c3ce9fdd633a262c335",
+      "Target": "C:\\mozilla-build\\python\\Lib\\site-packages\\virtualenv_support\\pypiwin32-219-cp27-none-win_amd64.whl"
     }
   ]
 }
