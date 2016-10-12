@@ -421,15 +421,10 @@ if ($rebootReasons.length) {
     'Microsoft Windows 7*' {
       # set network interface to public
       ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(0) }
-      if (-not ($isWorker)) {
-        Set-Credentials -username 'GenericWorker' -password ('{0}' -f [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value) -setautologon
-      }
     }
-    'Microsoft Windows 10*' {
-      if (-not ($isWorker)) {
-        Set-Credentials -username 'GenericWorker' -password ('{0}' -f [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value) -setautologon
-      }
-    }
+  }
+  if (-not ($isWorker)) {
+    Set-Credentials -username 'GenericWorker' -password ('{0}' -f [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value) -setautologon
   }
 
   # create a scheduled task to run dsc at startup
