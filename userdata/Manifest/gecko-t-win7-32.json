@@ -518,6 +518,18 @@
       ],
       "Source": "https://pypi.python.org/packages/cp27/p/pypiwin32/pypiwin32-219-cp27-none-win_amd64.whl#md5=d7bafcf3cce72c3ce9fdd633a262c335",
       "Target": "C:\\mozilla-build\\python\\Lib\\site-packages\\virtualenv_support\\pypiwin32-219-cp27-none-win_amd64.whl"
+    },
+    {
+      "ComponentName": "virtualenv_support_mozsystemmonitor",
+      "ComponentType": "FileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "virtualenv_support"
+        }
+      ],
+      "Source": "https://pypi.python.org/packages/34/2d/c3ad362b986914a3b6cc8fc91defe8f23f213319b444e14a6e76a71a45f6/mozsystemmonitor-0.3.zip#md5=660f1dce77bf9cffddf9171f653d4570",
+      "Target": "C:\\mozilla-build\\python\\Lib\\site-packages\\virtualenv_support\\mozsystemmonitor-0.3.zip"
     }
   ]
 }
