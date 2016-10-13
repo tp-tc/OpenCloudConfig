@@ -521,16 +521,28 @@
       "Target": "C:\\mozilla-build\\python\\Lib\\site-packages\\virtualenv_support\\pypiwin32-219-cp27-none-win_amd64.whl"
     },
     {
-      "ComponentName": "virtualenv_support_mozsystemmonitor",
-      "ComponentType": "FileDownload",
+      "ComponentName": "HgShared",
+      "ComponentType": "DirectoryCreate",
+      "Comment": "allows builds to use `hg robustcheckout ...`",
+      "Comment": "required by hg caches",
+      "Path": "z:\\hg-shared"
+    },
+    {
+      "ComponentName": "HgSharedAccessRights",
+      "ComponentType": "CommandRun",
+      "Comment": "allows builds to use `hg robustcheckout ...`",
+      "Command": "icacls.exe",
+      "Arguments": [
+        "z:\\hg-shared",
+        "/grant",
+        "Everyone:(OI)(CI)F"
+      ],
       "DependsOn": [
         {
           "ComponentType": "DirectoryCreate",
-          "ComponentName": "virtualenv_support"
+          "ComponentName": "HgShared"
         }
-      ],
-      "Source": "https://pypi.python.org/packages/34/2d/c3ad362b986914a3b6cc8fc91defe8f23f213319b444e14a6e76a71a45f6/mozsystemmonitor-0.3.zip#md5=660f1dce77bf9cffddf9171f653d4570",
-      "Target": "C:\\mozilla-build\\python\\Lib\\site-packages\\virtualenv_support\\mozsystemmonitor-0.3.zip"
+      ]
     }
   ]
 }
