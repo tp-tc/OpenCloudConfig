@@ -258,6 +258,7 @@
         "/SP-",
         "/VERYSILENT",
         "/NORESTART",
+        "/DIR=expand:{pf}\\Mercurial",
         "/LOG=\"C:\\log\\Mercurial-3.9.1-x64.exe.install.log\""
       ],
       "Validate": {
