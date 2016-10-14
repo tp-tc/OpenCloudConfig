@@ -81,7 +81,9 @@ function Remove-LegacyStuff {
       ('{0}\quickedit' -f $env:SystemDrive),
       ('{0}\slave' -f $env:SystemDrive),
       ('{0}\sys-scripts' -f $env:SystemDrive),
+      ('{0}\System32\Configuration\backup.mof' -f $env:SystemRoot),
       ('{0}\System32\Configuration\Current.mof' -f $env:SystemRoot),
+      ('{0}\System32\Configuration\Previous.mof' -f $env:SystemRoot),
       ('{0}\System32\Tasks\runner' -f $env:SystemRoot),
       ('{0}\timeset.bat' -f $env:SystemDrive),
       ('{0}\updateservice' -f $env:SystemDrive),
@@ -493,8 +495,12 @@ if ($rebootReasons.length) {
               catch {
                 Write-Log -message ('failed to delete scheduled task: {0}. {1}' -f $scheduledTask, $_.Exception.Message) -severity 'ERROR'
               }
-              Remove-Item -Path ('{0}\System32\Configuration\Current.mof' -f $env:SystemRoot) -confirm:$false -force
-              Write-Log -message ('{0}\System32\Configuration\Current.mof deleted' -f $env:SystemRoot) -severity 'INFO'
+              foreach ($mof in @('Previous', 'backup', 'Current')) {
+                if (Test-Path -Path ('{0}\System32\Configuration\{1}.mof' -f $env:SystemRoot, $mof) -ErrorAction SilentlyContinue) {
+                  Remove-Item -Path ('{0}\System32\Configuration\{1}.mof' -f $env:SystemRoot, $mof) -confirm:$false -force
+                  Write-Log -message ('{0}\System32\Configuration\{1}.mof deleted' -f $env:SystemRoot, $mof) -severity 'INFO'
+                }
+              }
               Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
               Write-Log -message 'C:\dsc\rundsc.ps1 deleted' -severity 'INFO'
               Remove-Item -Path $lock -force
