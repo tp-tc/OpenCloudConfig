@@ -327,10 +327,15 @@
         {
           "ComponentType": "ExeInstall",
           "ComponentName": "MozillaBuildSetup"
+        },
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "Mercurial"
         }
       ],
       "Name": "PATH",
       "Values": [
+        "C:\\Program Files\\Mercurial",
         "C:\\mozilla-build\\7zip",
         "C:\\mozilla-build\\info-zip",
         "C:\\mozilla-build\\kdiff3",
@@ -344,8 +349,7 @@
         "C:\\mozilla-build\\python\\Scripts",
         "C:\\mozilla-build\\upx391w",
         "C:\\mozilla-build\\wget",
-        "C:\\mozilla-build\\yasm",
-        "C:\\Program Files\\Mercurial"
+        "C:\\mozilla-build\\yasm"
       ],
       "Target": "Machine"
     },
