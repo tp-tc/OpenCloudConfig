@@ -73,11 +73,13 @@ Configuration DynamicConfig {
     TestScript = { return $false }
   }
 
-  $userdata = (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/user-data' -UseBasicParsing).RawContent
-  if ($userdata.StartsWith('{')) {
-    $workerType = ($userdata | ConvertFrom-Json).workerType
+  $instancekey = (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/meta-data/public-keys' -UseBasicParsing).Content
+  if ($instancekey.StartsWith('0=aws-provisioner-v1-managed:')) {
+    # provisioned worker
+    $workerType = $instancekey.Split(':')[1]
   } else {
-    $workerType = ((Invoke-WebRequest -Uri 'http://169.254.169.254/latest/meta-data/public-keys' -UseBasicParsing).Content).Replace('0=mozilla-taskcluster-worker-', '')
+    # ami creation instance
+    $workerType = $instancekey.Replace('0=mozilla-taskcluster-worker-', '')
   }
   if ($workerType) {
     $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/{0}.json?{1}' -f $workerType, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
