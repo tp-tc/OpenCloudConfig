@@ -1051,7 +1051,6 @@
       "ComponentName": "HgShared",
       "ComponentType": "DirectoryCreate",
       "Comment": "allows builds to use `hg robustcheckout ...`",
-      "Comment": "required by hg caches",
       "Path": "y:\\hg-shared"
     },
     {
@@ -1075,7 +1074,6 @@
       "ComponentName": "LegacyHgShared",
       "ComponentType": "DirectoryCreate",
       "Comment": "allows builds to use `hg share ...`",
-      "Comment": "required by hg caches",
       "Path": "c:\\builds\\hg-shared"
     },
     {

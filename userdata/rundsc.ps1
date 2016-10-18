@@ -36,12 +36,7 @@ function Run-RemoteDesiredStateConfig {
   param (
     [string] $url
   )
-  # terminate any running dsc process
-  $dscpid = (Get-WmiObject msft_providers | ? {$_.provider -like 'dsccore'} | Select-Object -ExpandProperty HostProcessIdentifier)
-  if ($dscpid) {
-    Get-Process -Id $dscpid | Stop-Process -f
-    Write-Log -message ('{0} :: dsc process with pid {1}, stopped.' -f $($MyInvocation.MyCommand.Name), $dscpid) -severity 'DEBUG'
-  }
+  Stop-DesiredStateConfig
   $config = [IO.Path]::GetFileNameWithoutExtension($url)
   $target = ('{0}\{1}.ps1' -f $env:Temp, $config)
   Remove-Item $target -confirm:$false -force -ErrorAction SilentlyContinue
@@ -55,6 +50,33 @@ function Run-RemoteDesiredStateConfig {
   Write-Log -message ('{0} :: compiled mof {1}, from {2}.' -f $($MyInvocation.MyCommand.Name), $mof, $config) -severity 'DEBUG'
   Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
 }
+function Stop-DesiredStateConfig {
+  # terminate any running dsc process
+  $dscpid = (Get-WmiObject msft_providers | ? {$_.provider -like 'dsccore'} | Select-Object -ExpandProperty HostProcessIdentifier)
+  if ($dscpid) {
+    Get-Process -Id $dscpid | Stop-Process -f
+    Write-Log -message ('{0} :: dsc process with pid {1}, stopped.' -f $($MyInvocation.MyCommand.Name), $dscpid) -severity 'DEBUG'
+  }
+}
+function Remove-DesiredStateConfigTriggers {
+  try {
+    $scheduledTask = 'RunDesiredStateConfigurationAtStartup'
+    Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
+    Write-Log -message 'scheduled task: RunDesiredStateConfigurationAtStartup, deleted.' -severity 'INFO'
+  }
+  catch {
+    Write-Log -message ('failed to delete scheduled task: {0}. {1}' -f $scheduledTask, $_.Exception.Message) -severity 'ERROR'
+  }
+  foreach ($mof in @('Previous', 'backup', 'Current')) {
+    if (Test-Path -Path ('{0}\System32\Configuration\{1}.mof' -f $env:SystemRoot, $mof) -ErrorAction SilentlyContinue) {
+      Remove-Item -Path ('{0}\System32\Configuration\{1}.mof' -f $env:SystemRoot, $mof) -confirm:$false -force
+      Write-Log -message ('{0}\System32\Configuration\{1}.mof deleted' -f $env:SystemRoot, $mof) -severity 'INFO'
+    }
+  }
+  Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
+  Write-Log -message 'C:\dsc\rundsc.ps1 deleted' -severity 'INFO'
+}
+
 function Remove-LegacyStuff {
   param (
     [string] $logFile,
@@ -299,6 +321,7 @@ Write-Log -message ('isWorker: {0}.' -f $isWorker) -severity 'INFO'
 # if importing releng amis, do a little housekeeping
 switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
   'Microsoft Windows 10*' {
+    $runDscOnWorker = $false
     $renameInstance = $true
     $setFqdn = $true
     if (-not ($isWorker)) {
@@ -308,6 +331,7 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     Map-DriveLetters
   }
   'Microsoft Windows 7*' {
+    $runDscOnWorker = $false
     $renameInstance = $true
     $setFqdn = $true
     if (-not ($isWorker)) {
@@ -317,6 +341,7 @@ switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
     Map-DriveLetters
   }
   default {
+    $runDscOnWorker = $true
     $renameInstance = $true
     $setFqdn = $true
   }
@@ -404,41 +429,6 @@ if ($rebootReasons.length) {
     & shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
   }
 } else {
-  Start-Transcript -Path $logFile -Append
-  switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
-    'Microsoft Windows 7*' {
-      Map-DriveLetters
-      # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
-      ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) }
-      # this setting persists only for the current session
-      Enable-PSRemoting -Force
-    }
-    default {
-      # this setting persists only for the current session
-      Enable-PSRemoting -SkipNetworkProfileCheck -Force
-    }
-  }
-  Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/DynamicConfig.ps1' -workerType $workerType
-  switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
-    'Microsoft Windows 7*' {
-      # set network interface to public
-      ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(0) }
-    }
-  }
-  if (-not ($isWorker)) {
-    Set-Credentials -username 'GenericWorker' -password ('{0}' -f [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value) -setautologon
-  }
-
-  # create a scheduled task to run dsc at startup
-  if (Test-Path -Path 'C:\dsc\rundsc.ps1' -ErrorAction SilentlyContinue) {
-    Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
-    Write-Log -message 'C:\dsc\rundsc.ps1 deleted.' -severity 'INFO'
-  }
-  (New-Object Net.WebClient).DownloadFile(('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/rundsc.ps1?{0}' -f [Guid]::NewGuid()), 'C:\dsc\rundsc.ps1')
-  Write-Log -message 'C:\dsc\rundsc.ps1 downloaded.' -severity 'INFO'
-  & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/sc', 'onstart', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', 'powershell.exe -File C:\dsc\rundsc.ps1', '/f')
-  Write-Log -message 'scheduled task: RunDesiredStateConfigurationAtStartup, created.' -severity 'INFO'
-
   # create a scheduled task to run HaltOnIdle continuously
   if (Test-Path -Path 'C:\dsc\HaltOnIdle.ps1' -ErrorAction SilentlyContinue) {
     Remove-Item -Path 'C:\dsc\HaltOnIdle.ps1' -confirm:$false -force
@@ -449,77 +439,88 @@ if ($rebootReasons.length) {
   & schtasks @('/create', '/tn', 'HaltOnIdle', '/sc', 'minute', '/mo', '2', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', 'powershell.exe -File C:\dsc\HaltOnIdle.ps1', '/f')
   Write-Log -message 'scheduled task: HaltOnIdle, created.' -severity 'INFO'
 
-  Stop-Transcript
-  if (((Get-Content $logFile) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
-    Remove-Item -Path $lock -force
-    & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
-  } else {
-    # archive dsc logs
-    Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
-    New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { $_.FullName })
-    Write-Log -message ('log archive {0} created.' -f $logFile.Replace('.log', '.zip')) -severity 'INFO'
-    Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { Remove-Item -Path $_.FullName -Force }
-
-    if ((-not ($isWorker)) -and (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
-      Remove-Item -Path $lock -force
-      & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
-    } elseif ($isWorker) {
-      if (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) { # if the Z: drive isn't mapped, map it.
+  if (($runDscOnWorker)  -or (-not ($isWorker))) {
+    $transcript = ('{0}\log\{1}.dsc-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    Start-Transcript -Path $transcript -Append
+    switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+      'Microsoft Windows 7*' {
         Map-DriveLetters
+        # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
+        ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) }
+        # this setting persists only for the current session
+        Enable-PSRemoting -Force
       }
-      if (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
-        Write-Log -message 'generic-worker installation detected.' -severity 'INFO'
-        New-Item 'C:\dsc\task-claim-state.valid' -type file -force
-        # give g-w 3 minutes to fire up, if it doesn't, boot loop.
-        $timeout = New-Timespan -Minutes 3
-        $timer = [Diagnostics.Stopwatch]::StartNew()
-        $waitlogged = $false
-        while (($timer.Elapsed -lt $timeout) -and (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0)) {
-          if (!$waitlogged) {
-            Write-Log -message 'waiting for generic-worker process to start.' -severity 'INFO'
-            $waitlogged = $true
-          }
+      default {
+        # this setting persists only for the current session
+        Enable-PSRemoting -SkipNetworkProfileCheck -Force
+      }
+    }
+    Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/DynamicConfig.ps1' -workerType $workerType
+    switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+      'Microsoft Windows 7*' {
+        # set network interface to public
+        ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(0) }
+      }
+    }
+    Stop-Transcript
+    # create a scheduled task to run dsc at startup
+    if (Test-Path -Path 'C:\dsc\rundsc.ps1' -ErrorAction SilentlyContinue) {
+      Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
+      Write-Log -message 'C:\dsc\rundsc.ps1 deleted.' -severity 'INFO'
+    }
+    (New-Object Net.WebClient).DownloadFile(('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/rundsc.ps1?{0}' -f [Guid]::NewGuid()), 'C:\dsc\rundsc.ps1')
+    Write-Log -message 'C:\dsc\rundsc.ps1 downloaded.' -severity 'INFO'
+    & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/sc', 'onstart', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', 'powershell.exe -File C:\dsc\rundsc.ps1', '/f')
+    Write-Log -message 'scheduled task: RunDesiredStateConfigurationAtStartup, created.' -severity 'INFO'
+    if (((Get-Content $transcript) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
+      Remove-Item -Path $lock -force
+      & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+    }
+  } else {
+    Stop-DesiredStateConfig
+    Remove-DesiredStateConfigTriggers
+  }
+
+  if (-not ($isWorker)) {
+    Set-Credentials -username 'GenericWorker' -password ('{0}' -f [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value) -setautologon
+  }
+
+  # archive dsc logs
+  Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
+  New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { $_.FullName })
+  Write-Log -message ('log archive {0} created.' -f $logFile.Replace('.log', '.zip')) -severity 'INFO'
+  Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { Remove-Item -Path $_.FullName -Force }
+
+  if ((-not ($isWorker)) -and (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
+    Remove-Item -Path $lock -force
+    & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+  } elseif ($isWorker) {
+    if (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) { # if the Z: drive isn't mapped, map it.
+      Map-DriveLetters
+    }
+    if (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
+      Write-Log -message 'generic-worker installation detected.' -severity 'INFO'
+      New-Item 'C:\dsc\task-claim-state.valid' -type file -force
+      # give g-w 3 minutes to fire up, if it doesn't, boot loop.
+      $timeout = New-Timespan -Minutes 3
+      $timer = [Diagnostics.Stopwatch]::StartNew()
+      $waitlogged = $false
+      while (($timer.Elapsed -lt $timeout) -and (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0)) {
+        if (!$waitlogged) {
+          Write-Log -message 'waiting for generic-worker process to start.' -severity 'INFO'
+          $waitlogged = $true
         }
-        if ((@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0)) {
-          Write-Log -message 'no generic-worker process detected.' -severity 'INFO'
-          & format @('Z:', '/fs:ntfs', '/v:""', '/q', '/y')
-          Write-Log -message 'Z: drive formatted.' -severity 'INFO'
-          #& net @('user', 'GenericWorker', (Get-ItemProperty -path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -name 'DefaultPassword').DefaultPassword)
-          Remove-Item -Path $lock -force
-          & shutdown @('-r', '-t', '0', '-c', 'reboot to rouse the generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
-        } else {
-          $timer.Stop()
-          Write-Log -message ('generic-worker running process detected {0} ms after task-claim-state.valid flag set.' -f $timer.ElapsedMilliseconds) -severity 'INFO'
-          switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
-            'Microsoft Windows Server 2012*' {
-              # since builds are not susceptible to performance penalties from bacground occ processes, continue running to enable faster maintenance responses
-              Write-Log -message 'OCC will continue background dsc maintenance.' -severity 'DEBUG'
-            }
-            default {
-              # since tests are susceptible to performance penalties from bacground occ processes, kill userdata and dsc process triggers to prevent skewing test results
-              Write-Log -message 'OCC will now terminate. generic-worker has control.' -severity 'DEBUG'
-              try {
-                $scheduledTask = 'RunDesiredStateConfigurationAtStartup'
-                Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
-                Write-Log -message 'scheduled task: RunDesiredStateConfigurationAtStartup, deleted.' -severity 'INFO'
-              }
-              catch {
-                Write-Log -message ('failed to delete scheduled task: {0}. {1}' -f $scheduledTask, $_.Exception.Message) -severity 'ERROR'
-              }
-              foreach ($mof in @('Previous', 'backup', 'Current')) {
-                if (Test-Path -Path ('{0}\System32\Configuration\{1}.mof' -f $env:SystemRoot, $mof) -ErrorAction SilentlyContinue) {
-                  Remove-Item -Path ('{0}\System32\Configuration\{1}.mof' -f $env:SystemRoot, $mof) -confirm:$false -force
-                  Write-Log -message ('{0}\System32\Configuration\{1}.mof deleted' -f $env:SystemRoot, $mof) -severity 'INFO'
-                }
-              }
-              Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
-              Write-Log -message 'C:\dsc\rundsc.ps1 deleted' -severity 'INFO'
-              Remove-Item -Path $lock -force
-              Write-Log -message ('{0} deleted' -f $lock) -severity 'INFO'
-              exit
-            }
-          }
-        }
+      }
+      if ((@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0)) {
+        Write-Log -message 'no generic-worker process detected.' -severity 'INFO'
+        & format @('Z:', '/fs:ntfs', '/v:""', '/q', '/y')
+        Write-Log -message 'Z: drive formatted.' -severity 'INFO'
+        #& net @('user', 'GenericWorker', (Get-ItemProperty -path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -name 'DefaultPassword').DefaultPassword)
+        Remove-Item -Path $lock -force
+        & shutdown @('-r', '-t', '0', '-c', 'reboot to rouse the generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+      } else {
+        $timer.Stop()
+        Write-Log -message ('generic-worker running process detected {0} ms after task-claim-state.valid flag set.' -f $timer.ElapsedMilliseconds) -severity 'INFO'
       }
     }
   }
