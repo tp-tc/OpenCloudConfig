@@ -469,7 +469,17 @@ if ($rebootReasons.length) {
       }
       if (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
         Write-Log -message 'generic-worker installation detected.' -severity 'INFO'
-        Start-Sleep -seconds 180 # give g-w a moment to fire up, if it doesn't, boot loop.
+        New-Item 'C:\dsc\task-claim-state.valid' -type file -force
+        # give g-w 3 minutes to fire up, if it doesn't, boot loop.
+        $timeout = New-Timespan -Minutes 3
+        $timer = [Diagnostics.Stopwatch]::StartNew()
+        $waitlogged = $false
+        while (($timer.Elapsed -lt $timeout) -and (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0)) {
+          if (!$waitlogged) {
+            Write-Log -message 'waiting for generic-worker process to start.' -severity 'INFO'
+            $waitlogged = $true
+          }
+        }
         if ((@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0)) {
           Write-Log -message 'no generic-worker process detected.' -severity 'INFO'
           & format @('Z:', '/fs:ntfs', '/v:""', '/q', '/y')
@@ -478,7 +488,8 @@ if ($rebootReasons.length) {
           Remove-Item -Path $lock -force
           & shutdown @('-r', '-t', '0', '-c', 'reboot to rouse the generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
         } else {
-          Write-Log -message 'generic-worker running process detected.' -severity 'INFO'
+          $timer.Stop()
+          Write-Log -message ('generic-worker running process detected {0} ms after task-claim-state.valid flag set.' -f $timer.ElapsedMilliseconds) -severity 'INFO'
           switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
             'Microsoft Windows Server 2012*' {
               # since builds are not susceptible to performance penalties from bacground occ processes, continue running to enable faster maintenance responses
