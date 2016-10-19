@@ -318,35 +318,6 @@ try {
 }
 Write-Log -message ('isWorker: {0}.' -f $isWorker) -severity 'INFO'
 
-# if importing releng amis, do a little housekeeping
-switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
-  'Microsoft Windows 10*' {
-    $runDscOnWorker = $false
-    $renameInstance = $true
-    $setFqdn = $true
-    if (-not ($isWorker)) {
-      Remove-LegacyStuff -logFile $logFile
-      Set-Credentials -username 'root' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
-    }
-    Map-DriveLetters
-  }
-  'Microsoft Windows 7*' {
-    $runDscOnWorker = $false
-    $renameInstance = $true
-    $setFqdn = $true
-    if (-not ($isWorker)) {
-      Remove-LegacyStuff -logFile $logFile
-      Set-Credentials -username 'root' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
-    }
-    Map-DriveLetters
-  }
-  default {
-    $runDscOnWorker = $true
-    $renameInstance = $true
-    $setFqdn = $true
-  }
-}
-
 if ($isWorker) {
   $u = ($userdata | ConvertFrom-Json)
   $workerType = $u.workerType
@@ -371,6 +342,30 @@ switch -wildcard ($az) {
   }
 }
 Write-Log -message ('availabilityZone: {0}, dnsRegion: {1}.' -f $az, $dnsRegion) -severity 'INFO'
+
+# if importing releng amis, do a little housekeeping
+switch -wildcard ($workerType) {
+  'gecko-t-*' {
+    $runDscOnWorker = $false
+    $renameInstance = $true
+    $setFqdn = $true
+    if (-not ($isWorker)) {
+      Remove-LegacyStuff -logFile $logFile
+      Set-Credentials -username 'root' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
+    }
+    Map-DriveLetters
+  }
+  'gecko-1-b-*' {
+    $runDscOnWorker = $false # testing no dsc on try build workers
+    $renameInstance = $true
+    $setFqdn = $true
+  }
+  default {
+    $runDscOnWorker = $true # run dsc on l1, l2 build workers
+    $renameInstance = $true
+    $setFqdn = $true
+  }
+}
 
 # install recent powershell (required by DSC) (requires reboot)
 if ($PSVersionTable.PSVersion.Major -lt 4) {
