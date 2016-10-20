@@ -355,13 +355,8 @@ switch -wildcard ($workerType) {
     }
     Map-DriveLetters
   }
-  'gecko-1-b-*' {
-    $runDscOnWorker = $false # testing no dsc on try build workers
-    $renameInstance = $true
-    $setFqdn = $true
-  }
   default {
-    $runDscOnWorker = $true # run dsc on l1, l2 build workers
+    $runDscOnWorker = $true
     $renameInstance = $true
     $setFqdn = $true
   }
