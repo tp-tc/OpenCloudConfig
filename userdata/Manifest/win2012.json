@@ -1137,14 +1137,6 @@
           "ComponentName": "MozillaCentralCacheCreate"
         }
       ]
-    },
-    {
-      "ComponentName": "env_PYTHONUNBUFFERED",
-      "ComponentType": "EnvironmentVariableSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1305485#c29",
-      "Name": "PYTHONUNBUFFERED",
-      "Value": "1",
-      "Target": "Machine"
     }
   ]
 }
