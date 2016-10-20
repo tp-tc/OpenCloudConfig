@@ -100,3 +100,10 @@ if ([IO.Directory]::GetFiles('C:\log', '*.zip').Count -gt 5) {
   Write-Log -message 'instance appears to be boot-looping and will be halted.' -severity 'ERROR'
   & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: boot-loop detected', '-f', '-d', 'p:4:1')
 }
+
+if (Test-Path -Path 'y:\' -ErrorAction SilentlyContinue) {
+  if (-not (Test-Path -Path 'y:\hg-shared' -ErrorAction SilentlyContinue)) {
+    New-Item -Path 'y:\hg-shared' -ItemType directory -force
+  }
+  & icacls @('y:\hg-shared', '/grant', 'Everyone:(OI)(CI)F')
+}
