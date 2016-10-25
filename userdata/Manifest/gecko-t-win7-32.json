@@ -230,6 +230,36 @@
       }
     },
     {
+      "ComponentName": "reg_PythonInstallPath",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\Python\\PythonCore\\2.7\\InstallPath",
+      "ValueName": "(Default)",
+      "ValueType": "String",
+      "ValueData": "C:\\mozilla-build\\python\\",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        }
+      ]
+    },
+    {
+      "ComponentName": "reg_PythonPath",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\Python\\PythonCore\\2.7\\PythonPath",
+      "ValueName": "(Default)",
+      "ValueType": "String",
+      "ValueData": "C:\\mozilla-build\\python\\Lib;C:\\mozilla-build\\python\\DLLs;C:\\mozilla-build\\python\\Lib\\lib-tk",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        }
+      ]
+    },
+    {
       "ComponentName": "DeleteMozillaBuildMercurial",
       "ComponentType": "CommandRun",
       "DependsOn": [
