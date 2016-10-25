@@ -76,7 +76,6 @@ function Remove-DesiredStateConfigTriggers {
   Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
   Write-Log -message 'C:\dsc\rundsc.ps1 deleted' -severity 'INFO'
 }
-
 function Remove-LegacyStuff {
   param (
     [string] $logFile,
