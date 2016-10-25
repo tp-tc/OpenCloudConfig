@@ -94,6 +94,7 @@ function Remove-LegacyStuff {
       ('{0}\mozilla-build-bak' -f $env:SystemDrive),
       ('{0}\mozilla-buildbuildbotve' -f $env:SystemDrive),
       ('{0}\mozilla-buildpython27' -f $env:SystemDrive),
+      ('{0}\nxlog\conf\nxlog_*.conf' -f $env:ProgramFiles),
       ('{0}\opt' -f $env:SystemDrive),
       ('{0}\opt.zip' -f $env:SystemDrive),
       ('{0}\Puppet Labs' -f $env:ProgramFiles),
