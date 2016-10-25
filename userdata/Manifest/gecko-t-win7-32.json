@@ -10,9 +10,9 @@
       "ComponentName": "NxLog",
       "ComponentType": "MsiInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Url": "http://nxlog.org/system/files/products/files/1/nxlog-ce-2.9.1504.msi",
+      "Url": "http://nxlog.co/system/files/products/files/1/nxlog-ce-2.9.1716.msi",
       "Name": "NxLog-CE",
-      "ProductId": "5E1D25F5-647E-44CA-9223-387230EC02C6"
+      "ProductId": ""
     },
     {
       "ComponentName": "PaperTrailEncryptionCertificate",
