@@ -133,6 +133,9 @@ function Remove-LegacyStuff {
       'timesync',
       'runner'
     ),
+    [string[]] $registryKeys = @(
+      'HKLM:\SOFTWARE\PuppetLabs'
+    ),
     [hashtable] $registryEntries = @{
       # g-w won't set autologin password if these keys pre-exist
       # https://github.com/taskcluster/generic-worker/blob/fb74177141c39afaa1daae53b6fb2a01edd8f32d/plat_windows.go#L440
@@ -204,6 +207,14 @@ function Remove-LegacyStuff {
       Get-Service -Name $service | Stop-Service -PassThru
       (Get-WmiObject -Class Win32_Service -Filter "Name='$service'").delete()
       Write-Log -message ('{0} :: service: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $service) -severity 'INFO'
+    }
+  }
+
+  # remove registry keys
+  foreach ($registryKey in $registryKeys) {
+    if ((Get-Item -Path $registryKey -ErrorAction SilentlyContinue) -ne $null) {
+      Remove-Item -Path $registryKey -recurse
+      Write-Log -message ('{0} :: registry key: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $registryKey) -severity 'INFO'
     }
   }
 
