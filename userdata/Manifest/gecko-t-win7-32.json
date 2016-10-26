@@ -233,10 +233,11 @@
       "ComponentName": "reg_PythonInstallPath",
       "ComponentType": "RegistryValueSet",
       "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\Python\\PythonCore\\2.7\\InstallPath",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\InstallPath",
       "ValueName": "(Default)",
       "ValueType": "String",
       "ValueData": "C:\\mozilla-build\\python\\",
+      "Hex": false,
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
@@ -248,10 +249,11 @@
       "ComponentName": "reg_PythonPath",
       "ComponentType": "RegistryValueSet",
       "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\Python\\PythonCore\\2.7\\PythonPath",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\PythonPath",
       "ValueName": "(Default)",
       "ValueType": "String",
       "ValueData": "C:\\mozilla-build\\python\\Lib;C:\\mozilla-build\\python\\DLLs;C:\\mozilla-build\\python\\Lib\\lib-tk",
+      "Hex": false,
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",

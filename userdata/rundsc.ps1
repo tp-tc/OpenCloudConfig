@@ -191,8 +191,10 @@ function Remove-LegacyStuff {
 
   # delete paths
   foreach ($path in $paths) {
-    Remove-Item $path -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
-    Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'INFO'
+    if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
+      Remove-Item $path -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+      Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'INFO'
+    }
   }
 
   # delete old mozilla-build. presence of python27 indicates old mozilla-build
