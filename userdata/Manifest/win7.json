@@ -597,6 +597,15 @@
           "ComponentName": "HgShared"
         }
       ]
+    },
+    {
+      "ComponentName": "ngen_executeQueuedItems",
+      "ComponentType": "CommandRun",
+      "Comment": "https://blogs.msdn.microsoft.com/dotnet/2013/08/06/wondering-why-mscorsvw-exe-has-high-cpu-usage-you-can-speed-it-up",
+      "Command": "c:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\ngen.exe",
+      "Arguments": [
+        "executeQueuedItems"
+      ]
     }
   ]
 }

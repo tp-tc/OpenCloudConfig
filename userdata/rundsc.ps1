@@ -396,6 +396,16 @@ if ($PSVersionTable.PSVersion.Major -lt 4) {
   $rebootReasons += 'powershell upgraded'
 }
 
+Get-ChildItem -Path $env:SystemRoot\Microsoft.Net -Filter ngen.exe -Recurse | % {
+  try {
+    & $_ executeQueuedItems
+    Write-Log -message ('executed: "{0} executeQueuedItems".' -f $_) -severity 'INFO'
+  }
+  catch {
+    Write-Log -message ('failed to execute: "{0} executeQueuedItems"' -f $_) -severity 'ERROR'
+  }
+}
+
 # rename the instance
 $instanceId = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-id'))
 $dnsHostname = [System.Net.Dns]::GetHostName()
