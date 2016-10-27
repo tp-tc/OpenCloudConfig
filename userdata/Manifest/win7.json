@@ -16,7 +16,7 @@
     },
     {
       "ComponentName": "PaperTrailEncryptionCertificate",
-      "ComponentType": "FileDownload",
+      "ComponentType": "ChecksumFileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Source": "https://papertrailapp.com/tools/papertrail-bundle.pem",
       "Target": "C:\\Program Files\\nxlog\\cert\\papertrail-bundle.pem",
@@ -35,7 +35,7 @@
       "Target": "C:\\Program Files\\nxlog\\conf\\nxlog.conf",
       "DependsOn": [
         {
-          "ComponentType": "FileDownload",
+          "ComponentType": "ChecksumFileDownload",
           "ComponentName": "PaperTrailEncryptionCertificate"
         }
       ]
