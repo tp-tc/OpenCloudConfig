@@ -230,13 +230,20 @@
       }
     },
     {
+      "ComponentName": "python-2.7.3",
+      "ComponentType": "ZipInstall",
+      "Comment": "Python 2.7.3 at C:\\python\\2.7.3 to support unit tests",
+      "Url": "http://pypi.pub.build.mozilla.org/pub/python-2.7.3.zip",
+      "Destination": "C:\\"
+    },
+    {
       "ComponentName": "reg_PythonInstallPath",
       "ComponentType": "RegistryValueSet",
       "Comment": "",
       "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\InstallPath",
       "ValueName": "(Default)",
       "ValueType": "String",
-      "ValueData": "C:\\mozilla-build\\python\\",
+      "ValueData": "C:\\python\\2.7.3\\",
       "Hex": false,
       "DependsOn": [
         {
@@ -252,7 +259,7 @@
       "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\PythonPath",
       "ValueName": "(Default)",
       "ValueType": "String",
-      "ValueData": "C:\\mozilla-build\\python\\Lib;C:\\mozilla-build\\python\\DLLs;C:\\mozilla-build\\python\\Lib\\lib-tk",
+      "ValueData": "C:\\python\\2.7.3\\Lib;C:\\python\\2.7.3\\DLLs;C:\\python\\2.7.3\\Lib\\lib-tk",
       "Hex": false,
       "DependsOn": [
         {
@@ -377,11 +384,11 @@
         "C:\\mozilla-build\\msys\\local\\bin",
         "C:\\mozilla-build\\nsis-3.0b3",
         "C:\\mozilla-build\\nsis-2.46u",
-        "C:\\mozilla-build\\python",
-        "C:\\mozilla-build\\python\\Scripts",
         "C:\\mozilla-build\\upx391w",
         "C:\\mozilla-build\\wget",
-        "C:\\mozilla-build\\yasm"
+        "C:\\mozilla-build\\yasm",
+        "C:\\python\\2.7.3",
+        "C:\\python\\2.7.3\\Scripts"
       ],
       "Target": "Machine"
     },
