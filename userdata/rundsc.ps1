@@ -295,6 +295,86 @@ function Set-Credentials {
     Write-Log -message ('{0} :: failed to set credentials for user: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $username, $_.Exception.Message) -severity 'ERROR'
   }
 }
+function Run-Dsc32BitBypass {
+  # nxlog
+  (New-Object Net.WebClient).DownloadFile('http://nxlog.co/system/files/products/files/1/nxlog-ce-2.9.1716.msi', 'Z:\nxlog-ce-2.9.1716.msi')
+  # todo: install nxlog
+  (New-Object Net.WebClient).DownloadFile('https://papertrailapp.com/tools/papertrail-bundle.pem', 'C:\Program Files\nxlog\cert\papertrail-bundle.pem')
+
+  # generic worker
+  $gwVersion = '6.0.9'
+  Remove-Item -Path 'C:\generic-worker' -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+  New-Item -Path 'C:\generic-worker' -ItemType directory -force
+  (New-Object Net.WebClient).DownloadFile(('https://github.com/taskcluster/generic-worker/releases/download/v{0}/generic-worker-windows-386.exe' -f $gwVersion), 'C:\generic-worker\generic-worker.exe')
+  (New-Object Net.WebClient).DownloadFile('https://github.com/taskcluster/livelog/releases/download/v1.0.0/livelog-windows-386.exe', 'C:\generic-worker\livelog.exe')
+  & 'C:\generic-worker\generic-worker.exe' @('install', 'startup', '--config', 'C:\generic-worker\generic-worker.config')
+  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker.bat', 'C:\generic-worker\run-generic-worker.bat')
+  if ((& 'netsh.exe' @('advfirewall', 'firewall', 'show', 'rule', 'name=LiveLog_Get')) -contains 'No rules match the specified criteria.') {
+    & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', 'name=LiveLog_Get', 'dir=in', 'action=allow', 'protocol=TCP', 'localport=60022')
+  }
+  if ((& 'netsh.exe' @('advfirewall', 'firewall', 'show', 'rule', 'name=LiveLog_Put')) -contains 'No rules match the specified criteria.') {
+    & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', 'name=LiveLog_Put', 'dir=in', 'action=allow', 'protocol=TCP', 'localport=60023')
+  }
+  Write-Log -message ('{0} :: generic-worker installed.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+
+  # pip conf
+  New-Item -Path 'C:\ProgramData\pip' -ItemType directory -force
+  (New-Object Net.WebClient).DownloadFile('http://hg.mozilla.org/mozilla-central/raw-file/aa3e7ff72452/testing/docker/desktop-test/dot-files/config/pip/pip.conf', 'C:\ProgramData\pip\pip.ini')
+  Write-Log -message ('{0} :: pip config installed.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+
+  # mercurial
+  (New-Object Net.WebClient).DownloadFile('https://www.mercurial-scm.org/release/windows/Mercurial-3.9.1.exe', 'Z:\Mercurial-3.9.1.exe')
+  # todo: install mercurial
+  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.ini', 'C:\Program Files\Mercurial\Mercurial.ini')
+  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/cacert.pem', 'C:\mozilla-build\msys\etc\cacert.pem')
+
+  # mozilla-build
+  (New-Object Net.WebClient).DownloadFile('http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.2.0.exe', 'Z:\MozillaBuildSetup-2.2.0.exe')
+  # todo: install mozilla-build
+  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py', 'C:\mozilla-build\tooltool.py')
+
+  # PythonPath registry
+  Set-ItemProperty 'HKLM:\SOFTWARE\Python\PythonCore\2.7\InstallPath' -Type 'String' -Name '(Default)' -Value 'C:\mozilla-build\python\'
+  Set-ItemProperty 'HKLM:\SOFTWARE\Python\PythonCore\2.7\PythonPath' -Type 'String' -Name '(Default)' -Value 'C:\mozilla-build\python\Lib;C:\mozilla-build\python\DLLs;C:\mozilla-build\python\Lib\lib-tk'
+  Write-Log -message ('{0} :: PythonPath registry value set.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+
+  $pathPrepend = @(
+    'C:\Program Files\Mercurial',
+    'C:\mozilla-build\7zip',
+    'C:\mozilla-build\info-zip',
+    'C:\mozilla-build\kdiff3',
+    'C:\mozilla-build\moztools-x64\bin',
+    'C:\mozilla-build\mozmake',
+    'C:\mozilla-build\msys\bin',
+    'C:\mozilla-build\msys\local\bin',
+    'C:\mozilla-build\nsis-3.0b3',
+    'C:\mozilla-build\nsis-2.46u',
+    'C:\mozilla-build\python',
+    'C:\mozilla-build\python\Scripts',
+    'C:\mozilla-build\upx391w',
+    'C:\mozilla-build\wget',
+    'C:\mozilla-build\yasm'
+  )
+  $env:PATH = (@(($pathPrepend + @($env:PATH -split ';')) | select -Unique) -join ';')
+  [Environment]::SetEnvironmentVariable('PATH', $env:Path, 'Machine')
+  Write-Log -message ('{0} :: environment PATH set ({1}).' -f $($MyInvocation.MyCommand.Name), $env:PATH) -severity 'INFO'
+
+  $env:MOZILLABUILD = 'C:\mozilla-build'
+  [Environment]::SetEnvironmentVariable('MOZILLABUILD', $env:MOZILLABUILD, 'Machine')
+  Write-Log -message ('{0} :: environment MOZILLABUILD set ({1}).' -f $($MyInvocation.MyCommand.Name), $env:MOZILLABUILD) -severity 'INFO'
+}
+function New-LocalCache {
+  param (
+    [string[]] $paths = @(
+      'y:\hg-shared',
+      'y:\local-app-data'
+    )
+  )
+  foreach ($path in $paths) {
+    New-Item -Path $path -ItemType directory -force
+    & 'icacls.exe' @($path, '/grant', 'Everyone:(OI)(CI)F')
+  }
+}
 
 $lock = 'C:\dsc\in-progress.lock'
 if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
@@ -318,8 +398,6 @@ Write-Log -message 'system clock synchronised.' -severity 'INFO'
 # set up a log folder, an execution policy that enables the dsc run and a winrm envelope size large enough for the dynamic dsc.
 $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
 New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
-Set-ExecutionPolicy RemoteSigned -force | Out-File -filePath $logFile -append
-& winrm @('set', 'winrm/config', '@{MaxEnvelopeSizekb="8192"}')
 
 # userdata that contains json, indicates a taskcluster-provisioned worker/spot instance.
 # userdata that contains pseudo-xml indicates a base instance or one created during ami generation.
@@ -336,8 +414,8 @@ if ($isWorker) {
   $workerType = $u.workerType
   $az = $u.availabilityZone
 } else {
-  $workerType = ((Invoke-WebRequest -Uri 'http://169.254.169.254/latest/meta-data/public-keys' -UseBasicParsing).Content).Replace('0=mozilla-taskcluster-worker-', '')
-  $az = ((Invoke-WebRequest -Uri 'http://169.254.169.254/latest/meta-data/placement/availability-zone' -UseBasicParsing).Content)
+  $workerType = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys').Replace('0=mozilla-taskcluster-worker-', '')
+  $az = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone')
 }
 Write-Log -message ('workerType: {0}.' -f $workerType) -severity 'INFO'
 switch -wildcard ($az) {
@@ -375,34 +453,13 @@ switch -wildcard ($workerType) {
   }
 }
 
-# install recent powershell (required by DSC) (requires reboot)
-if ($PSVersionTable.PSVersion.Major -lt 4) {
-  & sc.exe @('config', 'wuauserv', 'start=', 'demand')
-  & net @('start', 'wuauserv')
-  switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
-    'Microsoft Windows 7*' {
-      # install .net 4.5.2
-      (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/E/2/1/E21644B5-2DF2-47C2-91BD-63C560427900/NDP452-KB2901907-x86-x64-AllOS-ENU.exe', ('{0}\Temp\NDP452-KB2901907-x86-x64-AllOS-ENU.exe' -f $env:SystemRoot))
-      Write-Log -message '.net 4.5.2 downloaded.' -severity 'INFO'
-      & ('{0}\Temp\NDP452-KB2901907-x86-x64-AllOS-ENU.exe' -f $env:SystemRoot) @('Setup', '/q', '/norestart', '/log', ('{0}\log\{1}.NDP452-KB2901907-x86-x64-AllOS-ENU.exe.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")))
-      Write-Log -message '.net 4.5.2 installation run.' -severity 'INFO'
-      # install wmf 5
-      (New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/2/C/6/2C6E1B4A-EBE5-48A6-B225-2D2058A9CEFB/Win7-KB3134760-x86.msu', ('{0}\Temp\Win7-KB3134760-x86.msu' -f $env:SystemRoot))
-      Write-Log -message 'wmf 5 downloaded.' -severity 'INFO'
-      & wusa @(('{0}\Temp\Win7-KB3134760-x86.msu' -f $env:SystemRoot), '/quiet', '/norestart', ('/log:{0}\log\{1}.Win7-KB3134760-x86.msu.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")))
-      Write-Log -message 'wmf 5 installation run.' -severity 'INFO'
-    }
-  }
-  $rebootReasons += 'powershell upgraded'
-}
-
 Get-ChildItem -Path $env:SystemRoot\Microsoft.Net -Filter ngen.exe -Recurse | % {
   try {
-    & $_ executeQueuedItems
-    Write-Log -message ('executed: "{0} executeQueuedItems".' -f $_) -severity 'INFO'
+    & $_.FullName executeQueuedItems
+    Write-Log -message ('executed: "{0} executeQueuedItems".' -f $_.FullName) -severity 'INFO'
   }
   catch {
-    Write-Log -message ('failed to execute: "{0} executeQueuedItems"' -f $_) -severity 'ERROR'
+    Write-Log -message ('failed to execute: "{0} executeQueuedItems"' -f $_.FullName) -severity 'ERROR'
   }
 }
 
@@ -437,10 +494,8 @@ if ($setFqdn) {
 
 
 if ($rebootReasons.length) {
-  if ($rebootReasons[0] -ne 'powershell upgraded') {
-    Remove-Item -Path $lock -force
-    & shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
-  }
+  Remove-Item -Path $lock -force
+  & shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
 } else {
   # create a scheduled task to run HaltOnIdle continuously
   if (Test-Path -Path 'C:\dsc\HaltOnIdle.ps1' -ErrorAction SilentlyContinue) {
@@ -453,29 +508,26 @@ if ($rebootReasons.length) {
   Write-Log -message 'scheduled task: HaltOnIdle, created.' -severity 'INFO'
 
   if (($runDscOnWorker)  -or (-not ($isWorker))) {
-    $transcript = ('{0}\log\{1}.dsc-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-    Start-Transcript -Path $transcript -Append
     switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
       'Microsoft Windows 7*' {
         Map-DriveLetters
-        # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
-        ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) }
-        # this setting persists only for the current session
-        Enable-PSRemoting -Force
+        Run-Dsc32BitBypass
       }
       default {
+        Set-ExecutionPolicy RemoteSigned -force | Out-File -filePath $logFile -append
+        & winrm @('set', 'winrm/config', '@{MaxEnvelopeSizekb="8192"}')
+        $transcript = ('{0}\log\{1}.dsc-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+        Start-Transcript -Path $transcript -Append
         # this setting persists only for the current session
         Enable-PSRemoting -SkipNetworkProfileCheck -Force
+        Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/DynamicConfig.ps1' -workerType $workerType
+        Stop-Transcript
+        if (((Get-Content $transcript) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
+          Remove-Item -Path $lock -force
+          & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+        }
       }
     }
-    Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/DynamicConfig.ps1' -workerType $workerType
-    switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
-      'Microsoft Windows 7*' {
-        # set network interface to public
-        ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(0) }
-      }
-    }
-    Stop-Transcript
     # create a scheduled task to run dsc at startup
     if (Test-Path -Path 'C:\dsc\rundsc.ps1' -ErrorAction SilentlyContinue) {
       Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
@@ -485,13 +537,16 @@ if ($rebootReasons.length) {
     Write-Log -message 'C:\dsc\rundsc.ps1 downloaded.' -severity 'INFO'
     & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/sc', 'onstart', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', 'powershell.exe -File C:\dsc\rundsc.ps1', '/f')
     Write-Log -message 'scheduled task: RunDesiredStateConfigurationAtStartup, created.' -severity 'INFO'
-    if (((Get-Content $transcript) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
-      Remove-Item -Path $lock -force
-      & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
-    }
   } else {
-    Stop-DesiredStateConfig
-    Remove-DesiredStateConfigTriggers
+    switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+      'Microsoft Windows 7*' {
+        New-LocalCache
+      }
+      default {
+        Stop-DesiredStateConfig
+        Remove-DesiredStateConfigTriggers
+      }
+    }
   }
 
   if (-not ($isWorker)) {

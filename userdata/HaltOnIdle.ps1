@@ -59,7 +59,7 @@ function Is-Running {
 
 function Is-Terminating {
   try {
-    $response = (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/meta-data/spot/termination-time' -UseBasicParsing).Content
+    $response = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/spot/termination-time')
   }
   catch {
     $response = $_.Exception.Message
