@@ -80,7 +80,7 @@ userdata=${userdata/ROOTPASSWORDTOKEN/$root_password}
 userdata=${userdata/WORKERPASSWORDTOKEN/$worker_password}
 
 curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq '.' > ./${tc_worker_type}-pre.json
-cat ./${tc_worker_type}-pre.json | jq --arg gwusersdir $gw_users_dir --arg occmanifest $occ_manifest -c 'del(.workerType, .lastModified) | .secrets."generic-worker".config.usersDir = $gwusersdir | .secrets."generic-worker".config.workerTypeMetadata."machine-setup".manifest = $occmanifest' > ./${tc_worker_type}.json
+cat ./${tc_worker_type}-pre.json | jq --arg gwusersdir $gw_users_dir --arg occmanifest $occ_manifest --arg deploymentId $aws_client_token -c 'del(.workerType, .lastModified) | .secrets."generic-worker".config.usersDir = $gwusersdir | .secrets."generic-worker".config.workerTypeMetadata."machine-setup".manifest = $occmanifest | .secrets."generic-worker".config.deploymentId = $deploymentId' > ./${tc_worker_type}.json
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] active amis (pre-update): $(cat ./${tc_worker_type}.json | jq -c '[.regions[] | {region: .region, ami: .launchSpec.ImageId}]')"
 
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] latest base ami for: ${aws_base_ami_search_term}, in region: ${aws_region}, is: ${aws_base_ami_id}"
