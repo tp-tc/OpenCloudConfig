@@ -302,7 +302,7 @@ function Run-Dsc32BitBypass {
   (New-Object Net.WebClient).DownloadFile('https://papertrailapp.com/tools/papertrail-bundle.pem', 'C:\Program Files\nxlog\cert\papertrail-bundle.pem')
 
   # generic worker
-  $gwVersion = '6.0.9'
+  $gwVersion = '6.1.0'
   Remove-Item -Path 'C:\generic-worker' -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
   New-Item -Path 'C:\generic-worker' -ItemType directory -force
   (New-Object Net.WebClient).DownloadFile(('https://github.com/taskcluster/generic-worker/releases/download/v{0}/generic-worker-windows-386.exe' -f $gwVersion), 'C:\generic-worker\generic-worker.exe')
