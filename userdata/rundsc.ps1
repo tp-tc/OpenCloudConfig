@@ -362,6 +362,10 @@ function Run-Dsc32BitBypass {
   $env:MOZILLABUILD = 'C:\mozilla-build'
   [Environment]::SetEnvironmentVariable('MOZILLABUILD', $env:MOZILLABUILD, 'Machine')
   Write-Log -message ('{0} :: environment MOZILLABUILD set ({1}).' -f $($MyInvocation.MyCommand.Name), $env:MOZILLABUILD) -severity 'INFO'
+
+  $env:PIP_DOWNLOAD_CACHE = 'Y:\pip-cache'
+  [Environment]::SetEnvironmentVariable('PIP_DOWNLOAD_CACHE', $env:PIP_DOWNLOAD_CACHE, 'Machine')
+  Write-Log -message ('{0} :: environment PIP_DOWNLOAD_CACHE set ({1}).' -f $($MyInvocation.MyCommand.Name), $env:PIP_DOWNLOAD_CACHE) -severity 'INFO'
 }
 function New-LocalCache {
   param (

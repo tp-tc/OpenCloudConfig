@@ -581,6 +581,20 @@
           "ComponentName": "PipCache"
         }
       ]
+    },
+    {
+      "ComponentName": "env_PIP_DOWNLOAD_CACHE",
+      "ComponentType": "EnvironmentVariableSet",
+      "Comment": "share pip download cache between tasks",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "PipCacheAccessRights"
+        }
+      ],
+      "Name": "PIP_DOWNLOAD_CACHE",
+      "Value": "Y:\\pip-cache",
+      "Target": "Machine"
     }
   ]
 }
