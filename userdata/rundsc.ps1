@@ -332,6 +332,11 @@ function Run-Dsc32BitBypass {
   (New-Object Net.WebClient).DownloadFile('http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.2.0.exe', 'Z:\MozillaBuildSetup-2.2.0.exe')
   & 'Z:\MozillaBuildSetup-2.2.0.exe' @('/S', '/D=C:\mozilla-build')
   (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py', 'C:\mozilla-build\tooltool.py')
+  (New-Object Net.WebClient).DownloadFile('https://hg.mozilla.org/mozilla-central/raw-file/8c9eed5227f8/python/virtualenv/virtualenv.py', 'C:\mozilla-build\python\Lib\site-packages\virtualenv.py')
+  (New-Object Net.WebClient).DownloadFile('https://hg.mozilla.org/mozilla-central/raw-file/8c9eed5227f8/python/virtualenv/virtualenv_support/argparse-1.4.0-py2.py3-none-any.whl', 'C:\mozilla-build\python\Lib\site-packages\virtualenv_support\argparse-1.4.0-py2.py3-none-any.whl')
+  (New-Object Net.WebClient).DownloadFile('https://hg.mozilla.org/mozilla-central/raw-file/8c9eed5227f8/python/virtualenv/virtualenv_support/pip-8.1.2-py2.py3-none-any.whl', 'C:\mozilla-build\python\Lib\site-packages\virtualenv_support\pip-8.1.2-py2.py3-none-any.whl')
+  (New-Object Net.WebClient).DownloadFile('https://hg.mozilla.org/mozilla-central/raw-file/8c9eed5227f8/python/virtualenv/virtualenv_support/setuptools-25.2.0-py2.py3-none-any.whl', 'C:\mozilla-build\python\Lib\site-packages\virtualenv_support\setuptools-25.2.0-py2.py3-none-any.whl')
+  (New-Object Net.WebClient).DownloadFile('https://hg.mozilla.org/mozilla-central/raw-file/8c9eed5227f8/python/virtualenv/virtualenv_support/wheel-0.29.0-py2.py3-none-any.whl', 'C:\mozilla-build\python\Lib\site-packages\virtualenv_support\wheel-0.29.0-py2.py3-none-any.whl')
 
   # PythonPath registry
   Set-ItemProperty 'HKLM:\SOFTWARE\Python\PythonCore\2.7\InstallPath' -Type 'String' -Name '(Default)' -Value 'C:\mozilla-build\python\'
