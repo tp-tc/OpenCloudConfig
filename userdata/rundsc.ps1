@@ -298,7 +298,7 @@ function Set-Credentials {
 function Run-Dsc32BitBypass {
   # nxlog
   (New-Object Net.WebClient).DownloadFile('http://nxlog.co/system/files/products/files/1/nxlog-ce-2.9.1716.msi', 'Z:\nxlog-ce-2.9.1716.msi')
-  # todo: install nxlog
+  Start-Process msiexec.exe -ArgumentList @('/package', 'Z:\nxlog-ce-2.9.1716.msi', '/quiet', '/norestart', '/log', ('C:\log\{0}-nxlog-ce-2.9.1716.msi.install.log' -f [DateTime]::Now.ToString("yyyyMMddHHmmss"))) -wait
   (New-Object Net.WebClient).DownloadFile('https://papertrailapp.com/tools/papertrail-bundle.pem', 'C:\Program Files\nxlog\cert\papertrail-bundle.pem')
 
   # generic worker
@@ -319,18 +319,18 @@ function Run-Dsc32BitBypass {
 
   # pip conf
   New-Item -Path 'C:\ProgramData\pip' -ItemType directory -force
-  (New-Object Net.WebClient).DownloadFile('http://hg.mozilla.org/mozilla-central/raw-file/aa3e7ff72452/testing/docker/desktop-test/dot-files/config/pip/pip.conf', 'C:\ProgramData\pip\pip.ini')
+  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/pip.conf', 'C:\ProgramData\pip\pip.ini')
   Write-Log -message ('{0} :: pip config installed.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
 
   # mercurial
   (New-Object Net.WebClient).DownloadFile('https://www.mercurial-scm.org/release/windows/Mercurial-3.9.1.exe', 'Z:\Mercurial-3.9.1.exe')
-  # todo: install mercurial
+  & 'Z:\Mercurial-3.9.1.exe' @('/SP-', '/VERYSILENT', '/NORESTART', '/DIR=expand:{pf}\Mercurial', '/LOG="C:\log\Mercurial-3.9.1.exe.install.log"')
   (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.ini', 'C:\Program Files\Mercurial\Mercurial.ini')
   (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/cacert.pem', 'C:\mozilla-build\msys\etc\cacert.pem')
 
   # mozilla-build
   (New-Object Net.WebClient).DownloadFile('http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.2.0.exe', 'Z:\MozillaBuildSetup-2.2.0.exe')
-  # todo: install mozilla-build
+  & 'Z:\MozillaBuildSetup-2.2.0.exe' @('/S', '/D=C:\mozilla-build')
   (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py', 'C:\mozilla-build\tooltool.py')
 
   # PythonPath registry
@@ -367,7 +367,7 @@ function New-LocalCache {
   param (
     [string[]] $paths = @(
       'y:\hg-shared',
-      'y:\local-app-data'
+      'y:\pip-cache'
     )
   )
   foreach ($path in $paths) {
