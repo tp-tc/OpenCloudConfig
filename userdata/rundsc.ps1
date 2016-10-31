@@ -399,24 +399,24 @@ Write-Log -message 'system clock synchronised.' -severity 'INFO'
 $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
 New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
 
-# userdata that contains json, indicates a taskcluster-provisioned worker/spot instance.
-# userdata that contains pseudo-xml indicates a base instance or one created during ami generation.
 try {
   $userdata = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')
-  $isWorker = $userdata.StartsWith('{')
 } catch {
+  $userdata = $null
+}
+$publicKeys = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys')
+
+if ($publicKeys.StartsWith('0=aws-provisioner-v1-managed:')) {
+  # provisioned worker
+  $isWorker = $true
+  $workerType = $publicKeys.Split(':')[1]
+} else {
+  # ami creation instance
   $isWorker = $false
+  $workerType = $publicKeys.Replace('0=mozilla-taskcluster-worker-', '')
 }
 Write-Log -message ('isWorker: {0}.' -f $isWorker) -severity 'INFO'
-
-if ($isWorker) {
-  $u = ($userdata | ConvertFrom-Json)
-  $workerType = $u.workerType
-  $az = $u.availabilityZone
-} else {
-  $workerType = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys').Replace('0=mozilla-taskcluster-worker-', '')
-  $az = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone')
-}
+$az = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone')
 Write-Log -message ('workerType: {0}.' -f $workerType) -severity 'INFO'
 switch -wildcard ($az) {
   'eu-central-1*'{
@@ -569,8 +569,8 @@ if ($rebootReasons.length) {
     if (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
       Write-Log -message 'generic-worker installation detected.' -severity 'INFO'
       New-Item 'C:\dsc\task-claim-state.valid' -type file -force
-      # give g-w 3 minutes to fire up, if it doesn't, boot loop.
-      $timeout = New-Timespan -Minutes 3
+      # give g-w 2 minutes to fire up, if it doesn't, boot loop.
+      $timeout = New-Timespan -Minutes 2
       $timer = [Diagnostics.Stopwatch]::StartNew()
       $waitlogged = $false
       while (($timer.Elapsed -lt $timeout) -and (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0)) {
