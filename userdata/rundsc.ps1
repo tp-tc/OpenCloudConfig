@@ -351,9 +351,12 @@ function Run-Dsc32BitBypass {
   }
   process {
     # nxlog
-    (New-Object Net.WebClient).DownloadFile('http://nxlog.co/system/files/products/files/1/nxlog-ce-2.9.1716.msi', 'Z:\nxlog-ce-2.9.1716.msi')
-    Start-Process msiexec.exe -ArgumentList @('/package', 'Z:\nxlog-ce-2.9.1716.msi', '/quiet', '/norestart', '/log', ('C:\log\{0}-nxlog-ce-2.9.1716.msi.install.log' -f [DateTime]::Now.ToString("yyyyMMddHHmmss"))) -wait
-    (New-Object Net.WebClient).DownloadFile('https://papertrailapp.com/tools/papertrail-bundle.pem', 'C:\Program Files\nxlog\cert\papertrail-bundle.pem')
+    #if (-not (Get-EventLog -logName 'Application' -source 'OpenCloudConfig' -message 'Run-Dsc32BitBypass :: nxlog 2.9.1716 installed.' -after (Get-Date).AddHours(-1) -newest 1 -ErrorAction SilentlyContinue)) {
+    #  (New-Object Net.WebClient).DownloadFile('http://nxlog.co/system/files/products/files/1/nxlog-ce-2.9.1716.msi', 'Z:\nxlog-ce-2.9.1716.msi')
+    #  Start-Process msiexec.exe -ArgumentList @('/package', 'Z:\nxlog-ce-2.9.1716.msi', '/quiet', '/norestart', '/log', ('C:\log\{0}-nxlog-ce-2.9.1716.msi.install.log' -f [DateTime]::Now.ToString("yyyyMMddHHmmss"))) -wait
+    #  (New-Object Net.WebClient).DownloadFile('https://papertrailapp.com/tools/papertrail-bundle.pem', 'C:\Program Files\nxlog\cert\papertrail-bundle.pem')
+    #  Write-Log -message ('{0} :: nxlog 2.9.1716 installed.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+    #}
 
     $registryKeys = @(
       'HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps'
