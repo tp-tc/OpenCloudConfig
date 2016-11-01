@@ -85,8 +85,13 @@ if (-not (Is-Running -proc 'generic-worker' -predicate (@(Get-Process | ? { $_.P
   if (-not (Is-Running -proc 'OpenCloudConfig' -predicate (Test-Path -Path 'C:\dsc\in-progress.lock' -ErrorAction SilentlyContinue))) {
     $uptime = (Get-Uptime)
     if (($uptime) -and ($uptime -gt (New-TimeSpan -minutes 5))) {
-      Write-Log -message 'instance failed validity check and will be halted.' -severity 'ERROR'
-      & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: instance failed validity checks', '-f', '-d', 'p:4:1')
+
+      if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
+        Write-Log -message 'instance failed validity check and will be halted.' -severity 'ERROR'
+        & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: instance failed validity checks', '-f', '-d', 'p:4:1')
+      } else {
+        Write-Log -message 'instance failed validity check and should be halted, but has rdp session in progress.' -severity 'DEBUG'
+      }
     } else {
       Write-Log -message 'instance failed some validity checks and will be retested shortly.' -severity 'WARN'
     }

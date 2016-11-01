@@ -565,7 +565,9 @@ if ($rebootReasons.length) {
 
   if ((-not ($isWorker)) -and (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
     Remove-Item -Path $lock -force
-    & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+    if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
+      & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+    }
   } elseif ($isWorker) {
     if (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) { # if the Z: drive isn't mapped, map it.
       Map-DriveLetters
