@@ -301,9 +301,64 @@ function Run-Dsc32BitBypass {
   Start-Process msiexec.exe -ArgumentList @('/package', 'Z:\nxlog-ce-2.9.1716.msi', '/quiet', '/norestart', '/log', ('C:\log\{0}-nxlog-ce-2.9.1716.msi.install.log' -f [DateTime]::Now.ToString("yyyyMMddHHmmss"))) -wait
   (New-Object Net.WebClient).DownloadFile('https://papertrailapp.com/tools/papertrail-bundle.pem', 'C:\Program Files\nxlog\cert\papertrail-bundle.pem')
 
-  # adjust processor scheduling for best performance of background services (0x00000026 is foreground processes)
-  Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl' -Type 'DWord' -Name 'Win32PrioritySeparation' -Value 0x00000018
-  Write-Log -message ('{0} :: processor scheduling registry entry set to backround services.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+  $registryKeys = @(
+    'HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps'
+  )
+  $registryEntries = @(
+
+    # Puppet Legacy (process_priority)
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl';Type='DWord';Value=0x00000026;Name='Win32PrioritySeparation'},
+
+    # Puppet Legacy (ntfs_options)
+    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps';Type='DWord';Value=0x00000001;Name='DumpType'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem';Type='DWord';Value=0x00000001;Name='NtfsDisable8dot3NameCreation'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem';Type='DWord';Value=0x00000001;Name='NtfsDisableLastAccessUpdate'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem';Type='DWord';Value=0x00000002;Name='NtfsMemoryUsage'},
+
+    # Puppet Legacy (memory_paging)
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management';Type='DWord';Value=0x00000001;Name='DisablePagingExecutive'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters';Type='DWord';Value=0x00000012;Name='BootId'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters';Type='DWord';Value=0x185729f9;Name='BaseTime'},
+
+    # Puppet Legacy (windows_network_opt_registry)
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\ServiceProvider';Type='DWord';Value=0x00002000;Name='DnsPriority'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\ServiceProvider';Type='DWord';Value=0x00000500;Name='HostsPriority'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\ServiceProvider';Type='DWord';Value=0x00000499;Name='LocalPriority'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\ServiceProvider';Type='DWord';Value=0x00002001;Name='NetbtPriority'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\LanmanServer\Parameters';Type='DWord';Value=0x00000003;Name='Size'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\LanmanServer\Parameters';Type='DWord';Value=0x00000003;Name='AdjustedNullSessionPipes'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\AFD\Parameters';Type='DWord';Value=0x05316608;Name='DefaultSendWindow'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\AFD\Parameters';Type='DWord';Value=0x05316608;Name='DefaultReceiveWindow'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000003;Name='Tcp1323Opts'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000005;Name='TCPMaxDataRetransmissions'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000000;Name='SynAttackProtect_SEL'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000001;Name='DisableTaskOffload'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000001;Name='DisableTaskOffload_SEL'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000040;Name='DefaultTTL'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000030;Name='TcpTimedWaitDelay'},
+    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPER1_0SERVER';Type='DWord';Value=0x00000016;Name='explorer.exe'},
+    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPER1_0SERVER';Type='DWord';Value=0x00000016;Name='iexplorer.exe'},
+    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPERSERVER';Type='DWord';Value=0x00000016;Name='explorer.exe_01'},
+    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPERSERVER';Type='DWord';Value=0x00000016;Name='iexplorer.exe_01'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management';Type='DWord';Value=0x00000001;Name='LargeSystemCache'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters';Type='DWord';Value=0x00000000;Name='NegativeCacheTime'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters';Type='DWord';Value=0x00000000;Name='NetFailureCacheTime'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters';Type='DWord';Value=0x00000000;Name='NegativeSOACacheTime'},
+    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Policies\Microsoft\Windows\Psched';Type='DWord';Value=0x00000000;Name='NonBestEffortLimit'},
+    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile';Type='DWord';Value=0x4294967295;Name='NetworkThrottlingIndex'},
+    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile';Type='DWord';Value=0x00000010;Name='SystemResponsiveness'},
+    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters';Type='DWord';Value=0x4294967295;Name='DisabledComponents'},
+    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\MSMQ\Parameters';Type='DWord';Value=0x00000001;Name='LargeSystemCache_SEL'}
+  )
+  
+  foreach ($rk in $registryKeys) {
+    New-Item $rk -ErrorAction SilentlyContinue
+    Write-Log -message ('{0} :: registry key {1} created.' -f $($MyInvocation.MyCommand.Name), $rk) -severity 'INFO'
+  }
+  foreach ($re in $registryEntries) {
+    Set-ItemProperty -Path $re.Path -Type $re.Type -Name $re.Name -Value $re.Value
+    Write-Log -message ('{0} :: registry entry {1}\{2} set to {3} {4}.' -f $($MyInvocation.MyCommand.Name), $re.Path, $re.Name, $re.Type, $re.Value) -severity 'INFO'
+  }
 
   # generic worker
   $gwVersion = '6.1.0'
