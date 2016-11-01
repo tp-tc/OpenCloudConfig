@@ -158,8 +158,11 @@ function Remove-LegacyStuff {
     }
   )
 
-  # clear the event log
-  wevtutil el | % { wevtutil cl $_ }
+  # clear the event log (if it hasn't just been done)
+  if (-not (Get-EventLog -logName 'Application' -source 'OpenCloudConfig' -message 'Remove-LegacyStuff :: event log cleared.' -after (Get-Date).AddHours(-1) -newest 1 -ErrorAction SilentlyContinue)) {
+    wevtutil el | % { wevtutil cl $_ }
+    Write-Log -message ('{0} :: event log cleared.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+  }
 
   # remove scheduled tasks
   foreach ($scheduledTask in $scheduledTasks) {
