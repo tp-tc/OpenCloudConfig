@@ -593,7 +593,44 @@
         }
       ],
       "Name": "PIP_DOWNLOAD_CACHE",
-      "Value": "Y:\\pip-cache",
+      "Value": "y:\\pip-cache",
+      "Target": "Machine"
+    },
+    {
+      "ComponentName": "TooltoolCache",
+      "ComponentType": "DirectoryCreate",
+      "Comment": "share tooltool cache across subsequent task users",
+      "Path": "y:\\tooltool-cache"
+    },
+    {
+      "ComponentName": "TooltoolCacheAccessRights",
+      "ComponentType": "CommandRun",
+      "Comment": "share tooltool cache across subsequent task users",
+      "Command": "icacls.exe",
+      "Arguments": [
+        "y:\\tooltool-cache",
+        "/grant",
+        "Everyone:(OI)(CI)F"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "TooltoolCache"
+        }
+      ]
+    },
+    {
+      "ComponentName": "env_TOOLTOOL_CACHE",
+      "ComponentType": "EnvironmentVariableSet",
+      "Comment": "share tooltool cache between tasks",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "TooltoolCacheAccessRights"
+        }
+      ],
+      "Name": "TOOLTOOL_CACHE",
+      "Value": "y:\\tooltool-cache",
       "Target": "Machine"
     }
   ]

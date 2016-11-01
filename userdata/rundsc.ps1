@@ -301,9 +301,12 @@ function Run-Dsc32BitBypass {
   Start-Process msiexec.exe -ArgumentList @('/package', 'Z:\nxlog-ce-2.9.1716.msi', '/quiet', '/norestart', '/log', ('C:\log\{0}-nxlog-ce-2.9.1716.msi.install.log' -f [DateTime]::Now.ToString("yyyyMMddHHmmss"))) -wait
   (New-Object Net.WebClient).DownloadFile('https://papertrailapp.com/tools/papertrail-bundle.pem', 'C:\Program Files\nxlog\cert\papertrail-bundle.pem')
 
+  # adjust processor scheduling for best performance of background services (0x00000026 is foreground processes)
+  Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl' -Type 'DWord' -Name 'Win32PrioritySeparation' -Value 0x00000018
+  Write-Log -message ('{0} :: processor scheduling registry entry set to backround services.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+
   # generic worker
   $gwVersion = '6.1.0'
-  Remove-Item -Path 'C:\generic-worker' -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
   New-Item -Path 'C:\generic-worker' -ItemType directory -force
   (New-Object Net.WebClient).DownloadFile(('https://github.com/taskcluster/generic-worker/releases/download/v{0}/generic-worker-windows-386.exe' -f $gwVersion), 'C:\generic-worker\generic-worker.exe')
   (New-Object Net.WebClient).DownloadFile('https://github.com/taskcluster/livelog/releases/download/v1.0.0/livelog-windows-386.exe', 'C:\generic-worker\livelog.exe')
@@ -315,28 +318,49 @@ function Run-Dsc32BitBypass {
   if ((& 'netsh.exe' @('advfirewall', 'firewall', 'show', 'rule', 'name=LiveLog_Put')) -contains 'No rules match the specified criteria.') {
     & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', 'name=LiveLog_Put', 'dir=in', 'action=allow', 'protocol=TCP', 'localport=60023')
   }
-  Write-Log -message ('{0} :: generic-worker installed.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-
-  # pip conf
-  New-Item -Path 'C:\ProgramData\pip' -ItemType directory -force
-  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/pip.conf', 'C:\ProgramData\pip\pip.ini')
-  Write-Log -message ('{0} :: pip config installed.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+  Write-Log -message ('{0} :: generic-worker and livelog downloaded, installed and configured.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
 
   # mercurial
   (New-Object Net.WebClient).DownloadFile('https://www.mercurial-scm.org/release/windows/Mercurial-3.9.1.exe', 'Z:\Mercurial-3.9.1.exe')
   & 'Z:\Mercurial-3.9.1.exe' @('/SP-', '/VERYSILENT', '/NORESTART', '/DIR=expand:{pf}\Mercurial', '/LOG="C:\log\Mercurial-3.9.1.exe.install.log"')
   (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.ini', 'C:\Program Files\Mercurial\Mercurial.ini')
   (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/cacert.pem', 'C:\mozilla-build\msys\etc\cacert.pem')
+  Write-Log -message ('{0} :: hg 3.9.1 downloaded, installed and configured.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
 
   # mozilla-build
   (New-Object Net.WebClient).DownloadFile('http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.2.0.exe', 'Z:\MozillaBuildSetup-2.2.0.exe')
+  Write-Log -message ('{0} :: mozilla-build 2.2.0 downloaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
   & 'Z:\MozillaBuildSetup-2.2.0.exe' @('/S', '/D=C:\mozilla-build')
+  Write-Log -message ('{0} :: mozilla-build 2.2.0 installed.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+
+  # tooltool
   (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py', 'C:\mozilla-build\tooltool.py')
+  Write-Log -message ('{0} :: tooltool downloaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+  
+  # virtualenv
   (New-Object Net.WebClient).DownloadFile('https://hg.mozilla.org/mozilla-central/raw-file/8c9eed5227f8/python/virtualenv/virtualenv.py', 'C:\mozilla-build\python\Lib\site-packages\virtualenv.py')
-  (New-Object Net.WebClient).DownloadFile('https://hg.mozilla.org/mozilla-central/raw-file/8c9eed5227f8/python/virtualenv/virtualenv_support/argparse-1.4.0-py2.py3-none-any.whl', 'C:\mozilla-build\python\Lib\site-packages\virtualenv_support\argparse-1.4.0-py2.py3-none-any.whl')
-  (New-Object Net.WebClient).DownloadFile('https://hg.mozilla.org/mozilla-central/raw-file/8c9eed5227f8/python/virtualenv/virtualenv_support/pip-8.1.2-py2.py3-none-any.whl', 'C:\mozilla-build\python\Lib\site-packages\virtualenv_support\pip-8.1.2-py2.py3-none-any.whl')
-  (New-Object Net.WebClient).DownloadFile('https://hg.mozilla.org/mozilla-central/raw-file/8c9eed5227f8/python/virtualenv/virtualenv_support/setuptools-25.2.0-py2.py3-none-any.whl', 'C:\mozilla-build\python\Lib\site-packages\virtualenv_support\setuptools-25.2.0-py2.py3-none-any.whl')
-  (New-Object Net.WebClient).DownloadFile('https://hg.mozilla.org/mozilla-central/raw-file/8c9eed5227f8/python/virtualenv/virtualenv_support/wheel-0.29.0-py2.py3-none-any.whl', 'C:\mozilla-build\python\Lib\site-packages\virtualenv_support\wheel-0.29.0-py2.py3-none-any.whl')
+  Write-Log -message ('{0} :: virtualenv downloaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+  $wheels = @(
+    'argparse-1.4.0-py2.py3-none-any.whl',
+    'pip-8.1.2-py2.py3-none-any.whl',
+    'setuptools-25.2.0-py2.py3-none-any.whl',
+    'wheel-0.29.0-py2.py3-none-any.whl'
+  )
+  foreach ($wheel in $wheels) {
+    if (-not (Test-Path -Path ('C:\mozilla-build\python\Lib\site-packages\virtualenv_support\{0}' -f $wheel) -ErrorAction SilentlyContinue)) {
+      (New-Object Net.WebClient).DownloadFile(('https://hg.mozilla.org/mozilla-central/raw-file/8c9eed5227f8/python/virtualenv/virtualenv_support/{0}' -f $wheel), ('C:\mozilla-build\python\Lib\site-packages\virtualenv_support\{0}' -f $wheel))
+      Write-Log -message ('{0} :: {1} downloaded.' -f $($MyInvocation.MyCommand.Name), $wheel) -severity 'INFO'
+    }
+  }
+
+  # robustcheckout
+  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/FirefoxBuildResources/robustcheckout.py', 'C:\mozilla-build\robustcheckout.py')
+  Write-Log -message ('{0} :: robustcheckout downloaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+
+  # pip conf
+  New-Item -Path 'C:\ProgramData\pip' -ItemType directory -force
+  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/pip.conf', 'C:\ProgramData\pip\pip.ini')
+  Write-Log -message ('{0} :: pip config installed.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
 
   # PythonPath registry
   Set-ItemProperty 'HKLM:\SOFTWARE\Python\PythonCore\2.7\InstallPath' -Type 'String' -Name '(Default)' -Value 'C:\mozilla-build\python\'
@@ -376,7 +400,8 @@ function New-LocalCache {
   param (
     [string[]] $paths = @(
       'y:\hg-shared',
-      'y:\pip-cache'
+      'y:\pip-cache',
+      'y:\tooltool-cache'
     )
   )
   foreach ($path in $paths) {

@@ -422,6 +422,16 @@
       "Hex": true
     },
     {
+      "ComponentName": "reg_Win32PrioritySeparation_Background",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "adjust processor scheduling for best performance of background services (0x00000026 is foreground processes)",
+      "Key": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl",
+      "ValueName": "Win32PrioritySeparation",
+      "ValueType": "Dword",
+      "ValueData": "0x00000018",
+      "Hex": true
+    },
+    {
       "ComponentName": "GenericWorkerDirectory",
       "ComponentType": "DirectoryCreate",
       "Path": "C:\\generic-worker"
@@ -632,7 +642,44 @@
         }
       ],
       "Name": "PIP_DOWNLOAD_CACHE",
-      "Value": "Y:\\pip-cache",
+      "Value": "y:\\pip-cache",
+      "Target": "Machine"
+    },
+    {
+      "ComponentName": "TooltoolCache",
+      "ComponentType": "DirectoryCreate",
+      "Comment": "share tooltool cache across subsequent task users",
+      "Path": "y:\\tooltool-cache"
+    },
+    {
+      "ComponentName": "TooltoolCacheAccessRights",
+      "ComponentType": "CommandRun",
+      "Comment": "share tooltool cache across subsequent task users",
+      "Command": "icacls.exe",
+      "Arguments": [
+        "y:\\tooltool-cache",
+        "/grant",
+        "Everyone:(OI)(CI)F"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "TooltoolCache"
+        }
+      ]
+    },
+    {
+      "ComponentName": "env_TOOLTOOL_CACHE",
+      "ComponentType": "EnvironmentVariableSet",
+      "Comment": "share tooltool cache between tasks",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "TooltoolCacheAccessRights"
+        }
+      ],
+      "Name": "TOOLTOOL_CACHE",
+      "Value": "y:\\tooltool-cache",
       "Target": "Machine"
     },
     {
