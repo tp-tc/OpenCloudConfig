@@ -345,173 +345,6 @@ function Set-Credentials {
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
-function Run-Dsc32BitBypass {
-  begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
-  }
-  process {
-    # nxlog
-    #if (-not (Get-EventLog -logName 'Application' -source 'OpenCloudConfig' -message 'Run-Dsc32BitBypass :: nxlog 2.9.1716 installed.' -after (Get-Date).AddHours(-1) -newest 1 -ErrorAction SilentlyContinue)) {
-    #  (New-Object Net.WebClient).DownloadFile('http://nxlog.co/system/files/products/files/1/nxlog-ce-2.9.1716.msi', 'Z:\nxlog-ce-2.9.1716.msi')
-    #  Start-Process msiexec.exe -ArgumentList @('/package', 'Z:\nxlog-ce-2.9.1716.msi', '/quiet', '/norestart', '/log', ('C:\log\{0}-nxlog-ce-2.9.1716.msi.install.log' -f [DateTime]::Now.ToString("yyyyMMddHHmmss"))) -wait
-    #  (New-Object Net.WebClient).DownloadFile('https://papertrailapp.com/tools/papertrail-bundle.pem', 'C:\Program Files\nxlog\cert\papertrail-bundle.pem')
-    #  Write-Log -message ('{0} :: nxlog 2.9.1716 installed.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-    #}
-
-    $registryKeys = @(
-      'HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps'
-    )
-    $registryEntries = @(
-
-      # Puppet Legacy (process_priority)
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl';Type='DWord';Value=0x00000026;Name='Win32PrioritySeparation'},
-
-      # Puppet Legacy (ntfs_options)
-      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps';Type='DWord';Value=0x00000001;Name='DumpType'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem';Type='DWord';Value=0x00000001;Name='NtfsDisable8dot3NameCreation'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem';Type='DWord';Value=0x00000001;Name='NtfsDisableLastAccessUpdate'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem';Type='DWord';Value=0x00000002;Name='NtfsMemoryUsage'},
-
-      # Puppet Legacy (memory_paging)
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management';Type='DWord';Value=0x00000001;Name='DisablePagingExecutive'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters';Type='DWord';Value=0x00000012;Name='BootId'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters';Type='DWord';Value=0x185729f9;Name='BaseTime'},
-
-      # Puppet Legacy (windows_network_opt_registry)
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\ServiceProvider';Type='DWord';Value=0x00002000;Name='DnsPriority'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\ServiceProvider';Type='DWord';Value=0x00000500;Name='HostsPriority'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\ServiceProvider';Type='DWord';Value=0x00000499;Name='LocalPriority'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\ServiceProvider';Type='DWord';Value=0x00002001;Name='NetbtPriority'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\LanmanServer\Parameters';Type='DWord';Value=0x00000003;Name='Size'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\LanmanServer\Parameters';Type='DWord';Value=0x00000003;Name='AdjustedNullSessionPipes'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\AFD\Parameters';Type='DWord';Value=0x05316608;Name='DefaultSendWindow'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\AFD\Parameters';Type='DWord';Value=0x05316608;Name='DefaultReceiveWindow'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000003;Name='Tcp1323Opts'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000005;Name='TCPMaxDataRetransmissions'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000000;Name='SynAttackProtect_SEL'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000001;Name='DisableTaskOffload'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000001;Name='DisableTaskOffload_SEL'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000040;Name='DefaultTTL'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000030;Name='TcpTimedWaitDelay'},
-      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPER1_0SERVER';Type='DWord';Value=0x00000016;Name='explorer.exe'},
-      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPER1_0SERVER';Type='DWord';Value=0x00000016;Name='iexplorer.exe'},
-      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPERSERVER';Type='DWord';Value=0x00000016;Name='explorer.exe_01'},
-      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPERSERVER';Type='DWord';Value=0x00000016;Name='iexplorer.exe_01'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management';Type='DWord';Value=0x00000001;Name='LargeSystemCache'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters';Type='DWord';Value=0x00000000;Name='NegativeCacheTime'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters';Type='DWord';Value=0x00000000;Name='NetFailureCacheTime'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters';Type='DWord';Value=0x00000000;Name='NegativeSOACacheTime'},
-      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Policies\Microsoft\Windows\Psched';Type='DWord';Value=0x00000000;Name='NonBestEffortLimit'},
-      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile';Type='DWord';Value=0x4294967295;Name='NetworkThrottlingIndex'},
-      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile';Type='DWord';Value=0x00000010;Name='SystemResponsiveness'},
-      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters';Type='DWord';Value=0x4294967295;Name='DisabledComponents'},
-      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\MSMQ\Parameters';Type='DWord';Value=0x00000001;Name='LargeSystemCache_SEL'}
-    )
-    
-    foreach ($rk in $registryKeys) {
-      New-Item $rk -ErrorAction SilentlyContinue
-      Write-Log -message ('{0} :: registry key {1} created.' -f $($MyInvocation.MyCommand.Name), $rk) -severity 'INFO'
-    }
-    foreach ($re in $registryEntries) {
-      Set-ItemProperty -Path $re.Path -Type $re.Type -Name $re.Name -Value $re.Value
-      Write-Log -message ('{0} :: registry entry {1}\{2} set to {3} {4}.' -f $($MyInvocation.MyCommand.Name), $re.Path, $re.Name, $re.Type, $re.Value) -severity 'INFO'
-    }
-
-    # generic worker
-    $gwVersion = '6.1.0'
-    New-Item -Path 'C:\generic-worker' -ItemType directory -force
-    (New-Object Net.WebClient).DownloadFile(('https://github.com/taskcluster/generic-worker/releases/download/v{0}/generic-worker-windows-386.exe' -f $gwVersion), 'C:\generic-worker\generic-worker.exe')
-    (New-Object Net.WebClient).DownloadFile('https://github.com/taskcluster/livelog/releases/download/v1.0.0/livelog-windows-386.exe', 'C:\generic-worker\livelog.exe')
-    & 'C:\generic-worker\generic-worker.exe' @('install', 'startup', '--config', 'C:\generic-worker\generic-worker.config')
-    (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker.bat', 'C:\generic-worker\run-generic-worker.bat')
-    if ((& 'netsh.exe' @('advfirewall', 'firewall', 'show', 'rule', 'name=LiveLog_Get')) -contains 'No rules match the specified criteria.') {
-      & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', 'name=LiveLog_Get', 'dir=in', 'action=allow', 'protocol=TCP', 'localport=60022')
-    }
-    if ((& 'netsh.exe' @('advfirewall', 'firewall', 'show', 'rule', 'name=LiveLog_Put')) -contains 'No rules match the specified criteria.') {
-      & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', 'name=LiveLog_Put', 'dir=in', 'action=allow', 'protocol=TCP', 'localport=60023')
-    }
-    Write-Log -message ('{0} :: generic-worker and livelog downloaded, installed and configured.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-
-    # mercurial
-    (New-Object Net.WebClient).DownloadFile('https://www.mercurial-scm.org/release/windows/Mercurial-3.9.1.exe', 'Z:\Mercurial-3.9.1.exe')
-    & 'Z:\Mercurial-3.9.1.exe' @('/SP-', '/VERYSILENT', '/NORESTART', '/DIR=expand:{pf}\Mercurial', '/LOG="C:\log\Mercurial-3.9.1.exe.install.log"')
-    (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.ini', 'C:\Program Files\Mercurial\Mercurial.ini')
-    (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/cacert.pem', 'C:\mozilla-build\msys\etc\cacert.pem')
-    Write-Log -message ('{0} :: hg 3.9.1 downloaded, installed and configured.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-
-    # mozilla-build
-    (New-Object Net.WebClient).DownloadFile('http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.2.0.exe', 'Z:\MozillaBuildSetup-2.2.0.exe')
-    Write-Log -message ('{0} :: mozilla-build 2.2.0 downloaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-    & 'Z:\MozillaBuildSetup-2.2.0.exe' @('/S', '/D=C:\mozilla-build')
-    Write-Log -message ('{0} :: mozilla-build 2.2.0 installed.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-
-    # tooltool
-    (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py', 'C:\mozilla-build\tooltool.py')
-    Write-Log -message ('{0} :: tooltool downloaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-    
-    # virtualenv
-    (New-Object Net.WebClient).DownloadFile('https://hg.mozilla.org/mozilla-central/raw-file/8c9eed5227f8/python/virtualenv/virtualenv.py', 'C:\mozilla-build\python\Lib\site-packages\virtualenv.py')
-    Write-Log -message ('{0} :: virtualenv downloaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-    $wheels = @(
-      'argparse-1.4.0-py2.py3-none-any.whl',
-      'pip-8.1.2-py2.py3-none-any.whl',
-      'setuptools-25.2.0-py2.py3-none-any.whl',
-      'wheel-0.29.0-py2.py3-none-any.whl'
-    )
-    foreach ($wheel in $wheels) {
-      if (-not (Test-Path -Path ('C:\mozilla-build\python\Lib\site-packages\virtualenv_support\{0}' -f $wheel) -ErrorAction SilentlyContinue)) {
-        (New-Object Net.WebClient).DownloadFile(('https://hg.mozilla.org/mozilla-central/raw-file/8c9eed5227f8/python/virtualenv/virtualenv_support/{0}' -f $wheel), ('C:\mozilla-build\python\Lib\site-packages\virtualenv_support\{0}' -f $wheel))
-        Write-Log -message ('{0} :: {1} downloaded.' -f $($MyInvocation.MyCommand.Name), $wheel) -severity 'INFO'
-      }
-    }
-
-    # robustcheckout
-    (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/FirefoxBuildResources/robustcheckout.py', 'C:\mozilla-build\robustcheckout.py')
-    Write-Log -message ('{0} :: robustcheckout downloaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-
-    # pip conf
-    New-Item -Path 'C:\ProgramData\pip' -ItemType directory -force
-    (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/pip.conf', 'C:\ProgramData\pip\pip.ini')
-    Write-Log -message ('{0} :: pip config installed.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-
-    # PythonPath registry
-    Set-ItemProperty 'HKLM:\SOFTWARE\Python\PythonCore\2.7\InstallPath' -Type 'String' -Name '(Default)' -Value 'C:\mozilla-build\python\'
-    Set-ItemProperty 'HKLM:\SOFTWARE\Python\PythonCore\2.7\PythonPath' -Type 'String' -Name '(Default)' -Value 'C:\mozilla-build\python\Lib;C:\mozilla-build\python\DLLs;C:\mozilla-build\python\Lib\lib-tk'
-    Write-Log -message ('{0} :: PythonPath registry value set.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-
-    $pathPrepend = @(
-      'C:\Program Files\Mercurial',
-      'C:\mozilla-build\7zip',
-      'C:\mozilla-build\info-zip',
-      'C:\mozilla-build\kdiff3',
-      'C:\mozilla-build\moztools-x64\bin',
-      'C:\mozilla-build\mozmake',
-      'C:\mozilla-build\msys\bin',
-      'C:\mozilla-build\msys\local\bin',
-      'C:\mozilla-build\nsis-3.0b3',
-      'C:\mozilla-build\nsis-2.46u',
-      'C:\mozilla-build\python',
-      'C:\mozilla-build\python\Scripts',
-      'C:\mozilla-build\upx391w',
-      'C:\mozilla-build\wget',
-      'C:\mozilla-build\yasm'
-    )
-    $env:PATH = (@(($pathPrepend + @($env:PATH -split ';')) | select -Unique) -join ';')
-    [Environment]::SetEnvironmentVariable('PATH', $env:Path, 'Machine')
-    Write-Log -message ('{0} :: environment PATH set ({1}).' -f $($MyInvocation.MyCommand.Name), $env:PATH) -severity 'INFO'
-
-    $env:MOZILLABUILD = 'C:\mozilla-build'
-    [Environment]::SetEnvironmentVariable('MOZILLABUILD', $env:MOZILLABUILD, 'Machine')
-    Write-Log -message ('{0} :: environment MOZILLABUILD set ({1}).' -f $($MyInvocation.MyCommand.Name), $env:MOZILLABUILD) -severity 'INFO'
-
-    $env:PIP_DOWNLOAD_CACHE = 'Y:\pip-cache'
-    [Environment]::SetEnvironmentVariable('PIP_DOWNLOAD_CACHE', $env:PIP_DOWNLOAD_CACHE, 'Machine')
-    Write-Log -message ('{0} :: environment PIP_DOWNLOAD_CACHE set ({1}).' -f $($MyInvocation.MyCommand.Name), $env:PIP_DOWNLOAD_CACHE) -severity 'INFO'
-  }
-  end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
-  }
-}
 function New-LocalCache {
   param (
     [string[]] $paths = @(
@@ -665,27 +498,45 @@ if ($rebootReasons.length) {
   & schtasks @('/create', '/tn', 'HaltOnIdle', '/sc', 'minute', '/mo', '2', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', 'powershell.exe -File C:\dsc\HaltOnIdle.ps1', '/f')
   Write-Log -message 'scheduled task: HaltOnIdle, created.' -severity 'INFO'
 
-  if (($runDscOnWorker)  -or (-not ($isWorker))) {
+  if (($runDscOnWorker) -or (-not ($isWorker))) {
+
+    # pre dsc setup ###############################################################################################################################################
     switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
       'Microsoft Windows 7*' {
-        Map-DriveLetters
-        Run-Dsc32BitBypass
+        # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
+        ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) }
+        # this setting persists only for the current session
+        Enable-PSRemoting -Force
       }
       default {
-        Set-ExecutionPolicy RemoteSigned -force | Out-File -filePath $logFile -append
-        & winrm @('set', 'winrm/config', '@{MaxEnvelopeSizekb="8192"}')
-        $transcript = ('{0}\log\{1}.dsc-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-        Start-Transcript -Path $transcript -Append
         # this setting persists only for the current session
         Enable-PSRemoting -SkipNetworkProfileCheck -Force
-        Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/DynamicConfig.ps1' -workerType $workerType
-        Stop-Transcript
-        if (((Get-Content $transcript) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
-          Remove-Item -Path $lock -force
-          & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
-        }
       }
     }
+    Set-ExecutionPolicy RemoteSigned -force | Out-File -filePath $logFile -append
+    & winrm @('set', 'winrm/config', '@{MaxEnvelopeSizekb="8192"}')
+    $transcript = ('{0}\log\{1}.dsc-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    # end pre dsc setup ###########################################################################################################################################
+
+    # run dsc #####################################################################################################################################################
+    Start-Transcript -Path $transcript -Append
+    Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/DynamicConfig.ps1' -workerType $workerType
+    Stop-Transcript
+    # end run dsc #################################################################################################################################################
+    
+    # post dsc teardown ###########################################################################################################################################
+    if (((Get-Content $transcript) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
+      Remove-Item -Path $lock -force
+      & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+    }
+    switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+      'Microsoft Windows 7*' {
+        # set network interface to public
+        ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(0) }
+      }
+    }
+    # end post dsc teardown #######################################################################################################################################
+
     # create a scheduled task to run dsc at startup
     if (Test-Path -Path 'C:\dsc\rundsc.ps1' -ErrorAction SilentlyContinue) {
       Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
@@ -695,16 +546,11 @@ if ($rebootReasons.length) {
     Write-Log -message 'C:\dsc\rundsc.ps1 downloaded.' -severity 'INFO'
     & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/sc', 'onstart', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', 'powershell.exe -File C:\dsc\rundsc.ps1', '/f')
     Write-Log -message 'scheduled task: RunDesiredStateConfigurationAtStartup, created.' -severity 'INFO'
-  } else {
-    switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
-      'Microsoft Windows 7*' {
-        New-LocalCache
-      }
-      default {
-        Stop-DesiredStateConfig
-        Remove-DesiredStateConfigTriggers
-      }
-    }
+  }
+  if (($isWorker) -and (-not ($runDscOnWorker))) {
+    Stop-DesiredStateConfig
+    Remove-DesiredStateConfigTriggers
+    New-LocalCache
   }
 
   if (-not ($isWorker)) {
