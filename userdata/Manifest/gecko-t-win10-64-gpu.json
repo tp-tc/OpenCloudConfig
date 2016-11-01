@@ -189,19 +189,6 @@
       "Link": "C:\\home"
     },
     {
-      "ComponentName": "msys_home",
-      "ComponentType": "SymbolicLink",
-      "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Target": "C:\\Users",
-      "Link": "C:\\mozilla-build\\msys\\home",
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
-        }
-      ]
-    },
-    {
       "ComponentName": "MozillaBuildSetup",
       "ComponentType": "ExeInstall",
       "Comment": "Base Firefox on Windows build requirement",
@@ -228,6 +215,19 @@
           }
         ]
       }
+    },
+    {
+      "ComponentName": "msys_home",
+      "ComponentType": "SymbolicLink",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Target": "C:\\Users",
+      "Link": "C:\\mozilla-build\\msys\\home",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        }
+      ]
     },
     {
       "ComponentName": "DeleteMozillaBuildMercurial",
