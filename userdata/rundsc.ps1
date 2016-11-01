@@ -36,45 +36,69 @@ function Run-RemoteDesiredStateConfig {
   param (
     [string] $url
   )
-  Stop-DesiredStateConfig
-  $config = [IO.Path]::GetFileNameWithoutExtension($url)
-  $target = ('{0}\{1}.ps1' -f $env:Temp, $config)
-  Remove-Item $target -confirm:$false -force -ErrorAction SilentlyContinue
-  (New-Object Net.WebClient).DownloadFile(('{0}?{1}' -f $url, [Guid]::NewGuid()), $target)
-  Write-Log -message ('{0} :: downloaded {1}, from {2}.' -f $($MyInvocation.MyCommand.Name), $target, $url) -severity 'DEBUG'
-  Unblock-File -Path $target
-  . $target
-  $mof = ('{0}\{1}' -f $env:Temp, $config)
-  Remove-Item $mof -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
-  Invoke-Expression "$config -OutputPath $mof"
-  Write-Log -message ('{0} :: compiled mof {1}, from {2}.' -f $($MyInvocation.MyCommand.Name), $mof, $config) -severity 'DEBUG'
-  Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    Stop-DesiredStateConfig
+    $config = [IO.Path]::GetFileNameWithoutExtension($url)
+    $target = ('{0}\{1}.ps1' -f $env:Temp, $config)
+    Remove-Item $target -confirm:$false -force -ErrorAction SilentlyContinue
+    (New-Object Net.WebClient).DownloadFile(('{0}?{1}' -f $url, [Guid]::NewGuid()), $target)
+    Write-Log -message ('{0} :: downloaded {1}, from {2}.' -f $($MyInvocation.MyCommand.Name), $target, $url) -severity 'DEBUG'
+    Unblock-File -Path $target
+    . $target
+    $mof = ('{0}\{1}' -f $env:Temp, $config)
+    Remove-Item $mof -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+    Invoke-Expression "$config -OutputPath $mof"
+    Write-Log -message ('{0} :: compiled mof {1}, from {2}.' -f $($MyInvocation.MyCommand.Name), $mof, $config) -severity 'DEBUG'
+    Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
 }
 function Stop-DesiredStateConfig {
-  # terminate any running dsc process
-  $dscpid = (Get-WmiObject msft_providers | ? {$_.provider -like 'dsccore'} | Select-Object -ExpandProperty HostProcessIdentifier)
-  if ($dscpid) {
-    Get-Process -Id $dscpid | Stop-Process -f
-    Write-Log -message ('{0} :: dsc process with pid {1}, stopped.' -f $($MyInvocation.MyCommand.Name), $dscpid) -severity 'DEBUG'
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    # terminate any running dsc process
+    $dscpid = (Get-WmiObject msft_providers | ? {$_.provider -like 'dsccore'} | Select-Object -ExpandProperty HostProcessIdentifier)
+    if ($dscpid) {
+      Get-Process -Id $dscpid | Stop-Process -f
+      Write-Log -message ('{0} :: dsc process with pid {1}, stopped.' -f $($MyInvocation.MyCommand.Name), $dscpid) -severity 'DEBUG'
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
 function Remove-DesiredStateConfigTriggers {
-  try {
-    $scheduledTask = 'RunDesiredStateConfigurationAtStartup'
-    Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
-    Write-Log -message 'scheduled task: RunDesiredStateConfigurationAtStartup, deleted.' -severity 'INFO'
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
-  catch {
-    Write-Log -message ('failed to delete scheduled task: {0}. {1}' -f $scheduledTask, $_.Exception.Message) -severity 'ERROR'
-  }
-  foreach ($mof in @('Previous', 'backup', 'Current')) {
-    if (Test-Path -Path ('{0}\System32\Configuration\{1}.mof' -f $env:SystemRoot, $mof) -ErrorAction SilentlyContinue) {
-      Remove-Item -Path ('{0}\System32\Configuration\{1}.mof' -f $env:SystemRoot, $mof) -confirm:$false -force
-      Write-Log -message ('{0}\System32\Configuration\{1}.mof deleted' -f $env:SystemRoot, $mof) -severity 'INFO'
+  process {
+    try {
+      $scheduledTask = 'RunDesiredStateConfigurationAtStartup'
+      Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
+      Write-Log -message 'scheduled task: RunDesiredStateConfigurationAtStartup, deleted.' -severity 'INFO'
     }
+    catch {
+      Write-Log -message ('failed to delete scheduled task: {0}. {1}' -f $scheduledTask, $_.Exception.Message) -severity 'ERROR'
+    }
+    foreach ($mof in @('Previous', 'backup', 'Current')) {
+      if (Test-Path -Path ('{0}\System32\Configuration\{1}.mof' -f $env:SystemRoot, $mof) -ErrorAction SilentlyContinue) {
+        Remove-Item -Path ('{0}\System32\Configuration\{1}.mof' -f $env:SystemRoot, $mof) -confirm:$false -force
+        Write-Log -message ('{0}\System32\Configuration\{1}.mof deleted' -f $env:SystemRoot, $mof) -severity 'INFO'
+      }
+    }
+    Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
+    Write-Log -message 'C:\dsc\rundsc.ps1 deleted' -severity 'INFO'
   }
-  Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
-  Write-Log -message 'C:\dsc\rundsc.ps1 deleted' -severity 'INFO'
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
 }
 function Remove-LegacyStuff {
   param (
@@ -157,99 +181,106 @@ function Remove-LegacyStuff {
       'AWS.EC2.Windows.CloudWatch.PlugIn' = 'Disabled'
     }
   )
-
-  # clear the event log (if it hasn't just been done)
-  if (-not (Get-EventLog -logName 'Application' -source 'OpenCloudConfig' -message 'Remove-LegacyStuff :: event log cleared.' -after (Get-Date).AddHours(-1) -newest 1 -ErrorAction SilentlyContinue)) {
-    wevtutil el | % { wevtutil cl $_ }
-    Write-Log -message ('{0} :: event log cleared.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
+  process {
+    # clear the event log (if it hasn't just been done)
+    if (-not (Get-EventLog -logName 'Application' -source 'OpenCloudConfig' -message 'Remove-LegacyStuff :: event log cleared.' -after (Get-Date).AddHours(-1) -newest 1 -ErrorAction SilentlyContinue)) {
+      wevtutil el | % { wevtutil cl $_ }
+      Write-Log -message ('{0} :: event log cleared.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+    }
 
-  # remove scheduled tasks
-  foreach ($scheduledTask in $scheduledTasks) {
-    try {
-      Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
-      Write-Log -message ('{0} :: scheduled task: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $scheduledTask) -severity 'INFO'
-    }
-    catch {
-      Write-Log -message ('{0} :: failed to delete scheduled task: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $scheduledTask, $_.Exception.Message) -severity 'ERROR'
-    }
-  }
-
-  # remove user accounts
-  foreach ($user in $users) {
-    if (@(Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq $user }).length -gt 0) {
-      Start-Process 'logoff' -ArgumentList @((((quser /server:. | ? { $_ -match $user }) -split ' +')[2]), '/server:.') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-logoff.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $user) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-logoff.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $user)
-      Start-Process 'net' -ArgumentList @('user', $user, '/DELETE') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $user) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $user)
-      Write-Log -message ('{0} :: user: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $user) -severity 'INFO'
-    }
-    if (Test-Path -Path ('{0}\Users\{1}' -f $env:SystemDrive, $user) -ErrorAction SilentlyContinue) {
-      Remove-Item ('{0}\Users\{1}' -f $env:SystemDrive, $user) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
-      Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), ('{0}\Users\{1}' -f $env:SystemDrive, $user)) -severity 'INFO'
-    }
-    if (Test-Path -Path ('{0}\Users\{1}*' -f $env:SystemDrive, $user) -ErrorAction SilentlyContinue) {
-      Remove-Item ('{0}\Users\{1}*' -f $env:SystemDrive, $user) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
-      Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), ('{0}\Users\{1}*' -f $env:SystemDrive, $user)) -severity 'INFO'
-    }
-  }
-
-  # delete paths
-  foreach ($path in $paths) {
-    if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
-      Remove-Item $path -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
-      Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'INFO'
-    }
-  }
-
-  # delete old mozilla-build. presence of python27 indicates old mozilla-build
-  if (Test-Path -Path ('{0}\mozilla-build\python27' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
-    Remove-Item ('{0}\mozilla-build' -f $env:SystemDrive) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
-    Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), ('{0}\mozilla-build' -f $env:SystemDrive)) -severity 'INFO'
-  }
-
-  # delete services
-  foreach ($service in $services) {
-    if (Get-Service -Name $service -ErrorAction SilentlyContinue) {
-      Get-Service -Name $service | Stop-Service -PassThru
-      (Get-WmiObject -Class Win32_Service -Filter "Name='$service'").delete()
-      Write-Log -message ('{0} :: service: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $service) -severity 'INFO'
-    }
-  }
-
-  # remove registry keys
-  foreach ($registryKey in $registryKeys) {
-    if ((Get-Item -Path $registryKey -ErrorAction SilentlyContinue) -ne $null) {
-      Remove-Item -Path $registryKey -recurse
-      Write-Log -message ('{0} :: registry key: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $registryKey) -severity 'INFO'
-    }
-  }
-
-  # remove registry entries
-  foreach ($name in $registryEntries.Keys) {
-    $path = $registryEntries.Item($name)
-    $item = (Get-Item -Path $path)
-    if (($item -ne $null) -and ($item.GetValue($name) -ne $null)) {
-      Remove-ItemProperty -path $path -name $name
-      Write-Log -message ('{0} :: registry entry: {1}\{2}, deleted.' -f $($MyInvocation.MyCommand.Name), $path, $name) -severity 'INFO'
-    }
-  }
-
-  # reset ec2 config settings
-  $ec2ConfigSettingsFile = 'C:\Program Files\Amazon\Ec2ConfigService\Settings\Config.xml'
-  $ec2ConfigSettingsFileModified = $false;
-  [xml]$xml = (Get-Content $ec2ConfigSettingsFile)
-  foreach ($plugin in $xml.DocumentElement.Plugins.Plugin) {
-    if ($ec2ConfigSettings.ContainsKey($plugin.Name)) {
-      if ($plugin.State -ne $ec2ConfigSettings[$plugin.Name]) {
-        $plugin.State = $ec2ConfigSettings[$plugin.Name]
-        $ec2ConfigSettingsFileModified = $true
-        Write-Log -message ('{0} :: Ec2Config {1} set to: {2}, in: {3}' -f $($MyInvocation.MyCommand.Name), $plugin.Name, $plugin.State, $ec2ConfigSettingsFile) -severity 'INFO'
+    # remove scheduled tasks
+    foreach ($scheduledTask in $scheduledTasks) {
+      try {
+        Start-Process 'schtasks.exe' -ArgumentList @('/Delete', '/tn', $scheduledTask, '/F') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $scheduledTask)
+        Write-Log -message ('{0} :: scheduled task: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $scheduledTask) -severity 'INFO'
+      }
+      catch {
+        Write-Log -message ('{0} :: failed to delete scheduled task: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $scheduledTask, $_.Exception.Message) -severity 'ERROR'
       }
     }
+
+    # remove user accounts
+    foreach ($user in $users) {
+      if (@(Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq $user }).length -gt 0) {
+        Start-Process 'logoff' -ArgumentList @((((quser /server:. | ? { $_ -match $user }) -split ' +')[2]), '/server:.') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-logoff.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $user) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-logoff.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $user)
+        Start-Process 'net' -ArgumentList @('user', $user, '/DELETE') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $user) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $user)
+        Write-Log -message ('{0} :: user: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $user) -severity 'INFO'
+      }
+      if (Test-Path -Path ('{0}\Users\{1}' -f $env:SystemDrive, $user) -ErrorAction SilentlyContinue) {
+        Remove-Item ('{0}\Users\{1}' -f $env:SystemDrive, $user) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+        Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), ('{0}\Users\{1}' -f $env:SystemDrive, $user)) -severity 'INFO'
+      }
+      if (Test-Path -Path ('{0}\Users\{1}*' -f $env:SystemDrive, $user) -ErrorAction SilentlyContinue) {
+        Remove-Item ('{0}\Users\{1}*' -f $env:SystemDrive, $user) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+        Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), ('{0}\Users\{1}*' -f $env:SystemDrive, $user)) -severity 'INFO'
+      }
+    }
+
+    # delete paths
+    foreach ($path in $paths) {
+      if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
+        Remove-Item $path -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+        Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'INFO'
+      }
+    }
+
+    # delete old mozilla-build. presence of python27 indicates old mozilla-build
+    if (Test-Path -Path ('{0}\mozilla-build\python27' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
+      Remove-Item ('{0}\mozilla-build' -f $env:SystemDrive) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+      Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), ('{0}\mozilla-build' -f $env:SystemDrive)) -severity 'INFO'
+    }
+
+    # delete services
+    foreach ($service in $services) {
+      if (Get-Service -Name $service -ErrorAction SilentlyContinue) {
+        Get-Service -Name $service | Stop-Service -PassThru
+        (Get-WmiObject -Class Win32_Service -Filter "Name='$service'").delete()
+        Write-Log -message ('{0} :: service: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $service) -severity 'INFO'
+      }
+    }
+
+    # remove registry keys
+    foreach ($registryKey in $registryKeys) {
+      if ((Get-Item -Path $registryKey -ErrorAction SilentlyContinue) -ne $null) {
+        Remove-Item -Path $registryKey -recurse
+        Write-Log -message ('{0} :: registry key: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $registryKey) -severity 'INFO'
+      }
+    }
+
+    # remove registry entries
+    foreach ($name in $registryEntries.Keys) {
+      $path = $registryEntries.Item($name)
+      $item = (Get-Item -Path $path)
+      if (($item -ne $null) -and ($item.GetValue($name) -ne $null)) {
+        Remove-ItemProperty -path $path -name $name
+        Write-Log -message ('{0} :: registry entry: {1}\{2}, deleted.' -f $($MyInvocation.MyCommand.Name), $path, $name) -severity 'INFO'
+      }
+    }
+
+    # reset ec2 config settings
+    $ec2ConfigSettingsFile = 'C:\Program Files\Amazon\Ec2ConfigService\Settings\Config.xml'
+    $ec2ConfigSettingsFileModified = $false;
+    [xml]$xml = (Get-Content $ec2ConfigSettingsFile)
+    foreach ($plugin in $xml.DocumentElement.Plugins.Plugin) {
+      if ($ec2ConfigSettings.ContainsKey($plugin.Name)) {
+        if ($plugin.State -ne $ec2ConfigSettings[$plugin.Name]) {
+          $plugin.State = $ec2ConfigSettings[$plugin.Name]
+          $ec2ConfigSettingsFileModified = $true
+          Write-Log -message ('{0} :: Ec2Config {1} set to: {2}, in: {3}' -f $($MyInvocation.MyCommand.Name), $plugin.Name, $plugin.State, $ec2ConfigSettingsFile) -severity 'INFO'
+        }
+      }
+    }
+    if ($ec2ConfigSettingsFileModified) {
+      & 'icacls' @($ec2ConfigSettingsFile, '/grant', 'Administrators:F') | Out-File -filePath $logFile -append
+      & 'icacls' @($ec2ConfigSettingsFile, '/grant', 'System:F') | Out-File -filePath $logFile -append
+      $xml.Save($ec2ConfigSettingsFile) | Out-File -filePath $logFile -append
+    }
   }
-  if ($ec2ConfigSettingsFileModified) {
-    & 'icacls' @($ec2ConfigSettingsFile, '/grant', 'Administrators:F') | Out-File -filePath $logFile -append
-    & 'icacls' @($ec2ConfigSettingsFile, '/grant', 'System:F') | Out-File -filePath $logFile -append
-    $xml.Save($ec2ConfigSettingsFile) | Out-File -filePath $logFile -append
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
 function Map-DriveLetters {
@@ -259,25 +290,33 @@ function Map-DriveLetters {
       'E:' = 'Z:'
     }
   )
-  $driveLetterMap.Keys | % {
-    $old = $_
-    $new = $driveLetterMap.Item($_)
-    if (Test-Path -Path ('{0}\' -f $old) -ErrorAction SilentlyContinue) {
-      $volume = Get-WmiObject -Class win32_volume -Filter "DriveLetter='$old'"
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    $driveLetterMap.Keys | % {
+      $old = $_
+      $new = $driveLetterMap.Item($_)
+      if (Test-Path -Path ('{0}\' -f $old) -ErrorAction SilentlyContinue) {
+        $volume = Get-WmiObject -Class win32_volume -Filter "DriveLetter='$old'"
+        if ($null -ne $volume) {
+          $volume.DriveLetter = $new
+          $volume.Put()
+          Write-Log -message ('{0} :: drive {1} assigned new drive letter: {2}.' -f $($MyInvocation.MyCommand.Name), $old, $new) -severity 'INFO'
+        }
+      }
+    }
+    if ((Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue) -and (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue))) {
+      $volume = Get-WmiObject -Class win32_volume -Filter "DriveLetter='Y:'"
       if ($null -ne $volume) {
-        $volume.DriveLetter = $new
+        $volume.DriveLetter = 'Z:'
         $volume.Put()
-        Write-Log -message ('{0} :: drive {1} assigned new drive letter: {2}.' -f $($MyInvocation.MyCommand.Name), $old, $new) -severity 'INFO'
+        Write-Log -message ('{0} :: drive Y: assigned new drive letter: Z:.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
       }
     }
   }
-  if ((Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue) -and (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue))) {
-    $volume = Get-WmiObject -Class win32_volume -Filter "DriveLetter='Y:'"
-    if ($null -ne $volume) {
-      $volume.DriveLetter = 'Z:'
-      $volume.Put()
-      Write-Log -message ('{0} :: drive Y: assigned new drive letter: Z:.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-    }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
 function Set-Credentials {
@@ -286,173 +325,189 @@ function Set-Credentials {
     [string] $password,
     [switch] $setautologon
   )
-  try {
-    & net @('user', $username, $password)
-    Write-Log -message ('{0} :: credentials set for user: {1}.' -f $($MyInvocation.MyCommand.Name), $username) -severity 'INFO'
-    if ($setautologon) {
-      Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Type 'String' -Name 'DefaultPassword' -Value $password
-      Write-Log -message ('{0} :: autologon set for user: {1}.' -f $($MyInvocation.MyCommand.Name), $username) -severity 'INFO'
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    try {
+      & net @('user', $username, $password)
+      Write-Log -message ('{0} :: credentials set for user: {1}.' -f $($MyInvocation.MyCommand.Name), $username) -severity 'INFO'
+      if ($setautologon) {
+        Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Type 'String' -Name 'DefaultPassword' -Value $password
+        Write-Log -message ('{0} :: autologon set for user: {1}.' -f $($MyInvocation.MyCommand.Name), $username) -severity 'INFO'
+      }
+    }
+    catch {
+      Write-Log -message ('{0} :: failed to set credentials for user: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $username, $_.Exception.Message) -severity 'ERROR'
     }
   }
-  catch {
-    Write-Log -message ('{0} :: failed to set credentials for user: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $username, $_.Exception.Message) -severity 'ERROR'
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
 function Run-Dsc32BitBypass {
-  # nxlog
-  (New-Object Net.WebClient).DownloadFile('http://nxlog.co/system/files/products/files/1/nxlog-ce-2.9.1716.msi', 'Z:\nxlog-ce-2.9.1716.msi')
-  Start-Process msiexec.exe -ArgumentList @('/package', 'Z:\nxlog-ce-2.9.1716.msi', '/quiet', '/norestart', '/log', ('C:\log\{0}-nxlog-ce-2.9.1716.msi.install.log' -f [DateTime]::Now.ToString("yyyyMMddHHmmss"))) -wait
-  (New-Object Net.WebClient).DownloadFile('https://papertrailapp.com/tools/papertrail-bundle.pem', 'C:\Program Files\nxlog\cert\papertrail-bundle.pem')
-
-  $registryKeys = @(
-    'HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps'
-  )
-  $registryEntries = @(
-
-    # Puppet Legacy (process_priority)
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl';Type='DWord';Value=0x00000026;Name='Win32PrioritySeparation'},
-
-    # Puppet Legacy (ntfs_options)
-    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps';Type='DWord';Value=0x00000001;Name='DumpType'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem';Type='DWord';Value=0x00000001;Name='NtfsDisable8dot3NameCreation'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem';Type='DWord';Value=0x00000001;Name='NtfsDisableLastAccessUpdate'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem';Type='DWord';Value=0x00000002;Name='NtfsMemoryUsage'},
-
-    # Puppet Legacy (memory_paging)
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management';Type='DWord';Value=0x00000001;Name='DisablePagingExecutive'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters';Type='DWord';Value=0x00000012;Name='BootId'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters';Type='DWord';Value=0x185729f9;Name='BaseTime'},
-
-    # Puppet Legacy (windows_network_opt_registry)
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\ServiceProvider';Type='DWord';Value=0x00002000;Name='DnsPriority'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\ServiceProvider';Type='DWord';Value=0x00000500;Name='HostsPriority'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\ServiceProvider';Type='DWord';Value=0x00000499;Name='LocalPriority'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\ServiceProvider';Type='DWord';Value=0x00002001;Name='NetbtPriority'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\LanmanServer\Parameters';Type='DWord';Value=0x00000003;Name='Size'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\LanmanServer\Parameters';Type='DWord';Value=0x00000003;Name='AdjustedNullSessionPipes'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\AFD\Parameters';Type='DWord';Value=0x05316608;Name='DefaultSendWindow'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\AFD\Parameters';Type='DWord';Value=0x05316608;Name='DefaultReceiveWindow'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000003;Name='Tcp1323Opts'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000005;Name='TCPMaxDataRetransmissions'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000000;Name='SynAttackProtect_SEL'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000001;Name='DisableTaskOffload'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000001;Name='DisableTaskOffload_SEL'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000040;Name='DefaultTTL'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000030;Name='TcpTimedWaitDelay'},
-    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPER1_0SERVER';Type='DWord';Value=0x00000016;Name='explorer.exe'},
-    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPER1_0SERVER';Type='DWord';Value=0x00000016;Name='iexplorer.exe'},
-    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPERSERVER';Type='DWord';Value=0x00000016;Name='explorer.exe_01'},
-    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPERSERVER';Type='DWord';Value=0x00000016;Name='iexplorer.exe_01'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management';Type='DWord';Value=0x00000001;Name='LargeSystemCache'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters';Type='DWord';Value=0x00000000;Name='NegativeCacheTime'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters';Type='DWord';Value=0x00000000;Name='NetFailureCacheTime'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters';Type='DWord';Value=0x00000000;Name='NegativeSOACacheTime'},
-    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Policies\Microsoft\Windows\Psched';Type='DWord';Value=0x00000000;Name='NonBestEffortLimit'},
-    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile';Type='DWord';Value=0x4294967295;Name='NetworkThrottlingIndex'},
-    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile';Type='DWord';Value=0x00000010;Name='SystemResponsiveness'},
-    New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters';Type='DWord';Value=0x4294967295;Name='DisabledComponents'},
-    New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\MSMQ\Parameters';Type='DWord';Value=0x00000001;Name='LargeSystemCache_SEL'}
-  )
-  
-  foreach ($rk in $registryKeys) {
-    New-Item $rk -ErrorAction SilentlyContinue
-    Write-Log -message ('{0} :: registry key {1} created.' -f $($MyInvocation.MyCommand.Name), $rk) -severity 'INFO'
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
-  foreach ($re in $registryEntries) {
-    Set-ItemProperty -Path $re.Path -Type $re.Type -Name $re.Name -Value $re.Value
-    Write-Log -message ('{0} :: registry entry {1}\{2} set to {3} {4}.' -f $($MyInvocation.MyCommand.Name), $re.Path, $re.Name, $re.Type, $re.Value) -severity 'INFO'
-  }
+  process {
+    # nxlog
+    (New-Object Net.WebClient).DownloadFile('http://nxlog.co/system/files/products/files/1/nxlog-ce-2.9.1716.msi', 'Z:\nxlog-ce-2.9.1716.msi')
+    Start-Process msiexec.exe -ArgumentList @('/package', 'Z:\nxlog-ce-2.9.1716.msi', '/quiet', '/norestart', '/log', ('C:\log\{0}-nxlog-ce-2.9.1716.msi.install.log' -f [DateTime]::Now.ToString("yyyyMMddHHmmss"))) -wait
+    (New-Object Net.WebClient).DownloadFile('https://papertrailapp.com/tools/papertrail-bundle.pem', 'C:\Program Files\nxlog\cert\papertrail-bundle.pem')
 
-  # generic worker
-  $gwVersion = '6.1.0'
-  New-Item -Path 'C:\generic-worker' -ItemType directory -force
-  (New-Object Net.WebClient).DownloadFile(('https://github.com/taskcluster/generic-worker/releases/download/v{0}/generic-worker-windows-386.exe' -f $gwVersion), 'C:\generic-worker\generic-worker.exe')
-  (New-Object Net.WebClient).DownloadFile('https://github.com/taskcluster/livelog/releases/download/v1.0.0/livelog-windows-386.exe', 'C:\generic-worker\livelog.exe')
-  & 'C:\generic-worker\generic-worker.exe' @('install', 'startup', '--config', 'C:\generic-worker\generic-worker.config')
-  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker.bat', 'C:\generic-worker\run-generic-worker.bat')
-  if ((& 'netsh.exe' @('advfirewall', 'firewall', 'show', 'rule', 'name=LiveLog_Get')) -contains 'No rules match the specified criteria.') {
-    & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', 'name=LiveLog_Get', 'dir=in', 'action=allow', 'protocol=TCP', 'localport=60022')
-  }
-  if ((& 'netsh.exe' @('advfirewall', 'firewall', 'show', 'rule', 'name=LiveLog_Put')) -contains 'No rules match the specified criteria.') {
-    & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', 'name=LiveLog_Put', 'dir=in', 'action=allow', 'protocol=TCP', 'localport=60023')
-  }
-  Write-Log -message ('{0} :: generic-worker and livelog downloaded, installed and configured.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+    $registryKeys = @(
+      'HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps'
+    )
+    $registryEntries = @(
 
-  # mercurial
-  (New-Object Net.WebClient).DownloadFile('https://www.mercurial-scm.org/release/windows/Mercurial-3.9.1.exe', 'Z:\Mercurial-3.9.1.exe')
-  & 'Z:\Mercurial-3.9.1.exe' @('/SP-', '/VERYSILENT', '/NORESTART', '/DIR=expand:{pf}\Mercurial', '/LOG="C:\log\Mercurial-3.9.1.exe.install.log"')
-  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.ini', 'C:\Program Files\Mercurial\Mercurial.ini')
-  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/cacert.pem', 'C:\mozilla-build\msys\etc\cacert.pem')
-  Write-Log -message ('{0} :: hg 3.9.1 downloaded, installed and configured.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+      # Puppet Legacy (process_priority)
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl';Type='DWord';Value=0x00000026;Name='Win32PrioritySeparation'},
 
-  # mozilla-build
-  (New-Object Net.WebClient).DownloadFile('http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.2.0.exe', 'Z:\MozillaBuildSetup-2.2.0.exe')
-  Write-Log -message ('{0} :: mozilla-build 2.2.0 downloaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-  & 'Z:\MozillaBuildSetup-2.2.0.exe' @('/S', '/D=C:\mozilla-build')
-  Write-Log -message ('{0} :: mozilla-build 2.2.0 installed.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+      # Puppet Legacy (ntfs_options)
+      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps';Type='DWord';Value=0x00000001;Name='DumpType'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem';Type='DWord';Value=0x00000001;Name='NtfsDisable8dot3NameCreation'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem';Type='DWord';Value=0x00000001;Name='NtfsDisableLastAccessUpdate'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem';Type='DWord';Value=0x00000002;Name='NtfsMemoryUsage'},
 
-  # tooltool
-  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py', 'C:\mozilla-build\tooltool.py')
-  Write-Log -message ('{0} :: tooltool downloaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-  
-  # virtualenv
-  (New-Object Net.WebClient).DownloadFile('https://hg.mozilla.org/mozilla-central/raw-file/8c9eed5227f8/python/virtualenv/virtualenv.py', 'C:\mozilla-build\python\Lib\site-packages\virtualenv.py')
-  Write-Log -message ('{0} :: virtualenv downloaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-  $wheels = @(
-    'argparse-1.4.0-py2.py3-none-any.whl',
-    'pip-8.1.2-py2.py3-none-any.whl',
-    'setuptools-25.2.0-py2.py3-none-any.whl',
-    'wheel-0.29.0-py2.py3-none-any.whl'
-  )
-  foreach ($wheel in $wheels) {
-    if (-not (Test-Path -Path ('C:\mozilla-build\python\Lib\site-packages\virtualenv_support\{0}' -f $wheel) -ErrorAction SilentlyContinue)) {
-      (New-Object Net.WebClient).DownloadFile(('https://hg.mozilla.org/mozilla-central/raw-file/8c9eed5227f8/python/virtualenv/virtualenv_support/{0}' -f $wheel), ('C:\mozilla-build\python\Lib\site-packages\virtualenv_support\{0}' -f $wheel))
-      Write-Log -message ('{0} :: {1} downloaded.' -f $($MyInvocation.MyCommand.Name), $wheel) -severity 'INFO'
+      # Puppet Legacy (memory_paging)
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management';Type='DWord';Value=0x00000001;Name='DisablePagingExecutive'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters';Type='DWord';Value=0x00000012;Name='BootId'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters';Type='DWord';Value=0x185729f9;Name='BaseTime'},
+
+      # Puppet Legacy (windows_network_opt_registry)
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\ServiceProvider';Type='DWord';Value=0x00002000;Name='DnsPriority'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\ServiceProvider';Type='DWord';Value=0x00000500;Name='HostsPriority'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\ServiceProvider';Type='DWord';Value=0x00000499;Name='LocalPriority'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\ServiceProvider';Type='DWord';Value=0x00002001;Name='NetbtPriority'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\LanmanServer\Parameters';Type='DWord';Value=0x00000003;Name='Size'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\LanmanServer\Parameters';Type='DWord';Value=0x00000003;Name='AdjustedNullSessionPipes'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\AFD\Parameters';Type='DWord';Value=0x05316608;Name='DefaultSendWindow'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\AFD\Parameters';Type='DWord';Value=0x05316608;Name='DefaultReceiveWindow'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000003;Name='Tcp1323Opts'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000005;Name='TCPMaxDataRetransmissions'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000000;Name='SynAttackProtect_SEL'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000001;Name='DisableTaskOffload'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000001;Name='DisableTaskOffload_SEL'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000040;Name='DefaultTTL'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\services\Tcpip\Parameters';Type='DWord';Value=0x00000030;Name='TcpTimedWaitDelay'},
+      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPER1_0SERVER';Type='DWord';Value=0x00000016;Name='explorer.exe'},
+      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPER1_0SERVER';Type='DWord';Value=0x00000016;Name='iexplorer.exe'},
+      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPERSERVER';Type='DWord';Value=0x00000016;Name='explorer.exe_01'},
+      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_MAXCONNECTIONSPERSERVER';Type='DWord';Value=0x00000016;Name='iexplorer.exe_01'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management';Type='DWord';Value=0x00000001;Name='LargeSystemCache'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters';Type='DWord';Value=0x00000000;Name='NegativeCacheTime'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters';Type='DWord';Value=0x00000000;Name='NetFailureCacheTime'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters';Type='DWord';Value=0x00000000;Name='NegativeSOACacheTime'},
+      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Policies\Microsoft\Windows\Psched';Type='DWord';Value=0x00000000;Name='NonBestEffortLimit'},
+      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile';Type='DWord';Value=0x4294967295;Name='NetworkThrottlingIndex'},
+      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile';Type='DWord';Value=0x00000010;Name='SystemResponsiveness'},
+      New-Object PSObject -Property @{Path='HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters';Type='DWord';Value=0x4294967295;Name='DisabledComponents'},
+      New-Object PSObject -Property @{Path='HKLM:\SOFTWARE\Microsoft\MSMQ\Parameters';Type='DWord';Value=0x00000001;Name='LargeSystemCache_SEL'}
+    )
+    
+    foreach ($rk in $registryKeys) {
+      New-Item $rk -ErrorAction SilentlyContinue
+      Write-Log -message ('{0} :: registry key {1} created.' -f $($MyInvocation.MyCommand.Name), $rk) -severity 'INFO'
     }
+    foreach ($re in $registryEntries) {
+      Set-ItemProperty -Path $re.Path -Type $re.Type -Name $re.Name -Value $re.Value
+      Write-Log -message ('{0} :: registry entry {1}\{2} set to {3} {4}.' -f $($MyInvocation.MyCommand.Name), $re.Path, $re.Name, $re.Type, $re.Value) -severity 'INFO'
+    }
+
+    # generic worker
+    $gwVersion = '6.1.0'
+    New-Item -Path 'C:\generic-worker' -ItemType directory -force
+    (New-Object Net.WebClient).DownloadFile(('https://github.com/taskcluster/generic-worker/releases/download/v{0}/generic-worker-windows-386.exe' -f $gwVersion), 'C:\generic-worker\generic-worker.exe')
+    (New-Object Net.WebClient).DownloadFile('https://github.com/taskcluster/livelog/releases/download/v1.0.0/livelog-windows-386.exe', 'C:\generic-worker\livelog.exe')
+    & 'C:\generic-worker\generic-worker.exe' @('install', 'startup', '--config', 'C:\generic-worker\generic-worker.config')
+    (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker.bat', 'C:\generic-worker\run-generic-worker.bat')
+    if ((& 'netsh.exe' @('advfirewall', 'firewall', 'show', 'rule', 'name=LiveLog_Get')) -contains 'No rules match the specified criteria.') {
+      & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', 'name=LiveLog_Get', 'dir=in', 'action=allow', 'protocol=TCP', 'localport=60022')
+    }
+    if ((& 'netsh.exe' @('advfirewall', 'firewall', 'show', 'rule', 'name=LiveLog_Put')) -contains 'No rules match the specified criteria.') {
+      & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', 'name=LiveLog_Put', 'dir=in', 'action=allow', 'protocol=TCP', 'localport=60023')
+    }
+    Write-Log -message ('{0} :: generic-worker and livelog downloaded, installed and configured.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+
+    # mercurial
+    (New-Object Net.WebClient).DownloadFile('https://www.mercurial-scm.org/release/windows/Mercurial-3.9.1.exe', 'Z:\Mercurial-3.9.1.exe')
+    & 'Z:\Mercurial-3.9.1.exe' @('/SP-', '/VERYSILENT', '/NORESTART', '/DIR=expand:{pf}\Mercurial', '/LOG="C:\log\Mercurial-3.9.1.exe.install.log"')
+    (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.ini', 'C:\Program Files\Mercurial\Mercurial.ini')
+    (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/cacert.pem', 'C:\mozilla-build\msys\etc\cacert.pem')
+    Write-Log -message ('{0} :: hg 3.9.1 downloaded, installed and configured.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+
+    # mozilla-build
+    (New-Object Net.WebClient).DownloadFile('http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.2.0.exe', 'Z:\MozillaBuildSetup-2.2.0.exe')
+    Write-Log -message ('{0} :: mozilla-build 2.2.0 downloaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+    & 'Z:\MozillaBuildSetup-2.2.0.exe' @('/S', '/D=C:\mozilla-build')
+    Write-Log -message ('{0} :: mozilla-build 2.2.0 installed.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+
+    # tooltool
+    (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py', 'C:\mozilla-build\tooltool.py')
+    Write-Log -message ('{0} :: tooltool downloaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+    
+    # virtualenv
+    (New-Object Net.WebClient).DownloadFile('https://hg.mozilla.org/mozilla-central/raw-file/8c9eed5227f8/python/virtualenv/virtualenv.py', 'C:\mozilla-build\python\Lib\site-packages\virtualenv.py')
+    Write-Log -message ('{0} :: virtualenv downloaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+    $wheels = @(
+      'argparse-1.4.0-py2.py3-none-any.whl',
+      'pip-8.1.2-py2.py3-none-any.whl',
+      'setuptools-25.2.0-py2.py3-none-any.whl',
+      'wheel-0.29.0-py2.py3-none-any.whl'
+    )
+    foreach ($wheel in $wheels) {
+      if (-not (Test-Path -Path ('C:\mozilla-build\python\Lib\site-packages\virtualenv_support\{0}' -f $wheel) -ErrorAction SilentlyContinue)) {
+        (New-Object Net.WebClient).DownloadFile(('https://hg.mozilla.org/mozilla-central/raw-file/8c9eed5227f8/python/virtualenv/virtualenv_support/{0}' -f $wheel), ('C:\mozilla-build\python\Lib\site-packages\virtualenv_support\{0}' -f $wheel))
+        Write-Log -message ('{0} :: {1} downloaded.' -f $($MyInvocation.MyCommand.Name), $wheel) -severity 'INFO'
+      }
+    }
+
+    # robustcheckout
+    (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/FirefoxBuildResources/robustcheckout.py', 'C:\mozilla-build\robustcheckout.py')
+    Write-Log -message ('{0} :: robustcheckout downloaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+
+    # pip conf
+    New-Item -Path 'C:\ProgramData\pip' -ItemType directory -force
+    (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/pip.conf', 'C:\ProgramData\pip\pip.ini')
+    Write-Log -message ('{0} :: pip config installed.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+
+    # PythonPath registry
+    Set-ItemProperty 'HKLM:\SOFTWARE\Python\PythonCore\2.7\InstallPath' -Type 'String' -Name '(Default)' -Value 'C:\mozilla-build\python\'
+    Set-ItemProperty 'HKLM:\SOFTWARE\Python\PythonCore\2.7\PythonPath' -Type 'String' -Name '(Default)' -Value 'C:\mozilla-build\python\Lib;C:\mozilla-build\python\DLLs;C:\mozilla-build\python\Lib\lib-tk'
+    Write-Log -message ('{0} :: PythonPath registry value set.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+
+    $pathPrepend = @(
+      'C:\Program Files\Mercurial',
+      'C:\mozilla-build\7zip',
+      'C:\mozilla-build\info-zip',
+      'C:\mozilla-build\kdiff3',
+      'C:\mozilla-build\moztools-x64\bin',
+      'C:\mozilla-build\mozmake',
+      'C:\mozilla-build\msys\bin',
+      'C:\mozilla-build\msys\local\bin',
+      'C:\mozilla-build\nsis-3.0b3',
+      'C:\mozilla-build\nsis-2.46u',
+      'C:\mozilla-build\python',
+      'C:\mozilla-build\python\Scripts',
+      'C:\mozilla-build\upx391w',
+      'C:\mozilla-build\wget',
+      'C:\mozilla-build\yasm'
+    )
+    $env:PATH = (@(($pathPrepend + @($env:PATH -split ';')) | select -Unique) -join ';')
+    [Environment]::SetEnvironmentVariable('PATH', $env:Path, 'Machine')
+    Write-Log -message ('{0} :: environment PATH set ({1}).' -f $($MyInvocation.MyCommand.Name), $env:PATH) -severity 'INFO'
+
+    $env:MOZILLABUILD = 'C:\mozilla-build'
+    [Environment]::SetEnvironmentVariable('MOZILLABUILD', $env:MOZILLABUILD, 'Machine')
+    Write-Log -message ('{0} :: environment MOZILLABUILD set ({1}).' -f $($MyInvocation.MyCommand.Name), $env:MOZILLABUILD) -severity 'INFO'
+
+    $env:PIP_DOWNLOAD_CACHE = 'Y:\pip-cache'
+    [Environment]::SetEnvironmentVariable('PIP_DOWNLOAD_CACHE', $env:PIP_DOWNLOAD_CACHE, 'Machine')
+    Write-Log -message ('{0} :: environment PIP_DOWNLOAD_CACHE set ({1}).' -f $($MyInvocation.MyCommand.Name), $env:PIP_DOWNLOAD_CACHE) -severity 'INFO'
   }
-
-  # robustcheckout
-  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/FirefoxBuildResources/robustcheckout.py', 'C:\mozilla-build\robustcheckout.py')
-  Write-Log -message ('{0} :: robustcheckout downloaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-
-  # pip conf
-  New-Item -Path 'C:\ProgramData\pip' -ItemType directory -force
-  (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/pip.conf', 'C:\ProgramData\pip\pip.ini')
-  Write-Log -message ('{0} :: pip config installed.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-
-  # PythonPath registry
-  Set-ItemProperty 'HKLM:\SOFTWARE\Python\PythonCore\2.7\InstallPath' -Type 'String' -Name '(Default)' -Value 'C:\mozilla-build\python\'
-  Set-ItemProperty 'HKLM:\SOFTWARE\Python\PythonCore\2.7\PythonPath' -Type 'String' -Name '(Default)' -Value 'C:\mozilla-build\python\Lib;C:\mozilla-build\python\DLLs;C:\mozilla-build\python\Lib\lib-tk'
-  Write-Log -message ('{0} :: PythonPath registry value set.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-
-  $pathPrepend = @(
-    'C:\Program Files\Mercurial',
-    'C:\mozilla-build\7zip',
-    'C:\mozilla-build\info-zip',
-    'C:\mozilla-build\kdiff3',
-    'C:\mozilla-build\moztools-x64\bin',
-    'C:\mozilla-build\mozmake',
-    'C:\mozilla-build\msys\bin',
-    'C:\mozilla-build\msys\local\bin',
-    'C:\mozilla-build\nsis-3.0b3',
-    'C:\mozilla-build\nsis-2.46u',
-    'C:\mozilla-build\python',
-    'C:\mozilla-build\python\Scripts',
-    'C:\mozilla-build\upx391w',
-    'C:\mozilla-build\wget',
-    'C:\mozilla-build\yasm'
-  )
-  $env:PATH = (@(($pathPrepend + @($env:PATH -split ';')) | select -Unique) -join ';')
-  [Environment]::SetEnvironmentVariable('PATH', $env:Path, 'Machine')
-  Write-Log -message ('{0} :: environment PATH set ({1}).' -f $($MyInvocation.MyCommand.Name), $env:PATH) -severity 'INFO'
-
-  $env:MOZILLABUILD = 'C:\mozilla-build'
-  [Environment]::SetEnvironmentVariable('MOZILLABUILD', $env:MOZILLABUILD, 'Machine')
-  Write-Log -message ('{0} :: environment MOZILLABUILD set ({1}).' -f $($MyInvocation.MyCommand.Name), $env:MOZILLABUILD) -severity 'INFO'
-
-  $env:PIP_DOWNLOAD_CACHE = 'Y:\pip-cache'
-  [Environment]::SetEnvironmentVariable('PIP_DOWNLOAD_CACHE', $env:PIP_DOWNLOAD_CACHE, 'Machine')
-  Write-Log -message ('{0} :: environment PIP_DOWNLOAD_CACHE set ({1}).' -f $($MyInvocation.MyCommand.Name), $env:PIP_DOWNLOAD_CACHE) -severity 'INFO'
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
 }
 function New-LocalCache {
   param (
@@ -462,9 +517,17 @@ function New-LocalCache {
       'y:\tooltool-cache'
     )
   )
-  foreach ($path in $paths) {
-    New-Item -Path $path -ItemType directory -force
-    & 'icacls.exe' @($path, '/grant', 'Everyone:(OI)(CI)F')
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    foreach ($path in $paths) {
+      New-Item -Path $path -ItemType directory -force
+      & 'icacls.exe' @($path, '/grant', 'Everyone:(OI)(CI)F')
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
 
