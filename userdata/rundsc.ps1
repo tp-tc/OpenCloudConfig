@@ -483,7 +483,6 @@ if ($setFqdn) {
   }
 }
 
-
 if ($rebootReasons.length) {
   Remove-Item -Path $lock -force
   & shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
