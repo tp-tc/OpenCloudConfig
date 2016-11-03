@@ -472,12 +472,28 @@
       }
     },
     {
+      "ComponentName": "DisableDesktopInterrupt",
+      "ComponentType": "ChecksumFileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "GenericWorkerInstall"
+        }
+      ],
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/disable-desktop-interrupt.reg",
+      "Target": "C:\\generic-worker\\disable-desktop-interrupt.reg"
+    },
+    {
       "ComponentName": "GenericWorkerStateWait",
       "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
         {
           "ComponentType": "CommandRun",
           "ComponentName": "GenericWorkerInstall"
+        },
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "DisableDesktopInterrupt"
         }
       ],
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker.bat",
