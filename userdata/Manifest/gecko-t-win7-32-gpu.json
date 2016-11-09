@@ -428,7 +428,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v6.1.0/generic-worker-windows-386.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v7.0.0/generic-worker-windows-386.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
@@ -498,7 +498,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 6.1.0"
+            "Match": "generic-worker 7.0.0"
           }
         ]
       }
