@@ -648,6 +648,108 @@
       "Name": "TOOLTOOL_CACHE",
       "Value": "y:\\tooltool-cache",
       "Target": "Machine"
+    },
+    {
+      "ComponentName": "CarbonClone",
+      "ComponentType": "CommandRun",
+      "Comment": "Bug 1316329 - support creation of symlinks by task users",
+      "Command": "hg",
+      "Arguments": [
+        "clone",
+        "--insecure",
+        "https://bitbucket.org/splatteredbits/carbon",
+        "C:\\Windows\\Temp\\carbon"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "Mercurial"
+        }
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Windows\\Temp\\carbon\\.hg"
+        ]
+      }
+    },
+    {
+      "ComponentName": "CarbonUpdate",
+      "ComponentType": "CommandRun",
+      "Comment": "Bug 1316329 - support creation of symlinks by task users",
+      "Command": "hg",
+      "Arguments": [
+        "update",
+        "2.4.0",
+        "-R",
+        "C:\\Windows\\Temp\\carbon"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "CarbonClone"
+        }
+      ]
+    },
+    {
+      "ComponentName": "CarbonInstall",
+      "ComponentType": "CommandRun",
+      "Comment": "Bug 1316329 - support creation of symlinks by task users",
+      "Command": "xcopy",
+      "Arguments": [
+        "C:\\Windows\\Temp\\carbon\\Carbon",
+        "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Modules\\Carbon",
+        "/e",
+        "/i",
+        "/y"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "CarbonUpdate"
+        }
+      ]
+    },
+    {
+      "ComponentName": "GrantGenericWorkerSeAssignPrimaryTokenPrivilege",
+      "ComponentType": "CommandRun",
+      "Comment": "Bug 1303455 - grant SeAssignPrimaryTokenPrivilege, SeIncreaseQuotaPrivilege to g-w user",
+      "Command": "powershell",
+      "Arguments": [
+        "-command",
+        "\"& {&'Import-Module' Carbon}\";",
+        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeAssignPrimaryTokenPrivilege}\""
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "CarbonInstall"
+        },
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "GenericWorkerInstall"
+        }
+      ]
+    },
+    {
+      "ComponentName": "GrantGenericWorkerSeIncreaseQuotaPrivilege",
+      "ComponentType": "CommandRun",
+      "Comment": "Bug 1303455 - grant SeAssignPrimaryTokenPrivilege, SeIncreaseQuotaPrivilege to g-w user",
+      "Command": "powershell",
+      "Arguments": [
+        "-command",
+        "\"& {&'Import-Module' Carbon}\";",
+        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeIncreaseQuotaPrivilege}\""
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "CarbonInstall"
+        },
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "GenericWorkerInstall"
+        }
+      ]
     }
   ]
 }

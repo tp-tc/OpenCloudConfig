@@ -1,5 +1,0 @@
-[Privilege Rights]
-SeCreateSymbolicLinkPrivilege = *S-1-1-0
-[Version]
-signature="$CHICAGO$"
-Revision=1
