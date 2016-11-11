@@ -507,13 +507,19 @@ if ($rebootReasons.length) {
         # this setting persists only for the current session
         Enable-PSRemoting -Force
       }
+      'Microsoft Windows 10*' {
+        # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
+        ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) }
+        # this setting persists only for the current session
+        Enable-PSRemoting -SkipNetworkProfileCheck -Force
+      }
       default {
         # this setting persists only for the current session
         Enable-PSRemoting -SkipNetworkProfileCheck -Force
       }
     }
     Set-ExecutionPolicy RemoteSigned -force | Out-File -filePath $logFile -append
-    & winrm @('set', 'winrm/config', '@{MaxEnvelopeSizekb="8192"}')
+    & cmd @('/c', 'winrm', 'set', 'winrm/config', '@{MaxEnvelopeSizekb="8192"}')
     $transcript = ('{0}\log\{1}.dsc-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     # end pre dsc setup ###########################################################################################################################################
 
@@ -530,6 +536,10 @@ if ($rebootReasons.length) {
     }
     switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
       'Microsoft Windows 7*' {
+        # set network interface to public
+        ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(0) }
+      }
+      'Microsoft Windows 10*' {
         # set network interface to public
         ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(0) }
       }
