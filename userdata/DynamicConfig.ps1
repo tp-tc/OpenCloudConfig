@@ -84,21 +84,7 @@ Configuration DynamicConfig {
   if ($workerType) {
     $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/{0}.json?{1}' -f $workerType, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
   } else {
-    $os = (Get-WmiObject -class Win32_OperatingSystem).Caption
-    switch -wildcard ($os) {
-      'Microsoft Windows Server 2012*' {
-        $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/win2012.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
-      }
-      'Microsoft Windows 10*' {
-        $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/win10.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
-      }
-      'Microsoft Windows 7*' {
-        $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/win7.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
-      }
-      default {
-        $manifest = ('{"Items":[{"ComponentType":"DirectoryCreate","Path":"$env:SystemDrive\\log"}]}' | ConvertFrom-Json)
-      }
-    }
+    $manifest = ('{"Items":[{"ComponentType":"DirectoryCreate","Path":"$env:SystemDrive\\log"}]}' | ConvertFrom-Json)
   }
 
   # this hashtable maps json manifest component types to DSC component types for dependency mapping
