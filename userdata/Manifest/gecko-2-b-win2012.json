@@ -1066,7 +1066,7 @@
       "ComponentName": "CarbonClone",
       "ComponentType": "CommandRun",
       "Comment": "Bug 1316329 - support creation of symlinks by task users",
-      "Command": "hg",
+      "Command": "C:\\Program Files\\Mercurial\\hg.exe",
       "Arguments": [
         "clone",
         "--insecure",
@@ -1089,7 +1089,7 @@
       "ComponentName": "CarbonUpdate",
       "ComponentType": "CommandRun",
       "Comment": "Bug 1316329 - support creation of symlinks by task users",
-      "Command": "hg",
+      "Command": "C:\\Program Files\\Mercurial\\hg.exe",
       "Arguments": [
         "update",
         "2.4.0",
