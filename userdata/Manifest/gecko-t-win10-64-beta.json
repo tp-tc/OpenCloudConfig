@@ -396,7 +396,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v7.0.2alpha1/generic-worker-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v7.0.3alpha1/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
@@ -466,7 +466,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 7.0.2alpha1"
+            "Match": "generic-worker 7.0.3alpha1"
           }
         ]
       }
@@ -706,48 +706,6 @@
         {
           "ComponentType": "CommandRun",
           "ComponentName": "CarbonUpdate"
-        }
-      ]
-    },
-    {
-      "ComponentName": "GrantGenericWorkerSeAssignPrimaryTokenPrivilege",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1303455 - grant SeAssignPrimaryTokenPrivilege, SeIncreaseQuotaPrivilege to g-w user",
-      "Command": "powershell",
-      "Arguments": [
-        "-command",
-        "\"& {&'Import-Module' Carbon}\";",
-        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeAssignPrimaryTokenPrivilege}\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ]
-    },
-    {
-      "ComponentName": "GrantGenericWorkerSeIncreaseQuotaPrivilege",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1303455 - grant SeAssignPrimaryTokenPrivilege, SeIncreaseQuotaPrivilege to g-w user",
-      "Command": "powershell",
-      "Arguments": [
-        "-command",
-        "\"& {&'Import-Module' Carbon}\";",
-        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeIncreaseQuotaPrivilege}\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
         }
       ]
     }
