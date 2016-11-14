@@ -442,7 +442,7 @@ switch -wildcard ($workerType) {
     $renameInstance = $true
     $setFqdn = $true
     if (-not ($isWorker)) {
-      Set-Credentials -username 'root' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
+      Set-Credentials -username 'Administrator' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
     }
     Map-DriveLetters
   }
