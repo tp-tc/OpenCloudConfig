@@ -437,19 +437,13 @@ switch -wildcard ($workerType) {
     }
     Map-DriveLetters
   }
-  'gecko-1-b-win2012-beta' {
+  default {
     $runDscOnWorker = $true
     $renameInstance = $true
     $setFqdn = $true
     if (-not ($isWorker)) {
       Set-Credentials -username 'Administrator' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
     }
-    Map-DriveLetters
-  }
-  default {
-    $runDscOnWorker = $true
-    $renameInstance = $true
-    $setFqdn = $true
   }
 }
 
