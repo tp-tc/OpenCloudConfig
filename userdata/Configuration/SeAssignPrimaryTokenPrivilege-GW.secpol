@@ -1,5 +1,0 @@
-[Privilege Rights]
-SeCreateSymbolicLinkPrivilege = GenericWorker
-[Version]
-signature="$CHICAGO$"
-Revision=1
