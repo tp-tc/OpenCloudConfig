@@ -40,7 +40,6 @@ case "${tc_worker_type}" in
     gw_users_dir='Z:\'
     root_username=root
     worker_username=GenericWorker
-    pt_prefix='win7'
     ;;
   *-win10-64*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-1-t-win10-64-base*'}
@@ -52,9 +51,19 @@ case "${tc_worker_type}" in
     gw_users_dir='Z:\'
     root_username=root
     worker_username=GenericWorker
-    pt_prefix='win10'
     ;;
-  *-win2012*)
+  gecko-1-b-win2012-beta)
+    aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-base-*'}
+    aws_instance_type=${aws_instance_type:='c4.4xlarge'}
+    aws_instance_hdd_size=${aws_instance_hdd_size:=40}
+    aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
+    ami_description="Experimental Gecko builder for Windows; TaskCluster worker: ${tc_worker_type}, version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
+    occ_manifest="https://github.com/mozilla-releng/OpenCloudConfig/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/win2012.json"
+    gw_users_dir='Z:\'
+    root_username=Administrator
+    worker_username=GenericWorker
+    ;;
+  gecko-[123]-b-win2012)
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_Server-2012-R2_RTM-English-64Bit-Base*'}
     aws_instance_type=${aws_instance_type:='c3.2xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=60}
@@ -64,7 +73,6 @@ case "${tc_worker_type}" in
     gw_users_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
-    pt_prefix='win2012'
     ;;
   *)
     echo "ERROR: unknown worker type: '${tc_worker_type}'"
