@@ -64,10 +64,10 @@ case "${tc_worker_type}" in
     worker_username=GenericWorker
     ;;
   gecko-[123]-b-win2012)
-    aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_Server-2012-R2_RTM-English-64Bit-Base*'}
-    aws_instance_type=${aws_instance_type:='c3.2xlarge'}
-    aws_instance_hdd_size=${aws_instance_hdd_size:=60}
-    aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners amazon --filters "Name=platform,Values=windows" "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
+    aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-base-*'}
+    aws_instance_type=${aws_instance_type:='c4.4xlarge'}
+    aws_instance_hdd_size=${aws_instance_hdd_size:=40}
+    aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko builder for Windows; TaskCluster worker: ${tc_worker_type}, version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
     occ_manifest="https://github.com/mozilla-releng/OpenCloudConfig/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/win2012.json"
     gw_users_dir='Z:\'
@@ -88,7 +88,7 @@ userdata=${userdata/ROOTPASSWORDTOKEN/$root_password}
 userdata=${userdata/WORKERPASSWORDTOKEN/$worker_password}
 
 curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq '.' > ./${tc_worker_type}-pre.json
-cat ./${tc_worker_type}-pre.json | jq --arg gwusersdir $gw_users_dir --arg occmanifest $occ_manifest --arg deploymentId $aws_client_token -c 'del(.workerType, .lastModified) | .secrets."generic-worker".config.usersDir = $gwusersdir | .secrets."generic-worker".config.workerTypeMetadata."machine-setup".manifest = $occmanifest | .secrets."generic-worker".config.deploymentId = $deploymentId' > ./${tc_worker_type}.json
+cat ./${tc_worker_type}-pre.json | jq --arg gwusersdir $gw_users_dir --arg occmanifest $occ_manifest --arg awsinstancetype $aws_instance_type --arg deploymentId $aws_client_token -c 'del(.workerType, .lastModified) | .secrets."generic-worker".config.usersDir = $gwusersdir | .secrets."generic-worker".config.workerTypeMetadata."machine-setup".manifest = $occmanifest | .instanceTypes[].instanceType = $awsinstancetype | .secrets."generic-worker".config.deploymentId = $deploymentId' > ./${tc_worker_type}.json
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] active amis (pre-update): $(cat ./${tc_worker_type}.json | jq -c '[.regions[] | {region: .region, ami: .launchSpec.ImageId}]')"
 
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] latest base ami for: ${aws_base_ami_search_term}, in region: ${aws_region}, is: ${aws_base_ami_id}"

@@ -444,6 +444,7 @@ switch -wildcard ($workerType) {
     if (-not ($isWorker)) {
       Set-Credentials -username 'Administrator' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
     }
+    Map-DriveLetters
   }
 }
 
