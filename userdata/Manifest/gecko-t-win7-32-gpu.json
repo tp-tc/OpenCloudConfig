@@ -1117,6 +1117,23 @@
       ]
     },
     {
+      "ComponentName": "GrantEveryoneSeCreateSymbolicLinkPrivilege",
+      "ComponentType": "CommandRun",
+      "Comment": "Bug 1316329 - support creation of symlinks by task users",
+      "Command": "powershell",
+      "Arguments": [
+        "-command",
+        "\"& {&'Import-Module' Carbon}\";",
+        "\"& {&'Grant-Privilege' -Identity Everyone -Privilege SeCreateSymbolicLinkPrivilege}\""
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "CarbonInstall"
+        }
+      ]
+    },
+    {
       "ComponentName": "GrantGenericWorkerSeAssignPrimaryTokenPrivilege",
       "ComponentType": "CommandRun",
       "Comment": "Bug 1303455 - grant SeAssignPrimaryTokenPrivilege, SeIncreaseQuotaPrivilege to g-w user",
