@@ -81,8 +81,7 @@ if (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue) {
 } else {
   Write-Log -message 'drive z: does not exist' -severity 'DEBUG'
 }
-$gwService = Get-Service -Name 'Generic Worker' -ErrorAction SilentlyContinue
-if (-not (Is-Running -proc 'generic-worker' -predicate (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -gt 0) -or (($gwService) -and ($gwService.Status -eq 'Running')))) {
+if (-not (Is-Running -proc 'generic-worker' -predicate (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -gt 0))) {
   if (-not (Is-Running -proc 'OpenCloudConfig' -predicate (Test-Path -Path 'C:\dsc\in-progress.lock' -ErrorAction SilentlyContinue))) {
     $uptime = (Get-Uptime)
     if (($uptime) -and ($uptime -gt (New-TimeSpan -minutes 5))) {

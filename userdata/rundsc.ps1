@@ -438,7 +438,7 @@ switch -wildcard ($workerType) {
     Map-DriveLetters
   }
   default {
-    $runDscOnWorker = $false
+    $runDscOnWorker = $true
     $renameInstance = $true
     $setFqdn = $true
     if (-not ($isWorker)) {
@@ -522,8 +522,6 @@ if ($rebootReasons.length) {
         Enable-PSRemoting -SkipNetworkProfileCheck -Force
       }
     }
-    $env:GW_PASSWORD = ('{0}' -f [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value)
-    [Environment]::SetEnvironmentVariable('GW_PASSWORD', "$env:GW_PASSWORD", 'Machine')
     Set-ExecutionPolicy RemoteSigned -force | Out-File -filePath $logFile -append
     & cmd @('/c', 'winrm', 'set', 'winrm/config', '@{MaxEnvelopeSizekb="8192"}')
     $transcript = ('{0}\log\{1}.dsc-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
@@ -536,8 +534,6 @@ if ($rebootReasons.length) {
     # end run dsc #################################################################################################################################################
     
     # post dsc teardown ###########################################################################################################################################
-    $env:GW_PASSWORD = ''
-    [Environment]::SetEnvironmentVariable('GW_PASSWORD', '', 'Machine')
     if (((Get-Content $transcript) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
       Remove-Item -Path $lock -force
       & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
@@ -571,14 +567,7 @@ if ($rebootReasons.length) {
   }
 
   if (-not ($isWorker)) {
-    if ($workerType.EndsWith('-beta')) {
-      Set-Credentials -username 'GenericWorker' -password ('{0}' -f [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value)
-      Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Type 'String' -Name 'AutoAdminLogon' -Value '0'
-      Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Type 'String' -Name 'DefaultUsername' -Value ''
-      Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Type 'String' -Name 'DefaultPassword' -Value ''
-    } else {
-      Set-Credentials -username 'GenericWorker' -password ('{0}' -f [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value) -setautologon
-    }
+    Set-Credentials -username 'GenericWorker' -password ('{0}' -f [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value) -setautologon
   }
 
   # archive dsc logs
@@ -596,19 +585,8 @@ if ($rebootReasons.length) {
     if (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) { # if the Z: drive isn't mapped, map it.
       Map-DriveLetters
     }
-    $gwService = (Get-Service -Name 'Generic Worker' -ErrorAction SilentlyContinue)
-    if ($gwService) {
-      Write-Log -message 'generic-worker service installation detected.' -severity 'INFO'
-      if ($gwService.Status -eq 'Stopped') {
-        & format @('Z:', '/fs:ntfs', '/v:""', '/q', '/y')
-        Write-Log -message 'Z: drive formatted.' -severity 'INFO'
-        $gwService.Start()
-        Write-Log -message 'generic-worker service start prompted.' -severity 'INFO'
-      } elseif ($gwService.Status -eq 'Running') {
-        Write-Log -message 'generic-worker service already started.' -severity 'INFO'
-      }
-    } elseif (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
-      Write-Log -message 'generic-worker autologon installation detected.' -severity 'INFO'
+    if (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
+      Write-Log -message 'generic-worker installation detected.' -severity 'INFO'
       New-Item 'C:\dsc\task-claim-state.valid' -type file -force
       # give g-w 2 minutes to fire up, if it doesn't, boot loop.
       $timeout = New-Timespan -Minutes 2

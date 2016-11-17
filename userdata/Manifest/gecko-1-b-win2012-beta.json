@@ -966,12 +966,12 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v7.0.3alpha1/generic-worker-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v6.1.0/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
       "ComponentName": "LiveLogDownload",
-      "ComponentType": "ChecksumFileDownload",
+      "ComponentType": "FileDownload",
       "DependsOn": [
         {
           "ComponentType": "DirectoryCreate",
@@ -998,46 +998,14 @@
       "Action": "Allow"
     },
     {
-      "ComponentName": "nssm",
-      "ComponentType": "ZipInstall",
-      "Comment": "required for generic worker to run as a windows service",
-      "Url": "http://www.nssm.cc/release/nssm-2.24.zip",
-      "Destination": "C:\\generic-worker",
-      "DependsOn": [
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "GenericWorkerDirectory"
-        }
-      ]
-    },
-    {
-      "ComponentName": "GenericWorkerLog",
-      "ComponentType": "SymbolicLink",
-      "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Target": "C:\\Users\\GenericWorker\\generic-worker.log",
-      "Link": "C:\\generic-worker\\generic-worker.log",
-      "DependsOn": [
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "GenericWorkerDirectory"
-        }
-      ]
-    },
-    {
       "ComponentName": "GenericWorkerInstall",
       "ComponentType": "CommandRun",
       "Command": "C:\\generic-worker\\generic-worker.exe",
       "Arguments": [
         "install",
-        "service",
-        "--nssm",
-        "C:\\generic-worker\\nssm-2.24\\win64\\nssm.exe",
+        "startup",
         "--config",
-        "C:\\generic-worker\\generic-worker.config",
-        "--username",
-        "GenericWorker",
-        "--password",
-        "%GW_PASSWORD%"
+        "C:\\generic-worker\\generic-worker.config"
       ],
       "DependsOn": [
         {
@@ -1045,7 +1013,7 @@
           "ComponentName": "GenericWorkerDownload"
         },
         {
-          "ComponentType": "ChecksumFileDownload",
+          "ComponentType": "FileDownload",
           "ComponentName": "LiveLogDownload"
         },
         {
@@ -1055,14 +1023,11 @@
         {
           "ComponentType": "FirewallRule",
           "ComponentName": "LiveLog_Put"
-        },
-        {
-          "ComponentType": "ZipInstall",
-          "ComponentName": "nssm"
         }
       ],
       "Validate": {
         "PathsExist": [
+          "C:\\generic-worker\\run-generic-worker.bat",
           "C:\\generic-worker\\generic-worker.exe"
         ],
         "CommandsReturn": [
@@ -1077,18 +1042,16 @@
       }
     },
     {
-      "ComponentName": "StopGenericWorkerService",
-      "ComponentType": "ServiceControl",
-      "Comment": "prevent g-w running while dsc is in-progress",
-      "Name": "Generic Worker",
-      "StartupType": "Manual",
-      "State": "Stopped",
+      "ComponentName": "GenericWorkerStateWait",
+      "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
         {
           "ComponentType": "CommandRun",
           "ComponentName": "GenericWorkerInstall"
         }
-      ]
+      ],
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker.bat",
+      "Target": "C:\\generic-worker\\run-generic-worker.bat"
     },
     {
       "ComponentName": "HgShared",
