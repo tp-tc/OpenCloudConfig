@@ -55,6 +55,20 @@
       ]
     },
     {
+      "ComponentName": "ProcessExplorer",
+      "ComponentType": "ZipInstall",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Url": "https://download.sysinternals.com/files/ProcessExplorer.zip",
+      "Destination": "C:\\ProcessExplorer"
+    },
+    {
+      "ComponentName": "ProcessMonitor",
+      "ComponentType": "ZipInstall",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Url": "https://download.sysinternals.com/files/ProcessMonitor.zip",
+      "Destination": "C:\\ProcessMonitor"
+    },
+    {
       "ComponentName": "GpgForWin",
       "ComponentType": "ExeInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
