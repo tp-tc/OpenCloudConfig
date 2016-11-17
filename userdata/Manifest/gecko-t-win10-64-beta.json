@@ -415,7 +415,7 @@
     },
     {
       "ComponentName": "LiveLogDownload",
-      "ComponentType": "FileDownload",
+      "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
         {
           "ComponentType": "DirectoryCreate",
@@ -442,14 +442,46 @@
       "Action": "Allow"
     },
     {
+      "ComponentName": "nssm",
+      "ComponentType": "ZipInstall",
+      "Comment": "required for generic worker to run as a windows service",
+      "Url": "http://www.nssm.cc/release/nssm-2.24.zip",
+      "Destination": "C:\\generic-worker",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "GenericWorkerDirectory"
+        }
+      ]
+    },
+    {
+      "ComponentName": "GenericWorkerLog",
+      "ComponentType": "SymbolicLink",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Target": "C:\\Users\\GenericWorker\\generic-worker.log",
+      "Link": "C:\\generic-worker\\generic-worker.log",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "GenericWorkerDirectory"
+        }
+      ]
+    },
+    {
       "ComponentName": "GenericWorkerInstall",
       "ComponentType": "CommandRun",
       "Command": "C:\\generic-worker\\generic-worker.exe",
       "Arguments": [
         "install",
-        "startup",
+        "service",
+        "--nssm",
+        "C:\\generic-worker\\nssm-2.24\\win64\\nssm.exe",
         "--config",
-        "C:\\generic-worker\\generic-worker.config"
+        "C:\\generic-worker\\generic-worker.config",
+        "--username",
+        "GenericWorker",
+        "--password",
+        "%GW_PASSWORD%"
       ],
       "DependsOn": [
         {
@@ -457,7 +489,7 @@
           "ComponentName": "GenericWorkerDownload"
         },
         {
-          "ComponentType": "FileDownload",
+          "ComponentType": "ChecksumFileDownload",
           "ComponentName": "LiveLogDownload"
         },
         {
@@ -467,11 +499,14 @@
         {
           "ComponentType": "FirewallRule",
           "ComponentName": "LiveLog_Put"
+        },
+        {
+          "ComponentType": "ZipInstall",
+          "ComponentName": "nssm"
         }
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\generic-worker\\run-generic-worker.bat",
           "C:\\generic-worker\\generic-worker.exe"
         ],
         "CommandsReturn": [
@@ -484,6 +519,20 @@
           }
         ]
       }
+    },
+    {
+      "ComponentName": "StopGenericWorkerService",
+      "ComponentType": "ServiceControl",
+      "Comment": "prevent g-w running while dsc is in-progress",
+      "Name": "Generic Worker",
+      "StartupType": "Manual",
+      "State": "Stopped",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "GenericWorkerInstall"
+        }
+      ]
     },
     {
       "ComponentName": "DisableDesktopInterrupt",
