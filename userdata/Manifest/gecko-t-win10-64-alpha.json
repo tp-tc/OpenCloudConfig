@@ -875,6 +875,46 @@
           "ComponentName": "GenericWorkerInstall"
         }
       ]
+    },
+    {
+      "ComponentName": "reg_PythonCpuPriority",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\python.exe\\PerfOptions",
+      "ValueName": "CpuPriorityClass",
+      "ValueType": "Dword",
+      "ValueData": "0x00000006",
+      "Hex": true
+    },
+    {
+      "ComponentName": "reg_PythonIoPriority",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\python.exe\\PerfOptions",
+      "ValueName": "IoPriority",
+      "ValueType": "Dword",
+      "ValueData": "0x00000002",
+      "Hex": true
+    },
+    {
+      "ComponentName": "reg_MercurialCpuPriority",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\hg.exe\\PerfOptions",
+      "ValueName": "CpuPriorityClass",
+      "ValueType": "Dword",
+      "ValueData": "0x00000006",
+      "Hex": true
+    },
+    {
+      "ComponentName": "reg_MercurialIoPriority",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\hg.exe\\PerfOptions",
+      "ValueName": "IoPriority",
+      "ValueType": "Dword",
+      "ValueData": "0x00000002",
+      "Hex": true
     }
   ]
 }
