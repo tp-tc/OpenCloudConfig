@@ -101,9 +101,9 @@ if (-not (Is-Running -proc 'generic-worker' -predicate (@(Get-Process | ? { $_.P
 } else {
   Write-Log -message 'instance appears to be productive.' -severity 'DEBUG'
   $gwProcess = (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })
-  if (($gwProcess) -and ($gwProcess.PriorityClass) -and ($gwProcess.PriorityClass -ne [Diagnostics.ProcessPriorityClass]::RealTime)) {
+  if (($gwProcess) -and ($gwProcess.PriorityClass) -and ($gwProcess.PriorityClass -ne [Diagnostics.ProcessPriorityClass]::AboveNormal)) {
     $priorityClass = $gwProcess.PriorityClass
-    $gwProcess.PriorityClass = [Diagnostics.ProcessPriorityClass]::RealTime
+    $gwProcess.PriorityClass = [Diagnostics.ProcessPriorityClass]::AboveNormal
     Write-Log -message ('process priority for generic worker altered from {0} to {1}.' -f $priorityClass, $gwProcess.PriorityClass) -severity 'INFO'
   }
 }
