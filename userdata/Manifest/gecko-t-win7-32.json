@@ -893,6 +893,26 @@
       "ValueType": "Dword",
       "ValueData": "0x00000002",
       "Hex": true
+    },
+    {
+      "ComponentName": "reg_FirefoxCpuPriority",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\firefox.exe\\PerfOptions",
+      "ValueName": "CpuPriorityClass",
+      "ValueType": "Dword",
+      "ValueData": "0x00000006",
+      "Hex": true
+    },
+    {
+      "ComponentName": "reg_FirefoxIoPriority",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\firefox.exe\\PerfOptions",
+      "ValueName": "IoPriority",
+      "ValueType": "Dword",
+      "ValueData": "0x00000002",
+      "Hex": true
     }
   ]
 }
