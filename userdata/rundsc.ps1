@@ -608,13 +608,6 @@ if ($rebootReasons.length) {
       } else {
         $timer.Stop()
         Write-Log -message ('generic-worker running process detected {0} ms after task-claim-state.valid flag set.' -f $timer.ElapsedMilliseconds) -severity 'INFO'
-
-        # todo: remove this very temporary hack to work around bug 1319453 on Windows 7
-        if ((Get-WmiObject -class Win32_OperatingSystem).Caption.Contains('Microsoft Windows 7')) {
-          & icacls @('C:\Users\GenericWorker\AppData', '/grant', 'Everyone:(OI)(CI)F')
-          Write-Log -message 'GenericWorker AppData folder hacked for bug 1319453.' -severity 'WARN'
-        }
-
         $gwProcess = (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })
         if (($gwProcess) -and ($gwProcess.PriorityClass) -and ($gwProcess.PriorityClass -ne [Diagnostics.ProcessPriorityClass]::AboveNormal)) {
           $priorityClass = $gwProcess.PriorityClass

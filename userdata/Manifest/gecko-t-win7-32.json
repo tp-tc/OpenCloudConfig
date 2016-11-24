@@ -893,33 +893,6 @@
       "ValueType": "Dword",
       "ValueData": "0x00000002",
       "Hex": true
-    },
-    {
-      "ComponentName": "GrantEveryonePort2828ListenerRight",
-      "ComponentType": "CommandRun",
-      "Comment": "allow task users to create http listeners on port 2828",
-      "Command": "netsh",
-      "Arguments": [
-        "http",
-        "add",
-        "urlacl",
-        "url=http://+:2828/",
-        "user=\\Everyone"
-      ],
-      "Validate": {
-        "CommandsReturn": [
-          {
-            "Command": "netsh",
-            "Arguments": [
-              "http",
-              "show",
-              "urlacl",
-              "url=http://+:2828/"
-            ],
-            "Match": "Reserved URL            : http://+:2828/"
-          }
-        ]
-      }
     }
   ]
 }

@@ -12,7 +12,7 @@
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Url": "http://nxlog.co/system/files/products/files/1/nxlog-ce-2.9.1716.msi",
       "Name": "NxLog-CE",
-      "ProductId": "FC526514-AFD9-4A5C-8677-56241539609D"
+      "ProductId": "5E1D25F5-647E-44CA-9223-387230EC02C6"
     },
     {
       "ComponentName": "PaperTrailEncryptionCertificate",
@@ -915,33 +915,6 @@
       "ValueType": "Dword",
       "ValueData": "0x00000002",
       "Hex": true
-    },
-    {
-      "ComponentName": "GrantEveryonePort2828ListenerRight",
-      "ComponentType": "CommandRun",
-      "Comment": "allow task users to create http listeners on port 2828",
-      "Command": "netsh",
-      "Arguments": [
-        "http",
-        "add",
-        "urlacl",
-        "url=http://+:2828/",
-        "user=\\Everyone"
-      ],
-      "Validate": {
-        "CommandsReturn": [
-          {
-            "Command": "netsh",
-            "Arguments": [
-              "http",
-              "show",
-              "urlacl",
-              "url=http://+:2828/"
-            ],
-            "Match": "Reserved URL            : http://+:2828/"
-          }
-        ]
-      }
     }
   ]
 }
