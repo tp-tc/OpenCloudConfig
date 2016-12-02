@@ -86,11 +86,11 @@ if (-not (Is-Running -proc 'generic-worker' -predicate (@(Get-Process | ? { $_.P
     $uptime = (Get-Uptime)
     if (($uptime) -and ($uptime -gt (New-TimeSpan -minutes 5))) {
 
-      if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
+      if (@(Get-Process | ? { ($_.ProcessName -eq 'rdpclip') -or ($_.ProcessName -eq 'format.com') }).length -eq 0) {
         Write-Log -message 'instance failed validity check and will be halted.' -severity 'ERROR'
         & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: instance failed validity checks', '-f', '-d', 'p:4:1')
       } else {
-        Write-Log -message 'instance failed validity check and should be halted, but has rdp session in progress.' -severity 'DEBUG'
+        Write-Log -message 'instance failed validity check and would be halted, but has rdp session in progress or is formatting a drive.' -severity 'DEBUG'
       }
     } else {
       Write-Log -message 'instance failed some validity checks and will be retested shortly.' -severity 'WARN'
