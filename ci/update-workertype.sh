@@ -21,11 +21,11 @@ tc_worker_type="${1}"
 
 aws_region=${aws_region:='us-west-2'}
 case "${tc_worker_type}" in
-  *-gpu)
-    aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-west-1' 'eu-central-1')
+  gecko-3-b-win*)
+    aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1')
     ;;
   *)
-    aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
+    aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-west-1' 'eu-central-1')
     ;;
 esac
 
