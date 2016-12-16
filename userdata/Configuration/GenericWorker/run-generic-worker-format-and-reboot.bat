@@ -15,11 +15,11 @@ set errorlevel=
 
 if %errorlevel% equ 0 goto successful
 
-shutdown /s now /c "Killing worker, as generic worker crashed or had a problem"
+shutdown /s /t 0 /f /c "Killing worker, as generic worker crashed or had a problem"
 goto end
 
 :successful
 format Z: /fs:ntfs /v:"task" /q /y
-shutdown /r now /c "Rebooting as generic worker ran successfully"
+shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
 
 :end
