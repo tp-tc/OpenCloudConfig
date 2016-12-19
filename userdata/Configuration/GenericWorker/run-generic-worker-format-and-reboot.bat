@@ -20,6 +20,7 @@ goto end
 
 :successful
 format Z: /fs:ntfs /v:"task" /q /y
+<nul (set/p z=) >C:\dsc\task-claim-state.valid
 shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
 
 :end
