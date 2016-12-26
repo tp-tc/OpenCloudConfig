@@ -486,6 +486,7 @@ if ($setFqdn) {
     Write-Log -message ('domain set to: {0}' -f $domain) -severity 'INFO'
   }
 }
+[Environment]::SetEnvironmentVariable("TASKCLUSTER_INSTANCE_TYPE", "$workerType", "Machine")
 
 if ($rebootReasons.length) {
   Remove-Item -Path $lock -force
