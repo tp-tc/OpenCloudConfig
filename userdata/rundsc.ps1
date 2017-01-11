@@ -486,7 +486,10 @@ if ($setFqdn) {
     Write-Log -message ('domain set to: {0}' -f $domain) -severity 'INFO'
   }
 }
-[Environment]::SetEnvironmentVariable("TASKCLUSTER_INSTANCE_TYPE", "$workerType", "Machine")
+
+$instanceType = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-type'))
+Write-Log -message ('instanceType: {0}.' -f $instanceType) -severity 'INFO'
+[Environment]::SetEnvironmentVariable("TASKCLUSTER_INSTANCE_TYPE", "$instanceType", "Machine")
 
 if ($rebootReasons.length) {
   Remove-Item -Path $lock -force
