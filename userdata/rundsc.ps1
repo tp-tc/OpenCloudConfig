@@ -547,6 +547,16 @@ if ($rebootReasons.length) {
       'Microsoft Windows 10*' {
         # set network interface to public
         ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(0) }
+
+        # todo: move MS Edge install to json manifest.
+        $gwEdgeFolder = 'C:\Users\GenericWorker\AppData\Local\Packages\Microsoft.MicrosoftEdge_8wekyb3d8bbwe'
+        if (Test-Path -Path $gwEdgeFolder -ErrorAction SilentlyContinue) {
+          Remove-Item -Path $gwEdgeFolder -recurse -force
+          Write-Log -message ('{0} deleted.' -f $gwEdgeFolder) -severity 'INFO'
+        }
+        Get-AppXPackage -AllUsers -Name 'Microsoft.MicrosoftEdge' | % {
+          Add-AppxPackage -DisableDevelopmentMode -Register ('{0}\AppXManifest.xml' -f $($_.InstallLocation)) -Verbose
+        }
       }
     }
     # end post dsc teardown #######################################################################################################################################
