@@ -92,6 +92,9 @@ Configuration DynamicConfig {
       'Microsoft Windows 10*' {
         $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/gecko-t-win10-64-hw.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
       }
+      'Microsoft Windows Server 2012*' {
+        $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/gecko-1-b-win2012.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
+      }
       default {
         $manifest = ('{"Items":[{"ComponentType":"DirectoryCreate","Path":"$env:SystemDrive\\log"}]}' | ConvertFrom-Json)
       }
