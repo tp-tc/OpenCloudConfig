@@ -454,7 +454,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/livelog/releases/download/v1.0.1/livelog-windows-386.exe",
+      "Source": "https://github.com/taskcluster/livelog/releases/download/v1.1.0/livelog-windows-386.exe",
       "Target": "C:\\generic-worker\\livelog.exe"
     },
     {
