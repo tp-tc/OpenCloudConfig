@@ -463,6 +463,29 @@
       }
     },
     {
+      "ComponentName": "NsisInstall",
+      "ComponentType": "ExeInstall",
+      "Comment": "Bug 1236624 - NSIS 3.01",
+      "Arguments": [
+        "/S",
+        "/D=C:\\mozilla-build\\nsis-3.01"
+      ],
+      "Url": "http://downloads.sourceforge.net/project/nsis/NSIS%203/3.01/nsis-3.01-setup.exe?r=http%3A%2F%2Fnsis.sourceforge.net%2FDownload&ts=1484218481&use_mirror=kent",
+      "Validate": {
+        "PathsExist": [
+          "C:\\mozilla-build\\nsis-3.01\\NSIS.exe",
+          "C:\\mozilla-build\\nsis-3.01\\makensis.exe",
+          "C:\\mozilla-build\\nsis-3.01\\makensisw.exe"
+        ]
+      },
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        }
+      ]
+    },
+    {
       "ComponentName": "msys_home",
       "ComponentType": "SymbolicLink",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
@@ -912,6 +935,7 @@
         "C:\\mozilla-build\\mozmake",
         "C:\\mozilla-build\\msys\\bin",
         "C:\\mozilla-build\\msys\\local\\bin",
+        "C:\\mozilla-build\\nsis-3.01",
         "C:\\mozilla-build\\nsis-3.0b3",
         "C:\\mozilla-build\\nsis-2.46u",
         "C:\\mozilla-build\\python",

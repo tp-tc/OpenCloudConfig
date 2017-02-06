@@ -349,9 +349,6 @@
       ],
       "Name": "PATH",
       "Values": [
-        "C:\\go\\bin",
-        "C:\\gopath\\bin",
-        "C:\\Program Files (x86)\\Git\\cmd",
         "C:\\Program Files\\Mercurial",
         "C:\\mozilla-build\\7zip",
         "C:\\mozilla-build\\info-zip",
@@ -398,6 +395,123 @@
       "ValueType": "Dword",
       "ValueData": "0x00000001",
       "Hex": true
+    },
+    {
+      "ComponentName": "GenericWorkerDirectory",
+      "ComponentType": "DirectoryCreate",
+      "Path": "C:\\generic-worker"
+    },
+    {
+      "ComponentName": "GenericWorkerDownload",
+      "ComponentType": "ChecksumFileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "GenericWorkerDirectory"
+        }
+      ],
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v7.1.3/generic-worker-windows-amd64.exe",
+      "Target": "C:\\generic-worker\\generic-worker.exe"
+    },
+    {
+      "ComponentName": "LiveLogDownload",
+      "ComponentType": "FileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "GenericWorkerDirectory"
+        }
+      ],
+      "Source": "https://github.com/taskcluster/livelog/releases/download/v1.0.1/livelog-windows-amd64.exe",
+      "Target": "C:\\generic-worker\\livelog.exe"
+    },
+    {
+      "ComponentName": "LiveLog_Get",
+      "ComponentType": "FirewallRule",
+      "Protocol": "TCP",
+      "LocalPort": 60022,
+      "Direction": "Inbound",
+      "Action": "Allow"
+    },
+    {
+      "ComponentName": "LiveLog_Put",
+      "ComponentType": "FirewallRule",
+      "Protocol": "TCP",
+      "LocalPort": 60023,
+      "Direction": "Inbound",
+      "Action": "Allow"
+    },
+    {
+      "ComponentName": "GenericWorkerInstall",
+      "ComponentType": "CommandRun",
+      "Command": "C:\\generic-worker\\generic-worker.exe",
+      "Arguments": [
+        "install",
+        "startup",
+        "--config",
+        "C:\\generic-worker\\generic-worker.config"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "GenericWorkerDownload"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "LiveLogDownload"
+        },
+        {
+          "ComponentType": "FirewallRule",
+          "ComponentName": "LiveLog_Get"
+        },
+        {
+          "ComponentType": "FirewallRule",
+          "ComponentName": "LiveLog_Put"
+        }
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\generic-worker\\run-generic-worker.bat",
+          "C:\\generic-worker\\generic-worker.exe"
+        ],
+        "CommandsReturn": [
+          {
+            "Command": "C:\\generic-worker\\generic-worker.exe",
+            "Arguments": [
+              "--version"
+            ],
+            "Match": "generic-worker 7.1.3"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "DisableDesktopInterrupt",
+      "ComponentType": "ChecksumFileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "GenericWorkerInstall"
+        }
+      ],
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/disable-desktop-interrupt.reg",
+      "Target": "C:\\generic-worker\\disable-desktop-interrupt.reg"
+    },
+    {
+      "ComponentName": "GenericWorkerStateWait",
+      "ComponentType": "ChecksumFileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "GenericWorkerInstall"
+        },
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "DisableDesktopInterrupt"
+        }
+      ],
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker.bat",
+      "Target": "C:\\generic-worker\\run-generic-worker.bat"
     },
     {
       "ComponentName": "PipConfDirectory",
@@ -625,193 +739,6 @@
           "ComponentName": "CarbonInstall"
         }
       ]
-    },
-    {
-      "ComponentName": "Git",
-      "ComponentType": "ExeInstall",
-      "Comment": "generic worker debugging",
-      "Url": "https://github.com/msysgit/msysgit/releases/download/Git-1.9.5-preview20150319/Git-1.9.5-preview20150319.exe",
-      "Arguments": [
-        "/SILENT"
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Program Files (x86)\\Git\\cmd"
-        ]
-      }
-    },
-    {
-      "ComponentName": "GoPathDirectory",
-      "ComponentType": "DirectoryCreate",
-      "Comment": "generic worker debugging",
-      "Path": "C:\\gopath"
-    },
-    {
-      "ComponentName": "env_GOPATH",
-      "ComponentType": "EnvironmentVariableSet",
-      "Comment": "generic worker debugging",
-      "DependsOn": [
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "GoPathDirectory"
-        }
-      ],
-      "Name": "GOPATH",
-      "Value": "C:\\gopath",
-      "Target": "Machine"
-    },
-    {
-      "ComponentName": "GoInstall",
-      "ComponentType": "ZipInstall",
-      "Comment": "generic worker debugging",
-      "Url": "https://storage.googleapis.com/golang/go1.7.3.windows-amd64.zip",
-      "Destination": "C:\\"
-    },
-    {
-      "ComponentName": "env_GOROOT",
-      "ComponentType": "EnvironmentVariableSet",
-      "Comment": "generic worker debugging",
-      "DependsOn": [
-        {
-          "ComponentType": "ZipInstall",
-          "ComponentName": "GoInstall"
-        }
-      ],
-      "Name": "GOROOT",
-      "Value": "C:\\go",
-      "Target": "Machine"
-    },
-    {
-      "ComponentName": "GenericWorkerDirectory",
-      "ComponentType": "DirectoryCreate",
-      "Comment": "generic worker debugging",
-      "Path": "C:\\generic-worker"
-    },
-    {
-      "ComponentName": "GenericWorkerLiveLogGet",
-      "ComponentType": "CommandRun",
-      "Comment": "generic worker debugging",
-      "Command": "go",
-      "Arguments": [
-        "get",
-        "-t",
-        "-u",
-        "github.com/taskcluster/generic-worker",
-        "github.com/taskcluster/livelog"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonUpdate"
-        }
-      ]
-    },
-    {
-      "ComponentName": "GenericWorkerCopy",
-      "ComponentType": "CommandRun",
-      "Comment": "generic worker debugging",
-      "Command": "copy",
-      "Arguments": [
-        "C:\\gopath\\bin\\generic-worker.exe",
-        "C:\\generic-worker\\",
-        "/y"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerLiveLogGet"
-        }
-      ]
-    },
-    {
-      "ComponentName": "LiveLogCopy",
-      "ComponentType": "CommandRun",
-      "Comment": "generic worker debugging",
-      "Command": "copy",
-      "Arguments": [
-        "C:\\gopath\\bin\\livelog.exe",
-        "C:\\generic-worker\\",
-        "/y"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerLiveLogGet"
-        }
-      ]
-    },
-    {
-      "ComponentName": "LiveLog_Get",
-      "ComponentType": "FirewallRule",
-      "Protocol": "TCP",
-      "LocalPort": 60022,
-      "Direction": "Inbound",
-      "Action": "Allow"
-    },
-    {
-      "ComponentName": "LiveLog_Put",
-      "ComponentType": "FirewallRule",
-      "Protocol": "TCP",
-      "LocalPort": 60023,
-      "Direction": "Inbound",
-      "Action": "Allow"
-    },
-    {
-      "ComponentName": "GenericWorkerInstall",
-      "ComponentType": "CommandRun",
-      "Command": "C:\\generic-worker\\generic-worker.exe",
-      "Arguments": [
-        "install",
-        "startup",
-        "--config",
-        "C:\\generic-worker\\generic-worker.config"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerCopy"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "LiveLogCopy"
-        },
-        {
-          "ComponentType": "FirewallRule",
-          "ComponentName": "LiveLog_Get"
-        },
-        {
-          "ComponentType": "FirewallRule",
-          "ComponentName": "LiveLog_Put"
-        }
-      ]
-    },
-    {
-      "ComponentName": "DisableDesktopInterrupt",
-      "ComponentType": "ChecksumFileDownload",
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ],
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/disable-desktop-interrupt.reg",
-      "Target": "C:\\generic-worker\\disable-desktop-interrupt.reg"
-    },
-    {
-      "ComponentName": "GenericWorkerStateWait",
-      "ComponentType": "ChecksumFileDownload",
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        },
-        {
-          "ComponentType": "ChecksumFileDownload",
-          "ComponentName": "DisableDesktopInterrupt"
-        }
-      ],
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker.bat",
-      "Target": "C:\\generic-worker\\run-generic-worker.bat"
     },
     {
       "ComponentName": "GrantGenericWorkerSeAssignPrimaryTokenPrivilege",
