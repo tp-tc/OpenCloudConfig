@@ -1,6 +1,6 @@
 @echo off
 
-reg import C:\generic-worker\disable-desktop-interrupt.reg
+if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-worker\disable-desktop-interrupt.reg
 
 :CheckForStateFlag
 if exist C:\dsc\task-claim-state.valid goto RunWorker
