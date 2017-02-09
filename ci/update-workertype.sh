@@ -77,12 +77,12 @@ case "${tc_worker_type}" in
     root_username=root
     worker_username=GenericWorker
     ;;
-  gecko-1-b-win2012-beta)
-    aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-beta-base-*'}
-    aws_instance_type=${aws_instance_type:='c4.2xlarge'}
+  gecko-[123]-b-win2012-beta)
+    aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-base-*'}
+    aws_instance_type=${aws_instance_type:='c4.4xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=40}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-    ami_description="Experimental Gecko builder for Windows; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
+    ami_description="Gecko experimental builder for Windows; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
@@ -92,7 +92,7 @@ case "${tc_worker_type}" in
     aws_instance_type=${aws_instance_type:='c4.4xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=40}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-    ami_description="Gecko builder for Windows; TaskCluster worker: ${tc_worker_type}, version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
+    ami_description="Gecko builder for Windows; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
