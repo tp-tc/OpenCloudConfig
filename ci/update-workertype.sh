@@ -31,13 +31,13 @@ echo "{\"secret\":{\"latest\":{\"timestamp\":\"\",\"git-sha\":\"${GITHUB_HEAD_SH
 commit_message=$(curl --silent https://api.github.com/repos/mozilla-releng/OpenCloudConfig/git/commits/${GITHUB_HEAD_SHA} | jq '.message')
 if [[ $commit_message == *"nodeploy:"* ]]; then
   no_deploy_list=$([[ ${commit_message} =~ nodeploy:\s+?([^;]*) ]] && echo "${BASH_REMATCH[1]}")
-  if [[ ! " ${no_deploy_list[@]} " =~ " ${tc_worker_type} " ]]; then
+  if [[ " ${no_deploy_list[*]} " == *" ${tc_worker_type} "* ]]; then
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deployment skipped due to presence of ${tc_worker_type} in commit message no-deploy list (${no_deploy_list[*]})"
     exit
   fi
 elif [[ $commit_message == *"deploy:"* ]]; then
   deploy_list=$([[ ${commit_message} =~ deploy:\s+?([^;]*) ]] && echo "${BASH_REMATCH[1]}")
-  if [[ ! " ${deploy_list[@]} " =~ " ${tc_worker_type} " ]]; then
+  if [[ " ${deploy_list[*]} " != *" ${tc_worker_type} "* ]]; then
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deployment skipped due to absence of ${tc_worker_type} in commit message deploy list (${deploy_list[*]})"
     exit
   fi
