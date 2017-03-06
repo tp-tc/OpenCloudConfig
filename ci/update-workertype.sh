@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+shopt -s extglob
+
 # get some secrets from tc
 updateworkertype_secrets_url="taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype"
 read TASKCLUSTER_AWS_ACCESS_KEY TASKCLUSTER_AWS_SECRET_KEY aws_tc_account_id userdata<<EOF
@@ -49,7 +51,7 @@ fi
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] git sha: ${aws_client_token} used for aws client token"
 
 case "${tc_worker_type}" in
-  gecko-t-win7-32-gpu)
+  @(gecko|loan)-t-win7-32-gpu*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win7-32-base-*'}
     aws_instance_type=${aws_instance_type:='g2.2xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=30}
@@ -59,7 +61,7 @@ case "${tc_worker_type}" in
     root_username=root
     worker_username=GenericWorker
     ;;
-  gecko-t-win7*)
+  @(gecko|loan)-t-win7*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win7-32-base-*'}
     aws_instance_type=${aws_instance_type:='c4.2xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=30}
@@ -69,7 +71,7 @@ case "${tc_worker_type}" in
     root_username=root
     worker_username=GenericWorker
     ;;
-  gecko-t-win10-64-gpu)
+  @(gecko|loan)-t-win10-64-gpu*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win10-64-base-*'}
     aws_instance_type=${aws_instance_type:='g2.2xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=120}
@@ -79,7 +81,7 @@ case "${tc_worker_type}" in
     root_username=root
     worker_username=GenericWorker
     ;;
-  gecko-t-win10*)
+  @(gecko|loan)-t-win10*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win10-64-base-*'}
     aws_instance_type=${aws_instance_type:='c4.2xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=120}
@@ -99,7 +101,7 @@ case "${tc_worker_type}" in
     root_username=Administrator
     worker_username=GenericWorker
     ;;
-  gecko-[123]-b-win2012)
+  @(gecko|loan)-[123]-b-win2012*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-base-*'}
     aws_instance_type=${aws_instance_type:='c4.4xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=40}

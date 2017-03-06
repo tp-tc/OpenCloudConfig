@@ -426,7 +426,7 @@ switch -wildcard ($az) {
 Write-Log -message ('availabilityZone: {0}, dnsRegion: {1}.' -f $az, $dnsRegion) -severity 'INFO'
 
 # if importing releng amis, do a little housekeeping
-switch -wildcard ($workerType) {
+switch -wildcard ($workerType.Replace('loan-', 'gecko-')) {
   'gecko-t-*' {
     $runDscOnWorker = $false
     $renameInstance = $true
@@ -533,7 +533,7 @@ if ($rebootReasons.length) {
 
     # run dsc #####################################################################################################################################################
     Start-Transcript -Path $transcript -Append
-    Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/DynamicConfig.ps1' -workerType $workerType
+    Run-RemoteDesiredStateConfig -url 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/DynamicConfig.ps1'
     Stop-Transcript
     # end run dsc #################################################################################################################################################
     
