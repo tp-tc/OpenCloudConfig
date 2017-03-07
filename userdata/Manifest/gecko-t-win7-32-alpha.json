@@ -81,7 +81,8 @@
           "C:\\Program Files\\GNU\\GnuPG\\pub\\gpg.exe",
           "C:\\Program Files\\GNU\\GnuPG\\pub\\gpg2.exe"
         ]
-      }
+      },
+      "sha512": "b1c48d84d041055db3d3e3cbd22ef2f3300728b06c76660b9b78ececf56b7ccbc80addb39a64c0a4eb68bf3463ceb6d254dedda047049ce680e9d543dd8a9af9"
     },
     {
       "ComponentName": "SevenZip",
@@ -96,7 +97,8 @@
           "C:\\Program Files\\7-Zip\\7z.exe",
           "C:\\Program Files\\7-Zip\\7z.dll"
         ]
-      }
+      },
+      "sha512": "ad8298ae7d170c9a3e7f66a6098dd017adcd7912ba3938237db88dca141b6606b095a1c7c7fff0a2d4b47405ffbd25d65e5d8d98a55a8abaf3ced12854c18c4c"
     },
     {
       "ComponentName": "SublimeText3",
@@ -113,7 +115,8 @@
           "C:\\Program Files\\Sublime Text 3\\subl.exe",
           "C:\\Program Files\\Sublime Text 3\\sublime_text.exe"
         ]
-      }
+      },
+      "sha512": "99bb189e112a67358095554711c208fb9ec1bd35d3a333c0f4a157f1715bd0b852140231ab41fc161c262531340f954ccb8bfe792a35849f73596aa757ef3249"
     },
     {
       "ComponentName": "SublimeText3_PackagesFolder",
@@ -228,7 +231,8 @@
             "Match": "2.2.0"
           }
         ]
-      }
+      },
+      "sha512": "b593aa4ed9ff34bd4a20860fec478b3638ff1f916a60dc79ebcff46cee279fdb59dd53a36579378f0e11f4be201114578a429bfbfc11eda195a0b1db7aa9831e"
     },
     {
       "ComponentName": "msys_home",
@@ -312,7 +316,8 @@
           "C:\\Program Files\\Mercurial\\hg.exe",
           "C:\\Program Files\\Mercurial\\python27.dll"
         ]
-      }
+      },
+      "sha512": "a4a70ac81252605ba0856884d0cce6423b1557c8f6efe2f29c4f4b1c7a057de8d82e2074bd55d9b7562023e47ae55397c6632c3cff06e706c0271c8f2474af60"
     },
     {
       "ComponentName": "MercurialConfig",
@@ -742,7 +747,8 @@
         "PathsExist": [
           "C:\\Program Files\\Git\\cmd"
         ]
-      }
+      },
+      "sha512": "7fcebd2454f22b448a81f200b6ba7bdae9dd7be53b869b8f7e08ea20fe3bc344a8e88c2068cabb746fdc0fb82fd2aeec9e61cf33ee57cf79c1da541db5ef5079"
     },
     {
       "ComponentName": "GoPathDirectory",

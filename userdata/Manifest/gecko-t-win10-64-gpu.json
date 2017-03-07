@@ -81,7 +81,8 @@
           "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg.exe",
           "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg2.exe"
         ]
-      }
+      },
+      "sha512": "b1c48d84d041055db3d3e3cbd22ef2f3300728b06c76660b9b78ececf56b7ccbc80addb39a64c0a4eb68bf3463ceb6d254dedda047049ce680e9d543dd8a9af9"
     },
     {
       "ComponentName": "SevenZip",
@@ -96,7 +97,8 @@
           "C:\\Program Files\\7-Zip\\7z.exe",
           "C:\\Program Files\\7-Zip\\7z.dll"
         ]
-      }
+      },
+      "sha512": "4df02ab139b087c8d6e689a99afb58e1ab3d4c0722daa11f6a070cddb2506d079a7d9ff55341baa5b7fd1dc7593225eb9d7fdbfb9ac91e0d8db61f9fda85cbb3"
     },
     {
       "ComponentName": "SublimeText3",
@@ -113,7 +115,8 @@
           "C:\\Program Files\\Sublime Text 3\\subl.exe",
           "C:\\Program Files\\Sublime Text 3\\sublime_text.exe"
         ]
-      }
+      },
+      "sha512": "d3e71b28567ddd1b486aa3dcc9814818d91c322bc20ec203018d74bc465835f9ddd34d78f674172d00e66b39443070eb45e9799e3801b0ac410c958b2cf21098"
     },
     {
       "ComponentName": "SublimeText3_PackagesFolder",
@@ -228,7 +231,8 @@
             "Match": "2.2.0"
           }
         ]
-      }
+      },
+      "sha512": "b593aa4ed9ff34bd4a20860fec478b3638ff1f916a60dc79ebcff46cee279fdb59dd53a36579378f0e11f4be201114578a429bfbfc11eda195a0b1db7aa9831e"
     },
     {
       "ComponentName": "msys_home",
@@ -280,7 +284,8 @@
           "C:\\Program Files\\Mercurial\\hg.exe",
           "C:\\Program Files\\Mercurial\\python27.dll"
         ]
-      }
+      },
+      "sha512": "b71fd8f1d1e578bbd26b7bc6635d4a9d11320bce36f24ba44152cba3c02477006ab8d6fd9b06b263d11b4327713a048156d64bcbbb073d95eede0a53675a9a80"
     },
     {
       "ComponentName": "MercurialConfig",

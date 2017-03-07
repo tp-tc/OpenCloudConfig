@@ -81,7 +81,8 @@
           "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg.exe",
           "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg2.exe"
         ]
-      }
+      },
+      "sha512": "b1c48d84d041055db3d3e3cbd22ef2f3300728b06c76660b9b78ececf56b7ccbc80addb39a64c0a4eb68bf3463ceb6d254dedda047049ce680e9d543dd8a9af9"
     },
     {
       "ComponentName": "SevenZip",
@@ -96,7 +97,8 @@
           "C:\\Program Files\\7-Zip\\7z.exe",
           "C:\\Program Files\\7-Zip\\7z.dll"
         ]
-      }
+      },
+      "sha512": "4df02ab139b087c8d6e689a99afb58e1ab3d4c0722daa11f6a070cddb2506d079a7d9ff55341baa5b7fd1dc7593225eb9d7fdbfb9ac91e0d8db61f9fda85cbb3"
     },
     {
       "ComponentName": "SublimeText3",
@@ -113,7 +115,8 @@
           "C:\\Program Files\\Sublime Text 3\\subl.exe",
           "C:\\Program Files\\Sublime Text 3\\sublime_text.exe"
         ]
-      }
+      },
+      "sha512": "d3e71b28567ddd1b486aa3dcc9814818d91c322bc20ec203018d74bc465835f9ddd34d78f674172d00e66b39443070eb45e9799e3801b0ac410c958b2cf21098"
     },
     {
       "ComponentName": "SublimeText3_PackagesFolder",
@@ -307,7 +310,8 @@
         "PathsExist": [
           "C:\\Windows\\SysWOW64\\msvcr100.dll"
         ]
-      }
+      },
+      "sha512": "d2d99e06d49a5990b449cf31d82a33104a6b45164e76fbeb34c43d10bcd25c3622af52e59a2d4b7f5f45f83c3ba4d23cf1a5fc0c03b3606f42426988e63a9770"
     },
     {
       "ComponentName": "vcredist_vs2010_x64",
@@ -331,7 +335,8 @@
         "PathsExist": [
           "C:\\Windows\\System32\\msvcr100.dll"
         ]
-      }
+      },
+      "sha512": "75280d721550c2fa19b4f8d42b87d2fc6017f42709d84d2162c7330f7a0338bbd72cdc3f78626b10edcc602e2d22b174039254824334b3173d0ea48b3c06d1df"
     },
     {
       "ComponentName": "vcredist_vs2013_x86",
@@ -349,7 +354,8 @@
         "PathsExist": [
           "C:\\Windows\\SysWOW64\\msvcr120.dll"
         ]
-      }
+      },
+      "sha512": "729251371ed208898430040fe48cabd286a5671bd7f472a30e9021b68f73b2d49d85a0879920232426b139520f7e21321ba92646985216bf2f733c64e014a71d"
     },
     {
       "ComponentName": "vcredist_vs2013_x64",
@@ -367,7 +373,8 @@
         "PathsExist": [
           "C:\\Windows\\System32\\msvcr120.dll"
         ]
-      }
+      },
+      "sha512": "3a55dce14bbd455808bd939a5008b67c9c7111cab61b1339528308022e587726954f8c55a597c6974dc543964bdb6532fe433556fbeeaf9f8cb4d95f2bbffc12"
     },
     {
       "ComponentName": "vcredist_vs2015_x86",
@@ -385,7 +392,8 @@
         "PathsExist": [
           "C:\\Windows\\SysWOW64\\vcruntime140.dll"
         ]
-      }
+      },
+      "sha512": "c0eac71b95d1c0232ce1457561a66e24d3ef687ba8012f072d28f89df9dd409584b262b7bac9977f500ec99c0c31138c36f0da48972b818bacba2bc601d5f3a4"
     },
     {
       "ComponentName": "vcredist_vs2015_x64",
@@ -403,7 +411,8 @@
         "PathsExist": [
           "C:\\Windows\\System32\\vcruntime140.dll"
         ]
-      }
+      },
+      "sha512": "729b1e37aefdf708df6a787b2eecd0e4e186c4e8a6d6f3028b0134f81c4216f889e67645d9279cb0ae60079a8f6f68ac88ec5d1fe27ee54f8de563b5209698f3"
     },
     {
       "ComponentName": "WindowsSDK10Setup",
@@ -424,7 +433,8 @@
           "C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x86\\srcsrv\\pdbstr.exe",
           "C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x64\\srcsrv\\pdbstr.exe"
         ]
-      }
+      },
+      "sha512": "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
     },
     {
       "ComponentName": "BinScope",
@@ -460,7 +470,8 @@
             "Match": "2.2.0"
           }
         ]
-      }
+      },
+      "sha512": "b593aa4ed9ff34bd4a20860fec478b3638ff1f916a60dc79ebcff46cee279fdb59dd53a36579378f0e11f4be201114578a429bfbfc11eda195a0b1db7aa9831e"
     },
     {
       "ComponentName": "NsisInstall",
@@ -483,7 +494,8 @@
           "ComponentType": "ExeInstall",
           "ComponentName": "MozillaBuildSetup"
         }
-      ]
+      ],
+      "sha512": "daba46ce8850e0f4e40f62f6ef1dd0af791c7410e458759798053fd1887599158bd0b88ea6fa982a89411cb17fbe75a6ef5c5f945da4c2f9e496c374169567c1"
     },
     {
       "ComponentName": "msys_home",
@@ -534,7 +546,8 @@
           "C:\\Program Files\\Mercurial\\hg.exe",
           "C:\\Program Files\\Mercurial\\python27.dll"
         ]
-      }
+      },
+      "sha512": "b71fd8f1d1e578bbd26b7bc6635d4a9d11320bce36f24ba44152cba3c02477006ab8d6fd9b06b263d11b4327713a048156d64bcbbb073d95eede0a53675a9a80"
     },
     {
       "ComponentName": "MercurialConfig",
