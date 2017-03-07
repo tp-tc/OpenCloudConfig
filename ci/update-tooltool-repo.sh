@@ -31,9 +31,12 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
   done
 done
 
-if [ -f ./manifest.tt ] && grep -q "sha512" ./manifest.tt; then
-  python ./tooltool.py upload --url https://api.pub.build.mozilla.org/tooltool --authentication-file=./.tooltool.token --message "Bug 1342892 - OCC installers"
-  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] installers uploaded to tooltool"
-  rm ./manifest.tt
+if [ -f ./manifest.tt ]; then
+  if python ./tooltool.py validate; then
+    python ./tooltool.py upload --url https://api.pub.build.mozilla.org/tooltool --authentication-file=./.tooltool.token --message "Bug 1342892 - OCC installers"
+    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] installers uploaded to tooltool"
+  else
+    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] installers upload skipped due to manifest validation failure"
+  fi
 fi
 shred -u ./.tooltool.token
