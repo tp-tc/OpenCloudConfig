@@ -54,4 +54,4 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
 done
 cd OpenCloudConfig
 git diff > ../sha512.patch
-shred -u ./.tooltool.token
+shred -u ../.tooltool.token
