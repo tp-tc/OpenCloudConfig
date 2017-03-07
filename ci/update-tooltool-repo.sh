@@ -7,8 +7,13 @@ echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] tooltool token downloaded"
 curl -O https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] tooltool client downloaded"
 
+mkdir ./tooltool
+
 for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] processing Manifest ${manifest}"
+
+  json=$(basename $manifest)
+  tt=${json::-5}.tt
 
   jq -r '.Components[] | select(.ComponentType == "ExeInstall") | .ComponentName' ${manifest} | while read ComponentName; do
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] processing ExeInstall ${ComponentName}"
@@ -23,20 +28,21 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
     if curl --header "Authorization: Bearer $(cat ./.tooltool.token)" --output /dev/null --silent --head --fail ${tt_url}; then
       echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} found in tooltool: ${tt_url}"
     elif grep -q ${sha512} ./manifest.tt; then
-      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} found in manifest.tt (SHA 512: ${sha512})"
+      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} found in manifest: ${tt} (SHA 512: ${sha512})"
     else
-      python ./tooltool.py add --visibility internal ${filename}
-      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} added to manifest.tt (SHA 512: ${sha512})"
+      python ./tooltool.py add --visibility internal ${filename} -m ${tt}
+      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} added to manifest: ${tt} (SHA 512: ${sha512})"
     fi
   done
-done
-
-if [ -f ./manifest.tt ]; then
-  if python ./tooltool.py validate; then
-    python ./tooltool.py upload --url https://api.pub.build.mozilla.org/tooltool --authentication-file=./.tooltool.token --message "Bug 1342892 - OCC installers"
-    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] installers uploaded to tooltool"
-  else
-    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] installers upload skipped due to manifest validation failure"
+  if [ -f ./${tt} ]; then
+    if python ./tooltool.py validate -m ${tt}; then
+      python ./tooltool.py upload --url https://api.pub.build.mozilla.org/tooltool --authentication-file=./.tooltool.token --message "Bug 1342892 - OCC installers for ${tt::-3}" -m ${tt}
+      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] installers uploaded to tooltool"
+    else
+      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] installers upload skipped due to manifest validation failure for ${tt}"
+    fi
+    mv ${tt} ./tooltool/${tt}
   fi
-fi
+  rm -f *.exe
+done
 shred -u ./.tooltool.token

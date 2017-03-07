@@ -67,9 +67,9 @@ tasks:
               - '-c'
               - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-tooltool-repo.sh'
           artifacts:
-              'project/releng/opencloudconfig/manifest.tt':
-                  type: file
-                  path: './manifest.tt'
+              'project/releng/opencloudconfig/tooltool':
+                  type: directory
+                  path: './tooltool'
                   expires: "{{ '1 year' | $fromNow }}"
       metadata:
           name: 'Update tooltool repository'
