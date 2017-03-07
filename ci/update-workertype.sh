@@ -78,7 +78,7 @@ case "${tc_worker_type}" in
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
     gw_tasks_dir='Z:\'
-    root_username=root
+    root_username=Administrator
     worker_username=GenericWorker
     ;;
   @(gecko|loan)-t-win10*)
