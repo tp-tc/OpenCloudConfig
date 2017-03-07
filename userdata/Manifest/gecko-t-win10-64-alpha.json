@@ -12,7 +12,8 @@
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Url": "http://nxlog.co/system/files/products/files/1/nxlog-ce-2.9.1716.msi",
       "Name": "NxLog-CE",
-      "ProductId": "FC526514-AFD9-4A5C-8677-56241539609D"
+      "ProductId": "FC526514-AFD9-4A5C-8677-56241539609D",
+      "sha512": "70f5516bca0ff7814833ef397c01dbcd1c7011c0ef4b0f2aeda2e1aa7c02fe680eddfd1c0656f8d438559e34e5a841360dc6dafa7843c610528df2e1defb02be"
     },
     {
       "ComponentName": "PaperTrailEncryptionCertificate",
@@ -59,14 +60,16 @@
       "ComponentType": "ZipInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Url": "https://download.sysinternals.com/files/ProcessExplorer.zip",
-      "Destination": "C:\\ProcessExplorer"
+      "Destination": "C:\\ProcessExplorer",
+      "sha512": "ef89598b2d7f4659a98b0ace28f5b5274a93203d2a2296e37eadedf8cb0337ee5ccc161377644dae1c3e8526fc2545190077635e07458f7e4e74c5b3241f5e30"
     },
     {
       "ComponentName": "ProcessMonitor",
       "ComponentType": "ZipInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Url": "https://download.sysinternals.com/files/ProcessMonitor.zip",
-      "Destination": "C:\\ProcessMonitor"
+      "Destination": "C:\\ProcessMonitor",
+      "sha512": "0269c0354eb21345abe28da97043c88da2de2f27f84030c6746b7019368b482027a6a9ef48d715e11e389c7e12a89b8d638408f8826cebf72b886ec24ea776a1"
     },
     {
       "ComponentName": "GpgForWin",
@@ -671,7 +674,8 @@
       "ComponentType": "ZipInstall",
       "Comment": "generic worker debugging",
       "Url": "https://storage.googleapis.com/golang/go1.7.3.windows-amd64.zip",
-      "Destination": "C:\\"
+      "Destination": "C:\\",
+      "sha512": "04c89530c2e3a5646a5e9a52d1df9434c637b8c109c95715833eaacebac9a1a3d3976cd502b1d3fcd2e52275b13d6f2a891ef695bafdeae1d04e9cbc2cb90b20"
     },
     {
       "ComponentName": "env_GOROOT",
