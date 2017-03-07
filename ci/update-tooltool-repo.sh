@@ -20,23 +20,26 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
 
     filename=./${ComponentName}.exe
     www_url=$(jq --arg ComponentName ${ComponentName} -r '.Components[] | select(.ComponentType == "ExeInstall" and .ComponentName == $ComponentName) | .Url' ${manifest})
-    curl -o ${filename} ${www_url}
-    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName}.exe downloaded"
 
-    sha512=$(sha512sum ${filename} | { read sha _; echo $sha; })
-    tt_url="https://api.pub.build.mozilla.org/tooltool/sha512/${sha512}"
-    if curl --header "Authorization: Bearer $(cat ./.tooltool.token)" --output /dev/null --silent --head --fail ${tt_url}; then
-      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} found in tooltool: ${tt_url}"
-    elif grep -q ${sha512} ./manifest.tt; then
-      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} found in manifest: ${tt} (SHA 512: ${sha512})"
+    if curl -o ${filename} ${www_url}; then
+      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName}.exe downloaded"
+      sha512=$(sha512sum ${filename} | { read sha _; echo $sha; })
+      tt_url="https://api.pub.build.mozilla.org/tooltool/sha512/${sha512}"
+      if curl --header "Authorization: Bearer $(cat ./.tooltool.token)" --output /dev/null --silent --head --fail ${tt_url}; then
+        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} found in tooltool: ${tt_url}"
+      elif grep -q ${sha512} ./manifest.tt; then
+        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} found in manifest: ${tt} (SHA 512: ${sha512})"
+      else
+        python ./tooltool.py add --visibility internal ${filename} -m ${tt}
+        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} added to manifest: ${tt} (SHA 512: ${sha512})"
+      fi
+
+      jq --arg sha512 ${sha512} --arg componentName ${ComponentName} '(.Components[] | select(.ComponentType == "ExeInstall" and .ComponentName == $componentName) | .sha512) |= $sha512' ${manifest} > ${manifest}.tmp
+      rm ${manifest}
+      mv ${manifest}.tmp ${manifest}
     else
-      python ./tooltool.py add --visibility internal ${filename} -m ${tt}
-      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} added to manifest: ${tt} (SHA 512: ${sha512})"
+      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName}.exe download failed"
     fi
-
-    jq --arg sha512 ${sha512} --arg componentName ${ComponentName} '(.Components[] | select(.ComponentType == "ExeInstall" and .ComponentName == $componentName) | .sha512) |= $sha512' ${manifest} > ${manifest}.tmp
-    rm ${manifest}
-    mv ${manifest}.tmp ${manifest}
   done
   if [ -f ./${tt} ]; then
     if python ./tooltool.py validate -m ${tt}; then
