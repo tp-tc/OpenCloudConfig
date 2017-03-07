@@ -33,6 +33,10 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
       python ./tooltool.py add --visibility internal ${filename} -m ${tt}
       echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} added to manifest: ${tt} (SHA 512: ${sha512})"
     fi
+
+    jq --arg sha512 ${sha512} --arg componentName ${ComponentName} '(.Components[] | select(.ComponentType == "ExeInstall" and .ComponentName == $componentName) | .sha512) |= $sha512' ${manifest} > ${manifest}.tmp
+    rm ${manifest}
+    mv ${manifest}.tmp ${manifest}
   done
   if [ -f ./${tt} ]; then
     if python ./tooltool.py validate -m ${tt}; then
@@ -45,4 +49,6 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
   fi
   rm -f *.exe
 done
+cd OpenCloudConfig
+git diff > ../sha512.patch
 shred -u ./.tooltool.token
