@@ -15,31 +15,43 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
   json=$(basename $manifest)
   tt=${json::-5}.tt
 
-  jq -r '.Components[] | select(.ComponentType == "ExeInstall" and (.sha512 == "" or .sha512 == null)) | .ComponentName' ${manifest} | while read ComponentName; do
-    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] processing ExeInstall ${ComponentName}"
+  for ComponentType in ExeInstall MsiInstall ZipInstall; do
+    jq --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and (.sha512 == "" or .sha512 == null)) | .ComponentName' ${manifest} | while read ComponentName; do
+      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] processing ${ComponentType} ${ComponentName}"
+      case "${ComponentType}" in
+        ExeInstall)
+          ext=exe
+          ;;
+        MsiInstall)
+          ext=msi
+          ;;
+        ZipInstall)
+          ext=zip
+          ;;
+      esac
+      filename=./${ComponentName}.${ext}
+      www_url=$(jq --arg ComponentName ${ComponentName} --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and .ComponentName == $ComponentName) | .Url' ${manifest})
 
-    filename=./${ComponentName}.exe
-    www_url=$(jq --arg ComponentName ${ComponentName} -r '.Components[] | select(.ComponentType == "ExeInstall" and .ComponentName == $ComponentName) | .Url' ${manifest})
+      if curl -o ${filename} ${www_url}; then
+        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName}.${ext} downloaded"
+        sha512=$(sha512sum ${filename} | { read sha _; echo $sha; })
+        tt_url="https://api.pub.build.mozilla.org/tooltool/sha512/${sha512}"
+        if curl --header "Authorization: Bearer $(cat ./.tooltool.token)" --output /dev/null --silent --head --fail ${tt_url}; then
+          echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} found in tooltool: ${tt_url}"
+        elif grep -q ${sha512} ./manifest.tt; then
+          echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} found in manifest: ${tt} (SHA 512: ${sha512})"
+        else
+          python ./tooltool.py add --visibility internal ${filename} -m ${tt}
+          echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} added to manifest: ${tt} (SHA 512: ${sha512})"
+        fi
 
-    if curl -o ${filename} ${www_url}; then
-      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName}.exe downloaded"
-      sha512=$(sha512sum ${filename} | { read sha _; echo $sha; })
-      tt_url="https://api.pub.build.mozilla.org/tooltool/sha512/${sha512}"
-      if curl --header "Authorization: Bearer $(cat ./.tooltool.token)" --output /dev/null --silent --head --fail ${tt_url}; then
-        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} found in tooltool: ${tt_url}"
-      elif grep -q ${sha512} ./manifest.tt; then
-        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} found in manifest: ${tt} (SHA 512: ${sha512})"
+        jq --arg sha512 ${sha512} --arg componentName ${ComponentName} --arg componentType ${ComponentType} '(.Components[] | select(.ComponentType == $componentType and .ComponentName == $componentName) | .sha512) |= $sha512' ${manifest} > ${manifest}.tmp
+        rm ${manifest}
+        mv ${manifest}.tmp ${manifest}
       else
-        python ./tooltool.py add --visibility internal ${filename} -m ${tt}
-        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} added to manifest: ${tt} (SHA 512: ${sha512})"
+        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName}.${ext} download failed"
       fi
-
-      jq --arg sha512 ${sha512} --arg componentName ${ComponentName} '(.Components[] | select(.ComponentType == "ExeInstall" and .ComponentName == $componentName) | .sha512) |= $sha512' ${manifest} > ${manifest}.tmp
-      rm ${manifest}
-      mv ${manifest}.tmp ${manifest}
-    else
-      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName}.exe download failed"
-    fi
+    done
   done
   if [ -f ./${tt} ]; then
     if python ./tooltool.py validate -m ${tt}; then
@@ -50,7 +62,7 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
     fi
     mv ${tt} ./tooltool/${tt}
   fi
-  rm -f *.exe
+  rm -f *.exe *.msi
 done
 cd OpenCloudConfig
 git diff > ../sha512.patch
