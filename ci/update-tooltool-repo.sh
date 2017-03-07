@@ -15,7 +15,7 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
   json=$(basename $manifest)
   tt=${json::-5}.tt
 
-  jq -r '.Components[] | select(.ComponentType == "ExeInstall" and .sha512 == "") | .ComponentName' ${manifest} | while read ComponentName; do
+  jq -r '.Components[] | select(.ComponentType == "ExeInstall" and (.sha512 == "" or .sha512 == null)) | .ComponentName' ${manifest} | while read ComponentName; do
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] processing ExeInstall ${ComponentName}"
 
     filename=./${ComponentName}.exe
