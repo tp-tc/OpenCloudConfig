@@ -306,12 +306,18 @@ Configuration DynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ ExeDownload = $item.ComponentName }"
           SetScript = {
-            # todo: handle non-http fetches
-            try {
-              (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName))
-            } catch {
-              # handle redirects (eg: sourceforge)
-              Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+            if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
+              $webClient = New-Object System.Net.WebClient
+              $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
+              $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName))
+            } else {
+              # todo: handle non-http fetches
+              try {
+                (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName))
+              } catch {
+                # handle redirects (eg: sourceforge)
+                Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+              }
             }
             Unblock-File -Path ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName)
           }
@@ -345,12 +351,18 @@ Configuration DynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ MsiDownload = $item.ComponentName }"
           SetScript = {
-            # todo: handle non-http fetches
-            try {
-              (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $using:item.ComponentName))
-            } catch {
-              # handle redirects (eg: sourceforge)
-              Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $using:item.ComponentName) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+            if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
+              $webClient = New-Object System.Net.WebClient
+              $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
+              $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $using:item.ComponentName))
+            } else {
+              # todo: handle non-http fetches
+              try {
+                (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $using:item.ComponentName))
+              } catch {
+                # handle redirects (eg: sourceforge)
+                Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $using:item.ComponentName) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+              }
             }
             Unblock-File -Path ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $using:item.ComponentName)
           }
@@ -389,12 +401,18 @@ Configuration DynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ ZipDownload = $item.ComponentName }"
           SetScript = {
+            if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
+              $webClient = New-Object System.Net.WebClient
+              $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
+              $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName))
+            } else {
             # todo: handle non-http fetches
-            try {
-              (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName))
-            } catch {
-              # handle redirects (eg: sourceforge)
-              Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+              try {
+                (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName))
+              } catch {
+                # handle redirects (eg: sourceforge)
+                Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+              }
             }
             Unblock-File -Path ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName)
           }
