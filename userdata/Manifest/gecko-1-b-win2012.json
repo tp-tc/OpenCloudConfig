@@ -503,32 +503,6 @@
       "sha512": "daba46ce8850e0f4e40f62f6ef1dd0af791c7410e458759798053fd1887599158bd0b88ea6fa982a89411cb17fbe75a6ef5c5f945da4c2f9e496c374169567c1"
     },
     {
-      "ComponentName": "makensis_301",
-      "ComponentType": "SymbolicLink",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1236624#c53",
-      "Target": "C:\\mozilla-build\\nsis-3.01\\makensis.exe",
-      "Link": "C:\\mozilla-build\\nsis-3.01\\makensis-3.01.exe",
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "NsisInstall"
-        }
-      ]
-    },
-    {
-      "ComponentName": "bin_makensis_301",
-      "ComponentType": "SymbolicLink",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1236624#c53",
-      "Target": "C:\\mozilla-build\\nsis-3.01\\Bin\\makensis.exe",
-      "Link": "C:\\mozilla-build\\nsis-3.01\\Bin\\makensis-3.01.exe",
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "NsisInstall"
-        }
-      ]
-    },
-    {
       "ComponentName": "msys_home",
       "ComponentType": "SymbolicLink",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
