@@ -438,7 +438,7 @@
           "C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x64\\srcsrv\\pdbstr.exe"
         ]
       },
-      "sha512": "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
+      "sha512": "89ce9cb241ee33cc0642f93ea7d96ff148de6b54e27075398f8f2de31272e1c32865c43e5a9e89da8ce0317f586802bb21bb6247a643d5d201a79a5cd2648d09"
     },
     {
       "ComponentName": "BinScope",
