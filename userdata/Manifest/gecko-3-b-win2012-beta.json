@@ -446,7 +446,8 @@
       "Comment": "https://dxr.mozilla.org/mozilla-central/search?q=BinScope&redirect=false&case=false",
       "Url": "https://github.com/mozilla-releng/OpenCloudConfig/raw/master/userdata/Configuration/FirefoxBuildResources/BinScope_x64.msi",
       "Name": "Microsoft BinScope 2014",
-      "ProductId": "C7F11A71-09AA-43CC-9DFC-8CB12E678F21"
+      "ProductId": "C7F11A71-09AA-43CC-9DFC-8CB12E678F21",
+      "sha512": "3a36ed88690112d5ae1fc67d4af16973727e987a744a982c2357d72c955e21fcd20abc1ed48a23c376340d320463d91b2dd828454303075276a403f30d1d01aa"
     },
     {
       "ComponentName": "MozillaBuildSetup",
