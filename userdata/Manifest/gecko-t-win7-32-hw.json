@@ -104,6 +104,21 @@
       "sha512": "ad8298ae7d170c9a3e7f66a6098dd017adcd7912ba3938237db88dca141b6606b095a1c7c7fff0a2d4b47405ffbd25d65e5d8d98a55a8abaf3ced12854c18c4c"
     },
     {
+      "ComponentName": "Git-2.11.1",
+      "ComponentType": "ExeInstall",
+      "Comment": "Git-2.11.1",
+      "Url": "https://github.com/git-for-windows/git/releases/download/v2.11.1.windows.1/Git-2.11.1-32-bit.exe",
+            "Arguments": [
+        "/VerySilent"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files\\GIT\\git-cmd.exe",
+          "C:\\Program Files\\GIT\\bin\\git.exe"
+        ]
+      }
+    },
+    {
       "ComponentName": "SublimeText3",
       "ComponentType": "ExeInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
@@ -126,6 +141,185 @@
       "ComponentType": "DirectoryCreate",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Path": "C:\\Users\\Administrator\\AppData\\Roaming\\Sublime Text 3\\Packages"
+    },
+    {
+     "ComponentName": "UltraVNC",
+      "ComponentType": "MsiInstall",
+      "Comment": "VNC Server - not essential for building firefox",
+      "Url": "http://fakeurl/UltraVNC",
+      "sha512": "e454719aae70d26a52a5db499049d3684f7f9024d249620f9762d9c376030d602fec2a746afdb35bb0027186768f1311c34f152f52dba101823e7c8f0ec0b98e",
+      "Name": "UltraVnc",
+      "ProductId": "8C5C331A-97D6-46DE-BFF4-8424BD06A888"
+    }, 
+    {
+      "ComponentName": "MozillaMaintenanceDir",
+      "ComponentType": "DirectoryCreate",
+      "Comment": "Working directory for Mozilla Maintenance Service",
+      "Path": "C:\\DSC\\MozillaMaintenance"
+    },    
+    {
+      "ComponentName": "maintenanceservice.exe",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/maintenanceservice.exe?raw=true",
+      "Target": "C:\\DSC\\MozillaMaintenance\\maintenanceservice.exe",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate", 
+          "ComponentName": "MozillaMaintenanceDir"
+        }
+      ]
+    },
+    {
+      "ComponentName": "maintenanceservice_installer.exe",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/maintenanceservice_installer.exe?raw=true",
+      "Target": "C:\\DSC\\MozillaMaintenance\\maintenanceservice_installer.exe",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate", 
+          "ComponentName": "MozillaMaintenanceDir"
+        }
+      ]
+    },
+    {
+      "ComponentName": "MozFakeCA.cer",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/MozFakeCA.cer?raw=true",
+      "Target": "C:\\DSC\\MozillaMaintenance\\MozFakeCA.cer",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate", 
+          "ComponentName": "MozillaMaintenanceDir"
+        }
+      ]
+    },
+    {
+      "ComponentName": "MozRoot.cer",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/MozRoot.cer?raw=true",
+      "Target": "C:\\DSC\\MozillaMaintenance\\MozRoot.cer",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate", 
+          "ComponentName": "MozillaMaintenanceDir"
+        }
+      ]
+    },
+    {
+      "ComponentName": "mms.reg",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/mms.reg?raw=true",
+      "Target": "C:\\DSC\\MozillaMaintenance\\mms.reg",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate", 
+          "ComponentName": "MozillaMaintenanceDir"
+        }
+      ]
+    },
+    {
+      "ComponentName": "mms.bat",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "A comment",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mozilla%20Maintenance%20Service/mms.bat?raw=true",
+      "Target": "C:\\DSC\\MozillaMaintenance\\mms.bat",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate", 
+          "ComponentName": "MozillaMaintenanceDir"
+        }
+      ]
+    }, 
+    {
+      "ComponentName": "MMS_Install_bat",
+      "ComponentType": "CommandRun",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Command": "C:\\DSC\\MozillaMaintenance\\mms.bat",
+      "Arguments": "/FakeFlag",
+      "DependsOn": [
+              {
+                "ComponentName": "maintenanceservice.exe"
+              },
+              {
+                "ComponentName": "maintenanceservice_installer.exe"
+              },
+              {
+                "ComponentName": "MozFakeCA.cer"
+              },
+              {
+                "ComponentName": "mms.reg"
+              },
+              {
+                "ComponentName": "mms.bat"
+              }
+            ],
+      "Validate": {
+        "CommandsReturn": [
+        {
+          "Command": "sc",
+          "Arguments": [
+            "query",
+            "MozillaMaintenance",
+            "|",
+            "findstr",
+            "/i",
+            "\"STATE\""
+          ],
+            "Match": "RUNNING"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "Nvidia_Zip_dir",
+      "ComponentType": "DirectoryCreate",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Path": "C:\\DSC\\Nvidia"
+    },    
+    {
+      "ComponentName": "Nvidia_DATACENTER_Driver",
+      "ComponentType": "ZipInstall",
+      "Destination": "C:\\DSC\\Nvidia",
+      "Url": "http://fakeurl/Nvidia",
+      "sha512": "998c998d99eedcfb34cc9369d3804b8a78ab23e653981ffa1819bf22b763f28e6dc0391905e943fb6f6c6266655902737a3f79a6ad85fbe2347bf98d83705e11",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "Nvidia_Zip_dir"
+        }
+      ]
+    },
+    {
+      "ComponentName": "Nvidia_DATACENTER_Driver_Install",
+      "ComponentType": "CommandRun",
+      "Comment": "Nvidia Graphic driver install",
+      "Command": "C:\\dsc\\Nvidia\\314.07-desktop-win8-win7-winvista-32bit-english-whql\\setup.exe", 
+      "Arguments": [
+				"-clean",
+				"-passive",
+				"-noreboot",
+				"-loglevel:6",
+				"-log:C:\\log"
+			],
+      "DependsOn": [
+      	{
+        	"ComponentName": "Nvidia_DATACENTER_Driver"
+	      }      
+      ],		
+     "Validate": {
+        "PathsExist": [
+          "C:\\programfiles\\Nvidia Corporation\\license.txt",
+          "C:\\programfiles\\Nvidia Corporation\\Update Common||NvUpdt.dll"
+        ]
+      }
+    },
+    {
+      "ComponentName": "Nvidia_Update_service",
+      "ComponentType": "ServiceControl",
+      "Comment": "Disable Nvidia update service",
+      "Name": "nvUpdatusService",
+      "StartupType": "DIsabled",
+      "State": "Stopped"
     },
     {
       "ComponentName": "SublimeText3_PackageControl",
@@ -474,6 +668,14 @@
       "Action": "Allow"
     },
     {
+      "ComponentName": "UltraVnc",
+      "ComponentType": "FirewallRule",
+      "Protocol": "TCP",
+      "LocalPort": 5900,
+      "Direction": "Inbound",
+      "Action": "Allow"
+    },
+    {
       "ComponentName": "LiveLog_Put",
       "ComponentType": "FirewallRule",
       "Protocol": "TCP",
@@ -610,7 +812,7 @@
       "ComponentName": "HgShared",
       "ComponentType": "DirectoryCreate",
       "Comment": "allows builds to use `hg robustcheckout ...`",
-      "Path": "y:\\hg-shared"
+      "Path": "c:\\hg-shared"
     },
     {
       "ComponentName": "HgSharedAccessRights",
@@ -618,7 +820,7 @@
       "Comment": "allows builds to use `hg robustcheckout ...`",
       "Command": "icacls.exe",
       "Arguments": [
-        "y:\\hg-shared",
+        "c:\\hg-shared",
         "/grant",
         "Everyone:(OI)(CI)F"
       ],
@@ -633,7 +835,7 @@
       "ComponentName": "PipCache",
       "ComponentType": "DirectoryCreate",
       "Comment": "share pip cache across subsequent task users",
-      "Path": "y:\\pip-cache"
+      "Path": "c:\\pip-cache"
     },
     {
       "ComponentName": "PipCacheAccessRights",
@@ -641,7 +843,7 @@
       "Comment": "share pip cache across subsequent task users",
       "Command": "icacls.exe",
       "Arguments": [
-        "y:\\pip-cache",
+        "c:\\pip-cache",
         "/grant",
         "Everyone:(OI)(CI)F"
       ],
@@ -663,14 +865,14 @@
         }
       ],
       "Name": "PIP_DOWNLOAD_CACHE",
-      "Value": "y:\\pip-cache",
+      "Value": "c:\\pip-cache",
       "Target": "Machine"
     },
     {
       "ComponentName": "TooltoolCache",
       "ComponentType": "DirectoryCreate",
       "Comment": "share tooltool cache across subsequent task users",
-      "Path": "y:\\tooltool-cache"
+      "Path": "c:\\tooltool-cache"
     },
     {
       "ComponentName": "TooltoolCacheAccessRights",
@@ -678,7 +880,7 @@
       "Comment": "share tooltool cache across subsequent task users",
       "Command": "icacls.exe",
       "Arguments": [
-        "y:\\tooltool-cache",
+        "c:\\tooltool-cache",
         "/grant",
         "Everyone:(OI)(CI)F"
       ],
@@ -700,7 +902,7 @@
         }
       ],
       "Name": "TOOLTOOL_CACHE",
-      "Value": "y:\\tooltool-cache",
+      "Value": "c:\\tooltool-cache",
       "Target": "Machine"
     },
     {
@@ -891,6 +1093,22 @@
       "ValueType": "Dword",
       "ValueData": "0x00000002",
       "Hex": true
+    },
+    {
+      "ComponentName": "Window_Update",
+      "ComponentType": "ServiceControl",
+      "Comment": "Disable Windows update service",
+      "Name": "wuauserv",
+      "StartupType": "Manual",
+      "State": "Stopped"
+    },
+    {
+      "ComponentName": "Window_Search",
+      "ComponentType": "ServiceControl",
+      "Comment": "Disable Windows Indexing part 1 of 2",
+      "Name": "Wsearch",
+      "StartupType": "Disabled",
+      "State": "Stopped"
     }
   ]
 }
