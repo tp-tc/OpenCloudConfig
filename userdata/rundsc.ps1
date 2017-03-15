@@ -427,13 +427,23 @@ Write-Log -message ('availabilityZone: {0}, dnsRegion: {1}.' -f $az, $dnsRegion)
 
 # if importing releng amis, do a little housekeeping
 switch -wildcard ($workerType.Replace('loan-', 'gecko-')) {
-  'gecko-t-*' {
+  'gecko-t-win7-*' {
     $runDscOnWorker = $false
     $renameInstance = $true
     $setFqdn = $true
     if (-not ($isWorker)) {
       Remove-LegacyStuff -logFile $logFile
       Set-Credentials -username 'root' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
+    }
+    Map-DriveLetters
+  }
+  'gecko-t-win10-*' {
+    $runDscOnWorker = $false
+    $renameInstance = $true
+    $setFqdn = $true
+    if (-not ($isWorker)) {
+      Remove-LegacyStuff -logFile $logFile
+      Set-Credentials -username 'Administrator' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
     }
     Map-DriveLetters
   }
