@@ -6,16 +6,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 Configuration DynamicConfig {
   Import-DscResource -ModuleName PSDesiredStateConfiguration
-  # SourceRepo is in place to toggle between production and testing environments
-  $SourceRepo = "mozilla-releng"
+  # sourceRepo is in place to toggle between production and testing environments
+  $sourceRepo = 'mozilla-releng'
     
-  if (Get-Service "Ec2Config" -ErrorAction SilentlyContinue) {
-    $LocationType = "AWS"
+  if (Get-Service 'Ec2Config' -ErrorAction SilentlyContinue) {
+    $locationType = 'AWS'
   } else {
-    $LocationType = "DataCenter"
+    $locationType = 'DataCenter'
   }
-	
-  If ($LocationType -eq "AWS") { 
+
+  if ($locationType -eq 'AWS') { 
     Script GpgKeyImport {
       DependsOn = @('[Script]InstallSupportingModules', '[Script]ExeInstall_GpgForWin')
       GetScript = { @{ Result = (((Test-Path -Path ('{0}\SysWOW64\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\SysWOW64\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot)).length -gt 0kb)) -or ((Test-Path -Path ('{0}\System32\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\System32\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot)).length -gt 0kb))) } }
@@ -39,7 +39,7 @@ Configuration DynamicConfig {
     DestinationPath = ('{0}\builds' -f $env:SystemDrive)
     Ensure = 'Present'
   }
-  If ($LocationType -eq "AWS") { 
+  if ($locationType -eq 'AWS') { 
     Script FirefoxBuildSecrets {
       DependsOn = @('[Script]GpgKeyImport', '[File]BuildsFolder')
       GetScript = "@{ Script = FirefoxBuildSecrets }"
@@ -86,7 +86,7 @@ Configuration DynamicConfig {
     TestScript = { return $false }
   }
 
-  If ($LocationType -eq "AWS") { 
+  if ($locationType -eq 'AWS') { 
     $instancekey = (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/meta-data/public-keys' -UseBasicParsing).Content
     if ($instancekey.StartsWith('0=aws-provisioner-v1-managed:')) {
       # provisioned worker
@@ -96,23 +96,23 @@ Configuration DynamicConfig {
       $workerType = $instancekey.Replace('0=mozilla-taskcluster-worker-', '')
     }
     if ($workerType) {
-      if ($workerType.StartsWith('loan-')) {		
-	      # loan workers share a manifest with gecko parent worker type.		
-	      $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/{0}.json?{1}' -f ($workerType.Replace('loan-', 'gecko-') -replace ".{3}$"), [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)		
-	    } else {
-      $manifest = (Invoke-WebRequest -Uri ("https://raw.githubusercontent.com/$SourceRepo/OpenCloudConfig/master/userdata/Manifest/{0}.json?{1}" -f $workerType, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
+      if ($workerType.StartsWith('loan-')) {
+        # loan workers share a manifest with gecko parent worker type.
+        $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/Manifest/{1}.json?{2}' -f $sourceRepo, ($workerType.Replace('loan-', 'gecko-') -replace ".{3}$"), [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
+      } else {
+        $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/Manifest/{1}.json?{2}' -f $sourceRepo, $workerType, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
+      }
     }
-	}
   } else {
     switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
       'Microsoft Windows 7*' {
-        $manifest = (Invoke-WebRequest -Uri ("https://raw.githubusercontent.com/$SourceRepo/OpenCloudConfig/master/userdata/Manifest/gecko-t-win7-32-hw.json?{0}" -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
+        $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/Manifest/gecko-t-win7-32-hw.json?{1}' -f $sourceRepo, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
       }
       'Microsoft Windows 10*' {
-        $manifest = (Invoke-WebRequest -Uri ("https://raw.githubusercontent.com/$SourceRepo/OpenCloudConfig/master/userdata/Manifest/gecko-t-win10-64-hw.json?{0}" -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
+        $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/Manifest/gecko-t-win10-64-hw.json?{1}' -f $sourceRepo, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
       }
       'Microsoft Windows Server 2012*' {
-        $manifest = (Invoke-WebRequest -Uri ("https://raw.githubusercontent.com/$SourceRepo/OpenCloudConfig/master/userdata/Manifest/gecko-1-b-win2012.json?{0}" -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
+        $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/Manifest/gecko-1-b-win2012.json?{1}' -f $sourceRepo, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
       }
       default {
         $manifest = ('{"Items":[{"ComponentType":"DirectoryCreate","Path":"$env:SystemDrive\\log"}]}' | ConvertFrom-Json)
