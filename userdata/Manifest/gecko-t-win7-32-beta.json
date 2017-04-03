@@ -943,16 +943,6 @@
         "PathsExist": [
           "C:\\Program Files\\Mozilla Maintenance Service\\maintenanceservice.exe",
           "C:\\Program Files\\Mozilla Maintenance Service\\Uninstall.exe"
-        ],
-        "CommandsReturn": [
-          {
-            "Command": "sc",
-            "Arguments": [
-              "query",
-              "MozillaMaintenance"
-            ],
-            "Match": "SERVICE_NAME: MozillaMaintenance"
-          }
         ]
       }
     },
