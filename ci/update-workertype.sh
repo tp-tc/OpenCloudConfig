@@ -186,8 +186,8 @@ jq '.|keys[]' ./delete-queue-${aws_region}.json | while read i; do
   aws ec2 delete-snapshot --region ${aws_region} --snapshot-id ${old_snap} || true
 done
 
-# purge all but 2 newest workertype golden instances (only needed in the base region where goldens are instantiated)
-aws ec2 describe-instances --region ${aws_region} --filters Name=tag-key,Values=WorkerType "Name=tag-value,Values=golden-${tc_worker_type}" | jq '[ .Reservations[].Instances[] | { InstanceId, LaunchTime } ] | sort_by(.LaunchTime) [ 0 : -2 ]' > ./instance-delete-queue-${aws_region}.json
+# purge all but newest workertype golden instances (only needed in the base region where goldens are instantiated)
+aws ec2 describe-instances --region ${aws_region} --filters Name=tag-key,Values=WorkerType "Name=tag-value,Values=golden-${tc_worker_type}" | jq '[ .Reservations[].Instances[] | { InstanceId, LaunchTime } ] | sort_by(.LaunchTime) [ 0 : -1 ]' > ./instance-delete-queue-${aws_region}.json
 jq '.|keys[]' ./instance-delete-queue-${aws_region}.json | while read i; do
   old_instance=$(jq -r ".[$i].InstanceId" ./instance-delete-queue-${aws_region}.json)
   old_lt=$(jq ".[$i].LaunchTime" ./instance-delete-queue-${aws_region}.json)
