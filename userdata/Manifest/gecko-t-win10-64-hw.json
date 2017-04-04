@@ -145,6 +145,229 @@
       ]
     },
     {
+     "ComponentName": "UltraVNC",
+      "ComponentType": "MsiInstall",
+      "Comment": "VNC Server - not essential for building firefox",
+      "Url": "http://fakeurl/UltraVNC",
+      "sha512": "e454719aae70d26a52a5db499049d3684f7f9024d249620f9762d9c376030d602fec2a746afdb35bb0027186768f1311c34f152f52dba101823e7c8f0ec0b98e",
+      "Name": "UltraVnc",
+      "ProductId": "8C5C331A-97D6-46DE-BFF4-8424BD06A888"
+    }, 
+    {
+      "ComponentName": "Windows_SDK",
+      "ComponentType": "ExeInstall",
+      "Comment": "This SDK includes Windows toolkit https://bugzilla.mozilla.org/show_bug.cgi?id=1338661",
+      "Url": "http://fakeurl/SDK",
+      "Arguments": [
+        "/q"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files\\Windows Kits\\8.1\\sdk_license.rtf",
+          "C:\\Program Files\\Windows Kits\\8.1\\bin\\x86\\config.mftx"
+        ]
+      },
+      "sha512": "cbfd6a8dc39773ff3852998349b01612251a687a5992a51e117d169aa98fc313f0ca11d75572e14f2c64e18a10d2660a0710c4f1bc57dfdaf30804274e1bbef8"
+    },
+    {
+      "ComponentName": "Git_2_11_1",
+      "ComponentType": "ExeInstall",
+      "Comment": "Git-2.11.1",
+      "Url": "https://github.com/git-for-windows/git/releases/download/v2.11.1.windows.1/Git-2.11.1-32-bit.exe",
+      "Arguments": [
+        "/VerySilent"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files\\GIT\\git-cmd.exe",
+          "C:\\Program Files\\GIT\\bin\\git.exe"
+        ]
+      }
+    },
+    {
+      "ComponentName": "MozillaMaintenanceDir",
+      "ComponentType": "DirectoryCreate",
+      "Comment": "Working directory for Mozilla Maintenance Service",
+      "Path": "C:\\DSC\\MozillaMaintenance"
+    },    
+    {
+      "ComponentName": "maintenanceservice_exe",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/maintenanceservice.exe?raw=true",
+      "Target": "C:\\DSC\\MozillaMaintenance\\maintenanceservice.exe",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate", 
+          "ComponentName": "MozillaMaintenanceDir"
+        }
+      ]
+    },
+    {
+      "ComponentName": "maintenanceservice_installer_exe",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/maintenanceservice_installer.exe?raw=true",
+      "Target": "C:\\DSC\\MozillaMaintenance\\maintenanceservice_installer.exe",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate", 
+          "ComponentName": "MozillaMaintenanceDir"
+        }
+      ]
+    },
+    {
+      "ComponentName": "MozFakeCA_cer",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/MozFakeCA.cer?raw=true",
+      "Target": "C:\\DSC\\MozillaMaintenance\\MozFakeCA.cer",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate", 
+          "ComponentName": "MozillaMaintenanceDir"
+        }
+      ]
+    },
+    {
+      "ComponentName": "MozRoot_cer",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/MozRoot.cer?raw=true",
+      "Target": "C:\\DSC\\MozillaMaintenance\\MozRoot.cer",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate", 
+          "ComponentName": "MozillaMaintenanceDir"
+        }
+      ]
+    },
+    {
+      "ComponentName": "MMS_Install_exe",
+      "ComponentType": "CommandRun",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Command": "C:\\DSC\\MozillaMaintenance\\maintenanceservice_installer.exe",
+      "Arguments": "/FakeFlag",
+      "DependsOn": [
+          {
+            "ComponentName": "maintenanceservice.exe"
+          },
+	  {
+            "ComponentName": "maintenanceservice_installer.exe"
+          }
+        ],
+      "Validate": {
+      "CommandsReturn": [
+          {
+            "Command": "sc",
+              "Arguments": [
+                "query",
+                "MozillaMaintenance",
+                "|",
+                "findstr",
+                "/i",
+                "\"STATE\""
+              ],
+                "Match": "RUNNING"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "MMS_MozFakeCA_cer",
+      "ComponentType": "CommandRun",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Command": "certutil.exe",
+      "Arguments": "-addstore Root C:\\DSC\\MozillaMaintenance\\MozFakeCA.cer"
+    },
+    {
+      "ComponentName": "MMS_MozRoot_cer",
+      "ComponentType": "CommandRun",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Command": "certutil.exe",
+      "Arguments": "-addstore Root C:\\DSC\\MozillaMaintenance\\MozRoot.cer"
+    },
+    {
+      "ComponentName": "reg_MaintenanceService_0_name",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\0\\name",
+      "ValueName": "Mozilla Corporation"
+    },
+    {
+      "ComponentName": "reg_MaintenanceService_0_issuer",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\0\\issuer",
+      "ValueName": "Thawte Code Signing CA - G2"
+    },
+    {
+      "ComponentName": "reg_MaintenanceService_0_programName",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\0\\programName",
+      "ValueName": ""
+    },
+    {
+      "ComponentName": "reg_MaintenanceService_0_publisherLink",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\0\\publisherLink",
+      "ValueName": ""
+    },
+    {
+      "ComponentName": "reg_MaintenanceService_1_name",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\1\\name",
+      "ValueName": "Mozilla Fake SPC"
+    },
+    {
+      "ComponentName": "reg_MaintenanceService_1_issuer",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\1\\issuer",
+      "ValueName": "Mozilla Fake CA"
+    },
+    {
+      "ComponentName": "reg_MaintenanceService_1_programName",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\1\\programName",
+      "ValueName": ""
+    },
+    {
+      "ComponentName": "reg_MaintenanceService_1_publisherLink",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\1\\publisherLink",
+      "ValueName": ""
+    },
+    {
+      "ComponentName": "reg_MaintenanceService_2_name",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\2\\name",
+      "ValueName": "Mozilla Corporation"
+    },
+    {
+      "ComponentName": "reg_MaintenanceService_2_issuer",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\2\\issuer",
+      "ValueName": "DigiCert SHA2 Assured ID Code Signing CA"
+    },
+    {
+      "ComponentName": "reg_MaintenanceService_2_programName",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\2\\programName",
+      "ValueName": ""
+    },
+    {
+      "ComponentName": "reg_MaintenanceService_2_publisherLink",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\2\\publisherLink",
+      "ValueName": ""
+    },
+    {
       "ComponentName": "SystemPowerShellProfile",
       "ComponentType": "FileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
@@ -450,6 +673,14 @@
       "Action": "Allow"
     },
     {
+      "ComponentName": "UltraVnc",
+      "ComponentType": "FirewallRule",
+      "Protocol": "TCP",
+      "LocalPort": 5900,
+      "Direction": "Inbound",
+      "Action": "Allow"
+    },
+    {
       "ComponentName": "GenericWorkerInstall",
       "ComponentType": "CommandRun",
       "Command": "C:\\generic-worker\\generic-worker.exe",
@@ -591,7 +822,7 @@
       "ComponentName": "HgShared",
       "ComponentType": "DirectoryCreate",
       "Comment": "allows builds to use `hg robustcheckout ...`",
-      "Path": "y:\\hg-shared"
+      "Path": "c:\\hg-shared"
     },
     {
       "ComponentName": "HgSharedAccessRights",
@@ -599,7 +830,7 @@
       "Comment": "allows builds to use `hg robustcheckout ...`",
       "Command": "icacls.exe",
       "Arguments": [
-        "y:\\hg-shared",
+        "c:\\hg-shared",
         "/grant",
         "Everyone:(OI)(CI)F"
       ],
@@ -614,7 +845,7 @@
       "ComponentName": "PipCache",
       "ComponentType": "DirectoryCreate",
       "Comment": "share pip cache across subsequent task users",
-      "Path": "y:\\pip-cache"
+      "Path": "c:\\pip-cache"
     },
     {
       "ComponentName": "PipCacheAccessRights",
@@ -622,7 +853,7 @@
       "Comment": "share pip cache across subsequent task users",
       "Command": "icacls.exe",
       "Arguments": [
-        "y:\\pip-cache",
+        "c:\\pip-cache",
         "/grant",
         "Everyone:(OI)(CI)F"
       ],
@@ -644,14 +875,14 @@
         }
       ],
       "Name": "PIP_DOWNLOAD_CACHE",
-      "Value": "y:\\pip-cache",
+      "Value": "c:\\pip-cache",
       "Target": "Machine"
     },
     {
       "ComponentName": "TooltoolCache",
       "ComponentType": "DirectoryCreate",
       "Comment": "share tooltool cache across subsequent task users",
-      "Path": "y:\\tooltool-cache"
+      "Path": "c:\\tooltool-cache"
     },
     {
       "ComponentName": "TooltoolCacheAccessRights",
@@ -659,7 +890,7 @@
       "Comment": "share tooltool cache across subsequent task users",
       "Command": "icacls.exe",
       "Arguments": [
-        "y:\\tooltool-cache",
+        "c:\\tooltool-cache",
         "/grant",
         "Everyone:(OI)(CI)F"
       ],
@@ -681,7 +912,7 @@
         }
       ],
       "Name": "TOOLTOOL_CACHE",
-      "Value": "y:\\tooltool-cache",
+      "Value": "c:\\tooltool-cache",
       "Target": "Machine"
     },
     {
@@ -863,6 +1094,31 @@
       "ValueType": "Dword",
       "ValueData": "0x00000002",
       "Hex": true
+    },
+    {
+      "ComponentName": "Window_Update",
+      "ComponentType": "ServiceControl",
+      "Comment": "Disable Windows update service",
+      "Name": "wuauserv",
+      "StartupType": "Manual",
+      "State": "Stopped"
+    },
+    {
+      "ComponentName": "Window_Search",
+      "ComponentType": "ServiceControl",
+      "Comment": "Disable Windows Indexing",
+      "Name": "Wsearch",
+      "StartupType": "Disabled",
+      "State": "Stopped"
+    },
+	  {
+      "ComponentName": "KTS_ssh",
+      "ComponentType": "ServiceControl",
+      "Comment": "Enabled ssh",
+      "Name": "KpyM Telnet SSH Server v1.19",
+      "StartupType": "automatic",
+      "State": "running"
     }
   ]
 }
+
