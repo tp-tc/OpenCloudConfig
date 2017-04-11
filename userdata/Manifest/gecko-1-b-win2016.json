@@ -186,28 +186,15 @@
       }
     },
     {
-      "ComponentName": "VisualStudio2015AdminDeployment",
-      "ComponentType": "ChecksumFileDownload",
-      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/VisualStudio2015/AdminDeployment.xml",
-      "Target": "C:\\Windows\\Temp\\VisualStudio2015AdminDeployment.xml"
-    },
-    {
       "ComponentName": "VisualStudio2015Community",
       "ComponentType": "ExeInstall",
       "Url": "http://download.microsoft.com/download/0/B/C/0BC321A4-013F-479C-84E6-4A2F90B11269/vs_community.exe",
       "Arguments": [
         "/Passive",
         "/NoRestart",
-        "/AdminFile",
-        "C:\\Windows\\Temp\\VisualStudio2015AdminDeployment.xml",
+        "/full",
         "/Log",
         "C:\\log\\VisualStudio2015CommunityInstall.log"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "ChecksumFileDownload",
-          "ComponentName": "VisualStudio2015AdminDeployment"
-        }
       ],
       "Validate": {
         "PathsExist": [
@@ -307,7 +294,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v8.1.1/generic-worker-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v8.0.1/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
@@ -377,7 +364,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 8.1.1"
+            "Match": "generic-worker 8.0.1"
           }
         ]
       }

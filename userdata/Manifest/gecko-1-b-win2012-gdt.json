@@ -186,20 +186,13 @@
       }
     },
     {
-      "ComponentName": "VisualStudio2015AdminDeployment",
-      "ComponentType": "ChecksumFileDownload",
-      "Source": "https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/Configuration/VisualStudio2015/AdminDeployment.xml",
-      "Target": "C:\\Windows\\Temp\\VisualStudio2015AdminDeployment.xml"
-    },
-    {
       "ComponentName": "VisualStudio2015Community",
       "ComponentType": "ExeInstall",
       "Url": "http://download.microsoft.com/download/0/B/C/0BC321A4-013F-479C-84E6-4A2F90B11269/vs_community.exe",
       "Arguments": [
         "/Passive",
         "/NoRestart",
-        "/AdminFile",
-        "C:\\Windows\\Temp\\VisualStudio2015AdminDeployment.xml",
+        "/full",
         "/Log",
         "C:\\log\\VisualStudio2015CommunityInstall.log"
       ],

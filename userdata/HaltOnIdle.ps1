@@ -107,7 +107,7 @@ if (-not (Is-Running -proc 'generic-worker' -predicate (@(Get-Process | ? { $_.P
     Write-Log -message ('process priority for generic worker altered from {0} to {1}.' -f $priorityClass, $gwProcess.PriorityClass) -severity 'INFO'
   }
 }
-if ([IO.Directory]::GetFiles('C:\log', '*.zip').Count -gt 5) {
+if ([IO.Directory]::GetFiles('C:\log', '*.zip').Count -gt 10) {
   Write-Log -message 'instance appears to be boot-looping and will be halted.' -severity 'ERROR'
   & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: boot-loop detected', '-f', '-d', 'p:4:1')
 }
