@@ -1118,6 +1118,23 @@
       "Name": "KpyM Telnet SSH Server v1.19",
       "StartupType": "automatic",
       "State": "running"
+    },
+    {
+      "ComponentName": "GrantGenericWorkerMozillaRegistryWriteAccess",
+      "ComponentType": "CommandRun",
+      "Comment": "Bug 1353889 - Grant GenericWorker account write access to Mozilla registry key",
+      "Command": "powershell",
+      "Arguments": [
+        "-command",
+        "\"& {& (Get-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla').SetAccessRule(New-Object System.Security.AccessControl.RegistryAccessRule ('.\\GenericWorker', 'FullControl', 'Allow'))}\";",
+        "\"& {& ((Get-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla') | Set-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla')}\""
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "CarbonInstall"
+        }
+      ]
     }
   ]
 }
