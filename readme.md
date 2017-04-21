@@ -24,6 +24,7 @@ Which manifest to run is currently determined by the ssh key associated with the
   - Experimental:
     - [gecko-t-win7-32-beta](https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Manifest/gecko-t-win7-32-beta.json) Windows 7 - 32 bit
     - [gecko-t-win10-64-beta](https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Manifest/gecko-t-win10-64-beta.json) Windows 10 - 64 bit
+    - [gecko-t-win10-64-gpu-b](https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Manifest/gecko-t-win10-64-gpu-b.json) Windows 10 - 64 bit with GPU
 
 Running the following command at an elevated powershell prompt (or providing it as EC2 userdata) will start OCC on an instance:
 

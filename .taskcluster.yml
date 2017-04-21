@@ -732,6 +732,60 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-gpu-b
+          - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-gpu-b
+          - aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu-b
+      routes:
+          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-gpu-b'
+      workerType: '{{taskcluster.docker.workerType}}'
+      extra:
+          github:
+              env: true
+              events:
+                  - push
+              branches:
+                - master
+          data:
+              head:
+                  sha: '{{event.head.sha}}'
+                  user:
+                      email: '{{event.head.user.email}}'
+      payload:
+          maxRunTime: 10800
+          image: 'grenade/opencloudconfig'
+          features:
+              taskclusterProxy: true
+          command:
+              - '/bin/bash'
+              - '--login'
+              - '-c'
+              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win10-64-gpu-b'
+          artifacts:
+              'project/releng/opencloudconfig/update-request.json':
+                  type: file
+                  path: './gecko-t-win10-64-gpu-b.json'
+                  expires: "{{ '4 hours' | $fromNow }}"
+              'project/releng/opencloudconfig/update-response.json':
+                  type: file
+                  path: './update-response.json'
+                  expires: "{{ '4 hours' | $fromNow }}"
+              'project/releng/opencloudconfig/secret-update-response.json':
+                  type: file
+                  path: './secret-update-response.json'
+                  expires: "{{ '4 hours' | $fromNow }}"
+              'project/releng/opencloudconfig/gecko-t-win10-64-gpu-b.diff':
+                  type: file
+                  path: './gecko-t-win10-64-gpu-b.diff'
+                  expires: "{{ '1 year' | $fromNow }}"
+      metadata:
+          name: 'Update gecko-t-win10-64-gpu-b AMIs'
+          description: 'recreate Experimental Firefox Windows 10 (64 bit) GPU test AMIs using OpenCloudConfig for configuration and dependency installation'
+          owner: '{{event.head.user.email}}'
+          source: '{{event.head.repo.url}}'
+
+    - provisionerId: '{{taskcluster.docker.provisionerId}}'
+      scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-gpu
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-gpu
           - aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu
@@ -779,7 +833,7 @@ tasks:
                   expires: "{{ '1 year' | $fromNow }}"
       metadata:
           name: 'Update gecko-t-win10-64-gpu AMIs'
-          description: 'recreate Firefox Windows 10 (64 bit) test AMIs using OpenCloudConfig for configuration and dependency installation'
+          description: 'recreate Firefox Windows 10 (64 bit) GPU test AMIs using OpenCloudConfig for configuration and dependency installation'
           owner: '{{event.head.user.email}}'
           source: '{{event.head.repo.url}}'
 
