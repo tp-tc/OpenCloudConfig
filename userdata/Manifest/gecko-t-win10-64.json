@@ -1086,6 +1086,19 @@
           "ComponentName": "CarbonInstall"
         }
       ]
+    },
+    {
+      "ComponentName": "DisableFirewall",
+      "ComponentType": "CommandRun",
+      "Comment": "Bug 1358301 - Disable Windows Firewall",
+      "Command": "netsh",
+      "Arguments": [
+        "advfirewall",
+        "set",
+        "allprofiles",
+        "state",
+        "off"
+      ]
     }
   ]
 }
