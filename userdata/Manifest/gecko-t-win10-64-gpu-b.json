@@ -1086,6 +1086,22 @@
           "ComponentName": "CarbonInstall"
         }
       ]
+    },
+    {
+      "ComponentName": "python_In",
+      "ComponentType": "FirewallRule",
+      "Comment": "Bug 1358301 - firewall exception for python",
+      "Program": "python.exe",
+      "Direction": "Inbound",
+      "Action": "Allow"
+    },
+    {
+      "ComponentName": "python_Out",
+      "ComponentType": "FirewallRule",
+      "Comment": "Bug 1358301 - firewall exception for python",
+      "Program": "python.exe",
+      "Direction": "Outbound",
+      "Action": "Allow"
     }
   ]
 }
