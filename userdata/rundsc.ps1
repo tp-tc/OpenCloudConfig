@@ -451,6 +451,9 @@ If ($locationType -eq "AWS") {
     'us-east-1*'{
       $dnsRegion = 'use1'
     }
+    'us-east-2*'{
+      $dnsRegion = 'use2'
+    }
     'us-west-1*'{
       $dnsRegion = 'usw1'
     }

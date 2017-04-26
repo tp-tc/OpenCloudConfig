@@ -16,7 +16,6 @@ export AWS_SECRET_ACCESS_KEY=${TASKCLUSTER_AWS_SECRET_KEY}
 : ${aws_tc_account_id:?"aws_tc_account_id is not set"}
 
 aws_region=${aws_region:='us-west-2'}
-aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
 
 if [ "${#}" -lt 1 ]; then
   echo "workertype argument missing; usage: ./update-workertype.sh workertype" >&2
@@ -56,13 +55,14 @@ echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] git sha: ${aws_client_token}
 case "${tc_worker_type}" in
   @(gecko|loan)-t-win7-32-gpu*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win7-32-base-20170403-releng-activated'}
-    aws_instance_type=${aws_instance_type:='g2.2xlarge'}
+    aws_instance_type=${aws_instance_type:='c4.2xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=30}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko test worker for Windows 7 32 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
     gw_tasks_dir='Z:\'
     root_username=root
     worker_username=GenericWorker
+    aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
     ;;
   @(gecko|loan)-t-win7*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win7-32-base-20170403-releng-activated'}
@@ -73,16 +73,18 @@ case "${tc_worker_type}" in
     gw_tasks_dir='Z:\'
     root_username=root
     worker_username=GenericWorker
+    aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
     ;;
   @(gecko|loan)-t-win10-64-gpu*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win10-64-base-*'}
-    aws_instance_type=${aws_instance_type:='g2.2xlarge'}
+    aws_instance_type=${aws_instance_type:='c4.2xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=120}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
+    aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
     ;;
   @(gecko|loan)-t-win10*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win10-64-base-*'}
@@ -93,6 +95,7 @@ case "${tc_worker_type}" in
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
+    aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
     ;;
   gecko-[123]-b-win2012-beta)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-base-*'}
@@ -103,6 +106,7 @@ case "${tc_worker_type}" in
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
+    aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
     ;;
   gecko-1-b-win2012-gdt)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-base-*'}
@@ -113,6 +117,7 @@ case "${tc_worker_type}" in
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
+    aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
     ;;
   @(gecko|loan)-[123]-b-win2012*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-base-*'}
@@ -123,6 +128,7 @@ case "${tc_worker_type}" in
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
+    aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
     ;;
   @(gecko|loan)-1-b-win2016*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_Server-2016-English-Full-Base-*'}
@@ -133,6 +139,7 @@ case "${tc_worker_type}" in
     gw_tasks_dir='C:\tasks'
     root_username=Administrator
     worker_username=GenericWorker
+    aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
     ;;
   *)
     echo "ERROR: unknown worker type: '${tc_worker_type}'"
@@ -174,7 +181,11 @@ echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] instance public ip: ${aws_in
 # wait for instance stopped state
 until `aws ec2 wait instance-stopped --region ${aws_region} --instance-ids "${aws_instance_id}" >/dev/null 2>&1`;
 do
-  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for instance to shut down"
+  instance_state=$(aws ec2 describe-instances --region ${aws_region} --instance-id ${aws_instance_id} --query 'Reservations[*].Instances[*].State.Name' --output text)
+  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for instance to shut down. current state: ${instance_state}"
+  if [ "${instance_state}" == "terminated" ]; then
+    exit 68
+  fi
 done
 
 # create ami, get ami id, tag ami, wait for ami availability
