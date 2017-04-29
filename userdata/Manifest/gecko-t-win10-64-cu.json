@@ -518,8 +518,21 @@
           "ComponentName": "DisableDesktopInterrupt"
         }
       ],
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker.bat",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker-format-and-reboot.bat",
       "Target": "C:\\generic-worker\\run-generic-worker.bat"
+    },
+    {
+      "ComponentName": "TaskUserInitScript",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "Bug 1261188 - initialisation script for new task users",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/task-user-init-win10.cmd",
+      "Target": "C:\\generic-worker\\task-user-init.cmd",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "GenericWorkerDirectory"
+        }
+      ]
     },
     {
       "ComponentName": "PipConfDirectory",
@@ -850,6 +863,229 @@
       "ValueType": "Dword",
       "ValueData": "0x00000002",
       "Hex": true
+    },
+    {
+      "ComponentName": "MozillaMaintenanceDir",
+      "ComponentType": "DirectoryCreate",
+      "Comment": "Working directory for Mozilla Maintenance Service installation",
+      "Path": "C:\\dsc\\MozillaMaintenance"
+    },
+    {
+      "ComponentName": "maintenanceservice_installer",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/maintenanceservice_installer.exe?raw=true",
+      "Target": "C:\\dsc\\MozillaMaintenance\\maintenanceservice_installer.exe",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "MozillaMaintenanceDir"
+        }
+      ]
+    },
+    {
+      "ComponentName": "maintenanceservice",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/maintenanceservice.exe?raw=true",
+      "Target": "C:\\dsc\\MozillaMaintenance\\maintenanceservice.exe",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "MozillaMaintenanceDir"
+        }
+      ]
+    },
+    {
+      "ComponentName": "maintenanceservice_install",
+      "ComponentType": "CommandRun",
+      "Command": "C:\\dsc\\MozillaMaintenance\\maintenanceservice_installer.exe",
+      "Arguments": [
+        "/s"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "maintenanceservice_installer"
+        },
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "maintenanceservice"
+        }
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files (x86)\\Mozilla Maintenance Service\\maintenanceservice.exe",
+          "C:\\Program Files (x86)\\Mozilla Maintenance Service\\Uninstall.exe"
+        ]
+      }
+    },
+    {
+      "ComponentName": "MozFakeCA.cer",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/MozFakeCA.cer?raw=true",
+      "Target": "C:\\dsc\\MozillaMaintenance\\MozFakeCA.cer",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "MozillaMaintenanceDir"
+        }
+      ]
+    },
+    {
+      "ComponentName": "MozFakeCA.cer",
+      "ComponentType": "CommandRun",
+      "Command": "certutil.exe",
+      "Arguments": [
+        "-addstore",
+        "Root",
+        "C:\\dsc\\MozillaMaintenance\\MozFakeCA.cer"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "MozFakeCA.cer"
+        }
+      ]
+    },
+    {
+      "ComponentName": "MozRoot.cer",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/MozRoot.cer?raw=true",
+      "Target": "C:\\dsc\\MozillaMaintenance\\MozRoot.cer",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "MozillaMaintenanceDir"
+        }
+      ]
+    },
+    {
+      "ComponentName": "MozRoot.cer",
+      "ComponentType": "CommandRun",
+      "Command": "certutil.exe",
+      "Arguments": [
+        "-addstore",
+        "Root",
+        "C:\\dsc\\MozillaMaintenance\\MozRoot.cer"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "MozRoot.cer"
+        }
+      ]
+    },
+    {
+      "ComponentName": "reg_Mozilla_MaintenanceService_3932ecacee736d366d6436db0f55bce4_0_name",
+      "ComponentType": "RegistryValueSet",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\0",
+      "ValueName": "name",
+      "ValueType": "String",
+      "ValueData": "Mozilla Corporation"
+    },
+    {
+      "ComponentName": "reg_Mozilla_MaintenanceService_3932ecacee736d366d6436db0f55bce4_0_issuer",
+      "ComponentType": "RegistryValueSet",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\0",
+      "ValueName": "issuer",
+      "ValueType": "String",
+      "ValueData": "Thawte Code Signing CA - G2"
+    },
+    {
+      "ComponentName": "reg_Mozilla_MaintenanceService_3932ecacee736d366d6436db0f55bce4_0_programName",
+      "ComponentType": "RegistryValueSet",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\0",
+      "ValueName": "programName",
+      "ValueType": "String",
+      "ValueData": ""
+    },
+    {
+      "ComponentName": "reg_Mozilla_MaintenanceService_3932ecacee736d366d6436db0f55bce4_0_publisherLink",
+      "ComponentType": "RegistryValueSet",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\0",
+      "ValueName": "publisherLink",
+      "ValueType": "String",
+      "ValueData": ""
+    },
+    {
+      "ComponentName": "reg_Mozilla_MaintenanceService_3932ecacee736d366d6436db0f55bce4_1_name",
+      "ComponentType": "RegistryValueSet",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\1",
+      "ValueName": "name",
+      "ValueType": "String",
+      "ValueData": "Mozilla Fake SPC"
+    },
+    {
+      "ComponentName": "reg_Mozilla_MaintenanceService_3932ecacee736d366d6436db0f55bce4_1_issuer",
+      "ComponentType": "RegistryValueSet",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\1",
+      "ValueName": "issuer",
+      "ValueType": "String",
+      "ValueData": "Mozilla Fake CA"
+    },
+    {
+      "ComponentName": "reg_Mozilla_MaintenanceService_3932ecacee736d366d6436db0f55bce4_1_programName",
+      "ComponentType": "RegistryValueSet",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\1",
+      "ValueName": "programName",
+      "ValueType": "String",
+      "ValueData": ""
+    },
+    {
+      "ComponentName": "reg_Mozilla_MaintenanceService_3932ecacee736d366d6436db0f55bce4_1_publisherLink",
+      "ComponentType": "RegistryValueSet",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\1",
+      "ValueName": "publisherLink",
+      "ValueType": "String",
+      "ValueData": ""
+    },
+    {
+      "ComponentName": "reg_Mozilla_MaintenanceService_3932ecacee736d366d6436db0f55bce4_2_name",
+      "ComponentType": "RegistryValueSet",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\2",
+      "ValueName": "name",
+      "ValueType": "String",
+      "ValueData": "Mozilla Corporation"
+    },
+    {
+      "ComponentName": "reg_Mozilla_MaintenanceService_3932ecacee736d366d6436db0f55bce4_2_issuer",
+      "ComponentType": "RegistryValueSet",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\2",
+      "ValueName": "issuer",
+      "ValueType": "String",
+      "ValueData": "DigiCert SHA2 Assured ID Code Signing CA"
+    },
+    {
+      "ComponentName": "reg_Mozilla_MaintenanceService_3932ecacee736d366d6436db0f55bce4_2_programName",
+      "ComponentType": "RegistryValueSet",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\2",
+      "ValueName": "programName",
+      "ValueType": "String",
+      "ValueData": ""
+    },
+    {
+      "ComponentName": "reg_Mozilla_MaintenanceService_3932ecacee736d366d6436db0f55bce4_2_publisherLink",
+      "ComponentType": "RegistryValueSet",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\2",
+      "ValueName": "publisherLink",
+      "ValueType": "String",
+      "ValueData": ""
+    },
+    {
+      "ComponentName": "GrantGenericWorkerMozillaRegistryWriteAccess",
+      "ComponentType": "CommandRun",
+      "Comment": "Bug 1353889 - Grant GenericWorker account write access to Mozilla registry key",
+      "Command": "powershell",
+      "Arguments": [
+        "-command",
+        "\"& {& (Get-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla').SetAccessRule(New-Object System.Security.AccessControl.RegistryAccessRule ('.\\GenericWorker', 'FullControl', 'Allow'))}\";",
+        "\"& {& ((Get-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla') | Set-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla')}\""
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "CarbonInstall"
+        }
+      ]
     },
     {
       "ComponentName": "DisableFirewall",
