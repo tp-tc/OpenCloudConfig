@@ -1099,6 +1099,40 @@
         "state",
         "off"
       ]
+    },
+    {
+      "ComponentName": "NvidiaK520DriverPackage",
+      "ComponentType": "ExeInstall",
+      "Comment": "Required for hardware acceleration on EC2 g2 (GPU) instances. http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/accelerated-computing-instances.html#install-nvidia-driver-windows",
+      "Url": "http://uk.download.nvidia.com/Windows/Quadro_Certified/GRID/369.95/369.95-quadro-grid-desktop-notebook-win10-64bit-international-whql.exe",
+      "Arguments": [
+        "/s"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\NVIDIA\\369.95\\setup.exe"
+        ]
+      }
+    },
+    {
+      "ComponentName": "NvidiaK520DriverInstall",
+      "ComponentType": "CommandRun",
+      "Comment": "Required for hardware acceleration on EC2 g2 (GPU) instances. http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/accelerated-computing-instances.html#install-nvidia-driver-windows",
+      "Command": "C:\\NVIDIA\\369.95\\setup.exe",
+      "Arguments": [
+        "/s"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files\\NVIDIA Corporation\\license.txt"
+        ]
+      },
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "NvidiaK520DriverPackage"
+        }
+      ]
     }
   ]
 }
