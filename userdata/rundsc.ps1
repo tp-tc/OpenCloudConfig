@@ -155,7 +155,8 @@ function Remove-LegacyStuff {
       '"Make sure userdata runs"',
       '"Run Generic Worker on login"',
       'timesync',
-      'runner'
+      'runner',
+      '"OneDrive Standalone Update task v2"'
     ),
     [string[]] $registryKeys = @(
       'HKLM:\SOFTWARE\PuppetLabs'
@@ -388,18 +389,18 @@ if ($UpdateService.Status -ne "Running"){
 } else {
   Write-Log -message 'Windows update service is running'
 }
-# Prevent other updates from sneaking in on Windows 10
-If($OSVersion -eq "Microsoft Windows 10*") {
-	$taskName = "OneDrive Standalone Update task v2"
-	$taskExists = Get-ScheduledTask | Where-Object {$_.TaskName -like $taskName }
-		if($taskExists) {
-		Unregister-ScheduledTask -TaskName "OneDrive Standalone Update task v2" -Confirm:$false		
-	}
-}
 if ((Get-Service 'Ec2Config' -ErrorAction SilentlyContinue) -or (Get-Service 'AmazonSSMAgent' -ErrorAction SilentlyContinue)) {
   $locationType = 'AWS'
 } else {
   $locationType = 'DataCenter'
+  # Prevent other updates from sneaking in on Windows 10
+  If($OSVersion -eq "Microsoft Windows 10*") {
+    $taskName = "OneDrive Standalone Update task v2"
+    $taskExists = Get-ScheduledTask | Where-Object {$_.TaskName -like $taskName }
+      if($taskExists) {
+      Unregister-ScheduledTask -TaskName "OneDrive Standalone Update task v2" -Confirm:$false   
+    }
+  }
 }
 $lock = 'C:\dsc\in-progress.lock'
 if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
