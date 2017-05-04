@@ -506,6 +506,18 @@
       "Target": "C:\\generic-worker\\disable-desktop-interrupt.reg"
     },
     {
+      "ComponentName": "SetDefaultPrinter",
+      "ComponentType": "ChecksumFileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "GenericWorkerInstall"
+        }
+      ],
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/SetDefaultPrinter.ps1",
+      "Target": "C:\\generic-worker\\SetDefaultPrinter.ps1"
+    },
+    {
       "ComponentName": "GenericWorkerStateWait",
       "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
