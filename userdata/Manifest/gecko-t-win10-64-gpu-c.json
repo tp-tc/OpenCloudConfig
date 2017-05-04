@@ -1112,7 +1112,8 @@
         "PathsExist": [
           "C:\\NVIDIA\\369.95\\setup.exe"
         ]
-      }
+      },
+      "sha512": "7fd87a38e5eb760e49bd136d238ec8983a9cdacc1dfc67334c1033f887aab3c8592156a7f876de7c8938279008848ff755ec478aab9c1218f7879ca6758e29f2"
     },
     {
       "ComponentName": "NvidiaK520DriverInstall",
