@@ -1169,7 +1169,7 @@
         "GenericWorker",
         "-p",
         "qazwsx123!@#QAZ",
-        "LocalAppData",
+        "RoamingAppData",
         "Z:\\Users\\GenericWorker\\AppData\\Roaming"
       ],
       "DependsOn": [
