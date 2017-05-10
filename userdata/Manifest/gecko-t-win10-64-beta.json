@@ -457,7 +457,9 @@
         "install",
         "startup",
         "--config",
-        "C:\\generic-worker\\generic-worker.config"
+        "C:\\generic-worker\\generic-worker.config",
+        "--password",
+        "qazwsx123!@#QAZ"
       ],
       "DependsOn": [
         {
@@ -1099,6 +1101,143 @@
         "state",
         "off"
       ]
+    },
+    {
+      "ComponentName": "KnownFolderDirectory",
+      "ComponentType": "DirectoryCreate",
+      "Path": "C:\\knownfolder"
+    },
+    {
+      "ComponentName": "KnownFolderDownload",
+      "ComponentType": "FileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "KnownFolderDirectory"
+        }
+      ],
+      "Source": "https://github.com/taskcluster/knownfolder/releases/download/v1.1.0/knownfolder-1.1.0-windows-amd64.exe",
+      "Target": "C:\\knownfolder\\knownfolder.exe"
+    },
+    {
+      "ComponentName": "GenericWorkerSetLocalAppData",
+      "ComponentType": "CommandRun",
+      "Command": "C:\\knownfolder\\knownfolder.exe",
+      "Arguments": [
+        "set",
+        "-u",
+        "GenericWorker",
+        "-p",
+        "qazwsx123!@#QAZ",
+        "LocalAppData",
+        "Z:\\Users\\GenericWorker\\AppData\\Local"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "GenericWorkerInstall"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "KnownFolderDownload"
+        }
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "C:\\knownfolder\\knownfolder.exe",
+            "Arguments": [
+              "get",
+              "-u",
+              "GenericWorker",
+              "-p",
+              "qazwsx123!@#QAZ",
+              "LocalAppData"
+            ],
+            "Match": "Z:\\Users\\GenericWorker\\AppData\\Local"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "GenericWorkerSetRoamingAppData",
+      "ComponentType": "CommandRun",
+      "Command": "C:\\knownfolder\\knownfolder.exe",
+      "Arguments": [
+        "set",
+        "-u",
+        "GenericWorker",
+        "-p",
+        "qazwsx123!@#QAZ",
+        "LocalAppData",
+        "Z:\\Users\\GenericWorker\\AppData\\Roaming"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "GenericWorkerInstall"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "KnownFolderDownload"
+        }
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "C:\\knownfolder\\knownfolder.exe",
+            "Arguments": [
+              "get",
+              "-u",
+              "GenericWorker",
+              "-p",
+              "qazwsx123!@#QAZ",
+              "RoamingAppData"
+            ],
+            "Match": "Z:\\Users\\GenericWorker\\AppData\\Roaming"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "GenericWorkerSetLocalAppDataLow",
+      "ComponentType": "CommandRun",
+      "Command": "C:\\knownfolder\\knownfolder.exe",
+      "Arguments": [
+        "set",
+        "-u",
+        "GenericWorker",
+        "-p",
+        "qazwsx123!@#QAZ",
+        "LocalAppDataLow",
+        "Z:\\Users\\GenericWorker\\AppData\\LocalLow"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "GenericWorkerInstall"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "KnownFolderDownload"
+        }
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "C:\\knownfolder\\knownfolder.exe",
+            "Arguments": [
+              "get",
+              "-u",
+              "GenericWorker",
+              "-p",
+              "qazwsx123!@#QAZ",
+              "LocalAppDataLow"
+            ],
+            "Match": "Z:\\Users\\GenericWorker\\AppData\\LocalLow"
+          }
+        ]
+      }
     }
   ]
 }
