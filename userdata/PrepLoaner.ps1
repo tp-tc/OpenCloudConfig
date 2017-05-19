@@ -34,14 +34,25 @@ function Write-Log {
 }
 
 function Remove-GenericWorker {
+  $paths = @(
+    ('{0}\generic-worker\livelog.key' -f $env:SystemDrive),
+    ('{0}\generic-worker\generic-worker.config' -f $env:SystemDrive)
+  )
+  foreach ($path in $paths) {
+    if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
+      Remove-Item $path -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+      Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'INFO'
+    }
+  }
   $winlogonPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
   $autologonRegistryEntries = @{
     'DefaultUserName' = $winlogonPath;
+    'DefaultDomainName' = $winlogonPath;
     'DefaultPassword' = $winlogonPath;
     'AutoAdminLogon' = $winlogonPath
   }
   foreach ($name in $autologonRegistryEntries.Keys) {
-    $path = $registryEntries.Item($name)
+    $path = $autologonRegistryEntries.Item($name)
     $item = (Get-Item -Path $path)
     if (($item -ne $null) -and ($item.GetValue($name) -ne $null)) {
       Remove-ItemProperty -path $path -name $name
@@ -101,7 +112,7 @@ function Get-GeneratedPassword {
   }
   $password = ''
   for ($i=1; $i -le $length; $i++) {
-    $password += ($sourcedata | Get-Random)
+    $password += ($chars | Get-Random)
   }
   return $password
 }
@@ -129,11 +140,11 @@ if (Test-Path -Path $loanRegPath -ErrorAction SilentlyContinue) {
 if ((Test-Path -Path $loanReqPath -ErrorAction SilentlyContinue) -and (-not (Test-Path -Path $loanRegPath -ErrorAction SilentlyContinue))) {
   New-Item -Path $loanRegPath -Force | Out-Null
   New-ItemProperty -Path $loanRegPath -PropertyType String -Name 'Detected' -Value ((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:sszzz')) -Force | Out-Null
-  New-ItemProperty -Path $loanRegPath -PropertyType String -Name 'Requested' -Value ((Get-Item -Path 'Z:\loan-requested.json').LastWriteTime) -Force | Out-Null
+  New-ItemProperty -Path $loanRegPath -PropertyType String -Name 'Requested' -Value ((Get-Item -Path $loanReqPath).LastWriteTime.ToString('yyyy-MM-ddTHH:mm:sszzz')) -Force | Out-Null
   $loanRequest = (Get-Content -Raw -Path $loanReqPath | ConvertFrom-Json)
   New-ItemProperty -Path $loanRegPath -PropertyType String -Name 'Email' -Value $loanRequest.requester.email -Force | Out-Null
   New-ItemProperty -Path $loanRegPath -PropertyType String -Name 'PublicKeyUrl' -Value $loanRequest.requester.publickeyurl -Force | Out-Null
-  New-ItemProperty -Path $loanRegPath -PropertyType String -Name 'TaskId' -Value $loanRequest.requester.taskId -Force | Out-Null
+  New-ItemProperty -Path $loanRegPath -PropertyType String -Name 'TaskFolder' -Value $loanRequest.requester.taskFolder -Force | Out-Null
 }
 
 if (-not (Test-Path -Path $loanRegPath -ErrorAction SilentlyContinue)) {
@@ -147,18 +158,16 @@ $loanRequestPublicKeyUrl = (Get-ItemProperty -Path $loanRegPath -Name 'PublicKey
 $loanRequestTaskFolder = (Get-ItemProperty -Path $loanRegPath -Name 'TaskFolder').TaskFolder
 Write-Log -message ('loan request from {0} in task {1} ({2}) at {3} detected at {4}' -f $loanRequestEmail, $loanRequestTaskId, $loanRequestPublicKeyUrl, $loanRequestTime, $loanRequestDetectedTime) -severity 'INFO'
 
-#New-ItemProperty -Path $loanRegPath -PropertyType String -Name 'Cleaned' -Value ((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:sszzz')) -Force | Out-Null
-
-$password = (Get-GeneratedPassword)
 switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
   'Microsoft Windows 7*' {
-    Set-Credentials -username 'root' -password $password
+    $username = 'root'
   }
   default {
-    Set-Credentials -username 'Administrator' -password $password
+    $username = 'Administrator'
   }
 }
-$password | Out-File -filePath ('{0}\credentials.txt' -f $env:Temp)
+$password = (Get-GeneratedPassword)
+Set-Credentials -username $username -password $password
 
 if ("${env:ProgramFiles(x86)}") {
   $gpg = ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)})
@@ -170,12 +179,21 @@ $artifactsPath = 'z:\loan'
 if (-not (Test-Path $artifactsPath -ErrorAction SilentlyContinue)) {
   New-Item -Path $artifactsPath -ItemType directory -force
 }
-(New-Object Net.WebClient).DownloadFile($loanRequestPublicKeyUrl, ('{0}\public.key' -f $artifactsPath))
-& $gpg @('--import', ('{0}\public.key' -f $artifactsPath)) | Out-File -filePath ('{0}\key-import.log' -f $artifactsPath)
-& $gpg @('-e', '-u', 'releng-puppet-mail@mozilla.com', '-r', $loanRequestEmail, ('{0}\credentials.txt' -f $env:Temp)) | Out-File -filePath ('{0}\encryption.log' -f $artifactsPath)
-Remove-Item -Path ('{0}\credentials.txt' -f $env:Temp) -f
-Move-Item -Path ('{0}\credentials.txt.gpg' -f $env:Temp) -Destination $artifactsPath
+$token = [Guid]::NewGuid()
+"username: $username`npassword: $password" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token)
+(New-Object Net.WebClient).DownloadFile($loanRequestPublicKeyUrl, ('{0}\{1}.asc' -f $artifactsPath, $token))
+$tempKeyring = ('{0}.gpg' -f $token)
+Start-Process $gpg -ArgumentList @('--no-default-keyring', '--keyring', $tempKeyring, '--fingerprint') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\gpg-create-keyring.stdout.log' -f $artifactsPath) -RedirectStandardError ('{0}\gpg-create-keyring.stderr.log' -f $artifactsPath)
+Start-Process $gpg -ArgumentList @('--no-default-keyring', '--keyring', $tempKeyring, '--import', ('{0}\{1}.asc' -f $artifactsPath, $token)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\gpg-import-key.stdout.log' -f $artifactsPath) -RedirectStandardError ('{0}\gpg-import-key.stderr.log' -f $artifactsPath)
+Start-Process $gpg -ArgumentList @('--no-default-keyring', '--keyring', $tempKeyring, '--trust-model', 'always', '-e', '-u', 'releng-puppet-mail@mozilla.com', '-r', $loanRequestEmail, ('{0}\{1}.txt' -f $env:Temp, $token)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\gpg-encrypt.stdout.log' -f $artifactsPath) -RedirectStandardError ('{0}\gpg-encrypt.stderr.log' -f $artifactsPath)
+Get-ChildItem -Path $artifactsPath | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
+Remove-Item -Path ('{0}\{1}.txt' -f $env:Temp, $token) -force
+Move-Item -Path ('{0}\{1}.txt.gpg' -f $env:Temp, $token) -Destination ('{0}\credentials.txt' -f $artifactsPath)
+Write-Log -message 'credentials encrypted in task artefacts' -severity 'DEBUG'
 
 # wait for $loanRequestTaskFolder to disapear, then delete the gw user
-while ((Test-Path $loanRequestTaskFolder -ErrorAction SilentlyContinue)) { Start-Sleep 10 }
+while ((Test-Path $loanRequestTaskFolder -ErrorAction SilentlyContinue)) {
+  Write-Log -message 'waiting for loan request task to complete' -severity 'DEBUG'
+  Start-Sleep 1
+}
 Remove-GenericWorker
