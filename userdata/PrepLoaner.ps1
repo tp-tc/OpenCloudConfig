@@ -104,8 +104,8 @@ function Remove-GenericWorker {
 
 function Set-Credentials {
   param (
-    [string] $username,
-    [string] $password,
+    [string] $rootUsername,
+    [string] $rootPassword,
     [switch] $setautologon
   )
   begin {
@@ -113,15 +113,15 @@ function Set-Credentials {
   }
   process {
     try {
-      & net @('user', $username, $password)
-      Write-Log -message ('{0} :: credentials set for user: {1}.' -f $($MyInvocation.MyCommand.Name), $username) -severity 'INFO'
+      & net @('user', $rootUsername, $rootPassword)
+      Write-Log -message ('{0} :: credentials set for user: {1}.' -f $($MyInvocation.MyCommand.Name), $rootUsername) -severity 'INFO'
       if ($setautologon) {
-        Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Type 'String' -Name 'DefaultPassword' -Value $password
-        Write-Log -message ('{0} :: autologon set for user: {1}.' -f $($MyInvocation.MyCommand.Name), $username) -severity 'INFO'
+        Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Type 'String' -Name 'DefaultPassword' -Value $rootPassword
+        Write-Log -message ('{0} :: autologon set for user: {1}.' -f $($MyInvocation.MyCommand.Name), $rootUsername) -severity 'INFO'
       }
     }
     catch {
-      Write-Log -message ('{0} :: failed to set credentials for user: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $username, $_.Exception.Message) -severity 'ERROR'
+      Write-Log -message ('{0} :: failed to set credentials for user: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $rootUsername, $_.Exception.Message) -severity 'ERROR'
     }
   }
   end {
@@ -137,11 +137,11 @@ function Get-GeneratedPassword {
   for ($char = 48; $char -le 122; $char ++) {
     $chars += ,[char][byte]$char
   }
-  $password = ''
+  $rootPassword = ''
   for ($i=1; $i -le $length; $i++) {
-    $password += ($chars | Get-Random)
+    $rootPassword += ($chars | Get-Random)
   }
-  return $password
+  return $rootPassword
 }
 
 $loanReqPath = 'Z:\loan-request.json'
@@ -187,14 +187,17 @@ Write-Log -message ('loan request from {0}/{1} ({2}) at {3} detected at {4}' -f 
 Remove-Secrets
 switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
   'Microsoft Windows 7*' {
-    $username = 'root'
+    $rootUsername = 'root'
   }
   default {
-    $username = 'Administrator'
+    $rootUsername = 'Administrator'
   }
 }
-$password = (Get-GeneratedPassword)
-Set-Credentials -username $username -password $password
+$rootPassword = (Get-GeneratedPassword)
+Set-Credentials -username $rootUsername -password $rootPassword
+$workerUsername = 'GenericWorker'
+$workerPassword = (Get-GeneratedPassword)
+Set-Credentials -username $workerUsername -password $workerPassword
 
 if ("${env:ProgramFiles(x86)}") {
   $gpg = ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)})
@@ -208,9 +211,11 @@ if (-not (Test-Path $artifactsPath -ErrorAction SilentlyContinue)) {
 }
 $token = [Guid]::NewGuid()
 $publicIP = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4')
-"username: $username`npassword: $password`nhost: $publicIP`n" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8'
-"`nremote desktop from Linux (en-US keyboard):`nxfreerdp /u:$username /p:'$password' /kbd:409 /w:1024 /h:768 +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
-"`nremote desktop from Linux (en-GB keyboard):`nxfreerdp /u:$username /p:'$password' /kbd:809 /w:1024 /h:768 +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
+"host: $publicIP`n" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8'
+"root username: $rootUsername`nroot password: $rootPassword`n" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
+"worker username: $workerUsername`nworker password: $workerPassword`n" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
+"`nremote desktop from Linux (en-US keyboard):`nxfreerdp /u:$rootUsername /p:'$rootPassword' /kbd:409 /w:1024 /h:768 +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
+"`nremote desktop from Linux (en-GB keyboard):`nxfreerdp /u:$rootUsername /p:'$rootPassword' /kbd:809 /w:1024 /h:768 +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
 "`nremote desktop from Windows:`nmstsc /w:1024 /h:768 /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
 (New-Object Net.WebClient).DownloadFile($loanRequestPublicKeyUrl, ('{0}\{1}.asc' -f $artifactsPath, $token))
 $tempKeyring = ('{0}.gpg' -f $token)
