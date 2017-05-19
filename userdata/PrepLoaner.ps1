@@ -180,7 +180,11 @@ if (-not (Test-Path $artifactsPath -ErrorAction SilentlyContinue)) {
   New-Item -Path $artifactsPath -ItemType directory -force
 }
 $token = [Guid]::NewGuid()
-"username: $username`npassword: $password" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token)
+$publicIP = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4')
+"username: $username`npassword: $password`nhost: $publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token)
+"`n`nremote desktop from Linux (en-US keyboard):`nxfreerdp /u:$username /p:'$password' /kbd:409 /w:1024 /h:768 +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -append
+"`n`nremote desktop from Linux (en-GB keyboard):`nxfreerdp /u:$username /p:'$password' /kbd:809 /w:1024 /h:768 +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -append
+"`n`nremote desktop from Windows:`nmstsc /w:1024 /h:768 /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -append
 (New-Object Net.WebClient).DownloadFile($loanRequestPublicKeyUrl, ('{0}\{1}.asc' -f $artifactsPath, $token))
 $tempKeyring = ('{0}.gpg' -f $token)
 Start-Process $gpg -ArgumentList @('--no-default-keyring', '--keyring', $tempKeyring, '--fingerprint') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\gpg-create-keyring.stdout.log' -f $artifactsPath) -RedirectStandardError ('{0}\gpg-create-keyring.stderr.log' -f $artifactsPath)
