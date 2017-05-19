@@ -450,7 +450,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v8.3.0/generic-worker-windows-386.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v9.1.1/generic-worker-windows-386.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
@@ -482,12 +482,22 @@
       "Action": "Allow"
     },
     {
+      "ComponentName": "NSSMInstall",
+      "ComponentType": "ZipInstall",
+      "Comment": "NSSM is required to install Generic Worker as a service. Zip file contains top level nssm folder, so we can safely extract to C:\\.",
+      "Url": "http://www.nssm.cc/release/nssm-2.24.zip",
+      "Destination": "C:\\",
+      "sha512": "d71e037b177f80fc1414e26cf183aefef7729079ea48a268f834b335cbc269005de7ae6e54155a8cec3663c503741fa4241172fa69e8fd9a5c07b3eb1b56eff2"
+    },
+    {
       "ComponentName": "GenericWorkerInstall",
       "ComponentType": "CommandRun",
       "Command": "C:\\generic-worker\\generic-worker.exe",
       "Arguments": [
         "install",
-        "startup",
+        "service",
+        "--nssm",
+        "C:\\nssm-2.24\\win32\\nssm.exe",
         "--config",
         "C:\\generic-worker\\generic-worker.config"
       ],
@@ -507,6 +517,10 @@
         {
           "ComponentType": "FirewallRule",
           "ComponentName": "LiveLog_Put"
+        },
+        {
+          "ComponentType": "NSSMInstall",
+          "ComponentName": "ZipInstall"
         }
       ],
       "Validate": {
@@ -520,7 +534,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 8.3.0"
+            "Match": "generic-worker 9.1.1"
           }
         ]
       }

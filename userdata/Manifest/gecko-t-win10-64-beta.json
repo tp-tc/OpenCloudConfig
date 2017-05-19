@@ -418,7 +418,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v8.3.0/generic-worker-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v9.1.1/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
@@ -450,16 +450,24 @@
       "Action": "Allow"
     },
     {
+      "ComponentName": "NSSMInstall",
+      "ComponentType": "ZipInstall",
+      "Comment": "NSSM is required to install Generic Worker as a service. Zip file contains top level nssm folder, so we can safely extract to C:\\.",
+      "Url": "http://www.nssm.cc/release/nssm-2.24.zip",
+      "Destination": "C:\\",
+      "sha512": "d71e037b177f80fc1414e26cf183aefef7729079ea48a268f834b335cbc269005de7ae6e54155a8cec3663c503741fa4241172fa69e8fd9a5c07b3eb1b56eff2"
+    },
+    {
       "ComponentName": "GenericWorkerInstall",
       "ComponentType": "CommandRun",
       "Command": "C:\\generic-worker\\generic-worker.exe",
       "Arguments": [
         "install",
-        "startup",
+        "service",
+        "--nssm",
+        "C:\\nssm-2.24\\win64\\nssm.exe",
         "--config",
-        "C:\\generic-worker\\generic-worker.config",
-        "--password",
-        "qazwsx123!@#QAZ"
+        "C:\\generic-worker\\generic-worker.config"
       ],
       "DependsOn": [
         {
@@ -477,6 +485,10 @@
         {
           "ComponentType": "FirewallRule",
           "ComponentName": "LiveLog_Put"
+        },
+        {
+          "ComponentType": "NSSMInstall",
+          "ComponentName": "ZipInstall"
         }
       ],
       "Validate": {
@@ -490,7 +502,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 8.3.0"
+            "Match": "generic-worker 9.1.1"
           }
         ]
       }
@@ -508,6 +520,18 @@
       "Target": "C:\\generic-worker\\disable-desktop-interrupt.reg"
     },
     {
+      "ComponentName": "SetDefaultPrinter",
+      "ComponentType": "ChecksumFileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "GenericWorkerInstall"
+        }
+      ],
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/SetDefaultPrinter.ps1",
+      "Target": "C:\\generic-worker\\SetDefaultPrinter.ps1"
+    },
+    {
       "ComponentName": "GenericWorkerStateWait",
       "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
@@ -520,7 +544,7 @@
           "ComponentName": "DisableDesktopInterrupt"
         }
       ],
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker.bat",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker-format-and-reboot.bat",
       "Target": "C:\\generic-worker\\run-generic-worker.bat"
     },
     {
@@ -1101,143 +1125,6 @@
         "state",
         "off"
       ]
-    },
-    {
-      "ComponentName": "KnownFolderDirectory",
-      "ComponentType": "DirectoryCreate",
-      "Path": "C:\\knownfolder"
-    },
-    {
-      "ComponentName": "KnownFolderDownload",
-      "ComponentType": "FileDownload",
-      "DependsOn": [
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "KnownFolderDirectory"
-        }
-      ],
-      "Source": "https://github.com/taskcluster/knownfolder/releases/download/v1.1.0/knownfolder-1.1.0-windows-amd64.exe",
-      "Target": "C:\\knownfolder\\knownfolder.exe"
-    },
-    {
-      "ComponentName": "GenericWorkerSetLocalAppData",
-      "ComponentType": "CommandRun",
-      "Command": "C:\\knownfolder\\knownfolder.exe",
-      "Arguments": [
-        "set",
-        "-u",
-        "GenericWorker",
-        "-p",
-        "qazwsx123!@#QAZ",
-        "LocalAppData",
-        "Z:\\Users\\GenericWorker\\AppData\\Local"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        },
-        {
-          "ComponentType": "FileDownload",
-          "ComponentName": "KnownFolderDownload"
-        }
-      ],
-      "Validate": {
-        "CommandsReturn": [
-          {
-            "Command": "C:\\knownfolder\\knownfolder.exe",
-            "Arguments": [
-              "get",
-              "-u",
-              "GenericWorker",
-              "-p",
-              "qazwsx123!@#QAZ",
-              "LocalAppData"
-            ],
-            "Match": "Z:\\Users\\GenericWorker\\AppData\\Local"
-          }
-        ]
-      }
-    },
-    {
-      "ComponentName": "GenericWorkerSetRoamingAppData",
-      "ComponentType": "CommandRun",
-      "Command": "C:\\knownfolder\\knownfolder.exe",
-      "Arguments": [
-        "set",
-        "-u",
-        "GenericWorker",
-        "-p",
-        "qazwsx123!@#QAZ",
-        "RoamingAppData",
-        "Z:\\Users\\GenericWorker\\AppData\\Roaming"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        },
-        {
-          "ComponentType": "FileDownload",
-          "ComponentName": "KnownFolderDownload"
-        }
-      ],
-      "Validate": {
-        "CommandsReturn": [
-          {
-            "Command": "C:\\knownfolder\\knownfolder.exe",
-            "Arguments": [
-              "get",
-              "-u",
-              "GenericWorker",
-              "-p",
-              "qazwsx123!@#QAZ",
-              "RoamingAppData"
-            ],
-            "Match": "Z:\\Users\\GenericWorker\\AppData\\Roaming"
-          }
-        ]
-      }
-    },
-    {
-      "ComponentName": "GenericWorkerSetLocalAppDataLow",
-      "ComponentType": "CommandRun",
-      "Command": "C:\\knownfolder\\knownfolder.exe",
-      "Arguments": [
-        "set",
-        "-u",
-        "GenericWorker",
-        "-p",
-        "qazwsx123!@#QAZ",
-        "LocalAppDataLow",
-        "Z:\\Users\\GenericWorker\\AppData\\LocalLow"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        },
-        {
-          "ComponentType": "FileDownload",
-          "ComponentName": "KnownFolderDownload"
-        }
-      ],
-      "Validate": {
-        "CommandsReturn": [
-          {
-            "Command": "C:\\knownfolder\\knownfolder.exe",
-            "Arguments": [
-              "get",
-              "-u",
-              "GenericWorker",
-              "-p",
-              "qazwsx123!@#QAZ",
-              "LocalAppDataLow"
-            ],
-            "Match": "Z:\\Users\\GenericWorker\\AppData\\LocalLow"
-          }
-        ]
-      }
     }
   ]
 }
