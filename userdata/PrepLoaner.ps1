@@ -181,10 +181,10 @@ if (-not (Test-Path $artifactsPath -ErrorAction SilentlyContinue)) {
 }
 $token = [Guid]::NewGuid()
 $publicIP = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4')
-"username: $username`npassword: $password`nhost: $publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token)
-"`n`nremote desktop from Linux (en-US keyboard):`nxfreerdp /u:$username /p:'$password' /kbd:409 /w:1024 /h:768 +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -append
-"`n`nremote desktop from Linux (en-GB keyboard):`nxfreerdp /u:$username /p:'$password' /kbd:809 /w:1024 /h:768 +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -append
-"`n`nremote desktop from Windows:`nmstsc /w:1024 /h:768 /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -append
+"username: $username`npassword: $password`nhost: $publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8'
+"`n`nremote desktop from Linux (en-US keyboard):`nxfreerdp /u:$username /p:'$password' /kbd:409 /w:1024 /h:768 +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
+"`n`nremote desktop from Linux (en-GB keyboard):`nxfreerdp /u:$username /p:'$password' /kbd:809 /w:1024 /h:768 +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
+"`n`nremote desktop from Windows:`nmstsc /w:1024 /h:768 /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
 (New-Object Net.WebClient).DownloadFile($loanRequestPublicKeyUrl, ('{0}\{1}.asc' -f $artifactsPath, $token))
 $tempKeyring = ('{0}.gpg' -f $token)
 Start-Process $gpg -ArgumentList @('--no-default-keyring', '--keyring', $tempKeyring, '--fingerprint') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\gpg-create-keyring.stdout.log' -f $artifactsPath) -RedirectStandardError ('{0}\gpg-create-keyring.stderr.log' -f $artifactsPath)
@@ -192,7 +192,7 @@ Start-Process $gpg -ArgumentList @('--no-default-keyring', '--keyring', $tempKey
 Start-Process $gpg -ArgumentList @('--no-default-keyring', '--keyring', $tempKeyring, '--trust-model', 'always', '-e', '-u', 'releng-puppet-mail@mozilla.com', '-r', $loanRequestEmail, ('{0}\{1}.txt' -f $env:Temp, $token)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\gpg-encrypt.stdout.log' -f $artifactsPath) -RedirectStandardError ('{0}\gpg-encrypt.stderr.log' -f $artifactsPath)
 Get-ChildItem -Path $artifactsPath | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
 Remove-Item -Path ('{0}\{1}.txt' -f $env:Temp, $token) -force
-Move-Item -Path ('{0}\{1}.txt.gpg' -f $env:Temp, $token) -Destination ('{0}\credentials.txt' -f $artifactsPath)
+Move-Item -Path ('{0}\{1}.txt.gpg' -f $env:Temp, $token) -Destination ('{0}\credentials.txt.gpg' -f $artifactsPath)
 Write-Log -message 'credentials encrypted in task artefacts' -severity 'DEBUG'
 
 # wait for $loanRequestTaskFolder to disapear, then delete the gw user
