@@ -165,10 +165,16 @@ if ("${env:ProgramFiles(x86)}") {
 } else {
   $gpg = ('{0}\GNU\GnuPG\pub\gpg.exe' -f $env:ProgramFiles)
 }
-(New-Object Net.WebClient).DownloadFile($loanRequestPublicKeyUrl, ('{0}\public.key' -f $loanRequestTaskFolder))
-& $gpg @('--import', ('{0}\public.key' -f $loanRequestTaskFolder)) | Out-File -filePath ('{0}\key-import.log' -f $loanRequestTaskFolder)
-& $gpg @('-e', '-u', 'releng-puppet-mail@mozilla.com', '-r', $loanRequestEmail, ('{0}\credentials.txt' -f $env:Temp)) | Out-File -filePath ('{0}\encryption.log' -f $loanRequestTaskFolder)
-Move-Item -Path ('{0}\credentials.txt.gpg' -f $env:Temp) -Destination $loanRequestTaskFolder
+
+$artifactsPath = 'z:\loan'
+if (-not (Test-Path $artifactsPath -ErrorAction SilentlyContinue)) {
+  New-Item -Path $artifactsPath -ItemType directory -force
+}
+(New-Object Net.WebClient).DownloadFile($loanRequestPublicKeyUrl, ('{0}\public.key' -f $artifactsPath))
+& $gpg @('--import', ('{0}\public.key' -f $artifactsPath)) | Out-File -filePath ('{0}\key-import.log' -f $artifactsPath)
+& $gpg @('-e', '-u', 'releng-puppet-mail@mozilla.com', '-r', $loanRequestEmail, ('{0}\credentials.txt' -f $env:Temp)) | Out-File -filePath ('{0}\encryption.log' -f $artifactsPath)
+Remove-Item -Path ('{0}\credentials.txt' -f $env:Temp) -f
+Move-Item -Path ('{0}\credentials.txt.gpg' -f $env:Temp) -Destination $artifactsPath
 
 # wait for $loanRequestTaskFolder to disapear, then delete the gw user
 while ((Test-Path $loanRequestTaskFolder -ErrorAction SilentlyContinue)) { Start-Sleep 10 }
