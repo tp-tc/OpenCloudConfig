@@ -156,7 +156,7 @@ $loanRequestDetectedTime = (Get-Date -Date (Get-ItemProperty -Path $loanRegPath 
 $loanRequestEmail = (Get-ItemProperty -Path $loanRegPath -Name 'Email').Email
 $loanRequestPublicKeyUrl = (Get-ItemProperty -Path $loanRegPath -Name 'PublicKeyUrl').PublicKeyUrl
 $loanRequestTaskFolder = (Get-ItemProperty -Path $loanRegPath -Name 'TaskFolder').TaskFolder
-Write-Log -message ('loan request from {0} in task {1} ({2}) at {3} detected at {4}' -f $loanRequestEmail, $loanRequestTaskId, $loanRequestPublicKeyUrl, $loanRequestTime, $loanRequestDetectedTime) -severity 'INFO'
+Write-Log -message ('loan request from {0}/{1} ({2}) at {3} detected at {4}' -f $loanRequestEmail, $loanRequestPublicKeyUrl, $loanRequestTaskFolder, $loanRequestTime, $loanRequestDetectedTime) -severity 'INFO'
 
 switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
   'Microsoft Windows 7*' {
