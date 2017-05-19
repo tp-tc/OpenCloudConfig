@@ -33,10 +33,37 @@ function Write-Log {
   Write-EventLog -LogName $logName -Source $source -EntryType $entryType -Category 0 -EventID $eventId -Message $message
 }
 
+function Remove-Secrets {
+  $paths = @(
+    ('{0}\builds\crash-stats-api.token' -f $env:SystemDrive),
+    ('{0}\builds\gapi.data' -f $env:SystemDrive),
+    ('{0}\builds\google-oauth-api.key' -f $env:SystemDrive),
+    ('{0}\builds\mozilla-api.key' -f $env:SystemDrive),
+    ('{0}\builds\mozilla-desktop-geoloc-api.key' -f $env:SystemDrive),
+    ('{0}\builds\mozilla-fennec-geoloc-api.key' -f $env:SystemDrive),
+    ('{0}\builds\oauth' -f $env:SystemDrive),
+    ('{0}\builds\occ-installers.tok' -f $env:SystemDrive),
+    # intentionally commented (required for building firefox)
+    #('{0}\builds\relengapi.tok' -f $env:SystemDrive),
+    ('{0}\builds\tc-sccache.boto' -f $env:SystemDrive)
+  )
+  foreach ($path in $paths) {
+    if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
+      Remove-Item $path -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+      Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'INFO'
+    }
+  }
+}
+
 function Remove-GenericWorker {
   $paths = @(
+    ('{0}\generic-worker\disable-desktop-interrupt.reg' -f $env:SystemDrive),
+    ('{0}\generic-worker\generic-worker.log' -f $env:SystemDrive),
+    ('{0}\generic-worker\generic-worker.config' -f $env:SystemDrive),
+    ('{0}\generic-worker\generic-worker-test-creds.cmd' -f $env:SystemDrive),
+    ('{0}\generic-worker\livelog.crt' -f $env:SystemDrive),
     ('{0}\generic-worker\livelog.key' -f $env:SystemDrive),
-    ('{0}\generic-worker\generic-worker.config' -f $env:SystemDrive)
+    ('{0}\generic-worker\*.xml' -f $env:SystemDrive)
   )
   foreach ($path in $paths) {
     if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
@@ -157,7 +184,7 @@ $loanRequestEmail = (Get-ItemProperty -Path $loanRegPath -Name 'Email').Email
 $loanRequestPublicKeyUrl = (Get-ItemProperty -Path $loanRegPath -Name 'PublicKeyUrl').PublicKeyUrl
 $loanRequestTaskFolder = (Get-ItemProperty -Path $loanRegPath -Name 'TaskFolder').TaskFolder
 Write-Log -message ('loan request from {0}/{1} ({2}) at {3} detected at {4}' -f $loanRequestEmail, $loanRequestPublicKeyUrl, $loanRequestTaskFolder, $loanRequestTime, $loanRequestDetectedTime) -severity 'INFO'
-
+Remove-Secrets
 switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
   'Microsoft Windows 7*' {
     $username = 'root'
@@ -181,10 +208,10 @@ if (-not (Test-Path $artifactsPath -ErrorAction SilentlyContinue)) {
 }
 $token = [Guid]::NewGuid()
 $publicIP = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4')
-"username: $username`npassword: $password`nhost: $publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8'
-"`n`nremote desktop from Linux (en-US keyboard):`nxfreerdp /u:$username /p:'$password' /kbd:409 /w:1024 /h:768 +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
-"`n`nremote desktop from Linux (en-GB keyboard):`nxfreerdp /u:$username /p:'$password' /kbd:809 /w:1024 /h:768 +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
-"`n`nremote desktop from Windows:`nmstsc /w:1024 /h:768 /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
+"username: $username`npassword: $password`nhost: $publicIP`n" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8'
+"`nremote desktop from Linux (en-US keyboard):`nxfreerdp /u:$username /p:'$password' /kbd:409 /w:1024 /h:768 +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
+"`nremote desktop from Linux (en-GB keyboard):`nxfreerdp /u:$username /p:'$password' /kbd:809 /w:1024 /h:768 +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
+"`nremote desktop from Windows:`nmstsc /w:1024 /h:768 /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
 (New-Object Net.WebClient).DownloadFile($loanRequestPublicKeyUrl, ('{0}\{1}.asc' -f $artifactsPath, $token))
 $tempKeyring = ('{0}.gpg' -f $token)
 Start-Process $gpg -ArgumentList @('--no-default-keyring', '--keyring', $tempKeyring, '--fingerprint') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\gpg-create-keyring.stdout.log' -f $artifactsPath) -RedirectStandardError ('{0}\gpg-create-keyring.stderr.log' -f $artifactsPath)
@@ -194,10 +221,9 @@ Get-ChildItem -Path $artifactsPath | ? { !$_.PSIsContainer -and $_.Name.EndsWith
 Remove-Item -Path ('{0}\{1}.txt' -f $env:Temp, $token) -force
 Move-Item -Path ('{0}\{1}.txt.gpg' -f $env:Temp, $token) -Destination ('{0}\credentials.txt.gpg' -f $artifactsPath)
 Write-Log -message 'credentials encrypted in task artefacts' -severity 'DEBUG'
-
-# wait for $loanRequestTaskFolder to disapear, then delete the gw user
+Write-Log -message 'waiting for loan request task to complete' -severity 'DEBUG'
 while ((Test-Path $loanRequestTaskFolder -ErrorAction SilentlyContinue)) {
-  Write-Log -message 'waiting for loan request task to complete' -severity 'DEBUG'
   Start-Sleep 1
 }
+Write-Log -message 'loan request task completion detected' -severity 'DEBUG'
 Remove-GenericWorker
