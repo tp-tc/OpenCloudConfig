@@ -334,16 +334,20 @@ function Set-Credentials {
     Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
   process {
-    try {
-      & net @('user', $username, $password)
-      Write-Log -message ('{0} :: credentials set for user: {1}.' -f $($MyInvocation.MyCommand.Name), $username) -severity 'INFO'
-      if ($setautologon) {
-        Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Type 'String' -Name 'DefaultPassword' -Value $password
-        Write-Log -message ('{0} :: autologon set for user: {1}.' -f $($MyInvocation.MyCommand.Name), $username) -severity 'INFO'
+    if (($username) -and ($password)) {
+      try {
+        & net @('user', $username, $password)
+        Write-Log -message ('{0} :: credentials set for user: {1}.' -f $($MyInvocation.MyCommand.Name), $username) -severity 'INFO'
+        if ($setautologon) {
+          Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Type 'String' -Name 'DefaultPassword' -Value $password
+          Write-Log -message ('{0} :: autologon set for user: {1}.' -f $($MyInvocation.MyCommand.Name), $username) -severity 'INFO'
+        }
       }
-    }
-    catch {
-      Write-Log -message ('{0} :: failed to set credentials for user: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $username, $_.Exception.Message) -severity 'ERROR'
+      catch {
+        Write-Log -message ('{0} :: failed to set credentials for user: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $username, $_.Exception.Message) -severity 'ERROR'
+      }
+    } else {
+      Write-Log -message ('{0} :: empty username or password.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
     }
   }
   end {
@@ -640,16 +644,6 @@ if ($rebootReasons.length) {
       'Microsoft Windows 10*' {
         # set network interface to public
         ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(0) }
-
-        # todo: move MS Edge install to json manifest.
-        $gwEdgeFolder = 'C:\Users\GenericWorker\AppData\Local\Packages\Microsoft.MicrosoftEdge_8wekyb3d8bbwe'
-        if (Test-Path -Path $gwEdgeFolder -ErrorAction SilentlyContinue) {
-          Remove-Item -Path $gwEdgeFolder -recurse -force
-          Write-Log -message ('{0} deleted.' -f $gwEdgeFolder) -severity 'INFO'
-        }
-        Get-AppXPackage -AllUsers -Name 'Microsoft.MicrosoftEdge' | % {
-          Add-AppxPackage -DisableDevelopmentMode -Register ('{0}\AppXManifest.xml' -f $($_.InstallLocation)) -Verbose
-        }
       }
     }
     # end post dsc teardown #######################################################################################################################################
