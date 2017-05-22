@@ -731,6 +731,6 @@ if ($rebootReasons.length) {
       }
     }
   }
-  Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
-  Write-Log -message 'userdata run completed' -severity 'INFO'
 }
+Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+Write-Log -message 'userdata run completed' -severity 'INFO'
