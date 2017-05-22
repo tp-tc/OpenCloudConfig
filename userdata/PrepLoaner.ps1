@@ -104,24 +104,19 @@ function Remove-GenericWorker {
 
 function Set-Credentials {
   param (
-    [string] $rootUsername,
-    [string] $rootPassword,
-    [switch] $setautologon
+    [string] $username,
+    [string] $password
   )
   begin {
     Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
   process {
     try {
-      & net @('user', $rootUsername, $rootPassword)
-      Write-Log -message ('{0} :: credentials set for user: {1}.' -f $($MyInvocation.MyCommand.Name), $rootUsername) -severity 'INFO'
-      if ($setautologon) {
-        Set-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -Type 'String' -Name 'DefaultPassword' -Value $rootPassword
-        Write-Log -message ('{0} :: autologon set for user: {1}.' -f $($MyInvocation.MyCommand.Name), $rootUsername) -severity 'INFO'
-      }
+      & net @('user', $username, $password)
+      Write-Log -message ('{0} :: credentials set for user: {1}.' -f $($MyInvocation.MyCommand.Name), $username) -severity 'INFO'
     }
     catch {
-      Write-Log -message ('{0} :: failed to set credentials for user: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $rootUsername, $_.Exception.Message) -severity 'ERROR'
+      Write-Log -message ('{0} :: failed to set credentials for user: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $username, $_.Exception.Message) -severity 'ERROR'
     }
   }
   end {

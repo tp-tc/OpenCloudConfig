@@ -93,8 +93,10 @@ function Remove-DesiredStateConfigTriggers {
         Write-Log -message ('{0}\System32\Configuration\{1}.mof deleted' -f $env:SystemRoot, $mof) -severity 'INFO'
       }
     }
-    Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
-    Write-Log -message 'C:\dsc\rundsc.ps1 deleted' -severity 'INFO'
+    if (Test-Path -Path 'C:\dsc\rundsc.ps1' -ErrorAction SilentlyContinue) {
+      Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
+      Write-Log -message 'C:\dsc\rundsc.ps1 deleted' -severity 'INFO'
+    }
   }
   end {
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
@@ -105,7 +107,9 @@ function Remove-LegacyStuff {
     [string] $logFile,
     [string[]] $users = @(
       'cltbld',
-      'GenericWorker'
+      'GenericWorker',
+      't-w1064-vanilla',
+      'inst'
     ),
     [string[]] $paths = @(
       ('{0}\default_browser' -f $env:SystemDrive),
@@ -347,23 +351,14 @@ function Set-Credentials {
   }
 }
 function New-LocalCache {
-  if ((Test-Path "y:\") -eq $true) {
-		param (
-    	[string[]] $paths = @(
-        'y:\hg-shared',
-        'y:\pip-cache',
-        'y:\tooltool-cache'
-      )
-	  )
-	} else {
-	  param (
-      [string[]] $paths = @(
-        'C\hg-shared',
-        'C\pip-cache',
-        'C\tooltool-cache'
-      )
+  param (
+    [string] $cacheDrive = $(if (Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue) {'Y:'} else {$env:SystemDrive}),
+    [string[]] $paths = @(
+      ('{0}\hg-shared' -f $cacheDrive),
+      ('{0}\pip-cache' -f $cacheDrive),
+      ('{0}\tooltool-cache' -f $cacheDrive)
     )
-  }
+  )
   begin {
     Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
@@ -600,7 +595,7 @@ if ($rebootReasons.length) {
     $isWorker = $true
     $runDscOnWorker = $true
   }
-  if (($runDscOnWorker) -or (-not ($isWorker))) {
+  if (($runDscOnWorker) -or (-not ($isWorker)) -or ("$env:RunDsc" -ne "")) {
 
     # pre dsc setup ###############################################################################################################################################
     switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
