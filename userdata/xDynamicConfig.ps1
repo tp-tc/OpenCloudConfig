@@ -4,8 +4,8 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
 
-Configuration DynamicConfig {
-  Import-DscResource -ModuleName PSDesiredStateConfiguration
+Configuration xDynamicConfig {
+  Import-DscResource -ModuleName PSDesiredStateConfiguration,xPSDesiredStateConfiguration
   # sourceRepo is in place to toggle between production and testing environments
   $sourceRepo = 'mozilla-releng'
   if ((Get-Service 'Ec2Config' -ErrorAction SilentlyContinue) -or (Get-Service 'AmazonSSMAgent' -ErrorAction SilentlyContinue)) {
@@ -446,7 +446,7 @@ Configuration DynamicConfig {
           Ensure = 'Present'
         }
         Log ('Log_ZipInstall_{0}' -f $item.ComponentName) {
-          DependsOn = ('[Archive]ZipInstall_{0}' -f $item.ComponentName)
+          DependsOn = ('[xArchive]ZipInstall_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
@@ -458,7 +458,7 @@ Configuration DynamicConfig {
           StartupType = $item.StartupType
         }
         Log ('Log_ServiceControl_{0}' -f $item.ComponentName) {
-          DependsOn = ('[Service]ServiceControl_{0}' -f $item.ComponentName)
+          DependsOn = ('[xService]ServiceControl_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }

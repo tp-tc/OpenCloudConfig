@@ -630,6 +630,8 @@ if ($rebootReasons.length) {
     switch ((Get-WmiObject -class Win32_OperatingSystem).Version) {
       '10.0.15063' {
         # see https://github.com/PowerShell/PSDscResources/issues/57
+        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+        Install-Module -Name xPSDesiredStateConfiguration -Force
         Run-RemoteDesiredStateConfig -url "https://raw.githubusercontent.com/$SourceRepo/OpenCloudConfig/master/userdata/xDynamicConfig.ps1" -workerType $workerType
       }
       default {
