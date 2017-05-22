@@ -627,7 +627,16 @@ if ($rebootReasons.length) {
 
     # run dsc #####################################################################################################################################################
     Start-Transcript -Path $transcript -Append
-    Run-RemoteDesiredStateConfig -url "https://raw.githubusercontent.com/$SourceRepo/OpenCloudConfig/master/userdata/DynamicConfig.ps1" -workerType $workerType
+    switch ((Get-WmiObject -class Win32_OperatingSystem).Version) {
+      '10.0.15063' {
+        # see https://github.com/PowerShell/PSDscResources/issues/57
+        Run-RemoteDesiredStateConfig -url "https://raw.githubusercontent.com/$SourceRepo/OpenCloudConfig/master/userdata/xDynamicConfig.ps1" -workerType $workerType
+      }
+      default {
+        Run-RemoteDesiredStateConfig -url "https://raw.githubusercontent.com/$SourceRepo/OpenCloudConfig/master/userdata/DynamicConfig.ps1" -workerType $workerType
+      }
+    }
+    
     Stop-Transcript
     # end run dsc #################################################################################################################################################
     
