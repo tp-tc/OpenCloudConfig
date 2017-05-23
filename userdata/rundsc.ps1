@@ -420,6 +420,159 @@ function Create-ScheduledPowershellTask {
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
+function Wipe-Drive {
+  # derived from http://blog.whatsupduck.net/2012/03/powershell-alternative-to-sdelete.html
+  param (
+    [char] $drive,
+    $percentFree = 0.05
+  )
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    $filename = "thinsan.tmp"
+    $filePath = Join-Path ('{0}:\' -f $drive) $filename
+    if (Test-Path $filePath -ErrorAction SilentlyContinue) {
+      Remove-Item -Path $filePath -force -ErrorAction SilentlyContinue
+    }
+    $volume = (gwmi win32_volume -filter ("name='{0}:\\'" -f $drive))
+    if ($volume) {
+      $arraySize = 64kb
+      $fileSize = $volume.FreeSpace - ($volume.Capacity * $percentFree)
+      $zeroArray = new-object byte[]($arraySize)
+      $stream = [io.File]::OpenWrite($filePath)
+      try {
+        $curfileSize = 0
+        while ($curfileSize -lt $fileSize) {
+          $stream.Write($zeroArray, 0, $zeroArray.Length)
+          $curfileSize += $zeroArray.Length
+        }
+      } finally {
+        if($stream) {
+          $stream.Close()
+        }
+        if((Test-Path $filePath)) {
+          del $filePath
+        }
+      }
+    } else {
+      Write-Log -message ('{0} :: unable to locate a volume mounted at {0}:' -f $($MyInvocation.MyCommand.Name), $drive) -severity 'ERROR'
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+}
+function Connect-Vpn {
+  param (
+    [Guid] $token = [Guid]::NewGuid(),
+    [TimeSpan] $timeout = (New-TimeSpan -seconds 60),
+    [string] $wipeDrive = 'Y:'
+  )
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    $stopwatch = [Diagnostics.Stopwatch]::StartNew()
+  }
+  process {
+    New-Item -ItemType Directory -Force -Path ('{0}\{1}' -f $wipeDrive, $token)
+    if (Test-Path -Path ('{0}\.ovpn' -f $home) -ErrorAction SilentlyContinue) {
+      Get-ChildItem -Path ('{0}\.ovpn' -f $home) | % {
+        Copy-Item -Path $_.FullName -Destination ('{0}\{1}' -f $wipeDrive, $token)
+      }
+    } else {
+      try {
+        $userdata = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')
+      } catch {
+        $userdata = $false
+      }
+      if (-not ($userdata)) {
+        Write-Log -message ('{0} :: missing userdata' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+        return
+      }
+      $username = [regex]::matches($userdata, '<vpnUsername>(.*)<\/vpnUsername>')[0].Groups[1].Value
+      $password = [regex]::matches($userdata, '<vpnPassword>(.*)<\/vpnPassword>')[0].Groups[1].Value
+      if ((-not ($username)) -or (-not ($password))) {
+        Write-Log -message ('{0} :: missing username or password' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+        return
+      }
+      $ca = [regex]::matches($userdata, '<vpnCa>(.*)<\/vpnCa>')[0].Groups[1].Value
+      $cert = [regex]::matches($userdata, '<vpnCert>(.*)<\/vpnCert>')[0].Groups[1].Value
+      if ((-not ($ca)) -or (-not ($cert))) {
+        Write-Log -message ('{0} :: missing ca or cert' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+        return
+      }
+      $tlsAuth = [regex]::matches($userdata, '<vpnTlsAuth>(.*)<\/vpnTlsAuth>')[0].Groups[1].Value
+      $key = [regex]::matches($userdata, '<vpnKey>(.*)<\/vpnKey>')[0].Groups[1].Value
+      if ((-not ($tlsAuth)) -or (-not ($key))) {
+        Write-Log -message ('{0} :: missing tlsAuth or key' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+        return
+      }
+      "$username`n$password" | Out-File -Path ('{0}\{1}\auth' -f $wipeDrive, $token)
+      $tlsAuth | Out-File -Path ('{0}\{1}\ta.key' -f $wipeDrive, $token)
+      $key | Out-File -Path ('{0}\{1}\key.key' -f $wipeDrive, $token)
+      $ca | Out-File -Path ('{0}\{1}\ca.crt' -f $wipeDrive, $token)
+      $cert | Out-File -Path ('{0}\{1}\cert.crt' -f $wipeDrive, $token)
+    }
+    $openvpnCmd = 'C:\Program Files\OpenVPN\bin\openvpn.exe'
+    $openvpnOptions = @(
+      '--remote', 'openvpn.scl3.mozilla.com', '1194', 'udp',
+      '--remote', 'openvpn.scl3.mozilla.com', '1194', 'tcp-client',
+      '--remote', 'openvpn.scl3.mozilla.com', '443', 'tcp-client',
+      '--remote', 'openvpn.scl3.mozilla.com', '80', 'tcp-client',
+      '--persist-key',
+      '--tls-client',
+      '--tls-auth', ('{0}\{1}\ta.key' -f $wipeDrive, $token), '1',
+      '--pull',
+      '--ca', ('{0}\{1}\ca.crt' -f $wipeDrive, $token),
+      '--dev', 'tun',
+      '--persist-tun',
+      '--cert', ('{0}\{1}\cert.crt' -f $wipeDrive, $token),
+      '--comp-lzo', 'yes',
+      '--key', ('{0}\{1}\key.key' -f $wipeDrive, $token),
+      '--cipher', 'AES-256-CBC',
+      '--remote-cert-eku', '"TLS Web Server Authentication"',
+      '--resolv-retry', 'infinite',
+      '--reneg-sec', '2592000',
+      '--auth-nocache',
+      '--auth-user-pass', ('{0}\{1}\auth' -f $wipeDrive, $token))
+    $stdOutPath = ('{0}\{1}\stdout.log' -f $wipeDrive, $token)
+    $stdErrPath = ('{0}\{1}\stderr.log' -f $wipeDrive, $token)
+    $openvpnProcess = $false
+    try {
+      $openvpnProcess = (Start-Process $openvpnCmd -ArgumentList $openvpnOptions -PassThru -RedirectStandardOutput $stdOutPath -RedirectStandardError $stdErrPath)
+      do {
+        $initializationCompleted = [bool](Get-WmiObject Win32_NetworkAdapterConfiguration | ? {$_.DNSDomain -eq 'mozilla.org' -and $_.IPAddress.length -gt 0 -and $_.IPAddress[0].StartsWith('10.')})
+        Write-Log -message ('{0} :: vpn connection initialising.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+        Sleep 1
+      } while ((-not ($initializationCompleted)) -and $stopwatch.IsRunning -and $stopwatch.Elapsed -lt $timeout)
+      if ($initializationCompleted) {
+        Write-Log -message ('{0} :: vpn connection established.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+      } else {
+        Write-Log -message ('{0} :: unable to establish vpn connection before timeout.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+        $openvpnProcess | Stop-Process
+        $openvpnProcess = $false
+      }
+    } catch {
+      Write-Log -message ('{0} :: failed to connect VPN. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+    } finally {
+      foreach ($file in @('auth', 'ta.key', 'key.key', 'ca.crt', 'cert.crt')) {
+        $path = ('{0}\{1}\{2}' -f $wipeDrive, $token, $file)
+        Remove-Item -Path $path -force -ErrorAction SilentlyContinue
+        if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
+          Write-Log -message ('{0} :: failed to delete {1}.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'ERROR'
+        } else {
+          Write-Log -message ('{0} :: {1} deleted.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'DEBUG'
+        }
+      }
+      Start-Job -ScriptBlock { Wipe-Drive -drive $wipeDrive[0] }
+    }
+    return $openvpnProcess
+  }
+  end {
+    $stopwatch.Stop()
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+}
 function Activate-Windows {
   param (
     [string] $keyManagementServiceMachine = 'kms1.ad.mozilla.com',
@@ -436,9 +589,9 @@ function Activate-Windows {
       Write-Log -message ('{0} :: failed to determine product key with os caption: {1}.' -f $($MyInvocation.MyCommand.Name), $osCaption) -severity 'INFO'
       return
     }
-    # todo: handle the network setup (vpn/vpc)
-    $networkInitialised = [bool](Get-WmiObject Win32_NetworkAdapterConfiguration| ? {$_.DNSDomain -eq 'mozilla.org'} )
-    if (-not ($networkInitialised)) {
+    $openvpnProcess = Connect-Vpn
+    $networkInitialised = [bool](Get-WmiObject Win32_NetworkAdapterConfiguration | ? {$_.DNSDomain -eq 'mozilla.org' -and $_.IPAddress.length -gt 0 -and $_.IPAddress[0].StartsWith('10.')})
+    if ((-not ($networkInitialised)) -or (-not ($openvpnProcess))) {
       Write-Log -message ('{0} :: unable to reach activation service at {1}:{2}.' -f $($MyInvocation.MyCommand.Name), $keyManagementServiceMachine, $keyManagementServicePort) -severity 'INFO'
       return
     }
@@ -452,6 +605,8 @@ function Activate-Windows {
     }
     catch {
       Write-Log -message ('{0} :: failed to activate Windows. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+    } finally {
+      $openvpnProcess | Stop-Process -ErrorAction SilentlyContinue
     }
   }
   end {
