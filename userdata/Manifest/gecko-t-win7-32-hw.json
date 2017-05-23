@@ -1197,6 +1197,22 @@
           "ComponentName": "CarbonInstall"
         }
       ]
+    },
+    {
+      "ComponentName": "KmsIn",
+      "ComponentType": "FirewallRule",
+      "Protocol": "TCP",
+      "LocalPort": 1688,
+      "Direction": "Inbound",
+      "Action": "Allow"
+    },
+    {
+      "ComponentName": "KmsOut",
+      "ComponentType": "FirewallRule",
+      "Protocol": "TCP",
+      "LocalPort": 1688,
+      "Direction": "Outbound",
+      "Action": "Allow"
     }
   ]
 }
