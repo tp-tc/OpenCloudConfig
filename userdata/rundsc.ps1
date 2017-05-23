@@ -130,6 +130,7 @@ function Remove-LegacyStuff {
       ('{0}\puppetagain' -f $env:ProgramData),
       ('{0}\quickedit' -f $env:SystemDrive),
       ('{0}\slave' -f $env:SystemDrive),
+      ('{0}\scripts' -f $env:SystemDrive),
       ('{0}\sys-scripts' -f $env:SystemDrive),
       ('{0}\System32\Configuration\backup.mof' -f $env:SystemRoot),
       ('{0}\System32\Configuration\Current.mof' -f $env:SystemRoot),
@@ -413,6 +414,44 @@ function Create-ScheduledPowershellTask {
     }
     catch {
       Write-Log -message ('{0} :: failed to create scheduled task: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $taskName, $_.Exception.Message) -severity 'ERROR'
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+}
+function Activate-Windows {
+  param (
+    [string] $keyManagementServiceMachine = 'kms1.ad.mozilla.com',
+    [int] $keyManagementServicePort = 1688
+  )
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    $productKeyMap = (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/product-key-map.json' -UseBasicParsing | ConvertFrom-Json)
+    $osCaption = (Get-WmiObject -class Win32_OperatingSystem).Caption
+    $productKey = ($productKeyMap | ? {$_.os_caption -eq $osCaption}).product_key
+    if (-not ($productKey)) {
+      Write-Log -message ('{0} :: failed to determine product key with os caption: {1}.' -f $($MyInvocation.MyCommand.Name), $osCaption) -severity 'INFO'
+      return
+    }
+    # todo: handle the network setup (vpn/vpc)
+    $networkInitialised = [bool](Get-WmiObject Win32_NetworkAdapterConfiguration| ? {$_.DNSDomain -eq 'mozilla.org'} )
+    if (-not ($networkInitialised)) {
+      Write-Log -message ('{0} :: unable to reach activation service at {1}:{2}.' -f $($MyInvocation.MyCommand.Name), $keyManagementServiceMachine, $keyManagementServicePort) -severity 'INFO'
+      return
+    }
+    try {
+      $kms = (Get-WMIObject -query "select * from SoftwareLicensingService")
+      $kms.SetKeyManagementServiceMachine($keyManagementServiceMachine)
+      $kms.SetKeyManagementServicePort($keyManagementServicePort)
+      $kms.InstallProductKey($productKey)
+      $kms.RefreshLicenseStatus()
+      Write-Log -message ('{0} :: Windows activated with product key: {1} ({2}) against {3}:{4}.' -f $($MyInvocation.MyCommand.Name), $productKey, $osCaption, $keyManagementServiceMachine, $keyManagementServicePort) -severity 'INFO'
+    }
+    catch {
+      Write-Log -message ('{0} :: failed to activate Windows. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
     }
   }
   end {
