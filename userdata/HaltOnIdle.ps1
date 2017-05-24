@@ -142,6 +142,36 @@ if (-not (Is-Loaner)) {
     & icacls @('y:\hg-shared', '/grant', 'Everyone:(OI)(CI)F')
   }
 } else {
-  Write-Log -message 'instance is a loaner.' -severity 'INFO'
-  # todo: terminate abandoned or unused loaners
+  $loanerIdleTimeout = (New-TimeSpan -minutes 15)
+  $loanerUnclaimedTimeout = (New-TimeSpan -minutes 30)
+
+  $rdpSessionActiveMessages = @(Get-EventLog -logName 'Application' -source 'PrepLoaner' -message 'rdp session detected on active loaner' -ErrorAction SilentlyContinue)
+  $rdpSessionInactiveMessages = @(Get-EventLog -logName 'Application' -source 'PrepLoaner' -message 'rdp session not detected on active loaner' -ErrorAction SilentlyContinue)
+  $loanerStateUnknownMessages = @(Get-EventLog -logName 'Application' -source 'HaltOnIdle' -message 'loaner state unknown' -ErrorAction SilentlyContinue)
+
+  if ($rdpSessionActiveMessages.length > 0) {
+    $lastSessionActiveTimestamp = @($rdpSessionActiveMessages | Sort Index -Descending)[0].TimeGenerated
+    $idleTime = ((Get-Date) - $lastSessionActiveTimestamp)
+    if ($idleTime -gt $loanerIdleTimeout) {
+      Write-Log -message ('last active session was {0:T}. loaner exceeded max idle time ({1:mm} minutes) and will be terminated.' -f $lastSessionActiveTimestamp, $loanerIdleTimeout) -severity 'INFO'
+      & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: loaner exceeded max idle time', '-f', '-d', 'p:4:1')
+    } else {
+      Write-Log -message ('last active session was {0:T}. loaner within idle time ({1:mm} minutes) constraints.' -f $lastSessionActiveTimestamp, $loanerIdleTimeout) -severity 'INFO'
+    }
+  } elseif ($rdpSessionInactiveMessages.length > 0) {
+    $provisionedTimestamp = @($rdpSessionInactiveMessages | Sort Index)[0].TimeGenerated
+    $unclaimedTime = ((Get-Date) - $provisionedTimestamp)
+    if ($unclaimedTime -gt $loanerUnclaimedTimeout) {
+      Write-Log -message ('loaner provisioned at {0:T}. loaner exceeded max unclaimed time ({1:mm} minutes) and will be terminated.' -f $provisionedTimestamp, $loanerUnclaimedTimeout) -severity 'INFO'
+      & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: loaner exceeded max unclaimed time', '-f', '-d', 'p:4:1')
+    } else {
+      Write-Log -message ('loaner provisioned at {0:T}. loaner within unclaimed time ({1:mm} minutes) constraints.' -f $provisionedTimestamp, $loanerUnclaimedTimeout) -severity 'INFO'
+    }
+  } elseif ($loanerStateUnknownMessages.length > 0) {
+    $lastStateUnknownTimestamp = @($loanerStateUnknownMessages | Sort Index -Descending)[0].TimeGenerated
+    Write-Log -message ('loaner state is unknown and has not been rectified since last check at {0:T}. instance will be terminated.' -f $lastStateUnknownTimestamp) -severity 'ERROR'
+    & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: loaner state unknown and unrectified', '-f', '-d', 'p:4:1')
+  } else {
+    Write-Log -message 'loaner state unknown' -severity 'WARN'
+  }
 }
