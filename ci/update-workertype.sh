@@ -53,7 +53,7 @@ fi
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] git sha: ${aws_client_token} used for aws client token"
 
 case "${tc_worker_type}" in
-  @(gecko|loan)-t-win7-32-gpu*)
+  gecko-t-win7-32-gpu*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win7-32-base-20170403-releng-activated'}
     aws_instance_type=${aws_instance_type:='g2.2xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=30}
@@ -64,7 +64,7 @@ case "${tc_worker_type}" in
     worker_username=GenericWorker
     aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
     ;;
-  @(gecko|loan)-t-win7*)
+  gecko-t-win7*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win7-32-base-20170403-releng-activated'}
     aws_instance_type=${aws_instance_type:='c4.2xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=30}
@@ -75,7 +75,7 @@ case "${tc_worker_type}" in
     worker_username=GenericWorker
     aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
     ;;
-  @(gecko|loan)-t-win10-64-gpu*)
+  gecko-t-win10-64-gpu*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win10-64-base-*'}
     aws_instance_type=${aws_instance_type:='g2.2xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=120}
@@ -86,7 +86,7 @@ case "${tc_worker_type}" in
     worker_username=GenericWorker
     aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
     ;;
-  @(gecko|loan)-t-win10*)
+  gecko-t-win10*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win10-64-base-*'}
     aws_instance_type=${aws_instance_type:='c4.2xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=120}
@@ -119,7 +119,7 @@ case "${tc_worker_type}" in
     worker_username=GenericWorker
     aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
     ;;
-  @(gecko|loan)-[123]-b-win2012*)
+  gecko-[123]-b-win2012*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-base-*'}
     aws_instance_type=${aws_instance_type:='c4.4xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=40}
@@ -130,7 +130,7 @@ case "${tc_worker_type}" in
     worker_username=GenericWorker
     aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
     ;;
-  @(gecko|loan)-1-b-win2016*)
+  gecko-1-b-win2016*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_Server-2016-English-Full-Base-*'}
     aws_instance_type=${aws_instance_type:='c4.8xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=300}
