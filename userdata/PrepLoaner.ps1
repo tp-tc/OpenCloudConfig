@@ -56,6 +56,10 @@ function Remove-Secrets {
 }
 
 function Remove-GenericWorker {
+  $gw = (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })
+  if ($gw) {
+    $gw | Stop-Process -Force -ErrorAction SilentlyContinue
+  }
   $paths = @(
     ('{0}\generic-worker\disable-desktop-interrupt.reg' -f $env:SystemDrive),
     ('{0}\generic-worker\generic-worker.log' -f $env:SystemDrive),
