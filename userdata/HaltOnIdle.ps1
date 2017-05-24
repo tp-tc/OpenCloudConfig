@@ -149,7 +149,7 @@ if (-not (Is-Loaner)) {
   $rdpSessionInactiveMessages = @(Get-EventLog -logName 'Application' -source 'PrepLoaner' -message 'rdp session not detected on active loaner' -ErrorAction SilentlyContinue)
   $loanerStateUnknownMessages = @(Get-EventLog -logName 'Application' -source 'HaltOnIdle' -message 'loaner state unknown' -ErrorAction SilentlyContinue)
 
-  if ($rdpSessionActiveMessages.length > 0) {
+  if ($rdpSessionActiveMessages.length -gt 0) {
     $lastSessionActiveTimestamp = @($rdpSessionActiveMessages | Sort Index -Descending)[0].TimeGenerated
     $idleTime = ((Get-Date) - $lastSessionActiveTimestamp)
     if ($idleTime -gt $loanerIdleTimeout) {
@@ -158,7 +158,7 @@ if (-not (Is-Loaner)) {
     } else {
       Write-Log -message ('last active session was {0:T}. loaner within idle time ({1:mm} minutes) constraints.' -f $lastSessionActiveTimestamp, $loanerIdleTimeout) -severity 'INFO'
     }
-  } elseif ($rdpSessionInactiveMessages.length > 0) {
+  } elseif ($rdpSessionInactiveMessages.length -gt 0) {
     $provisionedTimestamp = @($rdpSessionInactiveMessages | Sort Index)[0].TimeGenerated
     $unclaimedTime = ((Get-Date) - $provisionedTimestamp)
     if ($unclaimedTime -gt $loanerUnclaimedTimeout) {
@@ -167,7 +167,7 @@ if (-not (Is-Loaner)) {
     } else {
       Write-Log -message ('loaner provisioned at {0:T}. loaner within unclaimed time ({1:mm} minutes) constraints.' -f $provisionedTimestamp, $loanerUnclaimedTimeout) -severity 'INFO'
     }
-  } elseif ($loanerStateUnknownMessages.length > 0) {
+  } elseif ($loanerStateUnknownMessages.length -gt 0) {
     $lastStateUnknownTimestamp = @($loanerStateUnknownMessages | Sort Index -Descending)[0].TimeGenerated
     Write-Log -message ('loaner state is unknown and has not been rectified since last check at {0:T}. instance will be terminated.' -f $lastStateUnknownTimestamp) -severity 'ERROR'
     & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: loaner state unknown and unrectified', '-f', '-d', 'p:4:1')
