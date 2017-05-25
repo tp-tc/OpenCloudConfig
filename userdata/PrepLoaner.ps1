@@ -274,4 +274,6 @@ while ((Test-Path $loanRequestTaskFolder -ErrorAction SilentlyContinue)) {
   Start-Sleep 1
 }
 Write-Log -message 'loan request task completion detected' -severity 'DEBUG'
+# give gw a moment to upload artifacts, then kill it.
+Start-Sleep 10
 Remove-GenericWorker
