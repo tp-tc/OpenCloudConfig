@@ -112,6 +112,7 @@ function Remove-LegacyStuff {
       'inst'
     ),
     [string[]] $paths = @(
+      ('{0}\Apache Software Foundation' -f $env:ProgramFiles),
       ('{0}\default_browser' -f $env:SystemDrive),
       ('{0}\etc' -f $env:SystemDrive),
       ('{0}\generic-worker' -f $env:SystemDrive),
@@ -146,7 +147,8 @@ function Remove-LegacyStuff {
     ),
     [string[]] $services = @(
       'puppet',
-      'uvnc_service'
+      'uvnc_service',
+      'Apache2.2'
     ),
     [string[]] $scheduledTasks = @(
       'Disable_maintain',
@@ -225,6 +227,15 @@ function Remove-LegacyStuff {
       }
     }
 
+    # delete services
+    foreach ($service in $services) {
+      if (Get-Service -Name $service -ErrorAction SilentlyContinue) {
+        Get-Service -Name $service | Stop-Service -PassThru
+        (Get-WmiObject -Class Win32_Service -Filter "Name='$service'").delete()
+        Write-Log -message ('{0} :: service: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $service) -severity 'INFO'
+      }
+    }
+
     # delete paths
     foreach ($path in $paths) {
       if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
@@ -237,15 +248,6 @@ function Remove-LegacyStuff {
     if (Test-Path -Path ('{0}\mozilla-build\python27' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
       Remove-Item ('{0}\mozilla-build' -f $env:SystemDrive) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
       Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), ('{0}\mozilla-build' -f $env:SystemDrive)) -severity 'INFO'
-    }
-
-    # delete services
-    foreach ($service in $services) {
-      if (Get-Service -Name $service -ErrorAction SilentlyContinue) {
-        Get-Service -Name $service | Stop-Service -PassThru
-        (Get-WmiObject -Class Win32_Service -Filter "Name='$service'").delete()
-        Write-Log -message ('{0} :: service: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $service) -severity 'INFO'
-      }
     }
 
     # remove registry keys
