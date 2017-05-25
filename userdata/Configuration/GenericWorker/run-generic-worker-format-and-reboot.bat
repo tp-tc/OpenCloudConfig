@@ -15,8 +15,10 @@ set errorlevel=
 .\generic-worker.exe run --configure-for-aws > .\generic-worker.log 2>&1
 
 if %errorlevel% equ 0 goto successful
-
-shutdown /s /t 0 /f /c "Killing worker, as generic worker crashed or had a problem"
+rem commented shutdown as it interferes with loaner provisioning [occ kills gw in order to re-provision as loaner].
+rem HaltOnIdle manages terminations with consideration to other instance states and requirements.
+rem this script does not have the awareness of other considerations to manage this.
+rem shutdown /s /t 0 /f /c "Killing worker, as generic worker crashed or had a problem"
 goto end
 
 :successful
