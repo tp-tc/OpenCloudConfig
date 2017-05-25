@@ -34,24 +34,67 @@ function Write-Log {
 }
 
 function Remove-Secrets {
-  $paths = @(
-    ('{0}\builds\crash-stats-api.token' -f $env:SystemDrive),
-    ('{0}\builds\gapi.data' -f $env:SystemDrive),
-    ('{0}\builds\google-oauth-api.key' -f $env:SystemDrive),
-    ('{0}\builds\mozilla-api.key' -f $env:SystemDrive),
-    ('{0}\builds\mozilla-desktop-geoloc-api.key' -f $env:SystemDrive),
-    ('{0}\builds\mozilla-fennec-geoloc-api.key' -f $env:SystemDrive),
-    ('{0}\builds\oauth' -f $env:SystemDrive),
-    ('{0}\builds\occ-installers.tok' -f $env:SystemDrive),
-    # intentionally commented (required for building firefox)
-    #('{0}\builds\relengapi.tok' -f $env:SystemDrive),
-    ('{0}\builds\tc-sccache.boto' -f $env:SystemDrive)
+  param (
+    [string[]] $paths = @(
+      ('{0}\builds\crash-stats-api.token' -f $env:SystemDrive),
+      ('{0}\builds\gapi.data' -f $env:SystemDrive),
+      ('{0}\builds\google-oauth-api.key' -f $env:SystemDrive),
+      ('{0}\builds\mozilla-api.key' -f $env:SystemDrive),
+      ('{0}\builds\mozilla-desktop-geoloc-api.key' -f $env:SystemDrive),
+      ('{0}\builds\mozilla-fennec-geoloc-api.key' -f $env:SystemDrive),
+      ('{0}\builds\oauth' -f $env:SystemDrive),
+      ('{0}\builds\occ-installers.tok' -f $env:SystemDrive),
+      # intentionally commented (required for building firefox)
+      #('{0}\builds\relengapi.tok' -f $env:SystemDrive),
+      ('{0}\builds\tc-sccache.boto' -f $env:SystemDrive),\Viscosity
+      ('{0}\Users\Administrator\.ovpn' -f $env:SystemDrive),
+      ('{0}\Users\Administrator\AppData\Roaming\Viscosity' -f $env:SystemDrive),
+      ('{0}\System32\config\systemprofile\AppData\Roaming\gnupg' -f $env:AppData),
+      ('{0}\SysWOW64\config\systemprofile\AppData\Roaming\gnupg' -f $env:SystemRoot),
+      ('{0}\gnupg' -f $env:AppData)
+    )
   )
-  foreach ($path in $paths) {
-    if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
-      Remove-Item $path -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
-      Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'INFO'
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    foreach ($path in $paths) {
+      if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
+        Remove-Item $path -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+        if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
+          Write-Log -message ('{0} :: failed to delete path: {1}.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'Error'
+        } else {
+          Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'INFO'
+        }
+      }
     }
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+}
+
+function Remove-UserAppData {
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    Get-ChildItem ('{0}\Users' -f $env:SystemDrive) | ? { $_.PSIsContainer -and -not @('Default', 'Public').Contains($_.Name) } | Select-Object FullName | % {
+      $appData = ('{0}\AppData' -f $_.FullName)
+      foreach ($appdataProfile in @('Local', 'Roaming')) {
+        Get-ChildItem ('{0}\{1}' -f $appData, $appdataProfile) | Select-Object FullName | % {
+          Remove-Item $_.FullName -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+          if (Test-Path -Path $_.FullName -ErrorAction SilentlyContinue) {
+            Write-Log -message ('{0} :: failed to delete path: {1}.' -f $($MyInvocation.MyCommand.Name), $_.FullName) -severity 'Error'
+          } else {
+            Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $_.FullName) -severity 'INFO'
+          }
+        }
+      }
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
 
@@ -184,6 +227,7 @@ $loanRequestPublicKeyUrl = (Get-ItemProperty -Path $loanRegPath -Name 'PublicKey
 $loanRequestTaskFolder = (Get-ItemProperty -Path $loanRegPath -Name 'TaskFolder').TaskFolder
 Write-Log -message ('loan request from {0}/{1} ({2}) at {3} detected at {4}' -f $loanRequestEmail, $loanRequestPublicKeyUrl, $loanRequestTaskFolder, $loanRequestTime, $loanRequestDetectedTime) -severity 'INFO'
 Remove-Secrets
+Remove-UserAppData
 switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
   'Microsoft Windows 7*' {
     $rootUsername = 'root'
