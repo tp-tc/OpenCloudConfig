@@ -518,8 +518,8 @@
           "ComponentName": "LiveLog_Put"
         },
         {
-          "ComponentType": "NSSMInstall",
-          "ComponentName": "ZipInstall"
+          "ComponentType": "ZipInstall",
+          "ComponentName": "NSSMInstall"
         }
       ],
       "Validate": {
