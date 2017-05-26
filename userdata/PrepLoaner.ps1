@@ -202,6 +202,19 @@ function Get-GeneratedPassword {
   }
 }
 
+function Test-RegistryValue {
+  param (
+    [string] $path,
+    [string] $value
+  )
+  try {
+    Get-ItemProperty -Path $Path | Select-Object -ExpandProperty $Value -ErrorAction Stop | Out-Null
+    return $true
+  } catch {
+    return $false
+  }
+}
+
 $loanReqPath = 'Z:\loan-request.json'
 $loanRegPath = 'HKLM:\SOFTWARE\OpenCloudConfig\Loan'
 
@@ -217,6 +230,9 @@ if (Test-Path -Path $loanRegPath -ErrorAction SilentlyContinue) {
     Write-Log -message 'rdp session detected on active loaner' -severity 'DEBUG'
   } else {
     Write-Log -message 'rdp session not detected on active loaner' -severity 'DEBUG'
+  }
+  if ((Test-RegistryValue -path $loanRegPath -value 'Fulfilled') -and (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })) {
+    Remove-GenericWorker
   }
   exit
 }
@@ -290,5 +306,6 @@ Write-Log -message 'waiting for loan request task to complete' -severity 'DEBUG'
 while ((Test-Path $loanRequestTaskFolder -ErrorAction SilentlyContinue)) {
   Start-Sleep 1
 }
+New-ItemProperty -Path $loanRegPath -PropertyType String -Name 'Fulfilled' -Value ((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:sszzz')) -Force | Out-Null
 Write-Log -message 'loan request task completion detected' -severity 'DEBUG'
 Remove-GenericWorker
