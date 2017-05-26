@@ -46,7 +46,7 @@ function Remove-Secrets {
       ('{0}\builds\occ-installers.tok' -f $env:SystemDrive),
       # intentionally commented (required for building firefox)
       #('{0}\builds\relengapi.tok' -f $env:SystemDrive),
-      ('{0}\builds\tc-sccache.boto' -f $env:SystemDrive),\Viscosity
+      ('{0}\builds\tc-sccache.boto' -f $env:SystemDrive),
       ('{0}\Users\Administrator\.ovpn' -f $env:SystemDrive),
       ('{0}\Users\Administrator\AppData\Roaming\Viscosity' -f $env:SystemDrive),
       ('{0}\System32\config\systemprofile\AppData\Roaming\gnupg' -f $env:AppData),
@@ -99,53 +99,61 @@ function Remove-UserAppData {
 }
 
 function Remove-GenericWorker {
-  $gw = (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })
-  if ($gw) {
-    $gw | Stop-Process -Force -ErrorAction SilentlyContinue
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
-  $paths = @(
-    ('{0}\generic-worker\disable-desktop-interrupt.reg' -f $env:SystemDrive),
-    ('{0}\generic-worker\generic-worker.log' -f $env:SystemDrive),
-    ('{0}\generic-worker\generic-worker.config' -f $env:SystemDrive),
-    ('{0}\generic-worker\generic-worker-test-creds.cmd' -f $env:SystemDrive),
-    ('{0}\generic-worker\livelog.crt' -f $env:SystemDrive),
-    ('{0}\generic-worker\livelog.key' -f $env:SystemDrive),
-    ('{0}\generic-worker\*.xml' -f $env:SystemDrive)
-  )
-  foreach ($path in $paths) {
-    if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
-      Remove-Item $path -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
-      Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'INFO'
+  process {
+    $gw = (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })
+    if ($gw) {
+      $gw | Stop-Process -Force -ErrorAction SilentlyContinue
+    }
+    $paths = @(
+      ('{0}\generic-worker\disable-desktop-interrupt.reg' -f $env:SystemDrive),
+      ('{0}\generic-worker\generic-worker.log' -f $env:SystemDrive),
+      ('{0}\generic-worker\generic-worker.config' -f $env:SystemDrive),
+      ('{0}\generic-worker\generic-worker-test-creds.cmd' -f $env:SystemDrive),
+      ('{0}\generic-worker\livelog.crt' -f $env:SystemDrive),
+      ('{0}\generic-worker\livelog.key' -f $env:SystemDrive),
+      ('{0}\generic-worker\*.xml' -f $env:SystemDrive)
+    )
+    foreach ($path in $paths) {
+      if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
+        Remove-Item $path -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+        Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'INFO'
+      }
+    }
+    $winlogonPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
+    $autologonRegistryEntries = @{
+      'DefaultUserName' = $winlogonPath;
+      'DefaultDomainName' = $winlogonPath;
+      'DefaultPassword' = $winlogonPath;
+      'AutoAdminLogon' = $winlogonPath
+    }
+    foreach ($name in $autologonRegistryEntries.Keys) {
+      $path = $autologonRegistryEntries.Item($name)
+      $item = (Get-Item -Path $path)
+      if (($item -ne $null) -and ($item.GetValue($name) -ne $null)) {
+        Remove-ItemProperty -path $path -name $name
+        Write-Log -message ('{0} :: registry entry: {1}\{2}, deleted.' -f $($MyInvocation.MyCommand.Name), $path, $name) -severity 'INFO'
+      }
+    }
+    $gwuser = 'GenericWorker'
+    if (@(Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq $gwuser }).length -gt 0) {
+      Start-Process 'logoff' -ArgumentList @((((quser /server:. | ? { $_ -match $gwuser }) -split ' +')[2]), '/server:.') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-logoff.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $gwuser) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-logoff.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $gwuser)
+      Start-Process 'net' -ArgumentList @('user', $gwuser, '/DELETE') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $gwuser) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $gwuser)
+      Write-Log -message ('{0} :: user: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $gwuser) -severity 'INFO'
+    }
+    if (Test-Path -Path ('{0}\Users\{1}' -f $env:SystemDrive, $gwuser) -ErrorAction SilentlyContinue) {
+      Remove-Item ('{0}\Users\{1}' -f $env:SystemDrive, $gwuser) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+      Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), ('{0}\Users\{1}' -f $env:SystemDrive, $gwuser)) -severity 'INFO'
+    }
+    if (Test-Path -Path ('{0}\Users\{1}*' -f $env:SystemDrive, $gwuser) -ErrorAction SilentlyContinue) {
+      Remove-Item ('{0}\Users\{1}*' -f $env:SystemDrive, $gwuser) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+      Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), ('{0}\Users\{1}*' -f $env:SystemDrive, $gwuser)) -severity 'INFO'
     }
   }
-  $winlogonPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
-  $autologonRegistryEntries = @{
-    'DefaultUserName' = $winlogonPath;
-    'DefaultDomainName' = $winlogonPath;
-    'DefaultPassword' = $winlogonPath;
-    'AutoAdminLogon' = $winlogonPath
-  }
-  foreach ($name in $autologonRegistryEntries.Keys) {
-    $path = $autologonRegistryEntries.Item($name)
-    $item = (Get-Item -Path $path)
-    if (($item -ne $null) -and ($item.GetValue($name) -ne $null)) {
-      Remove-ItemProperty -path $path -name $name
-      Write-Log -message ('{0} :: registry entry: {1}\{2}, deleted.' -f $($MyInvocation.MyCommand.Name), $path, $name) -severity 'INFO'
-    }
-  }
-  $gwuser = 'GenericWorker'
-  if (@(Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq $gwuser }).length -gt 0) {
-    Start-Process 'logoff' -ArgumentList @((((quser /server:. | ? { $_ -match $gwuser }) -split ' +')[2]), '/server:.') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-logoff.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $gwuser) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-logoff.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $gwuser)
-    Start-Process 'net' -ArgumentList @('user', $gwuser, '/DELETE') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $gwuser) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $gwuser)
-    Write-Log -message ('{0} :: user: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $gwuser) -severity 'INFO'
-  }
-  if (Test-Path -Path ('{0}\Users\{1}' -f $env:SystemDrive, $gwuser) -ErrorAction SilentlyContinue) {
-    Remove-Item ('{0}\Users\{1}' -f $env:SystemDrive, $gwuser) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
-    Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), ('{0}\Users\{1}' -f $env:SystemDrive, $gwuser)) -severity 'INFO'
-  }
-  if (Test-Path -Path ('{0}\Users\{1}*' -f $env:SystemDrive, $gwuser) -ErrorAction SilentlyContinue) {
-    Remove-Item ('{0}\Users\{1}*' -f $env:SystemDrive, $gwuser) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
-    Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), ('{0}\Users\{1}*' -f $env:SystemDrive, $gwuser)) -severity 'INFO'
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
 
@@ -175,15 +183,23 @@ function Get-GeneratedPassword {
   param (
     [int] $length = 16
   )
-  $chars=$null;
-  for ($char = 48; $char -le 122; $char ++) {
-    $chars += ,[char][byte]$char
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
-  $rootPassword = ''
-  for ($i=1; $i -le $length; $i++) {
-    $rootPassword += ($chars | Get-Random)
+  process {
+    $chars=$null;
+    for ($char = 48; $char -le 122; $char ++) {
+      $chars += ,[char][byte]$char
+    }
+    $rootPassword = ''
+    for ($i=1; $i -le $length; $i++) {
+      $rootPassword += ($chars | Get-Random)
+    }
+    return $rootPassword
   }
-  return $rootPassword
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
 }
 
 $loanReqPath = 'Z:\loan-request.json'
@@ -268,12 +284,11 @@ Start-Process $gpg -ArgumentList @('--no-default-keyring', '--keyring', $tempKey
 Get-ChildItem -Path $artifactsPath | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
 Remove-Item -Path ('{0}\{1}.txt' -f $env:Temp, $token) -force
 Move-Item -Path ('{0}\{1}.txt.gpg' -f $env:Temp, $token) -Destination ('{0}\credentials.txt.gpg' -f $artifactsPath)
+& 'icacls' @($artifactsPath, '/grant', 'Everyone:(OI)(CI)F')
 Write-Log -message 'credentials encrypted in task artefacts' -severity 'DEBUG'
 Write-Log -message 'waiting for loan request task to complete' -severity 'DEBUG'
 while ((Test-Path $loanRequestTaskFolder -ErrorAction SilentlyContinue)) {
   Start-Sleep 1
 }
 Write-Log -message 'loan request task completion detected' -severity 'DEBUG'
-# give gw a moment to upload artifacts, then kill it.
-Start-Sleep 10
 Remove-GenericWorker

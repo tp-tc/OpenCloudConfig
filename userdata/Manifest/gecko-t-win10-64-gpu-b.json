@@ -506,6 +506,18 @@
       "Target": "C:\\generic-worker\\disable-desktop-interrupt.reg"
     },
     {
+      "ComponentName": "SetDefaultPrinter",
+      "ComponentType": "ChecksumFileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "GenericWorkerInstall"
+        }
+      ],
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/SetDefaultPrinter.ps1",
+      "Target": "C:\\generic-worker\\SetDefaultPrinter.ps1"
+    },
+    {
       "ComponentName": "GenericWorkerStateWait",
       "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
@@ -518,7 +530,7 @@
           "ComponentName": "DisableDesktopInterrupt"
         }
       ],
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker.bat",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker-format-and-reboot.bat",
       "Target": "C:\\generic-worker\\run-generic-worker.bat"
     },
     {
@@ -1114,6 +1126,41 @@
         "allprofiles",
         "state",
         "off"
+      ]
+    },
+    {
+      "ComponentName": "NvidiaK520DriverPackage",
+      "ComponentType": "ExeInstall",
+      "Comment": "Required for hardware acceleration on EC2 g2 (GPU) instances. http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/accelerated-computing-instances.html#install-nvidia-driver-windows",
+      "Url": "http://uk.download.nvidia.com/Windows/Quadro_Certified/GRID/369.95/369.95-quadro-grid-desktop-notebook-win10-64bit-international-whql.exe",
+      "Arguments": [
+        "/s"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\NVIDIA\\369.95\\setup.exe"
+        ]
+      },
+      "sha512": "7fd87a38e5eb760e49bd136d238ec8983a9cdacc1dfc67334c1033f887aab3c8592156a7f876de7c8938279008848ff755ec478aab9c1218f7879ca6758e29f2"
+    },
+    {
+      "ComponentName": "NvidiaK520DriverInstall",
+      "ComponentType": "CommandRun",
+      "Comment": "Required for hardware acceleration on EC2 g2 (GPU) instances. http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/accelerated-computing-instances.html#install-nvidia-driver-windows",
+      "Command": "C:\\NVIDIA\\369.95\\setup.exe",
+      "Arguments": [
+        "/s"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files\\NVIDIA Corporation\\license.txt"
+        ]
+      },
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "NvidiaK520DriverPackage"
+        }
       ]
     }
   ]
