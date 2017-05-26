@@ -486,8 +486,7 @@
       "ComponentType": "ZipInstall",
       "Comment": "NSSM is required to install Generic Worker as a service. Zip file contains top level nssm folder, so we can safely extract to C:\\.",
       "Url": "http://www.nssm.cc/release/nssm-2.24.zip",
-      "Destination": "C:\\",
-      "sha512": "d71e037b177f80fc1414e26cf183aefef7729079ea48a268f834b335cbc269005de7ae6e54155a8cec3663c503741fa4241172fa69e8fd9a5c07b3eb1b56eff2"
+      "Destination": "C:\\"
     },
     {
       "ComponentName": "GenericWorkerInstall",
