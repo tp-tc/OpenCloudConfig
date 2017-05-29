@@ -14,16 +14,21 @@ pushd %~dp0
 set errorlevel=
 .\generic-worker.exe run --configure-for-aws > .\generic-worker.log 2>&1
 
-if %errorlevel% equ 0 goto successful
+rem exit code 67 means generic worker has created a task user and wants to reboot into it
+if %errorlevel% equ 67 goto FormatAndReboot
+
+rem exit code 0 handled for legacy reasons (needed when generic-worker version < 9.0.0)
+if %errorlevel% equ 0 goto FormatAndReboot
+
 rem commented shutdown as it interferes with loaner provisioning [occ kills gw in order to re-provision as loaner].
 rem HaltOnIdle manages terminations with consideration to other instance states and requirements.
 rem this script does not have the awareness of other considerations to manage this.
 rem shutdown /s /t 0 /f /c "Killing worker, as generic worker crashed or had a problem"
-goto end
+goto End
 
-:successful
+:FormatAndReboot
 format Z: /fs:ntfs /v:"task" /q /y
 <nul (set/p z=) >C:\dsc\task-claim-state.valid
 shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
 
-:end
+:End
