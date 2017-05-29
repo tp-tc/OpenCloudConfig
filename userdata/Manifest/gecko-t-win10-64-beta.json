@@ -489,7 +489,7 @@
         "install",
         "service",
         "--nssm",
-        "C:\\nssm\\nssm-2.24\\win64\\nssm.exe",
+        "C:\\nssm-2.24\\win64\\nssm.exe",
         "--config",
         "C:\\generic-worker\\generic-worker.config"
       ],
