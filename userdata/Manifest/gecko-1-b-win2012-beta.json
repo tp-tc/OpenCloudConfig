@@ -1071,11 +1071,36 @@
       "Action": "Allow"
     },
     {
+      "ComponentName": "NSSMDownload",
+      "ComponentType": "FileDownload",
+      "Source": "https://nssm.cc/ci/nssm-2.24-103-gdee49fc.zip",
+      "Target": "C:\\Windows\\Temp\\NSSMInstall.zip"
+    },
+    {
       "ComponentName": "NSSMInstall",
-      "ComponentType": "ZipInstall",
-      "Comment": "NSSM is required to install Generic Worker as a service.",
-      "Url": "http://www.nssm.cc/release/nssm-2.24.zip",
-      "Destination": "C:\\nssm"
+      "ComponentType": "CommandRun",
+      "Comment": "NSSM is required to install Generic Worker as a service. Currently ZipInstall fails, so using 7z instead.",
+      "Command": "C:\\Program Files\\7-Zip\\7z.exe",
+      "Arguments": [
+        "x",
+        "-oC:\\",
+        "C:\\Windows\\Temp\\NSSMInstall.zip"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "SevenZip"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "NSSMDownload"
+        }
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe"
+        ]
+      }
     },
     {
       "ComponentName": "GenericWorkerInstall",
@@ -1085,7 +1110,7 @@
         "install",
         "service",
         "--nssm",
-        "C:\\nssm\\nssm-2.24\\win64\\nssm.exe",
+        "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe",
         "--config",
         "C:\\generic-worker\\generic-worker.config"
       ],
