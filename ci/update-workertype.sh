@@ -2,10 +2,26 @@
 
 shopt -s extglob
 
+if [ "${#}" -lt 1 ]; then
+  echo "workertype argument missing; usage: ./update-workertype.sh workertype" >&2
+  exit 64
+fi
+tc_worker_type="${1}"
+
 # get some secrets from tc
-updateworkertype_secrets_url="taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype"
+secrets_url=taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig
+if [[ $tc_worker_type == *"-b-win"* ]]; then
+  cot_private_key="$(curl -s -N ${secrets_url}:cot-${tc_worker_type} | jq -r '.secret.cot_private_key')"
+  if [ -z "${cot_private_key}" ]; then
+    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] cot private key retrieval failed."
+  else
+    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] cot private key retrieval suceeeded."
+  fi
+else
+  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] cot private key retrieval skipped."
+fi
 read TASKCLUSTER_AWS_ACCESS_KEY TASKCLUSTER_AWS_SECRET_KEY aws_tc_account_id userdata<<EOF
-$(curl -s -N ${updateworkertype_secrets_url} | python -c 'import json, sys; a = json.load(sys.stdin)["secret"]; cot_key = getattr(a["cot"], "${1}", ""); print a["TASKCLUSTER_AWS_ACCESS_KEY"], a["TASKCLUSTER_AWS_SECRET_KEY"], a["aws_tc_account_id"], ("<powershell>\nInvoke-Expression (New-Object Net.WebClient).DownloadString(('\''https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/rundsc.ps1?{0}'\'' -f [Guid]::NewGuid()))\n</powershell>\n<persist>true</persist>\n<secrets>\n  <rootPassword>ROOTPASSWORDTOKEN</rootPassword>\n  <rootGpgKey>\n%s\n</rootGpgKey>\n  <workerPassword>WORKERPASSWORDTOKEN</workerPassword>\n  <workerGpgKey>\n%s\n</workerGpgKey>\n  <cotGpgKey>\n%s\n</cotGpgKey>\n</secrets>" % (a["rootGpgKey"], a["workerGpgKey"], cot_key)).replace("\n", "\\\\n");' 2> /dev/null)
+$(curl -s -N ${secrets_url}:updateworkertype | jq ". | .secret.cotGpgKey=\"${cot_private_key}\"" | python -c 'import json, sys; a = json.load(sys.stdin)["secret"]; print a["TASKCLUSTER_AWS_ACCESS_KEY"], a["TASKCLUSTER_AWS_SECRET_KEY"], a["aws_tc_account_id"], ("<powershell>\nInvoke-Expression (New-Object Net.WebClient).DownloadString(('\''https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/rundsc.ps1?{0}'\'' -f [Guid]::NewGuid()))\n</powershell>\n<persist>true</persist>\n<secrets>\n  <rootPassword>ROOTPASSWORDTOKEN</rootPassword>\n  <rootGpgKey>\n%s\n</rootGpgKey>\n  <workerPassword>WORKERPASSWORDTOKEN</workerPassword>\n  <workerGpgKey>\n%s\n</workerGpgKey>\n  <cotGpgKey>\n%s\n</cotGpgKey>\n</secrets>" % (a["rootGpgKey"], a["workerGpgKey"], a["cotGpgKey"])).replace("\n", "\\\\n");' 2> /dev/null)
 EOF
 
 : ${TASKCLUSTER_AWS_ACCESS_KEY:?"TASKCLUSTER_AWS_ACCESS_KEY is not set"}
@@ -16,12 +32,6 @@ export AWS_SECRET_ACCESS_KEY=${TASKCLUSTER_AWS_SECRET_KEY}
 : ${aws_tc_account_id:?"aws_tc_account_id is not set"}
 
 aws_region=${aws_region:='us-west-2'}
-
-if [ "${#}" -lt 1 ]; then
-  echo "workertype argument missing; usage: ./update-workertype.sh workertype" >&2
-  exit 64
-fi
-tc_worker_type="${1}"
 
 aws_key_name="mozilla-taskcluster-worker-${tc_worker_type}"
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] aws_key_name: ${aws_key_name}"
