@@ -14,7 +14,7 @@ Configuration xDynamicConfig {
     $locationType = 'DataCenter'
   }
 
-  if ($locationType -eq 'AWS') { 
+  if ($locationType -eq 'AWS') {
     Script GpgKeyImport {
       DependsOn = @('[Script]InstallSupportingModules', '[Script]ExeInstall_GpgForWin')
       GetScript = { @{ Result = (((Test-Path -Path ('{0}\SysWOW64\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\SysWOW64\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot)).length -gt 0kb)) -or ((Test-Path -Path ('{0}\System32\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\System32\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot)).length -gt 0kb))) } }
@@ -141,7 +141,7 @@ Configuration xDynamicConfig {
     'EnvironmentVariableUniquePrepend' = 'Script';
     'RegistryKeySet' = 'Registry';
     'RegistryValueSet' = 'Registry';
-	'DisableIndexing' = 'Script';
+    'DisableIndexing' = 'Script';
     'FirewallRule' = 'Script'
   }
   Log Manifest {
@@ -537,21 +537,21 @@ Configuration xDynamicConfig {
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
-	  'DisableIndexing' {
-	  	Script ( 'DisableIndexing_{0}' -f $item.ComponentName) {
-		  DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
-		  GetScript = "@{ DisableIndexing = $item.ComponentName }"
-		  SetScript = {
-		    # Disable indexing on all disk volumes.
-		    Get-WmiObject Win32_Volume -Filter "IndexingEnabled=$true" | Set-WmiInstance -Arguments @{IndexingEnabled=$false}
-		  }
-		  TestScript = { return $false }
-		}
-		Log ('Log_DisableIndexing_{0}' -f $item.ComponentName) {
+      'DisableIndexing' {
+        Script ( 'DisableIndexing_{0}' -f $item.ComponentName) {
+          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          GetScript = "@{ DisableIndexing = $item.ComponentName }"
+          SetScript = {
+            # Disable indexing on all disk volumes.
+            Get-WmiObject Win32_Volume -Filter "IndexingEnabled=$true" | Set-WmiInstance -Arguments @{IndexingEnabled=$false}
+          }
+          TestScript = { return $false }
+        }
+        Log ('Log_DisableIndexing_{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]DisableIndexing_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
-	  }
+      }
       'FirewallRule' {
         Script ('FirewallRule_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
@@ -598,6 +598,30 @@ Configuration xDynamicConfig {
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
+    }
+  }
+  $builderWorkerTypes = @('gecko-1-b-win2012', 'gecko-1-b-win2012-beta', 'gecko-2-b-win2012', 'gecko-3-b-win2012')
+  if (($locationType -eq 'AWS') -and ($workerType) -and $builderWorkerTypes.Contains($workerType)) {
+    Script CotGpgKeyImport {
+      DependsOn = @('[Script]InstallSupportingModules', '[Script]ExeInstall_GpgForWin', '[File]DirectoryCreate_GenericWorkerDirectory')
+      GetScript = "@{ Script = CotGpgKeyImport }"
+      SetScript = {
+        if ("${env:ProgramFiles(x86)}") {
+          $gpg = ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)})
+        } else{
+          $gpg = ('{0}\GNU\GnuPG\pub\gpg.exe' -f $env:ProgramFiles)
+        }
+        try {
+          $userdata = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')
+          $cotKey = [regex]::matches($userdata, '<cotGpgKey>(.*)<\/cotGpgKey>')[0].Groups[1].Value
+        } catch {
+          $cotKey = $false
+        }
+        if ($cotKey) {
+          [IO.File]::WriteAllLines(('{0}\generic-worker\cot.key' -f $env:SystemDrive), $cotKey)
+        }
+      }
+      TestScript = { if ((Test-Path -Path ('{0}\generic-worker\cot.key' -f $env:SystemDrive) -ErrorAction SilentlyContinue))  { $true } else { $false } }
     }
   }
 }
