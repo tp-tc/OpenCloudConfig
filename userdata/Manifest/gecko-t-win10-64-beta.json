@@ -511,7 +511,7 @@
           "ComponentName": "LiveLog_Put"
         },
         {
-          "ComponentType": "ZipInstall",
+          "ComponentType": "CommandRun",
           "ComponentName": "NSSMInstall"
         }
       ],
