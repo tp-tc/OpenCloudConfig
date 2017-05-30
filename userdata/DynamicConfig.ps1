@@ -613,7 +613,7 @@ Configuration DynamicConfig {
         }
         try {
           $userdata = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')
-          $cotKey = [regex]::matches($userdata, '<cotGpgKey>(.*)<\/cotGpgKey>')[0].Groups[1].Value
+          $cotKey = [regex]::matches($userdata, '<cotGpgKey>((.|\n)*)<\/cotGpgKey>')[0].Groups[1].Value
         } catch {
           $cotKey = $false
         }
