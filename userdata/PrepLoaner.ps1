@@ -309,3 +309,12 @@ while ((Test-Path $loanRequestTaskFolder -ErrorAction SilentlyContinue)) {
 New-ItemProperty -Path $loanRegPath -PropertyType String -Name 'Fulfilled' -Value ((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:sszzz')) -Force | Out-Null
 Write-Log -message 'loan request task completion detected' -severity 'DEBUG'
 Remove-GenericWorker
+switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+  'Microsoft Windows 10*' {
+    Write-Log -message 'rebooting prepped loaner' -severity 'DEBUG'
+    & shutdown @('-r', '-t', '0', '-c', 'loaner reboot', '-f', '-d', 'p:4:1')
+  }
+  default {
+    Write-Log -message 'skipping reboot of prepped loaner' -severity 'DEBUG'
+  }
+}
