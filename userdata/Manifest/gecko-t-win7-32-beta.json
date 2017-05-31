@@ -509,7 +509,7 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe"
+          "C:\\nssm-2.24-103-gdee49fc\\win32\\nssm.exe"
         ]
       }
     },
@@ -521,7 +521,7 @@
         "install",
         "service",
         "--nssm",
-        "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe",
+        "C:\\nssm-2.24-103-gdee49fc\\win32\\nssm.exe",
         "--config",
         "C:\\generic-worker\\generic-worker.config"
       ],
