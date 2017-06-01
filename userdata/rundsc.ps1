@@ -652,10 +652,13 @@ if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
 }
 Write-Log -message 'userdata run starting.' -severity 'INFO'
 
+Get-Service -Name 'w32time' | Stop-Service -PassThru
 tzutil /s UTC
 Write-Log -message 'system timezone set to UTC.' -severity 'INFO'
-W32tm /register
-W32tm /resync /force
+w32tm /register
+w32tm /config /syncfromflags:manual /manualpeerlist:"0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org",0x8
+Get-Service -Name 'w32time' | Start-Service -PassThru
+w32tm /resync /force
 Write-Log -message 'system clock synchronised.' -severity 'INFO'
 
 # set up a log folder, an execution policy that enables the dsc run and a winrm envelope size large enough for the dynamic dsc.
