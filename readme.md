@@ -1,4 +1,7 @@
-# Open Cloud Config (OCC) [![Docker pulls](https://img.shields.io/docker/pulls/grenade/opencloudconfig.svg?style=plastic)](https://hub.docker.com/r/grenade/opencloudconfig/)
+# Open Cloud Config (OCC)
+
+[![Docker pulls](https://img.shields.io/docker/pulls/grenade/opencloudconfig.svg?style=plastic)](https://hub.docker.com/r/grenade/opencloudconfig/)
+[![Deploy status](https://github.taskcluster.net/v1/repository/mozilla-releng/OpenCloudConfig/master/badge.svg)](https://github.taskcluster.net/v1/repository/mozilla-releng/OpenCloudConfig/master/latest)
 
 OCC is a small, fast, lightweight tool for creating Windows cloud (they don't really have to be in a cloud though) instances with a specific configuration in a repeatable, source controlled manner. Think of it as Puppet or Chef, without all the Orchestration. There isn't even anything to install. It's implemented in a few powershell scripts, hosted in this repository.
 
