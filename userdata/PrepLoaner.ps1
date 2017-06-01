@@ -33,6 +33,36 @@ function Write-Log {
   Write-EventLog -LogName $logName -Source $source -EntryType $entryType -Category 0 -EventID $eventId -Message $message
 }
 
+function Remove-InstanceConfig {
+  param (
+    [string[]] $paths = @(
+      ('{0}\Users\inst' -f $env:SystemDrive),
+      ('{0}\Users\t-w1064-vanilla' -f $env:SystemDrive),
+      ('{0}\log\*.log' -f $env:SystemDrive),
+      ('{0}\log\*.zip' -f $env:SystemDrive),
+      ('{0}\dsc\MozillaMaintenance' -f $env:SystemDrive)
+    )
+  )
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    foreach ($path in $paths) {
+      if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
+        Remove-Item $path -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+        if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
+          Write-Log -message ('{0} :: failed to delete path: {1}.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'Error'
+        } else {
+          Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'INFO'
+        }
+      }
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+}
+
 function Remove-Secrets {
   param (
     [string[]] $paths = @(
@@ -43,6 +73,7 @@ function Remove-Secrets {
       ('{0}\builds\mozilla-desktop-geoloc-api.key' -f $env:SystemDrive),
       ('{0}\builds\mozilla-fennec-geoloc-api.key' -f $env:SystemDrive),
       ('{0}\builds\oauth' -f $env:SystemDrive),
+      ('{0}\builds\oauth.txt' -f $env:SystemDrive),
       ('{0}\builds\occ-installers.tok' -f $env:SystemDrive),
       # intentionally commented (required for building firefox)
       #('{0}\builds\relengapi.tok' -f $env:SystemDrive),
@@ -105,6 +136,7 @@ function Remove-GenericWorker {
   process {
     $gw = (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })
     if ($gw) {
+      Write-Log -message ('{0} :: attempting to stop running generic-worker process.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
       $gw | Stop-Process -Force -ErrorAction SilentlyContinue
     }
     $paths = @(
@@ -114,12 +146,17 @@ function Remove-GenericWorker {
       ('{0}\generic-worker\generic-worker-test-creds.cmd' -f $env:SystemDrive),
       ('{0}\generic-worker\livelog.crt' -f $env:SystemDrive),
       ('{0}\generic-worker\livelog.key' -f $env:SystemDrive),
+      ('{0}\generic-worker\cot.key' -f $env:SystemDrive),
       ('{0}\generic-worker\*.xml' -f $env:SystemDrive)
     )
     foreach ($path in $paths) {
       if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
         Remove-Item $path -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
-        Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'INFO'
+        if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
+          Write-Log -message ('{0} :: failed to delete path: {1}.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'Error'
+        } else {
+          Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'INFO'
+        }
       }
     }
     $winlogonPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
@@ -231,7 +268,9 @@ if (Test-Path -Path $loanRegPath -ErrorAction SilentlyContinue) {
   } else {
     Write-Log -message 'rdp session not detected on active loaner' -severity 'DEBUG'
   }
-  if ((Test-RegistryValue -path $loanRegPath -value 'Fulfilled') -and (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })) {
+  if (Test-RegistryValue -path $loanRegPath -value 'Fulfilled') {
+    # rerun this part of cleanup to purge files that may have been locked or in use on previous runs
+    Remove-InstanceConfig
     Remove-GenericWorker
   }
   exit
@@ -260,6 +299,7 @@ $loanRequestTaskFolder = (Get-ItemProperty -Path $loanRegPath -Name 'TaskFolder'
 Write-Log -message ('loan request from {0}/{1} ({2}) at {3} detected at {4}' -f $loanRequestEmail, $loanRequestPublicKeyUrl, $loanRequestTaskFolder, $loanRequestTime, $loanRequestDetectedTime) -severity 'INFO'
 Remove-Secrets
 Remove-UserAppData
+Remove-InstanceConfig
 switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
   'Microsoft Windows 7*' {
     $rootUsername = 'root'
