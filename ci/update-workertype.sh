@@ -240,6 +240,10 @@ for region in "${aws_copy_regions[@]}"; do
   done
 done
 
+# overlay userdata/Configuration/GenericWorker/generic-worker.config on top of the generic-worker config section of the worker type definition
+echo $(cat ./${tc_worker_type}.json | jq '.secrets."generic-worker".config') $(cat OpenCloudConfig/userdata/Configuration/GenericWorker/generic-worker.config) | jq --slurp add > ./merged-gw-config.json
+cat ./${tc_worker_type}.json | jq --sort-keys --slurpfile 'gwconfig' ./merged-gw-config.json '.secrets."generic-worker".config=$gwconfig[0]' > .workertype-secrets.json && rm workertype-secrets.json && mv .workertype-secrets.json workertype-secrets.json
+
 cat ./${tc_worker_type}.json | curl --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ./update-response.json
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] worker type updated: https://tools.taskcluster.net/aws-provisioner/#${tc_worker_type}/view"
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] active amis (post-update): $(curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq -c '[.regions[] | {region: .region, ami: .launchSpec.ImageId}]')"
