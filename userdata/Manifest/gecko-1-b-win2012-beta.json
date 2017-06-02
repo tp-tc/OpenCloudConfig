@@ -1153,18 +1153,6 @@
       }
     },
     {
-      "ComponentName": "GenericWorkerRequiredConfig",
-      "ComponentType": "ChecksumFileDownload",
-      "DependsOn": [
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "GenericWorkerDirectory"
-        }
-      ],
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/generic-worker.config",
-      "Target": "C:\\generic-worker\\generic-worker.config"
-    },
-    {
       "ComponentName": "GenericWorkerStateWait",
       "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
