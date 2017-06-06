@@ -262,7 +262,7 @@ if (-not (Test-Path -Path $loanReqPath -ErrorAction SilentlyContinue)) {
 }
 # if reg keys exist, log activity and exit since an earlier run will have performed loan prep
 if (Test-Path -Path $loanRegPath -ErrorAction SilentlyContinue) {
-  if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -gt 0) {
+  if (@(& qwinsta | ? { $_ -match 'rdp-tcp.*Active' }).length -gt 0) {
     # todo: record the ip address where the rdp session originates
     Write-Log -message 'rdp session detected on active loaner' -severity 'DEBUG'
   } else {
