@@ -1200,6 +1200,33 @@
           "ComponentName": "NvidiaK520DriverPackage"
         }
       ]
+    },
+    {
+      "ComponentName": "DevconInstall",
+      "ComponentType": "FileDownload",
+      "Comment": "Bug 1366288 - used to disable BasicDisplay adapter",
+      "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/devcon/x86_64/devcon.exe",
+      "Target": "C:\\Windows\\System32\\devcon.exe"
+    },
+    {
+      "ComponentName": "DisableBasicDisplay",
+      "ComponentType": "CommandRun",
+      "Comment": "Bug 1366288 - used to disable BasicDisplay adapter",
+      "Command": "C:\\Windows\\System32\\devcon.exe",
+      "Arguments": [
+        "disable",
+        "*VEN_1013"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "DevconInstall"
+        },
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "NvidiaK520DriverInstall"
+        }
+      ]
     }
   ]
 }
