@@ -874,10 +874,6 @@ if ($rebootReasons.length) {
     New-LocalCache
   }
 
-  if (-not ($isWorker)) {
-    Set-Credentials -username 'GenericWorker' -password ('{0}' -f [regex]::matches($userdata, '<workerPassword>(.*)<\/workerPassword>')[0].Groups[1].Value) -setautologon
-  }
-
   # archive dsc logs
   Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
   New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { $_.FullName })
