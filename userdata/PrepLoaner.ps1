@@ -136,12 +136,25 @@ function Remove-GenericWorker {
   process {
     $gwService = (Get-Service -Name 'Generic Worker' -ErrorAction SilentlyContinue)
     if (($gwService) -and ($gwService.Status -eq 'Running')) {
+      Write-Log -message ('{0} :: attempting to stop running generic-worker service.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
       $gwService | Stop-Service -PassThru | Set-Service -StartupType disabled
+      $gwService = (Get-Service -Name 'Generic Worker' -ErrorAction SilentlyContinue)
+      if (($gwService) -and ($gwService.Status -eq 'Running')) {
+        Write-Log -message ('{0} :: failed to stop running generic-worker service.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+      } else {
+        Write-Log -message ('{0} :: generic-worker service stopped successfully.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+      }
     }
-    $gw = (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })
-    if ($gw) {
-      Write-Log -message ('{0} :: attempting to stop running generic-worker process.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-      $gw | Stop-Process -Force -ErrorAction SilentlyContinue
+    $gwProcess = (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })
+    if ($gwProcess) {
+      Write-Log -message ('{0} :: attempting to stop running generic-worker process.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+      $gwProcess | Stop-Process -Force -ErrorAction SilentlyContinue
+      $gwProcess = (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })
+      if ($gwProcess) {
+        Write-Log -message ('{0} :: failed to stop running generic-worker process.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+      } else {
+        Write-Log -message ('{0} :: generic-worker process stopped successfully.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+      }
     }
     $paths = @(
       ('{0}\generic-worker\disable-desktop-interrupt.reg' -f $env:SystemDrive),
