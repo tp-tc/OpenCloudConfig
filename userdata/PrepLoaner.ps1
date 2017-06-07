@@ -134,6 +134,10 @@ function Remove-GenericWorker {
     Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
   process {
+    $gwService = (Get-Service -Name 'Generic Worker' -ErrorAction SilentlyContinue)
+    if (($gwService) -and ($gwService.Status -eq 'Running')) {
+      $gwService | Stop-Service -PassThru | Set-Service -StartupType disabled
+    }
     $gw = (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })
     if ($gw) {
       Write-Log -message ('{0} :: attempting to stop running generic-worker process.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
