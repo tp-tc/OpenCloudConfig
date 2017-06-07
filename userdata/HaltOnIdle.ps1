@@ -167,7 +167,7 @@ if (-not (Is-Loaner)) {
     } else {
       Write-Log -message ('loaner provisioned at {0:T}. loaner within unclaimed time ({1:mm} minutes) constraints.' -f $provisionedTimestamp, $loanerUnclaimedTimeout) -severity 'INFO'
     }
-  } elseif ($loanerStateUnknownMessages.length -gt 0) {
+  } elseif ($loanerStateUnknownMessages.length -gt 3) {
     $lastStateUnknownTimestamp = @($loanerStateUnknownMessages | Sort Index -Descending)[0].TimeGenerated
     Write-Log -message ('loaner state is unknown and has not been rectified since last check at {0:T}. instance will be terminated.' -f $lastStateUnknownTimestamp) -severity 'ERROR'
     & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: loaner state unknown and unrectified', '-f', '-d', 'p:4:1')
