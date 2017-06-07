@@ -20,7 +20,7 @@
       "ComponentType": "ChecksumFileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Source": "https://papertrailapp.com/tools/papertrail-bundle.pem",
-      "Target": "C:\\Program Files (x86)\\nxlog\\cert\\papertrail-bundle.pem",
+      "Target": "C:\\Program Files\\nxlog\\cert\\papertrail-bundle.pem",
       "DependsOn": [
         {
           "ComponentType": "MsiInstall",
@@ -32,8 +32,8 @@
       "ComponentName": "NxLogPaperTrailConfiguration",
       "ComponentType": "ChecksumFileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win10.conf",
-      "Target": "C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win7.conf",
+      "Target": "C:\\Program Files\\nxlog\\conf\\nxlog.conf",
       "DependsOn": [
         {
           "ComponentType": "ChecksumFileDownload",
@@ -81,8 +81,8 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg.exe",
-          "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg2.exe"
+          "C:\\Program Files\\GNU\\GnuPG\\pub\\gpg.exe",
+          "C:\\Program Files\\GNU\\GnuPG\\pub\\gpg2.exe"
         ]
       },
       "sha512": "b1c48d84d041055db3d3e3cbd22ef2f3300728b06c76660b9b78ececf56b7ccbc80addb39a64c0a4eb68bf3463ceb6d254dedda047049ce680e9d543dd8a9af9"
@@ -91,7 +91,7 @@
       "ComponentName": "SevenZip",
       "ComponentType": "ExeInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Url": "http://7-zip.org/a/7z1514-x64.exe",
+      "Url": "http://7-zip.org/a/7z1602.exe",
       "Arguments": [
         "/S"
       ],
@@ -101,13 +101,13 @@
           "C:\\Program Files\\7-Zip\\7z.dll"
         ]
       },
-      "sha512": "4df02ab139b087c8d6e689a99afb58e1ab3d4c0722daa11f6a070cddb2506d079a7d9ff55341baa5b7fd1dc7593225eb9d7fdbfb9ac91e0d8db61f9fda85cbb3"
+      "sha512": "ad8298ae7d170c9a3e7f66a6098dd017adcd7912ba3938237db88dca141b6606b095a1c7c7fff0a2d4b47405ffbd25d65e5d8d98a55a8abaf3ced12854c18c4c"
     },
     {
       "ComponentName": "SublimeText3",
       "ComponentType": "ExeInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Url": "https://download.sublimetext.com/Sublime%20Text%20Build%203114%20x64%20Setup.exe",
+      "Url": "https://download.sublimetext.com/Sublime%20Text%20Build%203114%20Setup.exe",
       "Arguments": [
         "/VERYSILENT",
         "/NORESTART",
@@ -119,7 +119,7 @@
           "C:\\Program Files\\Sublime Text 3\\sublime_text.exe"
         ]
       },
-      "sha512": "d3e71b28567ddd1b486aa3dcc9814818d91c322bc20ec203018d74bc465835f9ddd34d78f674172d00e66b39443070eb45e9799e3801b0ac410c958b2cf21098"
+      "sha512": "99bb189e112a67358095554711c208fb9ec1bd35d3a333c0f4a157f1715bd0b852140231ab41fc161c262531340f954ccb8bfe792a35849f73596aa757ef3249"
     },
     {
       "ComponentName": "SublimeText3_PackagesFolder",
@@ -251,6 +251,38 @@
       ]
     },
     {
+      "ComponentName": "reg_PythonInstallPath",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\InstallPath",
+      "ValueName": "(Default)",
+      "ValueType": "String",
+      "ValueData": "C:\\mozilla-build\\python",
+      "Hex": false,
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        }
+      ]
+    },
+    {
+      "ComponentName": "reg_PythonPath",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\PythonPath",
+      "ValueName": "(Default)",
+      "ValueType": "String",
+      "ValueData": "C:\\mozilla-build\\python\\Lib;C:\\mozilla-build\\python\\DLLs;C:\\mozilla-build\\python\\Lib\\lib-tk",
+      "Hex": false,
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        }
+      ]
+    },
+    {
       "ComponentName": "DeleteMozillaBuildMercurial",
       "ComponentType": "CommandRun",
       "DependsOn": [
@@ -274,13 +306,13 @@
       "ComponentName": "Mercurial",
       "ComponentType": "ExeInstall",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1298976",
-      "Url": "https://www.mercurial-scm.org/release/windows/Mercurial-3.9.1-x64.exe",
+      "Url": "https://www.mercurial-scm.org/release/windows/Mercurial-3.9.1.exe",
       "Arguments": [
         "/SP-",
         "/VERYSILENT",
         "/NORESTART",
         "/DIR=expand:{pf}\\Mercurial",
-        "/LOG=\"C:\\log\\Mercurial-3.9.1-x64.exe.install.log\""
+        "/LOG=\"C:\\log\\Mercurial-3.9.1.exe.install.log\""
       ],
       "Validate": {
         "PathsExist": [
@@ -288,7 +320,7 @@
           "C:\\Program Files\\Mercurial\\python27.dll"
         ]
       },
-      "sha512": "b71fd8f1d1e578bbd26b7bc6635d4a9d11320bce36f24ba44152cba3c02477006ab8d6fd9b06b263d11b4327713a048156d64bcbbb073d95eede0a53675a9a80"
+      "sha512": "a4a70ac81252605ba0856884d0cce6423b1557c8f6efe2f29c4f4b1c7a057de8d82e2074bd55d9b7562023e47ae55397c6632c3cff06e706c0271c8f2474af60"
     },
     {
       "ComponentName": "MercurialConfig",
@@ -418,19 +450,19 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v8.3.0/generic-worker-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.0.3/generic-worker-windows-386.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
       "ComponentName": "LiveLogDownload",
-      "ComponentType": "FileDownload",
+      "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
         {
           "ComponentType": "DirectoryCreate",
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/livelog/releases/download/v1.1.0/livelog-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/livelog/releases/download/v1.1.0/livelog-windows-386.exe",
       "Target": "C:\\generic-worker\\livelog.exe"
     },
     {
@@ -477,7 +509,7 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe"
+          "C:\\nssm-2.24-103-gdee49fc\\win32\\nssm.exe"
         ]
       }
     },
@@ -489,7 +521,7 @@
         "install",
         "service",
         "--nssm",
-        "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe",
+        "C:\\nssm-2.24-103-gdee49fc\\win32\\nssm.exe",
         "--config",
         "C:\\generic-worker\\generic-worker.config"
       ],
@@ -499,7 +531,7 @@
           "ComponentName": "GenericWorkerDownload"
         },
         {
-          "ComponentType": "FileDownload",
+          "ComponentType": "ChecksumFileDownload",
           "ComponentName": "LiveLogDownload"
         },
         {
@@ -544,18 +576,6 @@
       "Target": "C:\\generic-worker\\disable-desktop-interrupt.reg"
     },
     {
-      "ComponentName": "SetDefaultPrinter",
-      "ComponentType": "ChecksumFileDownload",
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ],
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/SetDefaultPrinter.ps1",
-      "Target": "C:\\generic-worker\\SetDefaultPrinter.ps1"
-    },
-    {
       "ComponentName": "GenericWorkerStateWait",
       "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
@@ -570,19 +590,6 @@
       ],
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker-format-and-reboot.bat",
       "Target": "C:\\generic-worker\\run-generic-worker.bat"
-    },
-    {
-      "ComponentName": "TaskUserInitScript",
-      "ComponentType": "ChecksumFileDownload",
-      "Comment": "Bug 1261188 - initialisation script for new task users",
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/task-user-init-win10.cmd",
-      "Target": "C:\\generic-worker\\task-user-init.cmd",
-      "DependsOn": [
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "GenericWorkerDirectory"
-        }
-      ]
     },
     {
       "ComponentName": "PipConfDirectory",
@@ -733,6 +740,15 @@
       "Name": "TOOLTOOL_CACHE",
       "Value": "y:\\tooltool-cache",
       "Target": "Machine"
+    },
+    {
+      "ComponentName": "ngen_executeQueuedItems",
+      "ComponentType": "CommandRun",
+      "Comment": "https://blogs.msdn.microsoft.com/dotnet/2013/08/06/wondering-why-mscorsvw-exe-has-high-cpu-usage-you-can-speed-it-up",
+      "Command": "c:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\ngen.exe",
+      "Arguments": [
+        "executeQueuedItems"
+      ]
     },
     {
       "ComponentName": "CarbonClone",
@@ -963,8 +979,8 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\Program Files (x86)\\Mozilla Maintenance Service\\maintenanceservice.exe",
-          "C:\\Program Files (x86)\\Mozilla Maintenance Service\\Uninstall.exe"
+          "C:\\Program Files\\Mozilla Maintenance Service\\maintenanceservice.exe",
+          "C:\\Program Files\\Mozilla Maintenance Service\\Uninstall.exe"
         ]
       }
     },
@@ -1152,81 +1168,6 @@
       "LocalPort": 1688,
       "Direction": "Outbound",
       "Action": "Allow"
-    },
-    {
-      "ComponentName": "DisableFirewall",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1358301 - Disable Windows Firewall",
-      "Command": "netsh",
-      "Arguments": [
-        "advfirewall",
-        "set",
-        "allprofiles",
-        "state",
-        "off"
-      ]
-    },
-    {
-      "ComponentName": "NvidiaK520DriverPackage",
-      "ComponentType": "ExeInstall",
-      "Comment": "Required for hardware acceleration on EC2 g2 (GPU) instances. http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/accelerated-computing-instances.html#install-nvidia-driver-windows",
-      "Url": "http://uk.download.nvidia.com/Windows/Quadro_Certified/GRID/369.95/369.95-quadro-grid-desktop-notebook-win10-64bit-international-whql.exe",
-      "Arguments": [
-        "/s"
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\NVIDIA\\369.95\\setup.exe"
-        ]
-      },
-      "sha512": "7fd87a38e5eb760e49bd136d238ec8983a9cdacc1dfc67334c1033f887aab3c8592156a7f876de7c8938279008848ff755ec478aab9c1218f7879ca6758e29f2"
-    },
-    {
-      "ComponentName": "NvidiaK520DriverInstall",
-      "ComponentType": "CommandRun",
-      "Comment": "Required for hardware acceleration on EC2 g2 (GPU) instances. http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/accelerated-computing-instances.html#install-nvidia-driver-windows",
-      "Command": "C:\\NVIDIA\\369.95\\setup.exe",
-      "Arguments": [
-        "/s"
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Program Files\\NVIDIA Corporation\\license.txt"
-        ]
-      },
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "NvidiaK520DriverPackage"
-        }
-      ]
-    },
-    {
-      "ComponentName": "DevconInstall",
-      "ComponentType": "FileDownload",
-      "Comment": "Bug 1366288 - used to disable BasicDisplay adapter",
-      "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/devcon/x86_64/devcon.exe",
-      "Target": "C:\\Windows\\System32\\devcon.exe"
-    },
-    {
-      "ComponentName": "DisableBasicDisplay",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1366288 - used to disable BasicDisplay adapter",
-      "Command": "C:\\Windows\\System32\\devcon.exe",
-      "Arguments": [
-        "disable",
-        "*VEN_1013"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "FileDownload",
-          "ComponentName": "DevconInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "NvidiaK520DriverInstall"
-        }
-      ]
     }
   ]
 }
