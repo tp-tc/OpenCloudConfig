@@ -793,7 +793,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 8.2.0"
+            "Match": "generic-worker 10.0.4"
           }
         ]
       }
