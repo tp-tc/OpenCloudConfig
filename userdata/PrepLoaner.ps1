@@ -191,19 +191,19 @@ function Remove-GenericWorker {
         Write-Log -message ('{0} :: registry entry: {1}\{2}, deleted.' -f $($MyInvocation.MyCommand.Name), $path, $name) -severity 'INFO'
       }
     }
-    $gwuser = 'GenericWorker'
-    if (@(Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq $gwuser }).length -gt 0) {
-      Start-Process 'logoff' -ArgumentList @((((quser /server:. | ? { $_ -match $gwuser }) -split ' +')[2]), '/server:.') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-logoff.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $gwuser) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-logoff.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $gwuser)
-      Start-Process 'net' -ArgumentList @('user', $gwuser, '/DELETE') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $gwuser) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $gwuser)
-      Write-Log -message ('{0} :: user: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $gwuser) -severity 'INFO'
-    }
-    if (Test-Path -Path ('{0}\Users\{1}' -f $env:SystemDrive, $gwuser) -ErrorAction SilentlyContinue) {
-      Remove-Item ('{0}\Users\{1}' -f $env:SystemDrive, $gwuser) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
-      Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), ('{0}\Users\{1}' -f $env:SystemDrive, $gwuser)) -severity 'INFO'
-    }
-    if (Test-Path -Path ('{0}\Users\{1}*' -f $env:SystemDrive, $gwuser) -ErrorAction SilentlyContinue) {
-      Remove-Item ('{0}\Users\{1}*' -f $env:SystemDrive, $gwuser) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
-      Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), ('{0}\Users\{1}*' -f $env:SystemDrive, $gwuser)) -severity 'INFO'
+    $taskUsers = @(Get-WMiObject -class Win32_UserAccount | Where { (($_.Name -eq 'GenericWorker') -or ($_.Name.StartsWith('task_'))) })
+    foreach ($taskUser in $taskUsers) {
+      Start-Process 'logoff' -ArgumentList @((((quser /server:. | ? { $_ -match $taskUser.Name}) -split ' +')[2]), '/server:.') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-logoff.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskUser) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-logoff.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskUser)
+      Start-Process 'net' -ArgumentList @('user', $taskUser.Name, '/DELETE') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskUser) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskUser)
+      Write-Log -message ('{0} :: user: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $taskUser.Name) -severity 'INFO'
+      if (Test-Path -Path ('{0}\Users\{1}' -f $env:SystemDrive, $taskUser.Name) -ErrorAction SilentlyContinue) {
+        Remove-Item ('{0}\Users\{1}' -f $env:SystemDrive, $taskUser.Name) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+        Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), ('{0}\Users\{1}' -f $env:SystemDrive, $taskUser.Name)) -severity 'INFO'
+      }
+      if (Test-Path -Path ('{0}\Users\{1}*' -f $env:SystemDrive, $taskUser.Name) -ErrorAction SilentlyContinue) {
+        Remove-Item ('{0}\Users\{1}*' -f $env:SystemDrive, $taskUser.Name) -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+        Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), ('{0}\Users\{1}*' -f $env:SystemDrive, $taskUser.Name)) -severity 'INFO'
+      }
     }
   }
   end {
