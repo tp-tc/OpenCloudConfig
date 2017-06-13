@@ -240,6 +240,14 @@ for region in "${aws_copy_regions[@]}"; do
   done
 done
 
+# Overlay userdata/Configuration/GenericWorker/generic-worker.config on top of the generic-worker config section of the worker type definition.
+# Only required for generic worker version 10 and higher.
+# Once all workers are on generic-worker version 10 or higher, we can remove this hacky if statement (but keep the lines inside the if statement).
+if [ "$(cat OpenCloudConfig/userdata/Manifest/${tc_worker_type}.json | sed -n 's/.*generic-worker\/releases\/download\/v\([0-9]*\)\..*/\1/p')" -ge 10 ]; then
+  echo $(cat ${tc_worker_type}.json | jq '.secrets."generic-worker".config') $(cat OpenCloudConfig/userdata/Configuration/GenericWorker/generic-worker.config) | jq --slurp add > merged-gw-config.json
+  cat ${tc_worker_type}.json | jq --sort-keys --slurpfile 'gwconfig' merged-gw-config.json '.secrets."generic-worker".config=$gwconfig[0]' > .${tc_worker_type}.json && rm ${tc_worker_type}.json && mv .${tc_worker_type}.json ${tc_worker_type}.json
+fi
+
 cat ./${tc_worker_type}.json | curl --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ./update-response.json
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] worker type updated: https://tools.taskcluster.net/aws-provisioner/#${tc_worker_type}/view"
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] active amis (post-update): $(curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq -c '[.regions[] | {region: .region, ami: .launchSpec.ImageId}]')"
