@@ -155,7 +155,7 @@
       "ComponentName": "Vnc_In",
       "ComponentType": "FirewallRule",
       "Protocol": "TCP",
-      "LocalPort": 5800,
+      "LocalPort": 5900,
       "Direction": "Inbound",
       "Action": "Allow"
     },
