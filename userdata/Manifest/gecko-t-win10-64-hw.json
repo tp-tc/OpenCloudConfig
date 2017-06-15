@@ -29,6 +29,19 @@
       ]
     },
     {
+      "ComponentName": "NxLogPaperTrailConfiguration",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/hw-win10.conf",
+      "Target": "C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf",
+      "DependsOn": [
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "PaperTrailEncryptionCertificate"
+        }
+      ]
+    },
+    {
       "ComponentName": "Start_nxlog",
       "ComponentType": "ServiceControl",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
@@ -37,8 +50,8 @@
       "State": "Running",
       "DependsOn": [
         {
-          "ComponentType": "MsiInstall",
-          "ComponentName": "NxLog"
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "NxLogPaperTrailConfiguration"
         }
       ]
     },
