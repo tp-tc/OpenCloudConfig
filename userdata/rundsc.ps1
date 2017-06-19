@@ -148,7 +148,8 @@ function Remove-LegacyStuff {
     [string[]] $services = @(
       'puppet',
       'uvnc_service',
-      'Apache2.2'
+      'Apache2.2',
+      'ViscosityService'
     ),
     [string[]] $scheduledTasks = @(
       'Disable_maintain',
