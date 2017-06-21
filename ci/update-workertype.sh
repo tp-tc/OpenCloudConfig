@@ -94,7 +94,7 @@ case "${tc_worker_type}" in
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
-    aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
+    aws_copy_regions=('us-east-1' 'us-east-2' 'eu-central-1')
     ;;
   gecko-t-win10*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win10-64-base-*'}
