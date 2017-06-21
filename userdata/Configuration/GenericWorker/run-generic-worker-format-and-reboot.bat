@@ -2,7 +2,7 @@
 
 if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-worker\disable-desktop-interrupt.reg
 if exist C:\generic-worker\SetDefaultPrinter.ps1 powershell -NoLogo -file C:\generic-worker\SetDefaultPrinter.ps1 -WindowStyle hidden -NoProfile -ExecutionPolicy bypass
-if exist C:\Windows\System32\fakemon.vbs cscript C:\Windows\System32\fakemon.vbs
+if exist C:\Windows\System32\fakemon.vbs cscript C:\Windows\System32\fakemon.vbs > C:\log\fakemon-stdout.log 2> C:\log\fakemon-stderr.log
 
 :CheckForStateFlag
 if exist C:\dsc\task-claim-state.valid goto RunWorker
