@@ -130,11 +130,6 @@ if (-not (Is-Loaner)) {
       Write-Log -message ('process priority for generic worker altered from {0} to {1}.' -f $priorityClass, $gwProcess.PriorityClass) -severity 'INFO'
     }
   }
-  if ([IO.Directory]::GetFiles('C:\log', '*.zip').Count -gt 10) {
-    Write-Log -message 'instance appears to be boot-looping and will be halted.' -severity 'ERROR'
-    & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: boot-loop detected', '-f', '-d', 'p:4:1')
-  }
-
   if (Test-Path -Path 'y:\' -ErrorAction SilentlyContinue) {
     if (-not (Test-Path -Path 'y:\hg-shared' -ErrorAction SilentlyContinue)) {
       New-Item -Path 'y:\hg-shared' -ItemType directory -force
