@@ -365,7 +365,7 @@
       "ComponentName": "Intel_DATACENTER_Driver_Install",
       "ComponentType": "CommandRun",
       "Comment": "Intel Graphic driver install",
-      "Command": "C:\\dsc\\Intel\\intel32bit\\win32_Intel\\setup.exe", 
+      "Command": "C:\\dsc\\Intel\\setup.exe", 
       "Arguments": [
 				"-s",
 				"-overwrite"
