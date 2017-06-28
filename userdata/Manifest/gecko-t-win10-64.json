@@ -1127,6 +1127,12 @@
       "LocalPort": 1688,
       "Direction": "Outbound",
       "Action": "Allow"
+    },
+    {
+      "ComponentName": "nircmd",
+      "ComponentType": "FileDownload",
+      "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/nircmd/nircmd.exe",
+      "Target": "C:\\Windows\\System32\\nircmd.exe"
     }
   ]
 }
