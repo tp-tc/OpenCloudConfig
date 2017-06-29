@@ -1136,6 +1136,12 @@
       "ComponentType": "FileDownload",
       "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/nircmd/nircmd.exe",
       "Target": "C:\\Windows\\System32\\nircmd.exe"
+    },
+    {
+      "ComponentName": "nircmdc",
+      "ComponentType": "FileDownload",
+      "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/nircmd/nircmdc.exe",
+      "Target": "C:\\Windows\\System32\\nircmdc.exe"
     }
   ]
 }
