@@ -5,11 +5,13 @@ if exist C:\generic-worker\SetDefaultPrinter.ps1 powershell -NoLogo -file C:\gen
 if exist C:\Windows\System32\fakemon.vbs cscript C:\Windows\System32\fakemon.vbs > C:\log\fakemon-stdout.log 2> C:\log\fakemon-stderr.log
 
 :CheckForStateFlag
+if exist Z:\loan goto End
 if exist C:\dsc\task-claim-state.valid goto RunWorker
 timeout /t 1 >nul
 goto CheckForStateFlag
 
 :RunWorker
+if exist Z:\loan goto End
 del /Q /F C:\dsc\task-claim-state.valid
 pushd %~dp0
 set errorlevel=
@@ -28,6 +30,7 @@ rem shutdown /s /t 0 /f /c "Killing worker, as generic worker crashed or had a p
 goto End
 
 :FormatAndReboot
+if exist Z:\loan goto End
 format Z: /fs:ntfs /v:"task" /q /y
 <nul (set/p z=) >C:\dsc\task-claim-state.valid
 shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
