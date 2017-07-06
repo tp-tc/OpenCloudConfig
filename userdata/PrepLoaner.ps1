@@ -110,7 +110,7 @@ function Remove-UserAppData {
     Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
   process {
-    Get-ChildItem ('{0}\Users' -f $env:SystemDrive) | ? { $_.PSIsContainer -and -not @('Default', 'Public').Contains($_.Name) } | Select-Object FullName | % {
+    Get-ChildItem ('{0}\Users' -f $env:SystemDrive) | ? { $_.PSIsContainer -and -not @('Default', 'Public', 'Administrator').Contains($_.Name) } | Select-Object FullName | % {
       $appData = ('{0}\AppData' -f $_.FullName)
       foreach ($appdataProfile in @('Local', 'Roaming')) {
         Get-ChildItem ('{0}\{1}' -f $appData, $appdataProfile) | Select-Object FullName | % {
@@ -345,10 +345,8 @@ $token = [Guid]::NewGuid()
 $publicIP = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4')
 "host: $publicIP`n" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8'
 "root username: $rootUsername`nroot password: $rootPassword`n" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
-"worker username: $workerUsername`nworker password: $workerPassword`n" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
-"`nremote desktop from Linux (en-US keyboard):`nxfreerdp /u:$rootUsername /p:'$rootPassword' /kbd:409 /w:1024 /h:768 +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
-"`nremote desktop from Linux (en-GB keyboard):`nxfreerdp /u:$rootUsername /p:'$rootPassword' /kbd:809 /w:1024 /h:768 +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
-"`nremote desktop from Windows:`nmstsc /w:1024 /h:768 /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
+"`nremote desktop from Linux:`nxfreerdp /u:$rootUsername /p:'$rootPassword' /kbd:${XFR_K:-409} /w:${XFR_W:-1600} /h:${XFR_H:-1200} +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
+"`nremote desktop from Windows:`nmstsc /w:1600 /h:1200 /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
 (New-Object Net.WebClient).DownloadFile($loanRequestPublicKeyUrl, ('{0}\{1}.asc' -f $artifactsPath, $token))
 $tempKeyring = ('{0}.gpg' -f $token)
 Start-Process $gpg -ArgumentList @('--no-default-keyring', '--keyring', $tempKeyring, '--fingerprint') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\gpg-create-keyring.stdout.log' -f $artifactsPath) -RedirectStandardError ('{0}\gpg-create-keyring.stderr.log' -f $artifactsPath)

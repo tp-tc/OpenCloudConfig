@@ -810,6 +810,17 @@ if ($rebootReasons.length) {
         Enable-PSRemoting -Force
       }
       'Microsoft Windows 10*' {
+        if ($workerType.Contains('-gpu')) {
+          # .net 3.5 required for configmymonitor display settings
+          try {
+            Add-WindowsCapability -Online -Name NetFx3~~~~
+            Write-Log -message '.net framework 3.5 installed.' -severity 'INFO'
+          }
+          catch {
+            Write-Log -message ('.net framework 3.5 install failed. {0}' -f $_.Exception.Message) -severity 'ERROR'
+          }
+          
+        }
         # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
         ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) }
         # this setting persists only for the current session
