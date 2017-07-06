@@ -362,6 +362,27 @@
       ]
     },
     {
+      "ComponentName": "Intel_DATACENTER_Driver_Install",
+      "ComponentType": "CommandRun",
+      "Comment": "Intel Graphic driver install",
+      "Command": "C:\\dsc\\Intel\\setup.exe", 
+      "Arguments": [
+				"-s",
+				"-overwrite"
+			],
+      "DependsOn": [
+      	{
+        	"ComponentName": "Intel_DATACENTER_Driver"
+	      }      
+      ],		
+     "Validate": {
+        "PathsExist": [
+          "C:\\Program Files\\Intel\\Media Resource\\igd11dxva32.dll",
+          "C:\\Program Files\\Intel\\Media SDK\\c_w7_32.cpa"
+        ]
+      }
+    },  
+    {
       "ComponentName": "Windows SDK",
       "ComponentType": "ExeInstall",
       "Comment": "This SDK includes Windows toolkit https://bugzilla.mozilla.org/show_bug.cgi?id=1338661",
