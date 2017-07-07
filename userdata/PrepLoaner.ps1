@@ -358,7 +358,7 @@ Move-Item -Path ('{0}\{1}.txt.gpg' -f $env:Temp, $token) -Destination ('{0}\cred
 & 'icacls' @($artifactsPath, '/grant', 'Everyone:(OI)(CI)F')
 Write-Log -message 'credentials encrypted in task artefacts' -severity 'DEBUG'
 Write-Log -message 'waiting for loan request task to complete' -severity 'DEBUG'
-while ((Test-Path $loanRequestTaskFolder -ErrorAction SilentlyContinue)) {
+while ((Test-Path -Path ('{0}\public\logs\live.log' -f $loanRequestTaskFolder) -ErrorAction SilentlyContinue)) {
   Start-Sleep 1
 }
 New-ItemProperty -Path $loanRegPath -PropertyType String -Name 'Fulfilled' -Value ((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:sszzz')) -Force | Out-Null
