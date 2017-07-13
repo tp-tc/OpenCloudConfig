@@ -345,7 +345,8 @@ $token = [Guid]::NewGuid()
 $publicIP = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4')
 "host: $publicIP`n" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8'
 "root username: $rootUsername`nroot password: $rootPassword`n" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
-"`nremote desktop from Linux:`nxfreerdp /u:$rootUsername /p:'$rootPassword' /kbd:${XFR_K:-409} /w:${XFR_W:-1600} /h:${XFR_H:-1200} +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
+$bashArgs = '/kbd:${XFR_K:-409} /w:${XFR_W:-1600} /h:${XFR_H:-1200}'
+"`nremote desktop from Linux:`nxfreerdp /u:$rootUsername /p:'$rootPassword' $bashArgs +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
 "`nremote desktop from Windows:`nmstsc /w:1600 /h:1200 /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
 (New-Object Net.WebClient).DownloadFile($loanRequestPublicKeyUrl, ('{0}\{1}.asc' -f $artifactsPath, $token))
 $tempKeyring = ('{0}.gpg' -f $token)
