@@ -1189,28 +1189,6 @@
       "LocalPort": 1688,
       "Direction": "Outbound",
       "Action": "Allow"
-    },
-    {
-      "ComponentName": "jqInstall",
-      "ComponentType": "FileDownload",
-      "Source": "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-win64.exe",
-      "Target": "C:\\Windows\\System32\\jq.exe"
-    },
-    {
-      "ComponentName": "UpdateWorkerId",
-      "ComponentType": "CommandRun",
-      "Command": "C:\\Windows\\System32\\jq.exe",
-      "Arguments": [
-        "\". | .workerId=%COMPUTERNAME%\"",
-        "C:\\generic-worker\\generic-worker.config",
-        ">C:\\generic-worker\\generic-worker.config"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "FileDownload",
-          "ComponentName": "jqInstall"
-        }
-      ]
     }
   ]
 }
