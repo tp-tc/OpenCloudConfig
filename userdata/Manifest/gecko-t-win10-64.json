@@ -1139,6 +1139,16 @@
       "ComponentType": "FileDownload",
       "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/nircmd/nircmdc.exe",
       "Target": "C:\\Windows\\System32\\nircmdc.exe"
+    },
+    {
+      "ComponentName": "AssocTxtfileNotepad",
+      "ComponentType": "CommandRun",
+      "Comment": "Bug 1373551 - associate text files with notepad",
+      "Command": "ftype",
+      "Arguments": [
+        "txtfile=\"C:\\Windows\\System32\\Notepad.exe\"",
+        "\"%1\""
+      ]
     }
   ]
 }
