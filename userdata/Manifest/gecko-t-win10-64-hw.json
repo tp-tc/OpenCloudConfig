@@ -1202,7 +1202,7 @@
       "Command": "C:\\Windows\\System32\\jq.exe",
       "Arguments": [
         "\". | .workerId=%COMPUTERNAME%\"",
-        "C:\\generic-worker\\file-without-worker-id.config",
+        "C:\\generic-worker\\generic-worker.config",
         ">C:\\generic-worker\\generic-worker.config"
       ],
       "DependsOn": [
