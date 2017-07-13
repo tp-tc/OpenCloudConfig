@@ -86,7 +86,7 @@ case "${tc_worker_type}" in
     aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
     ;;
   gecko-t-win10-64-gpu*)
-    aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win10-64-base-*'}
+    aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win10-64-gpu-base-1703-*'}
     aws_instance_type=${aws_instance_type:='g2.2xlarge'}
     aws_instance_hdd_size=${aws_instance_hdd_size:=120}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
