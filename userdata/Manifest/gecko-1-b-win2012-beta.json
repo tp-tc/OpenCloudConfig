@@ -1134,6 +1134,10 @@
         {
           "ComponentType": "CommandRun",
           "ComponentName": "NSSMInstall"
+        },
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "GenericWorkerCreateOpenPGPKey"
         }
       ],
       "Validate": {
@@ -1149,6 +1153,27 @@
             ],
             "Match": "generic-worker 10.1.2"
           }
+        ]
+      }
+    },
+    {
+      "ComponentName": "GenericWorkerCreateOpenPGPKey",
+      "ComponentType": "CommandRun",
+      "Command": "C:\\generic-worker\\generic-worker.exe",
+      "Arguments": [
+        "new-openpgp-keypair",
+        "--file",
+        "C:\\generic-worker\\generic-worker-gpg-signing-key.key"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "GenericWorkerDownload"
+        }
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\generic-worker\\generic-worker-gpg-signing-key.key"
         ]
       }
     },
