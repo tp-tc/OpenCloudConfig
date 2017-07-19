@@ -1241,8 +1241,14 @@
       "Comment": "required by firefox builds",
       "Command": "C:\\Program Files\\Mercurial\\hg.exe",
       "Arguments": [
-        "clone",
-        "-U",
+        "robustcheckout",
+        "--sharebase",
+        "Y:\\hg-shared",
+        "--purge",
+        "--upstream",
+        "https://hg.mozilla.org/mozilla-unified",
+        "--branch",
+        "default",
         "https://hg.mozilla.org/mozilla-central",
         "C:\\builds\\hg-shared\\mozilla-central"
       ],
@@ -1254,6 +1260,10 @@
         {
           "ComponentType": "DirectoryCreate",
           "ComponentName": "LegacyHgShared"
+        },
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "HgShared"
         }
       ],
       "Validate": {
@@ -1261,23 +1271,6 @@
           "C:\\builds\\hg-shared\\mozilla-central\\.hg"
         ]
       }
-    },
-    {
-      "ComponentName": "MozillaCentralCacheUpdate",
-      "ComponentType": "CommandRun",
-      "Comment": "keeps the cache up to date on subsequent runs/reboots",
-      "Command": "C:\\Program Files\\Mercurial\\hg.exe",
-      "Arguments": [
-        "pull",
-        "-R",
-        "C:\\builds\\hg-shared\\mozilla-central"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "MozillaCentralCacheCreate"
-        }
-      ]
     },
     {
       "ComponentName": "CarbonClone",
