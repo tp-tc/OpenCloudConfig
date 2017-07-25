@@ -1242,6 +1242,22 @@
         "txtfile=\"C:\\Windows\\System32\\Notepad.exe\"",
         "\"%1\""
       ]
+    },
+    {
+     "ComponentName": "UltraVNC",
+      "ComponentType": "MsiInstall",
+      "Comment": "VNC Server - not essential for building firefox",
+      "Url": "https://s3.amazonaws.com/windows-opencloudconfig-packages/UltraVnc/UltraVnc_10962_x64.msi",
+      "Name": "UltraVnc",
+      "ProductId": "8C5C331A-97D6-46DE-BFF4-8424BD06A888"
+    },
+    {
+      "ComponentName": "Vnc_In",
+      "ComponentType": "FirewallRule",
+      "Protocol": "TCP",
+      "LocalPort": 5900,
+      "Direction": "Inbound",
+      "Action": "Allow"
     }
   ]
 }
