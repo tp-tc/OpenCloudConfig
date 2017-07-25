@@ -147,7 +147,6 @@ function Remove-LegacyStuff {
     ),
     [string[]] $services = @(
       'puppet',
-      'uvnc_service',
       'Apache2.2',
       'ViscosityService'
     ),
@@ -706,7 +705,7 @@ if ($locationType -ne 'DataCenter') {
   Write-Log -message ('availabilityZone: {0}, dnsRegion: {1}.' -f $az, $dnsRegion) -severity 'INFO'
 
   # if importing releng amis, do a little housekeeping
-  switch -wildcard ($workerType.Replace('loan-', 'gecko-')) {
+  switch -wildcard ($workerType) {
     'gecko-t-win7-*' {
       $runDscOnWorker = $false
       $renameInstance = $true
