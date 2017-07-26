@@ -1,8 +1,8 @@
 @echo off
 
-move C:\generic-worker\generic-worker.config C:\generic-worker\generic-worker.json
-cat C:\generic-worker\generic-worker.json | jq ".  | .workerId=\"%COMPUTERNAME%\"" > C:\generic-worker\generic-worker.config
-del C:\generic-worker\generic-worker.json
+
+cat C:\generic-worker\master-generic-worker.json | jq ".  | .workerId=\"%COMPUTERNAME%\"" > C:\generic-worker\generic-worker.config
+
 if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-worker\disable-desktop-interrupt.reg
 
 :CheckForStateFlag
