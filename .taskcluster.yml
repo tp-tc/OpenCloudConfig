@@ -31,7 +31,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && cd OpenCloudConfig && git checkout {{event.head.repo.branch}} && echo "do lint stuff here"'
+              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/validate.sh'
       metadata:
           name: 'Validate submission (not implemented)'
           description: 'todo: run a linter against json and powershell files'
