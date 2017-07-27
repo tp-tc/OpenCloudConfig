@@ -31,10 +31,10 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/validate.sh'
+              - 'git clone --quiet {{event.head.repo.url}} && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig fetch && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig checkout {{event.head.repo.branch}} && ./OpenCloudConfig/ci/validate.sh'
       metadata:
-          name: 'Validate submission (not implemented)'
-          description: 'todo: run a linter against json and powershell files'
+          name: 'Validate submission'
+          description: 'run a linter against json (and todo: powershell) files'
           owner: '{{event.head.user.email}}'
           source: '{{event.head.repo.url}}'
 
