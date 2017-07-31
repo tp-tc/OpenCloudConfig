@@ -139,7 +139,7 @@ function Remove-GenericWorker {
       Write-Log -message ('{0} :: attempting to stop running generic-worker service.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
       $gwService | Stop-Service -Force -WarningAction SilentlyContinue
       while((Get-Service -Name 'Generic Worker' -ErrorAction SilentlyContinue).State -ne 'Stopped') {
-        Write-Log -message ('{0} :: waiting for stopped state on generic-worker service.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+        Write-Log -message ('{0} :: waiting for stopped state on generic-worker service. current state: {1}.' -f $($MyInvocation.MyCommand.Name), (Get-Service -Name 'Generic Worker' -ErrorAction SilentlyContinue).State) -severity 'DEBUG'
         Start-Sleep -Seconds 2
       }
       Write-Log -message ('{0} :: generic-worker service stopped.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
