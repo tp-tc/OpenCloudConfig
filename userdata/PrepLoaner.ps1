@@ -348,6 +348,7 @@ if ("${env:ProgramFiles(x86)}") {
 $artifactsPath = 'z:\loan'
 if (-not (Test-Path $artifactsPath -ErrorAction SilentlyContinue)) {
   New-Item -Path $artifactsPath -ItemType directory -force
+  & 'icacls.exe' @($artifactsPath, '/grant', 'Everyone:(OI)(CI)F')
 }
 $token = [Guid]::NewGuid()
 $publicIP = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4')
