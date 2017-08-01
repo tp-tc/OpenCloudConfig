@@ -136,19 +136,24 @@ function Remove-GenericWorker {
   process {
     $gwService = (Get-Service -Name 'Generic Worker' -ErrorAction SilentlyContinue)
     if (($gwService) -and ($gwService.Status -eq 'Running')) {
-      Write-Log -message ('{0} :: attempting to stop running generic-worker service.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
-      $gwService | Stop-Service -Force -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
-      while((Get-Service -Name 'Generic Worker' -ErrorAction SilentlyContinue).State -ne 'Stopped') {
-        Write-Log -message ('{0} :: waiting for stopped state on generic-worker service. current state: {1}.' -f $($MyInvocation.MyCommand.Name), (Get-Service -Name 'Generic Worker' -ErrorAction SilentlyContinue).State) -severity 'DEBUG'
-        Start-Sleep -Seconds 2
+      try {
+        Write-Log -message ('{0} :: attempting to stop running generic-worker service.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+        $gwService | Stop-Service -Force -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
+        while((Get-Service -Name 'Generic Worker' -ErrorAction SilentlyContinue).State -ne 'Stopped') {
+          Write-Log -message ('{0} :: waiting for stopped state on generic-worker service. current state: {1}.' -f $($MyInvocation.MyCommand.Name), (Get-Service -Name 'Generic Worker' -ErrorAction SilentlyContinue).State) -severity 'DEBUG'
+          Start-Sleep -Seconds 2
+        }
+        Write-Log -message ('{0} :: generic-worker service stopped.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+        (Get-WmiObject -Class Win32_Service -Filter "Name='Generic Worker'").delete()
+        $gwService = (Get-Service -Name 'Generic Worker' -ErrorAction SilentlyContinue)
+        if ($gwService) {
+          Write-Log -message ('{0} :: failed to delete generic-worker service. current state: {1}.' -f $($MyInvocation.MyCommand.Name), $gwService.Status) -severity 'ERROR'
+        } else {
+          Write-Log -message ('{0} :: generic-worker service deleted.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+        }
       }
-      Write-Log -message ('{0} :: generic-worker service stopped.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-      (Get-WmiObject -Class Win32_Service -Filter "Name='Generic Worker'").delete()
-      $gwService = (Get-Service -Name 'Generic Worker' -ErrorAction SilentlyContinue)
-      if ($gwService) {
-        Write-Log -message ('{0} :: failed to delete generic-worker service. current state: {1}.' -f $($MyInvocation.MyCommand.Name), $gwService.Status) -severity 'ERROR'
-      } else {
-        Write-Log -message ('{0} :: generic-worker service deleted.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+      catch {
+        Write-Log -message ('{0} :: failed to stop generic-worker service. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
       }
     }
     $gwProcess = (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })
