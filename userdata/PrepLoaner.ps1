@@ -349,6 +349,9 @@ $artifactsPath = 'z:\loan'
 if (-not (Test-Path $artifactsPath -ErrorAction SilentlyContinue)) {
   New-Item -Path $artifactsPath -ItemType directory -force
   & 'icacls.exe' @($artifactsPath, '/grant', 'Everyone:(OI)(CI)F')
+  if (Test-Path $artifactsPath -ErrorAction SilentlyContinue) {
+    Write-Log -message ('artifact path: {0} created' -f $artifactsPath) -severity 'DEBUG'
+  }
 }
 $token = [Guid]::NewGuid()
 $publicIP = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-ipv4')
