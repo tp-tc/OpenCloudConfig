@@ -291,6 +291,68 @@ function Remove-LegacyStuff {
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
+function Mount-DiskOne {
+  param (
+    [string] $lock = 'C:\dsc\in-progress.lock'
+  )
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    if ((Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) {
+      Write-Log -message ('{0} :: skipping disk mount (drives y: and z: already exist).' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+    } else {
+      $pagefileName = $false
+      Get-WmiObject Win32_PagefileSetting | ? { !$_.Name.StartsWith('c:') } | % {
+        $pagefileName = $_.Name
+        try {
+          $_.Delete()
+          Write-Log -message ('{0} :: page file: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $pagefileName) -severity 'INFO'
+        }
+        catch {
+          Write-Log -message ('{0} :: failed to delete page file: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $pagefileName, $_.Exception.Message) -severity 'ERROR'
+        }
+      }
+      if ($pagefileName) {
+        Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+        & shutdown @('-r', '-t', '0', '-c', ('page file {0} removed' -f $pagefileName), '-f', '-d', 'p:4:1')
+      }
+      try {
+        Clear-Disk -Number 1 -RemoveData -Confirm:$false
+        Write-Log -message ('{0} :: disk 1 partition table cleared.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+      }
+      catch {
+        Write-Log -message ('{0} :: failed to clear partition table on disk 1. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+      }
+      try {
+        Initialize-Disk -Number 1 -PartitionStyle MBR
+        Write-Log -message ('{0} :: disk 1 initialized.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+      }
+      catch {
+        Write-Log -message ('{0} :: failed to initialize disk 1. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+      }
+      try {
+        New-Partition -DiskNumber 1 -Size 20GB -DriveLetter Y
+        Format-Volume -FileSystem NTFS -NewFileSystemLabel cache -DriveLetter Y -Confirm:$false
+        Write-Log -message ('{0} :: cache drive Y: formatted.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+      }
+      catch {
+        Write-Log -message ('{0} :: failed to format cache drive Y:. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+      }
+      try {
+        New-Partition -DiskNumber 1 -UseMaximumSize -DriveLetter Z
+        Format-Volume -FileSystem NTFS -NewFileSystemLabel task -DriveLetter Z -Confirm:$false
+        Write-Log -message ('{0} :: task drive Z: formatted.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+      }
+      catch {
+        Write-Log -message ('{0} :: failed to format task drive Z:. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+      }
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+}
 function Map-DriveLetters {
   param (
     [hashtable] $driveLetterMap = @{
@@ -724,6 +786,16 @@ if ($locationType -ne 'DataCenter') {
         Remove-LegacyStuff -logFile $logFile
         Set-Credentials -username 'Administrator' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
       }
+      Map-DriveLetters
+    }
+    'gecko-1-b-win2012-beta' {
+      $runDscOnWorker = $true
+      $renameInstance = $true
+      $setFqdn = $true
+      if (-not ($isWorker)) {
+        Set-Credentials -username 'Administrator' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
+      }
+      Mount-DiskOne -lock $lock
       Map-DriveLetters
     }
     default {
