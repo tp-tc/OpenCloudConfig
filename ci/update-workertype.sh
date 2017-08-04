@@ -108,15 +108,15 @@ case "${tc_worker_type}" in
     block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
   gecko-[123]-b-win2012-beta)
-    aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_Server-2012-R2_RTM-English-64Bit-Base*'}
+    aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-base-*'}
     aws_instance_type=${aws_instance_type:='c4.4xlarge'}
-    aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners amazon --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
+    aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko experimental builder for Windows; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
     aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
-    block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":120,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdb","Ebs":{"VolumeSize":120,"DeleteOnTermination":true}}]'
+    block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":40,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdb","Ebs":{"VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
   gecko-[123]-b-win2012*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-base-*'}
@@ -186,7 +186,7 @@ while [ -z "$aws_ami_id" ]; do
   # if we are dynamically adding the y: and z: ebs volume, detach and discard it before capturing ami.
   if [[ $block_device_mappings == *"/dev/sdb"* ]]; then
     dev_sdb_volume_id=$(aws ec2 describe-instances --region ${aws_region} --instance-id ${aws_instance_id} --query 'Reservations[*].Instances[*].BlockDeviceMappings[1].Ebs.VolumeId' --output text)
-    aws ec2 detach-volume --region ${aws_region} --device /dev/sdb --volume-id ${dev_sdb_volume_id}
+    aws ec2 detach-volume --region ${aws_region} --instance-id ${aws_instance_id} --device /dev/sdb --volume-id ${dev_sdb_volume_id}
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdb_volume_id} detached"
     aws ec2 delete-volume --region ${aws_region} --volume-id ${dev_sdb_volume_id}
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdb_volume_id} deleted"
