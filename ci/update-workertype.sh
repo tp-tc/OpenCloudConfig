@@ -244,7 +244,10 @@ done
 # Only required for generic worker version 10 and higher.
 # Once all workers are on generic-worker version 10 or higher, we can remove this hacky if statement (but keep the lines inside the if statement).
 if [ "$(cat OpenCloudConfig/userdata/Manifest/${tc_worker_type}.json | sed -n 's/.*generic-worker\/releases\/download\/v\([0-9]*\)\..*/\1/p')" -ge 10 ]; then
-  echo $(cat ${tc_worker_type}.json | jq '.secrets."generic-worker".config') $(cat OpenCloudConfig/userdata/Configuration/GenericWorker/generic-worker.config) | jq --slurp add > merged-gw-config.json
+  # Decide key runTasksAsCurrentUser based on whether worker type name ends in '-cu'
+  runTasksAsCurrentUser='false'
+  [ "${tc_worker_type:0,-3}" == '-cu' ] && runTasksAsCurrentUser='true'
+  echo $(cat ${tc_worker_type}.json | jq '.secrets."generic-worker".config') $(cat OpenCloudConfig/userdata/Configuration/GenericWorker/generic-worker.config | jq ".runTasksAsCurrentUser = ${runTasksAsCurrentUser}") | jq --slurp add > merged-gw-config.json
   cat ${tc_worker_type}.json | jq --sort-keys --slurpfile 'gwconfig' merged-gw-config.json '.secrets."generic-worker".config=$gwconfig[0]' > .${tc_worker_type}.json && rm ${tc_worker_type}.json && mv .${tc_worker_type}.json ${tc_worker_type}.json
 fi
 
