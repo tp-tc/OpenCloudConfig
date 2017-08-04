@@ -149,7 +149,7 @@ userdata=${userdata/ROOTPASSWORDTOKEN/$root_password}
 userdata=${userdata/WORKERPASSWORDTOKEN/$worker_password}
 
 curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq '.' > ./${tc_worker_type}-pre.json
-cat ./${tc_worker_type}-pre.json | jq --arg gwtasksdir $gw_tasks_dir --arg occmanifest $occ_manifest --arg deploydate "$(date --utc +"%F %T.%3NZ")" --arg awsinstancetype $aws_instance_type --arg deploymentId $aws_client_token --arg blockDeviceMappings $block_device_mappings -c 'del(.workerType, .lastModified) | .secrets."generic-worker".config.tasksDir = $gwtasksdir | .secrets."generic-worker".config.workerTypeMetadata."machine-setup".manifest = $occmanifest | .secrets."generic-worker".config.workerTypeMetadata."machine-setup"."ami-created" = $deploydate | .instanceTypes[].instanceType = $awsinstancetype | .instanceTypes[].launchSpec.BlockDeviceMappings = $blockDeviceMappings | .secrets."generic-worker".config.deploymentId = $deploymentId' > ./${tc_worker_type}.json
+cat ./${tc_worker_type}-pre.json | jq --arg gwtasksdir $gw_tasks_dir --arg occmanifest $occ_manifest --arg deploydate "$(date --utc +"%F %T.%3NZ")" --arg awsinstancetype $aws_instance_type --arg deploymentId $aws_client_token --argjson blockDeviceMappings $block_device_mappings -c 'del(.workerType, .lastModified) | .secrets."generic-worker".config.tasksDir = $gwtasksdir | .secrets."generic-worker".config.workerTypeMetadata."machine-setup".manifest = $occmanifest | .secrets."generic-worker".config.workerTypeMetadata."machine-setup"."ami-created" = $deploydate | .instanceTypes[].instanceType = $awsinstancetype | .instanceTypes[].launchSpec.BlockDeviceMappings = $blockDeviceMappings | .secrets."generic-worker".config.deploymentId = $deploymentId' > ./${tc_worker_type}.json
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] active amis (pre-update): $(cat ./${tc_worker_type}.json | jq -c '[.regions[] | {region: .region, ami: .launchSpec.ImageId}]')"
 
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] latest base ami for: ${aws_base_ami_search_term}, in region: ${aws_region}, is: ${aws_base_ami_id}"
@@ -187,7 +187,7 @@ while [ -z "$aws_ami_id" ]; do
   if [[ $block_device_mappings == *"/dev/sdb"* ]]; then
     dev_sdb_volume_id=$(aws ec2 describe-instances --region ${aws_region} --instance-id ${aws_instance_id} --query 'Reservations[*].Instances[*].BlockDeviceMappings[1].Ebs.VolumeId' --output text)
     aws ec2 detach-volume --region ${aws_region} --instance-id ${aws_instance_id} --device /dev/sdb --volume-id ${dev_sdb_volume_id}
-    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdb_volume_id} detached"
+    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdb_volume_id} detached from ${aws_instance_id} /dev/sdb"
     aws ec2 delete-volume --region ${aws_region} --volume-id ${dev_sdb_volume_id}
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdb_volume_id} deleted"
   fi
