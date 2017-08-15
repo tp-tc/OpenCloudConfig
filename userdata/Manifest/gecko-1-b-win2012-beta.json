@@ -568,22 +568,12 @@
     },
     {
       "ComponentName": "Mercurial",
-      "ComponentType": "ExeInstall",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1298976",
-      "Url": "https://www.mercurial-scm.org/release/windows/Mercurial-3.9.1-x64.exe",
-      "Arguments": [
-        "/SP-",
-        "/VERYSILENT",
-        "/NORESTART",
-        "/LOG=\"C:\\log\\Mercurial-3.9.1-x64.exe.install.log\""
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Program Files\\Mercurial\\hg.exe",
-          "C:\\Program Files\\Mercurial\\python27.dll"
-        ]
-      },
-      "sha512": "b71fd8f1d1e578bbd26b7bc6635d4a9d11320bce36f24ba44152cba3c02477006ab8d6fd9b06b263d11b4327713a048156d64bcbbb073d95eede0a53675a9a80"
+      "ComponentType": "MsiInstall",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1390310",
+      "Url": "https://www.mercurial-scm.org/release/windows/mercurial-4.3.1-x64.msi",
+      "Name": "Mercurial 4.3.1 (x64)",
+      "ProductId": "83036929-F1B7-411E-9AFA-E31742848AD4",
+      "sha512": "ba6c830ef61d91073e48c902566c95c2ed0d4673585ff2899469afc6dc49a578d8eae12b57ecd2cd2319b091a31f9967f5d08c8d73ac9c60a8695a3e1b335bd0"
     },
     {
       "ComponentName": "MercurialConfig",
@@ -591,7 +581,7 @@
       "Comment": "Required by clonebundle and share hg extensions",
       "DependsOn": [
         {
-          "ComponentType": "ExeInstall",
+          "ComponentType": "MsiInstall",
           "ComponentName": "Mercurial"
         }
       ],
@@ -616,7 +606,7 @@
       "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
         {
-          "ComponentType": "ExeInstall",
+          "ComponentType": "MsiInstall",
           "ComponentName": "Mercurial"
         }
       ],
@@ -970,7 +960,7 @@
           "ComponentName": "MozillaBuildSetup"
         },
         {
-          "ComponentType": "ExeInstall",
+          "ComponentType": "MsiInstall",
           "ComponentName": "Mercurial"
         }
       ],
@@ -1134,10 +1124,6 @@
         {
           "ComponentType": "CommandRun",
           "ComponentName": "NSSMInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerCreateOpenPGPKey"
         }
       ],
       "Validate": {
@@ -1153,27 +1139,6 @@
             ],
             "Match": "generic-worker 10.1.6"
           }
-        ]
-      }
-    },
-    {
-      "ComponentName": "GenericWorkerCreateOpenPGPKey",
-      "ComponentType": "CommandRun",
-      "Command": "C:\\generic-worker\\generic-worker.exe",
-      "Arguments": [
-        "new-openpgp-keypair",
-        "--file",
-        "C:\\generic-worker\\generic-worker-gpg-signing-key.key"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "ChecksumFileDownload",
-          "ComponentName": "GenericWorkerDownload"
-        }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\generic-worker\\generic-worker-gpg-signing-key.key"
         ]
       }
     },
@@ -1254,7 +1219,7 @@
       ],
       "DependsOn": [
         {
-          "ComponentType": "ExeInstall",
+          "ComponentType": "MsiInstall",
           "ComponentName": "Mercurial"
         },
         {
@@ -1285,7 +1250,7 @@
       ],
       "DependsOn": [
         {
-          "ComponentType": "ExeInstall",
+          "ComponentType": "MsiInstall",
           "ComponentName": "Mercurial"
         }
       ],
