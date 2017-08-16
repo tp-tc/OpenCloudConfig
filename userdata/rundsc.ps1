@@ -788,16 +788,6 @@ if ($locationType -ne 'DataCenter') {
       }
       Map-DriveLetters
     }
-    'gecko-1-b-win2012-beta' {
-      $runDscOnWorker = $true
-      $renameInstance = $true
-      $setFqdn = $true
-      if (-not ($isWorker)) {
-        Set-Credentials -username 'Administrator' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
-      }
-      Mount-DiskOne -lock $lock
-      Map-DriveLetters
-    }
     default {
       $runDscOnWorker = $true
       $renameInstance = $true
@@ -805,6 +795,7 @@ if ($locationType -ne 'DataCenter') {
       if (-not ($isWorker)) {
         Set-Credentials -username 'Administrator' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
       }
+      Mount-DiskOne -lock $lock
       Map-DriveLetters
     }
   }
