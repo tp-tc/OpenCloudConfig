@@ -1151,14 +1151,14 @@
       "Target": "C:\\Windows\\System32\\nircmdc.exe"
     },
     {
-      "ComponentName": "AssocTxtfileNotepad",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1373551 - associate text files with notepad",
-      "Command": "ftype",
-      "Arguments": [
-        "txtfile=\"C:\\Windows\\System32\\Notepad.exe\"",
-        "\"%1\""
-      ]
+      "ComponentName": "reg_DisableNewAppAlert",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "Bug 1373551 - prevent dialog to confirm file association",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\Explorer",
+      "ValueName": "NoNewAppAlert",
+      "ValueType": "Dword",
+      "ValueData": "0x00000001",
+      "Hex": true
     }
   ]
 }
