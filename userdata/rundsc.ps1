@@ -957,8 +957,22 @@ if ($rebootReasons.length) {
   if ((-not ($isWorker)) -and (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
     Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
     if ($locationType -ne 'DataCenter') {
-      if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
-        & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+      switch -regex ($workerType) {
+        '^gecko-[123]-win2012(-beta)?$' {
+          while ((-not (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue)) -and (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0)) {
+            Write-Log -message 'cot key missing. awaiting user intervention.' -severity 'WARN'
+            Sleep 60
+          }
+          if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
+            Write-Log -message 'cot key detected. shutting down.' -severity 'INFO'
+            & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+          }
+        }
+        default {
+          if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
+            & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+          }
+        }
       }
     }
   } elseif ($isWorker) {
