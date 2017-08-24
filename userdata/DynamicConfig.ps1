@@ -608,12 +608,15 @@ Configuration DynamicConfig {
       SetScript = {
         if ("${env:ProgramFiles(x86)}") {
           $gpg = ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)})
-        } else{
+        } else {
           $gpg = ('{0}\GNU\GnuPG\pub\gpg.exe' -f $env:ProgramFiles)
         }
         try {
           $userdata = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')
-          $cotKey = [regex]::matches($userdata, '<cotGpgKey>((.|\n)*)<\/cotGpgKey>')[0].Groups[1].Value
+          $cotKey = [regex]::matches($userdata, '<cotGpgKey>((.|\n)*)<\/cotGpgKey>')[0].Groups[1].Value.Trim()
+          if ((-not ($cotKey.Contains('-----BEGIN PGP PRIVATE KEY BLOCK-----'))) -or (-not ($cotKey.Contains('-----END PGP PRIVATE KEY BLOCK-----')))) {
+            $cotKey = $false
+          }
         } catch {
           $cotKey = $false
         }
