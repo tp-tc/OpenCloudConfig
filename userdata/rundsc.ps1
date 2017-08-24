@@ -958,7 +958,7 @@ if ($rebootReasons.length) {
     Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
     if ($locationType -ne 'DataCenter') {
       switch -regex ($workerType) {
-        '^gecko-[123]-win2012(-beta)?$' {
+        '^gecko-[123]-b-win2012(-beta)?$' {
           while ((-not (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue)) -and (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0)) {
             Write-Log -message 'cot key missing. awaiting user intervention.' -severity 'WARN'
             Sleep 60
