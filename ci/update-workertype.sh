@@ -71,7 +71,7 @@ case "${tc_worker_type}" in
     root_username=root
     worker_username=GenericWorker
     aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
-    block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":120,"DeleteOnTermination":true}}]'
+    block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
   gecko-t-win7*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win7-32-base-20170403-releng-activated'}
@@ -82,7 +82,7 @@ case "${tc_worker_type}" in
     root_username=root
     worker_username=GenericWorker
     aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
-    block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":120,"DeleteOnTermination":true}}]'
+    block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
   gecko-t-win10-64-gpu*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win10-64-gpu-base-1703-*'}
@@ -93,7 +93,7 @@ case "${tc_worker_type}" in
     root_username=Administrator
     worker_username=GenericWorker
     aws_copy_regions=('us-east-1' 'us-east-2' 'eu-central-1')
-    block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":120,"DeleteOnTermination":true}}]'
+    block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
   gecko-t-win10*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win10-64-base-*'}
@@ -104,7 +104,7 @@ case "${tc_worker_type}" in
     root_username=Administrator
     worker_username=GenericWorker
     aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
-    block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":120,"DeleteOnTermination":true}}]'
+    block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
   gecko-1-b-win2012*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-base-*'}
@@ -115,7 +115,7 @@ case "${tc_worker_type}" in
     root_username=Administrator
     worker_username=GenericWorker
     aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
-    block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":40,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdb","Ebs":{"VolumeSize":120,"DeleteOnTermination":true}}]'
+    block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":40,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdb","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
   gecko-[23]-b-win2012*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-base-20161115*'}
@@ -126,7 +126,7 @@ case "${tc_worker_type}" in
     root_username=Administrator
     worker_username=GenericWorker
     aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
-    block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":120,"DeleteOnTermination":true}}]'
+    block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
   *)
     echo "ERROR: unknown worker type: '${tc_worker_type}'"
