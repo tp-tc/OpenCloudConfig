@@ -46,17 +46,16 @@ if [[ $commit_message == *"nodeploy:"* ]]; then
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deployment skipped due to presence of ${tc_worker_type} in commit message no-deploy list (${no_deploy_list[*]})"
     exit
   fi
+elif [[ $commit_message == *"deploy: all"* ]]; then
+  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deploying ${tc_worker_type} as part of 'deploy: all'"
 elif [[ $commit_message == *"deploy:"* ]]; then
   deploy_list=$([[ ${commit_message} =~ deploy:\s+?([^;]*) ]] && echo "${BASH_REMATCH[1]}")
   if [[ " ${deploy_list[*]} " != *" ${tc_worker_type} "* ]]; then
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deployment skipped due to absence of ${tc_worker_type} in commit message deploy list (${deploy_list[*]})"
     exit
   fi
-elif [[ $commit_message == *"nodeploy"* ]]; then
-  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deployment skipped due to 'nodeploy' in commit message (${commit_message})"
-  exit
-elif [[ $commit_message == *"deploy "* ]]; then
-  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deployment skipped due to 'deploy ' in commit message (${commit_message}) - missing colon!"
+else
+  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deployment skipped due to absent deploy instruction in commit message (${commit_message})"
   exit
 fi
 
