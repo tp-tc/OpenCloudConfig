@@ -958,7 +958,8 @@ if ($rebootReasons.length) {
     Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
     if ($locationType -ne 'DataCenter') {
       switch -regex ($workerType) {
-        '^gecko-[123]-b-win2012(-beta)?$' {
+        # level 3 builder needs key added by user intervention and must already exist in cot repo
+        '^gecko-3-b-win2012$' {
           while ((-not (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue)) -and (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0)) {
             Write-Log -message 'cot key missing. awaiting user intervention.' -severity 'WARN'
             Sleep 60
@@ -966,8 +967,29 @@ if ($rebootReasons.length) {
           if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
             Write-Log -message 'cot key detected. shutting down.' -severity 'INFO'
             & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+          } else {
+            Write-Log -message 'cot key intervention failed. awaiting timeout or cancellation.' -severity 'ERROR'
           }
         }
+        # level 1 and 2 builders can generate new keys. these don't require trust from cot repo
+        '^gecko-[12]-b-win2012(-beta)?$' {
+          if (-not (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue)) {
+            Write-Log -message 'cot key missing. generating key.' -severity 'WARN'
+            & 'C:\generic-worker\generic-worker.exe' @('new-openpgp-keypair', '--file', 'C:\generic-worker\cot.key') | Out-File -filePath $logFile -append
+            if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
+              Write-Log -message 'cot key generated.' -severity 'INFO'
+            } else {
+              Write-Log -message 'cot key generation failed.' -severity 'ERROR'
+            }
+          }
+          if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
+            Write-Log -message 'cot key detected. shutting down.' -severity 'INFO'
+            & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+          } else {
+            Write-Log -message 'cot key missing. awaiting timeout or cancellation.' -severity 'INFO'
+          }
+        }
+        # testers don't need keys
         default {
           if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
             & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
