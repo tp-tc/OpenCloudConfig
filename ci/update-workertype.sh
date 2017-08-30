@@ -106,7 +106,7 @@ case "${tc_worker_type}" in
     aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
     block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
-  gecko-1-b-win2012*)
+  gecko-[123]-b-win2012*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-base-*'}
     aws_instance_type=${aws_instance_type:='c4.4xlarge'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
@@ -116,17 +116,6 @@ case "${tc_worker_type}" in
     worker_username=GenericWorker
     aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
     block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":40,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdb","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
-    ;;
-  gecko-[23]-b-win2012*)
-    aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-base-20161115*'}
-    aws_instance_type=${aws_instance_type:='c4.4xlarge'}
-    aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-    ami_description="Gecko try builder for Windows; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
-    gw_tasks_dir='Z:\'
-    root_username=Administrator
-    worker_username=GenericWorker
-    aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
-    block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
   *)
     echo "ERROR: unknown worker type: '${tc_worker_type}'"
