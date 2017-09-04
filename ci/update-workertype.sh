@@ -116,7 +116,6 @@ case "${tc_worker_type}" in
     worker_username=GenericWorker
     aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
     block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":40,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdb","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
-    subnet_id='subnet-f94cb29f'
     ;;
   *)
     echo "ERROR: unknown worker type: '${tc_worker_type}'"
@@ -145,11 +144,7 @@ echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] latest base ami for: ${aws_b
 
 # create instance, apply user-data, filter output, get instance id, tag instance, wait for shutdown
 while [ -z "$aws_instance_id" ]; do
-  if [ -z "$subnet_id" ]; then
-    aws_instance_id="$(aws ec2 run-instances --region ${aws_region} --image-id "${aws_base_ami_id}" --key-name ${aws_key_name} --security-groups "rdp-only" --user-data "$(echo -e ${userdata})" --instance-type ${aws_instance_type} --block-device-mappings "${block_device_mappings}" --instance-initiated-shutdown-behavior stop --client-token "${tc_worker_type}-${aws_client_token}" | sed -n 's/^ *"InstanceId": "\(.*\)", */\1/p')"
-  else
-    aws_instance_id="$(aws ec2 run-instances --region ${aws_region} --image-id "${aws_base_ami_id}" --key-name ${aws_key_name} --security-group-ids "sg-3bd7bf41" --subnet-id ${subnet_id} --user-data "$(echo -e ${userdata})" --instance-type ${aws_instance_type} --block-device-mappings "${block_device_mappings}" --instance-initiated-shutdown-behavior stop --client-token "${tc_worker_type}-${aws_client_token}" | sed -n 's/^ *"InstanceId": "\(.*\)", */\1/p')"
-  fi
+  aws_instance_id="$(aws ec2 run-instances --region ${aws_region} --image-id "${aws_base_ami_id}" --key-name ${aws_key_name} --security-group-ids "sg-3bd7bf41" --subnet-id "subnet-f94cb29f" --user-data "$(echo -e ${userdata})" --instance-type ${aws_instance_type} --block-device-mappings "${block_device_mappings}" --instance-initiated-shutdown-behavior stop --client-token "${tc_worker_type}-${aws_client_token}" | sed -n 's/^ *"InstanceId": "\(.*\)", */\1/p')"
   if [ -z "$aws_instance_id" ]; then
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] create instance failed. retrying..."
   fi
