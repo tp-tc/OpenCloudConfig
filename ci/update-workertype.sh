@@ -106,7 +106,7 @@ case "${tc_worker_type}" in
     aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
     block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
-  gecko-[123]-b-win2012*)
+  gecko-[123]-b-win2012)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-base-*'}
     aws_instance_type=${aws_instance_type:='c4.4xlarge'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
@@ -116,6 +116,18 @@ case "${tc_worker_type}" in
     worker_username=GenericWorker
     aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
     block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":40,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdb","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
+    ;;
+  gecko-1-b-win2012-beta)
+    aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-base-*'}
+    aws_instance_type=${aws_instance_type:='c4.4xlarge'}
+    aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
+    ami_description="Gecko experimental builder for Windows; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
+    gw_tasks_dir='Z:\'
+    root_username=Administrator
+    worker_username=GenericWorker
+    aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
+    block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":40,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdb","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
+    subnet_id='subnet-f94cb29f'
     ;;
   *)
     echo "ERROR: unknown worker type: '${tc_worker_type}'"
@@ -144,7 +156,11 @@ echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] latest base ami for: ${aws_b
 
 # create instance, apply user-data, filter output, get instance id, tag instance, wait for shutdown
 while [ -z "$aws_instance_id" ]; do
-  aws_instance_id="$(aws ec2 run-instances --region ${aws_region} --image-id "${aws_base_ami_id}" --key-name ${aws_key_name} --security-groups "ssh-only" "rdp-only" --user-data "$(echo -e ${userdata})" --instance-type ${aws_instance_type} --block-device-mappings "${block_device_mappings}" --instance-initiated-shutdown-behavior stop --client-token "${tc_worker_type}-${aws_client_token}" | sed -n 's/^ *"InstanceId": "\(.*\)", */\1/p')"
+  if [ -z "$subnet_id" ]; then
+    aws_instance_id="$(aws ec2 run-instances --region ${aws_region} --image-id "${aws_base_ami_id}" --key-name ${aws_key_name} --security-groups "rdp-only" --user-data "$(echo -e ${userdata})" --instance-type ${aws_instance_type} --block-device-mappings "${block_device_mappings}" --instance-initiated-shutdown-behavior stop --client-token "${tc_worker_type}-${aws_client_token}" | sed -n 's/^ *"InstanceId": "\(.*\)", */\1/p')"
+  else
+    aws_instance_id="$(aws ec2 run-instances --region ${aws_region} --image-id "${aws_base_ami_id}" --key-name ${aws_key_name} --security-group-ids "sg-3bd7bf41" --subnet-id ${subnet_id} --user-data "$(echo -e ${userdata})" --instance-type ${aws_instance_type} --block-device-mappings "${block_device_mappings}" --instance-initiated-shutdown-behavior stop --client-token "${tc_worker_type}-${aws_client_token}" | sed -n 's/^ *"InstanceId": "\(.*\)", */\1/p')"
+  fi
   if [ -z "$aws_instance_id" ]; then
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] create instance failed. retrying..."
   fi
