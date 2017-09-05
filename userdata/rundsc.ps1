@@ -659,7 +659,6 @@ if ($locationType -ne 'DataCenter') {
         Remove-LegacyStuff -logFile $logFile
         Set-Credentials -username 'root' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
       }
-      Map-DriveLetters
     }
     'gecko-t-win10-*' {
       $runDscOnWorker = $false
@@ -669,7 +668,6 @@ if ($locationType -ne 'DataCenter') {
         Remove-LegacyStuff -logFile $logFile
         Set-Credentials -username 'Administrator' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
       }
-      Map-DriveLetters
     }
     default {
       $runDscOnWorker = $true
@@ -678,10 +676,10 @@ if ($locationType -ne 'DataCenter') {
       if (-not ($isWorker)) {
         Set-Credentials -username 'Administrator' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
       }
-      Mount-DiskOne -lock $lock
-      Map-DriveLetters
     }
   }
+  Mount-DiskOne -lock $lock
+  Map-DriveLetters
 
   Get-ChildItem -Path $env:SystemRoot\Microsoft.Net -Filter ngen.exe -Recurse | % {
     try {
