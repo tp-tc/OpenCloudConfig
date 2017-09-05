@@ -537,7 +537,7 @@ function Activate-Windows {
   }
   process {
     $productKeyMap = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/product-key-map.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
-    $osCaption = (Get-WmiObject -class Win32_OperatingSystem).Caption
+    $osCaption = (Get-WmiObject -class Win32_OperatingSystem).Caption.Trim()
     $productKey = ($productKeyMap | ? {$_.os_caption -eq $osCaption}).product_key
     if (-not ($productKey)) {
       Write-Log -message ('{0} :: failed to determine product key with os caption: {1}.' -f $($MyInvocation.MyCommand.Name), $osCaption) -severity 'INFO'
