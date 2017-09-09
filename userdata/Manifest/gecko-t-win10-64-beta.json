@@ -1165,6 +1165,38 @@
       "LocalPort": 1688,
       "Direction": "Outbound",
       "Action": "Allow"
+    },
+    {
+      "ComponentName": "reg_DisableTouchEvents",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "Bug 1382988 - Disable touch events",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Wisp\\Touch",
+      "ValueName": "TouchGate",
+      "ValueType": "Dword",
+      "ValueData": "0x00000000",
+      "Hex": true
+    },
+    {
+      "ComponentName": "nircmd",
+      "ComponentType": "FileDownload",
+      "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/nircmd/nircmd.exe",
+      "Target": "C:\\Windows\\System32\\nircmd.exe"
+    },
+    {
+      "ComponentName": "nircmdc",
+      "ComponentType": "FileDownload",
+      "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/nircmd/nircmdc.exe",
+      "Target": "C:\\Windows\\System32\\nircmdc.exe"
+    },
+    {
+      "ComponentName": "reg_DisableNewAppAlert",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "Bug 1373551 - prevent dialog to confirm file association",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\Explorer",
+      "ValueName": "NoNewAppAlert",
+      "ValueType": "Dword",
+      "ValueData": "0x00000001",
+      "Hex": true
     }
   ]
 }
