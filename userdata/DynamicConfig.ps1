@@ -565,16 +565,32 @@ Configuration DynamicConfig {
             if (($using:item.Protocol) -and ($using:item.LocalPort)) {
               $ruleName = ('{0} ({1} {2} {3}): {4}' -f $using:item.ComponentName, $using:item.Protocol, $using:item.LocalPort, $using:item.Direction, $using:item.Action)
               if (Get-Command 'New-NetFirewallRule' -errorAction SilentlyContinue) {
-                New-NetFirewallRule -DisplayName $ruleName -Protocol $using:item.Protocol -LocalPort $using:item.LocalPort -Direction $using:item.Direction -Action $using:item.Action
+                if ($using:item.RemoteAddress) {
+                  New-NetFirewallRule -DisplayName $ruleName -Protocol $using:item.Protocol -LocalPort $using:item.LocalPort -Direction $using:item.Direction -Action $using:item.Action -RemoteAddress $using:item.RemoteAddress
+                } else {
+                  New-NetFirewallRule -DisplayName $ruleName -Protocol $using:item.Protocol -LocalPort $using:item.LocalPort -Direction $using:item.Direction -Action $using:item.Action
+                }
               } else {
-                & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $using:item.Action), ('protocol={0}' -f $using:item.Protocol), ('localport={0}' -f $using:item.LocalPort))
+                if ($using:item.RemoteAddress) {
+                  & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $using:item.Action), ('protocol={0}' -f $using:item.Protocol), ('localport={0}' -f $using:item.LocalPort), ('remoteip={0}' -f $using:item.RemoteAddress))
+                } else {
+                  & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $using:item.Action), ('protocol={0}' -f $using:item.Protocol), ('localport={0}' -f $using:item.LocalPort))
+                }
               }
             } elseif ($using:item.Program) {
               $ruleName = ('{0} ({1} {2}): {3}' -f $using:item.ComponentName, $using:item.Program, $using:item.Direction, $using:item.Action)
               if (Get-Command 'New-NetFirewallRule' -errorAction SilentlyContinue) {
-                New-NetFirewallRule -DisplayName $ruleName -Program $using:item.Program -Direction $using:item.Direction -Action $using:item.Action
+                if ($using:item.RemoteAddress) {
+                  New-NetFirewallRule -DisplayName $ruleName -Program $using:item.Program -Direction $using:item.Direction -Action $using:item.Action -RemoteAddress $using:item.RemoteAddress
+                } else {
+                  New-NetFirewallRule -DisplayName $ruleName -Program $using:item.Program -Direction $using:item.Direction -Action $using:item.Action
+                }
               } else {
-                & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $using:item.Action), ('program={0}' -f $using:item.Program))
+                if ($using:item.RemoteAddress) {
+                  & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $using:item.Action), ('program={0}' -f $using:item.Program), ('remoteip={0}' -f $using:item.RemoteAddress))
+                } else {
+                  & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $using:item.Action), ('program={0}' -f $using:item.Program))
+                }
               }
             }
           }
