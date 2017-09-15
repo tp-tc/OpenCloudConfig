@@ -424,6 +424,28 @@
       "sha512": "729b1e37aefdf708df6a787b2eecd0e4e186c4e8a6d6f3028b0134f81c4216f889e67645d9279cb0ae60079a8f6f68ac88ec5d1fe27ee54f8de563b5209698f3"
     },
     {
+      "ComponentName": "WindowsSDK10Setup",
+      "ComponentType": "ExeInstall",
+      "Url": "https://go.microsoft.com/fwlink/p/?LinkID=698771",
+      "Arguments": [
+        "/features",
+        "+",
+        "/quiet",
+        "/norestart",
+        "/ceip",
+        "off",
+        "/log",
+        "C:\\log\\windowssdk10setup.log"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x86\\srcsrv\\pdbstr.exe",
+          "C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x64\\srcsrv\\pdbstr.exe"
+        ]
+      },
+      "sha512": "89ce9cb241ee33cc0642f93ea7d96ff148de6b54e27075398f8f2de31272e1c32865c43e5a9e89da8ce0317f586802bb21bb6247a643d5d201a79a5cd2648d09"
+    },
+    {
       "ComponentName": "BinScope",
       "ComponentType": "MsiInstall",
       "Comment": "https://dxr.mozilla.org/mozilla-central/search?q=BinScope&redirect=false&case=false",
