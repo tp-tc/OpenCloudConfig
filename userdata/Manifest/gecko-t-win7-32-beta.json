@@ -985,6 +985,23 @@
       }
     },
     {
+      "ComponentName": "MaintenanceServiceAcessRights",
+      "ComponentType": "CommandRun",
+      "Comment": "See https://bugzilla.mozilla.org/show_bug.cgi?id=1067756#c21",
+      "Command": "icacls.exe",
+      "Arguments": [
+        "C:\\Program Files\\Mozilla Maintenance Service",
+        "/grant",
+        "Everyone:(OI)(CI)F"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "maintenanceservice_install"
+        }
+      ]
+    },
+    {
       "ComponentName": "MozFakeCA.cer",
       "ComponentType": "ChecksumFileDownload",
       "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/MozFakeCA.cer?raw=true",
