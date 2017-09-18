@@ -758,6 +758,8 @@ if ($rebootReasons.length) {
       }
       'Microsoft Windows 10*' {
         if ($workerType.Contains('-gpu')) {
+          # see bug 1382625 comment 6
+          & sc @('config', '"basicdisplay"', 'start=disabled') | Out-File -filePath $logFile -append
           # .net 3.5 required for configmymonitor display settings
           try {
             Add-WindowsCapability -Online -Name NetFx3~~~~
