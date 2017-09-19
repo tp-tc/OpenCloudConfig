@@ -759,7 +759,13 @@ if ($rebootReasons.length) {
       'Microsoft Windows 10*' {
         if ($workerType.Contains('-gpu')) {
           # see bug 1382625 comment 6
-          & sc @('config', '"basicdisplay"', 'start=disabled') | Out-File -filePath $logFile -append
+          try {
+            & sc @('config', '"basicdisplay"', 'start=disabled')
+            Write-Log -message 'basicdisplay disabled.' -severity 'INFO'
+          }
+          catch {
+            Write-Log -message ('failed to disable basicdisplay. {0}' -f $_.Exception.Message) -severity 'ERROR'
+          }
           # .net 3.5 required for configmymonitor display settings
           try {
             Add-WindowsCapability -Online -Name NetFx3~~~~
@@ -768,7 +774,6 @@ if ($rebootReasons.length) {
           catch {
             Write-Log -message ('.net framework 3.5 install failed. {0}' -f $_.Exception.Message) -severity 'ERROR'
           }
-          
         }
         # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
         ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) }
