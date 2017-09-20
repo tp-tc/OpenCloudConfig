@@ -851,7 +851,7 @@ if ($rebootReasons.length) {
     if ($locationType -ne 'DataCenter') {
       switch -regex ($workerType) {
         # level 3 builder needs key added by user intervention and must already exist in cot repo
-        '^gecko-3-b-win2012$' {
+        '^gecko-3-b-win201[26]$' {
           while ((-not (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue)) -or (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -gt 0)) {
             Write-Log -message 'cot key missing. awaiting user intervention.' -severity 'WARN'
             Sleep 60
@@ -864,7 +864,7 @@ if ($rebootReasons.length) {
           }
         }
         # level 1 and 2 builders can generate new keys. these don't require trust from cot repo
-        '^gecko-[12]-b-win2012(-beta)?$' {
+        '^gecko-[12]-b-win201[26](-beta)?$' {
           if (-not (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue)) {
             Write-Log -message 'cot key missing. generating key.' -severity 'WARN'
             & 'C:\generic-worker\generic-worker.exe' @('new-openpgp-keypair', '--file', 'C:\generic-worker\cot.key') | Out-File -filePath $logFile -append
