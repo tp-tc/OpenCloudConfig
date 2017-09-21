@@ -758,14 +758,6 @@ if ($rebootReasons.length) {
       }
       'Microsoft Windows 10*' {
         if ($workerType.Contains('-gpu')) {
-          # see bug 1382625 comment 6
-          try {
-            & sc @('config', '"basicdisplay"', 'start=disabled')
-            Write-Log -message 'basicdisplay disabled.' -severity 'INFO'
-          }
-          catch {
-            Write-Log -message ('failed to disable basicdisplay. {0}' -f $_.Exception.Message) -severity 'ERROR'
-          }
           # .net 3.5 required for configmymonitor display settings
           try {
             Add-WindowsCapability -Online -Name NetFx3~~~~
