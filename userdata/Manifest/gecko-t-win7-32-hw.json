@@ -1261,6 +1261,20 @@
       "ComponentType": "FileDownload",
       "Source": "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-win32.exe",
       "Target": "C:\\Windows\\System32\\jq.exe"
+    },
+    {
+      "ComponentName": "ICMPv4In",
+      "ComponentType": "FirewallRule",
+      "Protocol": "ICMPv4",
+      "Direction": "Inbound",
+      "Action": "Allow"
+    },
+    {
+      "ComponentName": "ICMPv6In",
+      "ComponentType": "FirewallRule",
+      "Protocol": "ICMPv6",
+      "Direction": "Inbound",
+      "Action": "Allow"
     }
   ]
 }

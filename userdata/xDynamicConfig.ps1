@@ -577,6 +577,21 @@ Configuration xDynamicConfig {
                   & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $using:item.Action), ('protocol={0}' -f $using:item.Protocol), ('localport={0}' -f $using:item.LocalPort))
                 }
               }
+            } elseif (($using:item.Protocol -eq 'ICMPv4') -or ($using:item.Protocol -eq 'ICMPv6')) {
+              $ruleName = ('{0} ({1} {2} {3}): {4}' -f $using:item.ComponentName, $using:item.Protocol, $using:item.Action)
+              if (Get-Command 'New-NetFirewallRule' -errorAction SilentlyContinue) {
+                if ($using:item.RemoteAddress) {
+                  New-NetFirewallRule -DisplayName $ruleName -Protocol $using:item.Protocol -IcmpType 8 -Action $using:item.Action -RemoteAddress $using:item.RemoteAddress
+                } else {
+                  New-NetFirewallRule -DisplayName $ruleName -Protocol $using:item.Protocol -IcmpType 8 -Action $using:item.Action
+                }
+              } else {
+                if ($using:item.RemoteAddress) {
+                  & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $using:item.Action), ('protocol={0}:8,any' -f $using:item.Protocol), ('localport={0}' -f $using:item.LocalPort), ('remoteip={0}' -f $using:item.RemoteAddress))
+                } else {
+                  & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $using:item.Action), ('protocol={0}:8,any' -f $using:item.Protocol), ('localport={0}' -f $using:item.LocalPort))
+                }
+              }
             } elseif ($using:item.Program) {
               $ruleName = ('{0} ({1} {2}): {3}' -f $using:item.ComponentName, $using:item.Program, $using:item.Direction, $using:item.Action)
               if (Get-Command 'New-NetFirewallRule' -errorAction SilentlyContinue) {
