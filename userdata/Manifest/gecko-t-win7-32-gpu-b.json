@@ -990,7 +990,7 @@
       "Comment": "See https://bugzilla.mozilla.org/show_bug.cgi?id=1067756#c21",
       "Command": "icacls.exe",
       "Arguments": [
-        "C:\\Program Files\\Mozilla Maintenance Service",
+        "\"C:\\Program Files\\Mozilla Maintenance Service\"",
         "/grant",
         "Everyone:(OI)(CI)F"
       ],
