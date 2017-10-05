@@ -5,7 +5,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
 
 Configuration xDynamicConfig {
-  Import-DscResource -ModuleName PSDesiredStateConfiguration,xPSDesiredStateConfiguration
+  Import-DscResource -ModuleName PSDesiredStateConfiguration,xPSDesiredStateConfiguration,xWindowsUpdate
   # sourceRepo is in place to toggle between production and testing environments
   $sourceRepo = 'mozilla-releng'
   if ((Get-Service 'Ec2Config' -ErrorAction SilentlyContinue) -or (Get-Service 'AmazonSSMAgent' -ErrorAction SilentlyContinue)) {
@@ -133,6 +133,7 @@ Configuration xDynamicConfig {
     'SymbolicLink' = 'Script';
     'ExeInstall' = 'Script';
     'MsiInstall' = 'Package';
+    'MsuInstall' = 'Hotfix';
     'WindowsFeatureInstall' = 'WindowsFeature';
     'ZipInstall' = 'Archive';
     'ServiceControl' = 'Service';
@@ -258,33 +259,7 @@ Configuration xDynamicConfig {
           }
           TestScript = { return $false }
         }
-        #Script ('ChecksumFileKillProcesses_{0}' -f $item.ComponentName) {
-        #  DependsOn = ('[Script]ChecksumFileDownload_{0}' -f $item.ComponentName)
-        #  GetScript = "@{ ChecksumFileKillProcesses = $item.ComponentName }"
-        #  SetScript = {
-        #    $processName = [IO.Path]::GetFileNameWithoutExtension($using:item.Target)
-        #    try {
-        #      Stop-Process -name $processName -Force
-        #      Write-Verbose ('Process: {0} stopped' -f $processName)
-        #    } catch {
-        #      Write-Verbose ('Failed to stop process: {0}' -f $processName)
-        #    }
-        #  }
-        #  TestScript = {
-        #    $tempTarget = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target))
-        #    $processName = [IO.Path]::GetFileNameWithoutExtension($using:item.Target)
-        #    if (([IO.Path]::GetExtension($using:item.Target) -ieq '.exe') -and (
-        #      (Test-Path -Path $using:item.Target -ErrorAction SilentlyContinue)) -and (
-        #      (Get-FileHash -Path $tempTarget -Algorithm 'SHA1') -ne (Get-FileHash -Path $using:item.Target -Algorithm 'SHA1')) -and (
-        #      (@(Get-Process | ? { $_.ProcessName -eq $processName }).length -gt 0))) {
-        #      return $false
-        #    } else {
-        #      return $true
-        #    }
-        #  }
-        #}
         File ('ChecksumFileCopy_{0}' -f $item.ComponentName) {
-          #DependsOn = @(('[Script]ChecksumFileDownload_{0}' -f $item.ComponentName), ('[Script]ChecksumFileKillProcesses_{0}' -f $item.ComponentName))
           DependsOn = ('[Script]ChecksumFileDownload_{0}' -f $item.ComponentName)
           Type = 'File'
           Checksum = 'SHA-1'
@@ -399,6 +374,43 @@ Configuration xDynamicConfig {
         }
         Log ('Log_MsiInstall_{0}' -f $item.ComponentName) {
           DependsOn = ('[Package]MsiInstall_{0}' -f $item.ComponentName)
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
+        }
+      }
+      'MsuInstall' {
+        Script ('MsuDownload_{0}' -f $item.ComponentName) {
+          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          GetScript = "@{ MsuDownload = $item.ComponentName }"
+          SetScript = {
+            if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
+              $webClient = New-Object System.Net.WebClient
+              $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
+              $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $using:item.ComponentName))
+            } else {
+            # todo: handle non-http fetches
+              try {
+                (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $using:item.ComponentName))
+              } catch {
+                # handle redirects (eg: sourceforge)
+                Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $using:item.ComponentName) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+              }
+            }
+            Unblock-File -Path ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $using:item.ComponentName)
+          }
+          TestScript = { return (Test-Path -Path ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $using:item.ComponentName) -ErrorAction SilentlyContinue) }
+        }
+        Log ('Log_MsuDownload_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]MsuDownload_{0}' -f $item.ComponentName)
+          Message = ('{0}: {1}, download completed' -f $item.ComponentType, $item.ComponentName)
+        }
+        xHotfix ('MsuInstall_{0}' -f $item.ComponentName) {
+          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          Id = $item.Id
+          Path = ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $item.ComponentName)
+          Ensure = 'Present'
+        }
+        Log ('Log_MsuInstall_{0}' -f $item.ComponentName) {
+          DependsOn = ('[xHotfix]MsuInstall_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }

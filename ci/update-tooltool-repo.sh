@@ -15,7 +15,7 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
   json=$(basename $manifest)
   tt=${json::-5}.tt
 
-  for ComponentType in ExeInstall MsiInstall ZipInstall; do
+  for ComponentType in ExeInstall MsiInstall MsuInstall ZipInstall; do
     jq --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and (.sha512 == "" or .sha512 == null)) | .ComponentName' ${manifest} | while read ComponentName; do
       echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] processing ${ComponentType} ${ComponentName}"
       case "${ComponentType}" in
@@ -24,6 +24,9 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
           ;;
         MsiInstall)
           ext=msi
+          ;;
+        MsuInstall)
+          ext=msu
           ;;
         ZipInstall)
           ext=zip
@@ -62,7 +65,7 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
     fi
     mv ${tt} ./tooltool/${tt}
   fi
-  rm -f *.exe *.msi
+  rm -f *.exe *.msi *.msu *.zip
 done
 cd OpenCloudConfig
 git diff > ../sha512.patch

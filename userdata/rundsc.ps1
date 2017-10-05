@@ -784,17 +784,10 @@ if ($rebootReasons.length) {
 
     # run dsc #####################################################################################################################################################
     Start-Transcript -Path $transcript -Append
-    switch ((Get-WmiObject -class Win32_OperatingSystem).Version) {
-      '10.0.15063' {
-        # see https://github.com/PowerShell/PSDscResources/issues/57
-        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-        Install-Module -Name xPSDesiredStateConfiguration -Force
-        Run-RemoteDesiredStateConfig -url "https://raw.githubusercontent.com/$SourceRepo/OpenCloudConfig/master/userdata/xDynamicConfig.ps1" -workerType $workerType
-      }
-      default {
-        Run-RemoteDesiredStateConfig -url "https://raw.githubusercontent.com/$SourceRepo/OpenCloudConfig/master/userdata/DynamicConfig.ps1" -workerType $workerType
-      }
-    }
+    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+    Install-Module -Name xPSDesiredStateConfiguration -Force
+    Install-Module -Name xWindowsUpdate -Force
+    Run-RemoteDesiredStateConfig -url "https://raw.githubusercontent.com/$SourceRepo/OpenCloudConfig/master/userdata/xDynamicConfig.ps1" -workerType $workerType
     
     Stop-Transcript
     # end run dsc #################################################################################################################################################
