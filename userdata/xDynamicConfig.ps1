@@ -133,10 +133,10 @@ Configuration xDynamicConfig {
     'SymbolicLink' = 'Script';
     'ExeInstall' = 'Script';
     'MsiInstall' = 'Package';
-    'MsuInstall' = 'Hotfix';
+    'MsuInstall' = 'xHotfix';
     'WindowsFeatureInstall' = 'WindowsFeature';
-    'ZipInstall' = 'Archive';
-    'ServiceControl' = 'Service';
+    'ZipInstall' = 'xArchive';
+    'ServiceControl' = 'xService';
     'EnvironmentVariableSet' = 'Script';
     'EnvironmentVariableUniqueAppend' = 'Script';
     'EnvironmentVariableUniquePrepend' = 'Script';
