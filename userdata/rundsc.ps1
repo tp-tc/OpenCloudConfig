@@ -587,6 +587,9 @@ $lock = 'C:\dsc\in-progress.lock'
 if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
   Write-Log -message 'userdata run aborted. lock file exists.' -severity 'INFO'
   exit
+} elseif ((@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -gt 0)) {
+  Write-Log -message 'userdata run aborted. generic-worker is running.' -severity 'INFO'
+  exit
 } else {
   $lockDir = [IO.Path]::GetDirectoryName($lock)
   if (-not (Test-Path -Path $lockDir -ErrorAction SilentlyContinue)) {
