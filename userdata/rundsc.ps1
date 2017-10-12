@@ -560,7 +560,8 @@ function Activate-Windows {
   }
 }
 # SourceRepo is in place to toggle between production and testing environments
-$SourceRepo = 'mozilla-releng'
+#$SourceRepo = 'mozilla-releng'
+$sourceRepo = 'markcor'
 
 # The Windows update service needs to be enabled for OCC to process but needs to be disabled during testing. 
 $UpdateService = Get-Service -Name wuauserv
@@ -598,12 +599,17 @@ if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
   New-Item $lock -type file -force
 }
 Write-Log -message 'userdata run starting.' -severity 'INFO'
+if ($locationType -eq 'DataCenter') {
+  $ntpserverlist = 'infoblox1.private.mdc1.mozilla.com'
+} else {
+  $ntpserverlist = '0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org'
+}
 
 Get-Service -Name 'w32time' | Stop-Service -PassThru
 tzutil /s UTC
 Write-Log -message 'system timezone set to UTC.' -severity 'INFO'
 w32tm /register
-w32tm /config /syncfromflags:manual /manualpeerlist:"0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org",0x8
+w32tm /config /syncfromflags:manual /manualpeerlist:"$ntpserverlist",0x8
 Get-Service -Name 'w32time' | Start-Service -PassThru
 w32tm /resync /force
 Write-Log -message 'system clock synchronised.' -severity 'INFO'
