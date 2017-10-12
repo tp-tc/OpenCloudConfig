@@ -1164,7 +1164,7 @@
       "Name": "W32time",
       "StartupType": "automatic",
       "State": "running"
-    },			    {
+    },
     {
       "ComponentName": "GrantGenericWorkerMozillaRegistryWriteAccess",
       "ComponentType": "CommandRun",
