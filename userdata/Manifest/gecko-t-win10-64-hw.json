@@ -649,7 +649,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.2.2/generic-worker-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10..0.5/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
@@ -683,7 +683,7 @@
     {
       "ComponentName": "NSSMDownload",
       "ComponentType": "FileDownload",
-      "Source": "https://nssm.cc/ci/nssm-2.24-103-gdee49fc.zip",
+      "Source": "https://nssm.cc/release/nssm-2.24.zip",
       "Target": "C:\\Windows\\Temp\\NSSMInstall.zip"
     },
     {
@@ -708,7 +708,7 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe"
+          "C:\\nssm-2.24\\win64\\nssm.exe"
         ]
       }
     },
@@ -720,7 +720,7 @@
         "install",
         "service",
         "--nssm",
-        "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe",
+        "C:\\nssm-2.24\\win64\\nssm.exe",
         "--config",
         "C:\\generic-worker\\generic-worker.config"
       ],
@@ -757,7 +757,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 10.2.2"
+            "Match": "generic-worker 10.0.5"
           }
         ]
       }
@@ -787,7 +787,7 @@
           "ComponentName": "DisableDesktopInterrupt"
         }
       ],
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-hw-generic-worker-and-reboot.bat",
+      "Source": "https://raw.githubusercontent.com/markcor/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-hw-generic-worker-and-reboot.bat",
       "Target": "C:\\generic-worker\\run-generic-worker.bat"
     },
     {
@@ -1149,7 +1149,7 @@
       "StartupType": "Disabled",
       "State": "Stopped"
     },
-	  {
+    {
       "ComponentName": "KTS_ssh",
       "ComponentType": "ServiceControl",
       "Comment": "Enabled ssh",
@@ -1157,6 +1157,14 @@
       "StartupType": "automatic",
       "State": "running"
     },
+    {
+      "ComponentName": "W32Time",
+      "ComponentType": "ServiceControl",
+      "Comment": "Enable time service",
+      "Name": "W32time",
+      "StartupType": "automatic",
+      "State": "running"
+    },			    {
     {
       "ComponentName": "GrantGenericWorkerMozillaRegistryWriteAccess",
       "ComponentType": "CommandRun",
