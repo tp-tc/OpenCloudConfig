@@ -4,8 +4,7 @@ C:\dsc\configmymonitor.exe list >> C:\dsc\gc.log 2>&1
 
 cat C:\generic-worker\master-generic-worker.json | jq ".  | .workerId=\"%COMPUTERNAME%\"" > C:\generic-worker\gen_worker.config
 
-rem if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-worker\disable-desktop-interrupt.reg
-rem if exist C:\Windows\System32\fakemon.vbs cscript C:\Windows\System32\fakemon.vbs > C:\log\fakemon-stdout.log 2> C:\log\fakemon-stderr.log
+if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-worker\disable-desktop-interrupt.reg
 
 :CheckForStateFlag
 if exist C:\dsc\task-claim-state.valid goto RunWorker
