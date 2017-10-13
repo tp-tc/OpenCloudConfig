@@ -8,7 +8,7 @@ Configuration xDynamicConfig {
   Import-DscResource -ModuleName PSDesiredStateConfiguration,xPSDesiredStateConfiguration,xWindowsUpdate
   # sourceRepo is in place to toggle between production and testing environments
   #$sourceRepo = 'mozilla-releng'
-	$sourceRepo = 'markcor'
+
   if ((Get-Service 'Ec2Config' -ErrorAction SilentlyContinue) -or (Get-Service 'AmazonSSMAgent' -ErrorAction SilentlyContinue)) {
     $locationType = 'AWS'
   } else {
