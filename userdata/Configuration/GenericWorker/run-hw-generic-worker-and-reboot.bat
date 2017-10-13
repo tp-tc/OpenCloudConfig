@@ -1,7 +1,5 @@
 @echo off
 
-C:\dsc\configmymonitor.exe list >> C:\dsc\gc.log 2>&1
-
 cat C:\generic-worker\master-generic-worker.json | jq ".  | .workerId=\"%COMPUTERNAME%\"" > C:\generic-worker\gen_worker.config
 
 if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-worker\disable-desktop-interrupt.reg
