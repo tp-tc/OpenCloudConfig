@@ -291,8 +291,10 @@
           "ComponentName": "MozillaBuildSetup"
         }
       ],
-      "Command": "del",
+      "Command": "cmd.exe",
       "Arguments": [
+        "/c",
+        "del",
         "C:\\mozilla-build\\python\\Scripts\\hg*"
       ],
       "Validate": {
