@@ -7,7 +7,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 Configuration xDynamicConfig {
   Import-DscResource -ModuleName PSDesiredStateConfiguration,xPSDesiredStateConfiguration,xWindowsUpdate
   # sourceRepo is in place to toggle between production and testing environments
-  #$sourceRepo = 'mozilla-releng'
+  $sourceRepo = 'mozilla-releng'
 
   if ((Get-Service 'Ec2Config' -ErrorAction SilentlyContinue) -or (Get-Service 'AmazonSSMAgent' -ErrorAction SilentlyContinue)) {
     $locationType = 'AWS'
