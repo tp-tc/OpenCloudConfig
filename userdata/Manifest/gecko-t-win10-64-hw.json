@@ -195,101 +195,112 @@
     {
       "ComponentName": "MozillaMaintenanceDir",
       "ComponentType": "DirectoryCreate",
-      "Comment": "Working directory for Mozilla Maintenance Service",
-      "Path": "C:\\DSC\\MozillaMaintenance"
-    },    
-    {
-      "ComponentName": "maintenanceservice_exe",
-      "ComponentType": "ChecksumFileDownload",
-      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/maintenanceservice.exe?raw=true",
-      "Target": "C:\\DSC\\MozillaMaintenance\\maintenanceservice.exe",
-      "DependsOn": [
-        {
-          "ComponentType": "DirectoryCreate", 
-          "ComponentName": "MozillaMaintenanceDir"
-        }
-      ]
+      "Comment": "Working directory for Mozilla Maintenance Service installation",
+      "Path": "C:\\dsc\\MozillaMaintenance"
     },
     {
-      "ComponentName": "maintenanceservice_installer_exe",
+      "ComponentName": "maintenanceservice_installer",
       "ComponentType": "ChecksumFileDownload",
       "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/maintenanceservice_installer.exe?raw=true",
-      "Target": "C:\\DSC\\MozillaMaintenance\\maintenanceservice_installer.exe",
+      "Target": "C:\\dsc\\MozillaMaintenance\\maintenanceservice_installer.exe",
       "DependsOn": [
         {
-          "ComponentType": "DirectoryCreate", 
+          "ComponentType": "DirectoryCreate",
           "ComponentName": "MozillaMaintenanceDir"
         }
       ]
     },
     {
-      "ComponentName": "MozFakeCA_cer",
+      "ComponentName": "maintenanceservice",
       "ComponentType": "ChecksumFileDownload",
-      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/MozFakeCA.cer?raw=true",
-      "Target": "C:\\DSC\\MozillaMaintenance\\MozFakeCA.cer",
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/maintenanceservice.exe?raw=true",
+      "Target": "C:\\dsc\\MozillaMaintenance\\maintenanceservice.exe",
       "DependsOn": [
         {
-          "ComponentType": "DirectoryCreate", 
+          "ComponentType": "DirectoryCreate",
           "ComponentName": "MozillaMaintenanceDir"
         }
       ]
     },
     {
-      "ComponentName": "MozRoot_cer",
-      "ComponentType": "ChecksumFileDownload",
-      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/MozRoot.cer?raw=true",
-      "Target": "C:\\DSC\\MozillaMaintenance\\MozRoot.cer",
-      "DependsOn": [
-        {
-          "ComponentType": "DirectoryCreate", 
-          "ComponentName": "MozillaMaintenanceDir"
-        }
-      ]
-    },
-    {
-      "ComponentName": "MMS_Install_exe",
+      "ComponentName": "maintenanceservice_install",
       "ComponentType": "CommandRun",
-      "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Command": "C:\\DSC\\MozillaMaintenance\\maintenanceservice_installer.exe",
-      "Arguments": "/FakeFlag",
+      "Command": "C:\\dsc\\MozillaMaintenance\\maintenanceservice_installer.exe",
+      "Arguments": [
+        "/s"
+      ],
       "DependsOn": [
-          {
-            "ComponentName": "maintenanceservice.exe"
-          },
-	  {
-            "ComponentName": "maintenanceservice_installer.exe"
-          }
-        ],
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "maintenanceservice_installer"
+        },
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "maintenanceservice"
+        }
+      ],
       "Validate": {
-      "CommandsReturn": [
-          {
-            "Command": "sc",
-              "Arguments": [
-                "query",
-                "MozillaMaintenance",
-                "|",
-                "findstr",
-                "/i",
-                "\"STATE\""
-              ],
-                "Match": "RUNNING"
-          }
+        "PathsExist": [
+          "C:\\Program Files (x86)\\Mozilla Maintenance Service\\maintenanceservice.exe",
+          "C:\\Program Files (x86)\\Mozilla Maintenance Service\\Uninstall.exe"
         ]
       }
     },
     {
-      "ComponentName": "MMS_MozFakeCA_cer",
-      "ComponentType": "CommandRun",
-      "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Command": "certutil.exe",
-      "Arguments": "-addstore Root C:\\DSC\\MozillaMaintenance\\MozFakeCA.cer"
+      "ComponentName": "MozFakeCA.cer",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/MozFakeCA.cer?raw=true",
+      "Target": "C:\\dsc\\MozillaMaintenance\\MozFakeCA.cer",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "MozillaMaintenanceDir"
+        }
+      ]
     },
     {
-      "ComponentName": "MMS_MozRoot_cer",
+      "ComponentName": "MozFakeCA.cer",
       "ComponentType": "CommandRun",
-      "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Command": "certutil.exe",
-      "Arguments": "-addstore Root C:\\DSC\\MozillaMaintenance\\MozRoot.cer"
+      "Arguments": [
+        "-addstore",
+        "Root",
+        "C:\\dsc\\MozillaMaintenance\\MozFakeCA.cer"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "MozFakeCA.cer"
+        }
+      ]
+    },
+    {
+      "ComponentName": "MozRoot.cer",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/MozRoot.cer?raw=true",
+      "Target": "C:\\dsc\\MozillaMaintenance\\MozRoot.cer",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "MozillaMaintenanceDir"
+        }
+      ]
+    },
+    {
+      "ComponentName": "MozRoot.cer",
+      "ComponentType": "CommandRun",
+      "Command": "certutil.exe",
+      "Arguments": [
+        "-addstore",
+        "Root",
+        "C:\\dsc\\MozillaMaintenance\\MozRoot.cer"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "MozRoot.cer"
+        }
+      ]
     },
     {
       "ComponentName": "reg_MaintenanceService_0_name",
