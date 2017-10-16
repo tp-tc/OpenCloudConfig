@@ -274,23 +274,12 @@
     },
     {
       "ComponentName": "Mercurial",
-      "ComponentType": "ExeInstall",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1298976",
-      "Url": "https://www.mercurial-scm.org/release/windows/Mercurial-3.9.1-x64.exe",
-      "Arguments": [
-        "/SP-",
-        "/VERYSILENT",
-        "/NORESTART",
-        "/DIR=expand:{pf}\\Mercurial",
-        "/LOG=\"C:\\log\\Mercurial-3.9.1-x64.exe.install.log\""
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Program Files\\Mercurial\\hg.exe",
-          "C:\\Program Files\\Mercurial\\python27.dll"
-        ]
-      },
-      "sha512": "b71fd8f1d1e578bbd26b7bc6635d4a9d11320bce36f24ba44152cba3c02477006ab8d6fd9b06b263d11b4327713a048156d64bcbbb073d95eede0a53675a9a80"
+      "ComponentType": "MsiInstall",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1390271",
+      "Url": "https://www.mercurial-scm.org/release/windows/mercurial-4.3.3-x64.msi",
+      "Name": "Mercurial 4.3.3 (x64)",
+      "ProductId": "D08D4000-DDF1-4FCA-A07E-C4898650EB0D",
+      "sha512": "67453A2E28DE4C4D6A8EDE3878B96A4DF02A3C01E3E2CA5C550381FA11867A46876957F76BD812EBF33F072161A6033CE2EAADAF281CE12238861685AAB47F6B"
     },
     {
       "ComponentName": "MercurialConfig",
@@ -298,7 +287,7 @@
       "Comment": "Required by clonebundle and share hg extensions",
       "DependsOn": [
         {
-          "ComponentType": "ExeInstall",
+          "ComponentType": "MsiInstall",
           "ComponentName": "Mercurial"
         }
       ],
@@ -323,7 +312,7 @@
       "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
         {
-          "ComponentType": "ExeInstall",
+          "ComponentType": "MsiInstall",
           "ComponentName": "Mercurial"
         }
       ],
@@ -353,7 +342,7 @@
           "ComponentName": "MozillaBuildSetup"
         },
         {
-          "ComponentType": "ExeInstall",
+          "ComponentType": "MsiInstall",
           "ComponentName": "Mercurial"
         }
       ],
@@ -757,7 +746,7 @@
       ],
       "DependsOn": [
         {
-          "ComponentType": "ExeInstall",
+          "ComponentType": "MsiInstall",
           "ComponentName": "Mercurial"
         }
       ],
