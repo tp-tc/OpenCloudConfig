@@ -521,7 +521,7 @@
       "Url": "https://www.mercurial-scm.org/release/windows/mercurial-4.3.3-x64.msi",
       "Name": "Mercurial 4.3.3 (x64)",
       "ProductId": "D08D4000-DDF1-4FCA-A07E-C4898650EB0D",
-      "sha512": "67453A2E28DE4C4D6A8EDE3878B96A4DF02A3C01E3E2CA5C550381FA11867A46876957F76BD812EBF33F072161A6033CE2EAADAF281CE12238861685AAB47F6B"
+      "sha512": "67453a2e28de4c4d6a8ede3878b96a4df02a3c01e3e2ca5c550381fa11867a46876957f76bd812ebf33f072161a6033ce2eaadaf281ce12238861685aab47f6b"
     },
     {
       "ComponentName": "MercurialConfig",

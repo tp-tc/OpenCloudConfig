@@ -574,7 +574,8 @@
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1390271",
       "Url": "https://www.mercurial-scm.org/release/windows/mercurial-4.3.3-x64.msi",
       "Name": "Mercurial 4.3.3 (x64)",
-      "ProductId": "D08D4000-DDF1-4FCA-A07E-C4898650EB0D"
+      "ProductId": "D08D4000-DDF1-4FCA-A07E-C4898650EB0D",
+      "sha512": "67453a2e28de4c4d6a8ede3878b96a4df02a3c01e3e2ca5c550381fa11867a46876957f76bd812ebf33f072161a6033ce2eaadaf281ce12238861685aab47f6b"
     },
     {
       "ComponentName": "MercurialConfig",
