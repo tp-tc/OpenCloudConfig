@@ -890,7 +890,7 @@
         "--url",
         "https://api.pub.build.mozilla.org/tooltool",
         "-c",
-        "C:\\builds\\tooltool-cache",
+        "C:\\builds\\tooltool_cache",
         "--authentication-file",
         "C:\\builds\\relengapi.tok",
         "-m",
@@ -918,7 +918,7 @@
         "--url",
         "https://api.pub.build.mozilla.org/tooltool",
         "-c",
-        "C:\\builds\\tooltool-cache",
+        "C:\\builds\\tooltool_cache",
         "--authentication-file",
         "C:\\builds\\relengapi.tok",
         "-m",
@@ -950,7 +950,7 @@
         }
       ],
       "Name": "TOOLTOOL_CACHE",
-      "Value": "C:\\builds\\tooltool-cache",
+      "Value": "C:\\builds\\tooltool_cache",
       "Target": "Machine"
     },
     {
