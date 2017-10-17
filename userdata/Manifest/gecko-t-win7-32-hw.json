@@ -104,21 +104,6 @@
       "sha512": "ad8298ae7d170c9a3e7f66a6098dd017adcd7912ba3938237db88dca141b6606b095a1c7c7fff0a2d4b47405ffbd25d65e5d8d98a55a8abaf3ced12854c18c4c"
     },
     {
-      "ComponentName": "Git-2.11.1",
-      "ComponentType": "ExeInstall",
-      "Comment": "Git-2.11.1",
-      "Url": "https://github.com/git-for-windows/git/releases/download/v2.11.1.windows.1/Git-2.11.1-32-bit.exe",
-      "Arguments": [
-        "/VerySilent"
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Program Files\\GIT\\git-cmd.exe",
-          "C:\\Program Files\\GIT\\bin\\git.exe"
-        ]
-      }
-    },
-    {
       "ComponentName": "SublimeText3",
       "ComponentType": "ExeInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
@@ -353,47 +338,6 @@
       "Comment": "",
       "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\MaintenanceService\\3932ecacee736d366d6436db0f55bce4\\2\\publisherLink",
       "ValueName": ""
-    },
-    {
-      "ComponentName": "Intel_Zip_dir",
-      "ComponentType": "DirectoryCreate",
-      "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Path": "C:\\DSC\\Intel"
-    },
-    {
-      "ComponentName": "Intel_DATACENTER_Driver",
-      "ComponentType": "ZipInstall",
-      "Destination": "C:\\DSC\\Intel",
-      "Url": "http://fakeurl/Intel",
-      "sha512": "b8c67c76d381c639979a65cb11948bf1258dafaee20cac346b7d299211cb54801edc13f3a5e0e781da0c112103ac363ff56bbea84dee58932658cae82796a6ff",
-      "DependsOn": [
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "Intel_Zip_dir"
-        }
-      ]
-    },
-    {
-      "ComponentName": "Intel_DATACENTER_Driver_Install",
-      "ComponentType": "CommandRun",
-      "Comment": "Intel Graphic driver install",
-      "Command": "C:\\dsc\\Intel\\setup.exe",
-      "Arguments": [
-        "-s",
-        "-overwrite"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "ZipInstall",
-          "ComponentName": "Intel_DATACENTER_Driver"
-        }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Program Files\\Intel\\Media Resource\\igd11dxva32.dll",
-          "C:\\Program Files\\Intel\\Media SDK\\c_w7_32.cpa"
-        ]
-      }
     },
     {
       "ComponentName": "Windows SDK",
