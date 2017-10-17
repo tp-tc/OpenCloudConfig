@@ -8,6 +8,27 @@ if [ "${#}" -lt 1 ]; then
 fi
 tc_worker_type="${1}"
 
+# validate that manifest components, which contain a sha512 hash, have a corresponding tooltool artifact
+secrets_url="taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo"
+curl -s -N ${secrets_url} | jq -r '.secret.tooltool.upload.internal' > ./.tooltool.token
+echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] tooltool token downloaded"
+manifest=./OpenCloudConfig/userdata/Manifest/${tc_worker_type}.json
+echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] validating Manifest ${manifest}"
+json=$(basename $manifest)
+for ComponentType in ExeInstall MsiInstall MsuInstall ZipInstall; do
+  jq --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and (.sha512 != "" and .sha512 != null)) | .sha512' ${manifest} | while read sha512; do
+    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] validating ${ComponentType} ${sha512}"
+
+    tt_url="https://api.pub.build.mozilla.org/tooltool/sha512/${sha512}"
+    if curl --header "Authorization: Bearer $(cat ./.tooltool.token)" --output /dev/null --silent --head --fail ${tt_url}; then
+      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${sha512} found in tooltool: ${tt_url}"
+    else
+      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${sha512} missing from tooltool: ${tt_url}"
+      exit 63
+    fi
+  done
+done
+
 # get some secrets from tc
 secrets_url=taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig
 if [[ $tc_worker_type == *"-b-win"* ]]; then

@@ -84,6 +84,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       retries: 0
       scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-gecko-1-b-win2012-beta
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-b-win2012-beta
@@ -140,6 +141,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       retries: 0
       scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-gecko-1-b-win2012
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-b-win2012
@@ -196,6 +198,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       retries: 0
       scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-gecko-2-b-win2012
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-2-b-win2012
@@ -252,6 +255,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       retries: 0
       scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-gecko-3-b-win2012
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-3-b-win2012
@@ -308,6 +312,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       retries: 0
       scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32-cu
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32-cu
@@ -363,6 +368,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       retries: 0
       scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32-gpu-b
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32-gpu-b
@@ -418,6 +424,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       retries: 0
       scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32-beta
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32-beta
@@ -473,6 +480,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       retries: 0
       scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32
@@ -528,6 +536,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       retries: 0
       scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32-gpu
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32-gpu
@@ -583,6 +592,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       retries: 0
       scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-cu
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-cu
@@ -638,6 +648,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       retries: 0
       scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-beta
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-beta
@@ -693,6 +704,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       retries: 0
       scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64
@@ -748,6 +760,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       retries: 0
       scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-gpu-b
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-gpu-b
@@ -803,6 +816,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       retries: 0
       scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-gpu
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-gpu
