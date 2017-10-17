@@ -218,7 +218,9 @@
       "ComponentType": "CommandRun",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Command": "C:\\DSC\\MozillaMaintenance\\maintenanceservice_installer.exe",
-      "Arguments": "/FakeFlag",
+      "Arguments": [
+        "/FakeFlag"
+      ],
       "DependsOn": [
           {
             "ComponentName": "maintenanceservice.exe"
@@ -249,14 +251,22 @@
       "ComponentType": "CommandRun",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Command": "certutil.exe",
-      "Arguments": "-addstore Root C:\\DSC\\MozillaMaintenance\\MozFakeCA.cer"
+      "Arguments": [
+        "-addstore",
+        "Root",
+        "C:\\DSC\\MozillaMaintenance\\MozFakeCA.cer"
+      ]
     },
     {
       "ComponentName": "MMS_MozRoot_cer",
       "ComponentType": "CommandRun",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Command": "certutil.exe",
-      "Arguments": "-addstore Root C:\\DSC\\MozillaMaintenance\\MozRoot.cer"
+      "Arguments": [
+        "-addstore",
+        "Root",
+        "C:\\DSC\\MozillaMaintenance\\MozRoot.cer"
+      ]
     },
     {
       "ComponentName": "reg_MaintenanceService_0_name",
