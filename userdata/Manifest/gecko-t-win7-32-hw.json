@@ -382,6 +382,7 @@
       ],
       "DependsOn": [
         {
+          "ComponentType": "ZipInstall",
           "ComponentName": "Intel_DATACENTER_Driver"
         }
       ],
