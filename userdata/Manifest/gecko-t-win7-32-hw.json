@@ -227,6 +227,7 @@
           "ComponentName": "maintenanceservice.exe"
         },
         {
+          "ComponentType": "ChecksumFileDownload",
           "ComponentName": "maintenanceservice_installer.exe"
         }
       ],
