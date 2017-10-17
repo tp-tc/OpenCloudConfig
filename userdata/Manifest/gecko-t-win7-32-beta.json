@@ -1191,7 +1191,7 @@
     },
     {
       "ComponentName": "UniversalCRuntime",
-      "ComponentType": "MsiInstall",
+      "ComponentType": "MsuInstall",
       "Comment": "Update for Universal C Runtime in Windows https://bugzilla.mozilla.org/show_bug.cgi?id=1369537#c19",
       "Url": "https://s3.amazonaws.com/windows-opencloudconfig-packages/CRuntime/Windows6.1-KB2999226-x86.msu",
       "Id": "KB2999226",
