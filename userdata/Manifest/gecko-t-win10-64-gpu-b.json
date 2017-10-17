@@ -1262,7 +1262,7 @@
       ]
     },
     {
-     "ComponentName": "UltraVNC",
+      "ComponentName": "UltraVNC",
       "ComponentType": "MsiInstall",
       "Comment": "VNC Server - not essential for building firefox",
       "Url": "https://s3.amazonaws.com/windows-opencloudconfig-packages/UltraVnc/UltraVnc_10962_x64.msi",

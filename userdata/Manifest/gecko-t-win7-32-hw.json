@@ -108,7 +108,7 @@
       "ComponentType": "ExeInstall",
       "Comment": "Git-2.11.1",
       "Url": "https://github.com/git-for-windows/git/releases/download/v2.11.1.windows.1/Git-2.11.1-32-bit.exe",
-            "Arguments": [
+      "Arguments": [
         "/VerySilent"
       ],
       "Validate": {
@@ -143,7 +143,7 @@
       "Path": "C:\\Users\\Administrator\\AppData\\Roaming\\Sublime Text 3\\Packages"
     },
     {
-     "ComponentName": "UltraVNC",
+      "ComponentName": "UltraVNC",
       "ComponentType": "MsiInstall",
       "Comment": "VNC Server - not essential for building firefox",
       "Url": "http://fakeurl/UltraVNC",
@@ -164,7 +164,7 @@
       "ComponentType": "DirectoryCreate",
       "Comment": "Working directory for Mozilla Maintenance Service",
       "Path": "C:\\DSC\\MozillaMaintenance"
-    },    
+    },
     {
       "ComponentName": "maintenanceservice.exe",
       "ComponentType": "ChecksumFileDownload",
@@ -172,7 +172,7 @@
       "Target": "C:\\DSC\\MozillaMaintenance\\maintenanceservice.exe",
       "DependsOn": [
         {
-          "ComponentType": "DirectoryCreate", 
+          "ComponentType": "DirectoryCreate",
           "ComponentName": "MozillaMaintenanceDir"
         }
       ]
@@ -184,7 +184,7 @@
       "Target": "C:\\DSC\\MozillaMaintenance\\maintenanceservice_installer.exe",
       "DependsOn": [
         {
-          "ComponentType": "DirectoryCreate", 
+          "ComponentType": "DirectoryCreate",
           "ComponentName": "MozillaMaintenanceDir"
         }
       ]
@@ -196,7 +196,7 @@
       "Target": "C:\\DSC\\MozillaMaintenance\\MozFakeCA.cer",
       "DependsOn": [
         {
-          "ComponentType": "DirectoryCreate", 
+          "ComponentType": "DirectoryCreate",
           "ComponentName": "MozillaMaintenanceDir"
         }
       ]
@@ -208,7 +208,7 @@
       "Target": "C:\\DSC\\MozillaMaintenance\\MozRoot.cer",
       "DependsOn": [
         {
-          "ComponentType": "DirectoryCreate", 
+          "ComponentType": "DirectoryCreate",
           "ComponentName": "MozillaMaintenanceDir"
         }
       ]
@@ -222,26 +222,26 @@
         "/FakeFlag"
       ],
       "DependsOn": [
-          {
-            "ComponentName": "maintenanceservice.exe"
-          },
-	  {
-            "ComponentName": "maintenanceservice_installer.exe"
-          }
-        ],
+        {
+          "ComponentName": "maintenanceservice.exe"
+        },
+        {
+          "ComponentName": "maintenanceservice_installer.exe"
+        }
+      ],
       "Validate": {
-      "CommandsReturn": [
+        "CommandsReturn": [
           {
             "Command": "sc",
-              "Arguments": [
-                "query",
-                "MozillaMaintenance",
-                "|",
-                "findstr",
-                "/i",
-                "\"STATE\""
-              ],
-                "Match": "RUNNING"
+            "Arguments": [
+              "query",
+              "MozillaMaintenance",
+              "|",
+              "findstr",
+              "/i",
+              "\"STATE\""
+            ],
+            "Match": "RUNNING"
           }
         ]
       }
@@ -357,7 +357,7 @@
       "ComponentType": "DirectoryCreate",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Path": "C:\\DSC\\Intel"
-    },    
+    },
     {
       "ComponentName": "Intel_DATACENTER_Driver",
       "ComponentType": "ZipInstall",
@@ -375,23 +375,23 @@
       "ComponentName": "Intel_DATACENTER_Driver_Install",
       "ComponentType": "CommandRun",
       "Comment": "Intel Graphic driver install",
-      "Command": "C:\\dsc\\Intel\\setup.exe", 
+      "Command": "C:\\dsc\\Intel\\setup.exe",
       "Arguments": [
-				"-s",
-				"-overwrite"
-			],
+        "-s",
+        "-overwrite"
+      ],
       "DependsOn": [
-      	{
-        	"ComponentName": "Intel_DATACENTER_Driver"
-	      }      
-      ],		
-     "Validate": {
+        {
+          "ComponentName": "Intel_DATACENTER_Driver"
+        }
+      ],
+      "Validate": {
         "PathsExist": [
           "C:\\Program Files\\Intel\\Media Resource\\igd11dxva32.dll",
           "C:\\Program Files\\Intel\\Media SDK\\c_w7_32.cpa"
         ]
       }
-    },  
+    },
     {
       "ComponentName": "Windows SDK",
       "ComponentType": "ExeInstall",

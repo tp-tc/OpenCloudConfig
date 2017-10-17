@@ -145,7 +145,7 @@
       ]
     },
     {
-     "ComponentName": "UltraVNC",
+      "ComponentName": "UltraVNC",
       "ComponentType": "MsiInstall",
       "Comment": "VNC Server - not essential for building firefox",
       "Url": "http://fakeurl/UltraVNC",
@@ -637,7 +637,7 @@
       "ValueData": "0x00000001",
       "Hex": true
     },
-        {
+    {
       "ComponentName": "GenericWorkerDirectory",
       "ComponentType": "DirectoryCreate",
       "Path": "C:\\generic-worker"
@@ -1222,4 +1222,3 @@
     }
   ]
 }
-

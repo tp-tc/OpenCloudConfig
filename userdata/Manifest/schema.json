@@ -10,24 +10,60 @@
       "items": {
         "type": "object",
         "oneOf": [
-          { "$ref": "#/definitions/DirectoryCreate" },
-          { "$ref": "#/definitions/DirectoryDelete" },
-          { "$ref": "#/definitions/DirectoryCopy" },
-          { "$ref": "#/definitions/CommandRun" },
-          { "$ref": "#/definitions/FileDownload" },
-          { "$ref": "#/definitions/ChecksumFileDownload" },
-          { "$ref": "#/definitions/SymbolicLink" },
-          { "$ref": "#/definitions/ExeInstall" },
-          { "$ref": "#/definitions/MsiInstall" },
-          { "$ref": "#/definitions/WindowsFeatureInstall" },
-          { "$ref": "#/definitions/ZipInstall" },
-          { "$ref": "#/definitions/ServiceControl" },
-          { "$ref": "#/definitions/EnvironmentVariableSet" },
-          { "$ref": "#/definitions/EnvironmentVariableUniqueAppend" },
-          { "$ref": "#/definitions/EnvironmentVariableUniquePrepend" },
-          { "$ref": "#/definitions/RegistryKeySet" },
-          { "$ref": "#/definitions/RegistryValueSet" },
-          { "$ref": "#/definitions/FirewallRule" }
+          {
+            "$ref": "#/definitions/DirectoryCreate"
+          },
+          {
+            "$ref": "#/definitions/DirectoryDelete"
+          },
+          {
+            "$ref": "#/definitions/DirectoryCopy"
+          },
+          {
+            "$ref": "#/definitions/CommandRun"
+          },
+          {
+            "$ref": "#/definitions/FileDownload"
+          },
+          {
+            "$ref": "#/definitions/ChecksumFileDownload"
+          },
+          {
+            "$ref": "#/definitions/SymbolicLink"
+          },
+          {
+            "$ref": "#/definitions/ExeInstall"
+          },
+          {
+            "$ref": "#/definitions/MsiInstall"
+          },
+          {
+            "$ref": "#/definitions/WindowsFeatureInstall"
+          },
+          {
+            "$ref": "#/definitions/ZipInstall"
+          },
+          {
+            "$ref": "#/definitions/ServiceControl"
+          },
+          {
+            "$ref": "#/definitions/EnvironmentVariableSet"
+          },
+          {
+            "$ref": "#/definitions/EnvironmentVariableUniqueAppend"
+          },
+          {
+            "$ref": "#/definitions/EnvironmentVariableUniquePrepend"
+          },
+          {
+            "$ref": "#/definitions/RegistryKeySet"
+          },
+          {
+            "$ref": "#/definitions/RegistryValueSet"
+          },
+          {
+            "$ref": "#/definitions/FirewallRule"
+          }
         ]
       },
       "uniqueItems": true
@@ -39,7 +75,11 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "DirectoryCreate" ] },
+        "ComponentType": {
+          "enum": [
+            "DirectoryCreate"
+          ]
+        },
         "Path": {
           "type": "string"
         },
@@ -76,11 +116,18 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
-        "required": [ "ComponentName", "ComponentType", "Path" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Path"
+        ],
         "additionalProperties": false
       }
     },
@@ -89,7 +136,11 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "DirectoryDelete" ] },
+        "ComponentType": {
+          "enum": [
+            "DirectoryDelete"
+          ]
+        },
         "Path": {
           "type": "string"
         },
@@ -126,11 +177,18 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
-        "required": [ "ComponentName", "ComponentType", "Path" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Path"
+        ],
         "additionalProperties": false
       }
     },
@@ -139,7 +197,11 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "DirectoryCopy" ] },
+        "ComponentType": {
+          "enum": [
+            "DirectoryCopy"
+          ]
+        },
         "Source": {
           "type": "string"
         },
@@ -179,11 +241,19 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
-        "required": [ "ComponentName", "ComponentType", "Source", "Target" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Source",
+          "Target"
+        ],
         "additionalProperties": false
       }
     },
@@ -192,7 +262,11 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "CommandRun" ] },
+        "ComponentType": {
+          "enum": [
+            "CommandRun"
+          ]
+        },
         "Command": {
           "type": "string"
         },
@@ -235,7 +309,10 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
@@ -291,7 +368,11 @@
           },
           "additionalProperties": false
         },
-        "required": [ "ComponentName", "ComponentType", "Command" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Command"
+        ],
         "additionalProperties": false
       }
     },
@@ -300,10 +381,14 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "FileDownload" ] },
+        "ComponentType": {
+          "enum": [
+            "FileDownload"
+          ]
+        },
         "Source": {
           "type": "string",
-          "pattern" : "/(http|https|ftp):\\/\\/[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&amp;:\\/~+#-]*[\\w@?^=%&amp;\\/~+#-])?/"
+          "pattern": "/(http|https|ftp):\\/\\/[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&amp;:\\/~+#-]*[\\w@?^=%&amp;\\/~+#-])?/"
         },
         "Target": {
           "type": "string"
@@ -341,11 +426,19 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
-        "required": [ "ComponentName", "ComponentType", "Source", "Target" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Source",
+          "Target"
+        ],
         "additionalProperties": false
       }
     },
@@ -354,10 +447,14 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "ChecksumFileDownload" ] },
+        "ComponentType": {
+          "enum": [
+            "ChecksumFileDownload"
+          ]
+        },
         "Source": {
           "type": "string",
-          "pattern" : "/(http|https|ftp):\\/\\/[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&amp;:\\/~+#-]*[\\w@?^=%&amp;\\/~+#-])?/"
+          "pattern": "/(http|https|ftp):\\/\\/[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&amp;:\\/~+#-]*[\\w@?^=%&amp;\\/~+#-])?/"
         },
         "Target": {
           "type": "string"
@@ -395,11 +492,19 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
-        "required": [ "ComponentName", "ComponentType", "Source", "Target" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Source",
+          "Target"
+        ],
         "additionalProperties": false
       }
     },
@@ -408,7 +513,11 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "SymbolicLink" ] },
+        "ComponentType": {
+          "enum": [
+            "SymbolicLink"
+          ]
+        },
         "Link": {
           "type": "string"
         },
@@ -448,11 +557,19 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
-        "required": [ "ComponentName", "ComponentType", "Link", "Target" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Link",
+          "Target"
+        ],
         "additionalProperties": false
       }
     },
@@ -461,10 +578,14 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "ExeInstall" ] },
+        "ComponentType": {
+          "enum": [
+            "ExeInstall"
+          ]
+        },
         "Url": {
           "type": "string",
-          "pattern" : "/(http|https|ftp):\\/\\/[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&amp;:\\/~+#-]*[\\w@?^=%&amp;\\/~+#-])?/"
+          "pattern": "/(http|https|ftp):\\/\\/[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&amp;:\\/~+#-]*[\\w@?^=%&amp;\\/~+#-])?/"
         },
         "Arguments": {
           "type": "array",
@@ -505,7 +626,10 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
@@ -561,7 +685,11 @@
           },
           "additionalProperties": false
         },
-        "required": [ "ComponentName", "ComponentType", "Url" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Url"
+        ],
         "additionalProperties": false
       }
     },
@@ -570,10 +698,14 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "MsiInstall" ] },
+        "ComponentType": {
+          "enum": [
+            "MsiInstall"
+          ]
+        },
         "Url": {
           "type": "string",
-          "pattern" : "/(http|https|ftp):\\/\\/[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&amp;:\\/~+#-]*[\\w@?^=%&amp;\\/~+#-])?/"
+          "pattern": "/(http|https|ftp):\\/\\/[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&amp;:\\/~+#-]*[\\w@?^=%&amp;\\/~+#-])?/"
         },
         "Name": {
           "type": "string"
@@ -615,11 +747,18 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
-        "required": [ "ComponentName", "ComponentType", "Url" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Url"
+        ],
         "additionalProperties": false
       }
     },
@@ -628,7 +767,11 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "WindowsFeatureInstall" ] },
+        "ComponentType": {
+          "enum": [
+            "WindowsFeatureInstall"
+          ]
+        },
         "Name": {
           "type": "string"
         },
@@ -665,11 +808,18 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
-        "required": [ "ComponentName", "ComponentType", "Name" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Name"
+        ],
         "additionalProperties": false
       }
     },
@@ -678,10 +828,14 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "ZipInstall" ] },
+        "ComponentType": {
+          "enum": [
+            "ZipInstall"
+          ]
+        },
         "Url": {
           "type": "string",
-          "pattern" : "/(http|https|ftp):\\/\\/[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&amp;:\\/~+#-]*[\\w@?^=%&amp;\\/~+#-])?/"
+          "pattern": "/(http|https|ftp):\\/\\/[\\w-]+(\\.[\\w-]+)+([\\w.,@?^=%&amp;:\\/~+#-]*[\\w@?^=%&amp;\\/~+#-])?/"
         },
         "Destination": {
           "type": "string"
@@ -719,11 +873,19 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
-        "required": [ "ComponentName", "ComponentType", "Url", "Destination" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Url",
+          "Destination"
+        ],
         "additionalProperties": false
       }
     },
@@ -732,7 +894,11 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "ServiceControl" ] },
+        "ComponentType": {
+          "enum": [
+            "ServiceControl"
+          ]
+        },
         "Name": {
           "type": "string"
         },
@@ -782,11 +948,20 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
-        "required": [ "ComponentName", "ComponentType", "Name", "StartupType", "State" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Name",
+          "StartupType",
+          "State"
+        ],
         "additionalProperties": false
       }
     },
@@ -795,7 +970,11 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "EnvironmentVariableSet" ] },
+        "ComponentType": {
+          "enum": [
+            "EnvironmentVariableSet"
+          ]
+        },
         "Name": {
           "type": "string"
         },
@@ -842,11 +1021,20 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
-        "required": [ "ComponentName", "ComponentType", "Name", "Value", "Target" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Name",
+          "Value",
+          "Target"
+        ],
         "additionalProperties": false
       }
     },
@@ -855,7 +1043,11 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "EnvironmentVariableUniqueAppend" ] },
+        "ComponentType": {
+          "enum": [
+            "EnvironmentVariableUniqueAppend"
+          ]
+        },
         "Name": {
           "type": "string"
         },
@@ -905,11 +1097,20 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
-        "required": [ "ComponentName", "ComponentType", "Name", "Values", "Target" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Name",
+          "Values",
+          "Target"
+        ],
         "additionalProperties": false
       }
     },
@@ -918,7 +1119,11 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "EnvironmentVariableUniquePrepend" ] },
+        "ComponentType": {
+          "enum": [
+            "EnvironmentVariableUniquePrepend"
+          ]
+        },
         "Name": {
           "type": "string"
         },
@@ -968,11 +1173,20 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
-        "required": [ "ComponentName", "ComponentType", "Name", "Values", "Target" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Name",
+          "Values",
+          "Target"
+        ],
         "additionalProperties": false
       }
     },
@@ -981,7 +1195,11 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "RegistryKeySet" ] },
+        "ComponentType": {
+          "enum": [
+            "RegistryKeySet"
+          ]
+        },
         "Key": {
           "type": "string"
         },
@@ -1021,11 +1239,19 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
-        "required": [ "ComponentName", "ComponentType", "Key", "ValueName" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Key",
+          "ValueName"
+        ],
         "additionalProperties": false
       }
     },
@@ -1034,7 +1260,11 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "RegistryValueSet" ] },
+        "ComponentType": {
+          "enum": [
+            "RegistryValueSet"
+          ]
+        },
         "Key": {
           "type": "string"
         },
@@ -1090,11 +1320,21 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
-        "required": [ "ComponentName", "ComponentType", "Key", "ValueName", "ValueType", "ValueData" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Key",
+          "ValueName",
+          "ValueType",
+          "ValueData"
+        ],
         "additionalProperties": false
       }
     },
@@ -1103,7 +1343,11 @@
         "ComponentName": {
           "type": "string"
         },
-        "ComponentType": { "enum": [ "FirewallRule" ] },
+        "ComponentType": {
+          "enum": [
+            "FirewallRule"
+          ]
+        },
         "Protocol": {
           "enum": [
             "TCP",
@@ -1158,11 +1402,21 @@
                   "FirewallRule"
                 ]
               },
-              "required": [ "ComponentName", "ComponentType" ]
+              "required": [
+                "ComponentName",
+                "ComponentType"
+              ]
             }
           }
         },
-        "required": [ "ComponentName", "ComponentType", "Protocol", "LocalPort", "Direction", "Action" ],
+        "required": [
+          "ComponentName",
+          "ComponentType",
+          "Protocol",
+          "LocalPort",
+          "Direction",
+          "Action"
+        ],
         "additionalProperties": false
       }
     }
