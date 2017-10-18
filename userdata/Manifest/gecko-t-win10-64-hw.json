@@ -679,7 +679,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.0.5/generic-worker-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v8.3.0/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
@@ -711,46 +711,12 @@
       "Action": "Allow"
     },
     {
-      "ComponentName": "NSSMDownload",
-      "ComponentType": "FileDownload",
-      "Source": "https://nssm.cc/release/nssm-2.24.zip",
-      "Target": "C:\\Windows\\Temp\\NSSMInstall.zip"
-    },
-    {
-      "ComponentName": "NSSMInstall",
-      "ComponentType": "CommandRun",
-      "Comment": "NSSM is required to install Generic Worker as a service. Currently ZipInstall fails, so using 7z instead.",
-      "Command": "C:\\Program Files\\7-Zip\\7z.exe",
-      "Arguments": [
-        "x",
-        "-oC:\\",
-        "C:\\Windows\\Temp\\NSSMInstall.zip"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "SevenZip"
-        },
-        {
-          "ComponentType": "FileDownload",
-          "ComponentName": "NSSMDownload"
-        }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\nssm-2.24\\win64\\nssm.exe"
-        ]
-      }
-    },
-    {
       "ComponentName": "GenericWorkerInstall",
       "ComponentType": "CommandRun",
       "Command": "C:\\generic-worker\\generic-worker.exe",
       "Arguments": [
         "install",
-        "service",
-        "--nssm",
-        "C:\\nssm-2.24\\win64\\nssm.exe",
+        "startup",
         "--config",
         "C:\\generic-worker\\generic-worker.config"
       ],
@@ -770,10 +736,6 @@
         {
           "ComponentType": "FirewallRule",
           "ComponentName": "LiveLog_Put"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "NSSMInstall"
         }
       ],
       "Validate": {
@@ -787,7 +749,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 10.0.5"
+            "Match": "generic-worker 8.3.0"
           }
         ]
       }
