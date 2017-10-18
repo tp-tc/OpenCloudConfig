@@ -1,4 +1,44 @@
 {
+  "AWS": {
+    "BaseAMISearchTerm": "gecko-t-win7-32-base-20170905",
+    "InstanceType": "g2.2xlarge",
+    "AMIDescriptionPrefix": "Gecko test worker for Windows 7 32 bit",
+    "CopyRegions": [
+      "us-east-1",
+      "us-east-2",
+      "us-west-1",
+      "eu-central-1"
+    ],
+    "BlockDeviceMappings": [
+      {
+        "DeviceName": "/dev/sda1",
+        "Ebs": {
+          "VolumeType": "gp2",
+          "VolumeSize": 30,
+          "DeleteOnTermination": true
+        }
+      },
+      {
+        "DeviceName": "/dev/sdb",
+        "Ebs": {
+          "VolumeType": "gp2",
+          "VolumeSize": 120,
+          "DeleteOnTermination": true
+        }
+      },
+      {
+        "DeviceName": "/dev/sdc",
+        "Ebs": {
+          "VolumeType": "gp2",
+          "VolumeSize": 120,
+          "DeleteOnTermination": true
+        }
+      }
+    ]
+  },
+  "GWTasksDir": "Z:\\",
+  "RootUsername": "root",
+  "WorkerUsername": "GenericWorker",
   "Components": [
     {
       "ComponentName": "LogDirectory",
