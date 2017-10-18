@@ -700,7 +700,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.2.2/generic-worker-windows-386.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v8.3.0/generic-worker-windows-386.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
@@ -712,7 +712,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/livelog/releases/download/v8.3.0/livelog-windows-386.exe",
+      "Source": "https://github.com/taskcluster/livelog/releases/download/v1.1.0/livelog-windows-386.exe",
       "Target": "C:\\generic-worker\\livelog.exe"
     },
     {
