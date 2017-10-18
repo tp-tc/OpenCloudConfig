@@ -938,7 +938,7 @@
       }
     },
     {
-      "ComponentName": "MozFakeCA.cer",
+      "ComponentName": "MozFakeCA_cer",
       "ComponentType": "ChecksumFileDownload",
       "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/MozFakeCA.cer?raw=true",
       "Target": "C:\\dsc\\MozillaMaintenance\\MozFakeCA.cer",
@@ -950,7 +950,7 @@
       ]
     },
     {
-      "ComponentName": "MozFakeCA.cer",
+      "ComponentName": "MozFakeCA_cer",
       "ComponentType": "CommandRun",
       "Command": "certutil.exe",
       "Arguments": [
@@ -961,12 +961,40 @@
       "DependsOn": [
         {
           "ComponentType": "ChecksumFileDownload",
-          "ComponentName": "MozFakeCA.cer"
+          "ComponentName": "MozFakeCA_cer"
         }
       ]
     },
     {
-      "ComponentName": "MozRoot.cer",
+      "ComponentName": "MozFakeCA_2017_10_13_cer",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/MozFakeCA_2017-10-13.cer?raw=true",
+      "Target": "C:\\dsc\\MozillaMaintenance\\MozFakeCA_2017-10-13.cer",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "MozillaMaintenanceDir"
+        }
+      ]
+    },
+    {
+      "ComponentName": "MozFakeCA_2017_10_13_cer",
+      "ComponentType": "CommandRun",
+      "Command": "certutil.exe",
+      "Arguments": [
+        "-addstore",
+        "Root",
+        "C:\\dsc\\MozillaMaintenance\\MozFakeCA_2017-10-13.cer"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "MozFakeCA_2017_10_13_cer"
+        }
+      ]
+    },
+    {
+      "ComponentName": "MozRoot_cer",
       "ComponentType": "ChecksumFileDownload",
       "Source": "https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/Mozilla%20Maintenance%20Service/MozRoot.cer?raw=true",
       "Target": "C:\\dsc\\MozillaMaintenance\\MozRoot.cer",
@@ -978,7 +1006,7 @@
       ]
     },
     {
-      "ComponentName": "MozRoot.cer",
+      "ComponentName": "MozRoot_cer",
       "ComponentType": "CommandRun",
       "Command": "certutil.exe",
       "Arguments": [
@@ -989,7 +1017,7 @@
       "DependsOn": [
         {
           "ComponentType": "ChecksumFileDownload",
-          "ComponentName": "MozRoot.cer"
+          "ComponentName": "MozRoot_cer"
         }
       ]
     },
