@@ -1,4 +1,4 @@
-Rem Refrence https://support.mozilla.org/t5/Install-and-Update/What-is-the-Mozilla-Maintenance-Service/ta-p/11800
+Rem Refrence https://support.mozilla.org/en-US/kb/what-mozilla-maintenance-service
 Rem Refrence https://bugzilla.mozilla.org/show_bug.cgi?id=1241225
 
 Set workingdir="C:\DSC\MozillaMaintenance"
