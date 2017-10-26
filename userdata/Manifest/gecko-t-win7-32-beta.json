@@ -441,7 +441,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.2.2/generic-worker-windows-386.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.2.3/generic-worker-windows-386.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
@@ -549,7 +549,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 10.2.2"
+            "Match": "generic-worker 10.2.3"
           }
         ]
       }
@@ -819,109 +819,6 @@
       ]
     },
     {
-      "ComponentName": "GrantGenericWorkerSeAssignPrimaryTokenPrivilege",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1303455 - grant SeAssignPrimaryTokenPrivilege to g-w user",
-      "Command": "powershell",
-      "Arguments": [
-        "-command",
-        "\"& {&'Import-Module' Carbon}\";",
-        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeAssignPrimaryTokenPrivilege}\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ]
-    },
-    {
-      "ComponentName": "GrantGenericWorkerSeIncreaseQuotaPrivilege",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1303455 - grant SeIncreaseQuotaPrivilege to g-w user",
-      "Command": "powershell",
-      "Arguments": [
-        "-command",
-        "\"& {&'Import-Module' Carbon}\";",
-        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeIncreaseQuotaPrivilege}\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ]
-    },
-    {
-      "ComponentName": "GrantGenericWorkerSeIncreaseBasePriorityPrivilege",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1312383 - grant SeIncreaseBasePriorityPrivilege to g-w user",
-      "Command": "powershell",
-      "Arguments": [
-        "-command",
-        "\"& {&'Import-Module' Carbon}\";",
-        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeIncreaseBasePriorityPrivilege}\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ]
-    },
-    {
-      "ComponentName": "reg_PythonCpuPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\python.exe\\PerfOptions",
-      "ValueName": "CpuPriorityClass",
-      "ValueType": "Dword",
-      "ValueData": "0x00000006",
-      "Hex": true
-    },
-    {
-      "ComponentName": "reg_PythonIoPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\python.exe\\PerfOptions",
-      "ValueName": "IoPriority",
-      "ValueType": "Dword",
-      "ValueData": "0x00000002",
-      "Hex": true
-    },
-    {
-      "ComponentName": "reg_MercurialCpuPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\hg.exe\\PerfOptions",
-      "ValueName": "CpuPriorityClass",
-      "ValueType": "Dword",
-      "ValueData": "0x00000006",
-      "Hex": true
-    },
-    {
-      "ComponentName": "reg_MercurialIoPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\hg.exe\\PerfOptions",
-      "ValueName": "IoPriority",
-      "ValueType": "Dword",
-      "ValueData": "0x00000002",
-      "Hex": true
-    },
-    {
       "ComponentName": "MozillaMaintenanceDir",
       "ComponentType": "DirectoryCreate",
       "Comment": "Working directory for Mozilla Maintenance Service installation",
@@ -1173,9 +1070,9 @@
       "ValueData": ""
     },
     {
-      "ComponentName": "GrantGenericWorkerMozillaRegistryWriteAccess",
+      "ComponentName": "GrantEveryoneMozillaRegistryWriteAccess",
       "ComponentType": "CommandRun",
-      "Comment": "Bug 1353889 - Grant GenericWorker account write access to Mozilla registry key",
+      "Comment": "Bug 1353889 - Grant all users account write access to Mozilla registry key",
       "Command": "powershell",
       "Arguments": [
         "-command",
