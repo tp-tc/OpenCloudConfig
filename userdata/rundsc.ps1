@@ -353,6 +353,66 @@ function Mount-DiskOne {
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
+function Set-Pagefile {
+  param (
+    [switch] $isWorker = $false,
+    [string] $lock = 'c:\dsc\in-progress.lock',
+    [string] $name = 'y:\pagefile.sys',
+    [int] $initialSize = 8192,
+    [int] $maximumSize = 8192
+  )
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+      'Microsoft Windows 7*' {
+        if (($isWorker) -and (Test-Path -Path ('{0}:\' -f $name[0]) -ErrorAction SilentlyContinue) -and (@(Get-WmiObject Win32_PagefileSetting | ? { $_.Name -ieq $name }).length -lt 1)) {
+          try {
+            $computerSystem = (Get-WmiObject Win32_ComputerSystem -EnableAllPrivileges)
+            $computerSystem.AutomaticManagedPagefile = $false
+            $computerSystem.Put()
+            Write-Log -message ('{0} :: automatic managed pagefile disabled.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+          }
+          catch {
+            Write-Log -message ('{0} :: failed to disable automatic managed pagefile. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+          }
+          Get-WmiObject Win32_PagefileSetting | ? { $_.Name.StartsWith('c:') } | % {
+            $existingPagefileName = $_.Name
+            try {
+              $_.Delete()
+              Write-Log -message ('{0} :: page file: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $existingPagefileName) -severity 'INFO'
+            }
+            catch {
+              Write-Log -message ('{0} :: failed to delete page file: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $existingPagefileName, $_.Exception.Message) -severity 'ERROR'
+            }
+          }
+          try {
+            Set-WmiInstance -class Win32_PageFileSetting -Arguments @{name=$name;InitialSize=$initialSize;MaximumSize=$maximumSize}
+            Write-Log -message ('{0} :: page file: {1}, created.' -f $($MyInvocation.MyCommand.Name), $name) -severity 'INFO'
+            Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+            & shutdown @('-r', '-t', '0', '-c', ('page file {0} created' -f $name), '-f', '-d', 'p:4:1')
+          }
+          catch {
+            Write-Log -message ('{0} :: failed to create pagefile: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $name, $_.Exception.Message) -severity 'ERROR'
+          }
+        } else {
+          if ($isWorker) {
+            Write-Log -message ('{0} :: skipping pagefile creation ({1} exists).' -f $($MyInvocation.MyCommand.Name), $name) -severity 'INFO'
+          } else {
+            Write-Log -message ('{0} :: skipping pagefile creation (not a worker).' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+          }
+        }
+      }
+      default {
+        Write-Log -message ('{0} :: skipping pagefile creation (not configured for OS: {1}).' -f $($MyInvocation.MyCommand.Name), (Get-WmiObject -class Win32_OperatingSystem).Caption) -severity 'INFO'
+      }
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+}
 function Map-DriveLetters {
   param (
     [hashtable] $driveLetterMap = @{
@@ -687,6 +747,7 @@ if ($locationType -ne 'DataCenter') {
     }
   }
   Mount-DiskOne -lock $lock
+  Set-Pagefile -isWorker:$isWorker -lock $lock
   Map-DriveLetters
   if (($isWorker) -and (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue))) {
     Write-Log -message 'missing task drive. terminating instance...' -severity 'ERROR'
