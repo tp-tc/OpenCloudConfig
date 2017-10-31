@@ -1215,8 +1215,7 @@
       "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Wisp\\Touch",
       "ValueName": "TouchGate",
       "ValueType": "Dword",
-      "ValueData": "0x00000000",
-      "Hex": true
+      "ValueData": 0
     },
     {
       "ComponentName": "nircmd",
@@ -1229,16 +1228,6 @@
       "ComponentType": "FileDownload",
       "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/nircmd/nircmdc.exe",
       "Target": "C:\\Windows\\System32\\nircmdc.exe"
-    },
-    {
-      "ComponentName": "AssocTxtfileNotepad",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1373551 - associate text files with notepad",
-      "Command": "ftype",
-      "Arguments": [
-        "txtfile=\"C:\\Windows\\System32\\Notepad.exe\"",
-        "\"%1\""
-      ]
     },
     {
       "ComponentName": "UltraVNC",
@@ -1264,8 +1253,7 @@
       "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\Explorer",
       "ValueName": "NoNewAppAlert",
       "ValueType": "Dword",
-      "ValueData": "0x00000001",
-      "Hex": true
+      "ValueData": 1
     }
   ]
 }

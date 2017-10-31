@@ -213,7 +213,15 @@ function Remove-LegacyStuff {
     # remove user accounts
     foreach ($user in $users) {
       if (@(Get-WMiObject -class Win32_UserAccount | Where { $_.Name -eq $user }).length -gt 0) {
-        Start-Process 'logoff' -ArgumentList @((((quser /server:. | ? { $_ -match $user }) -split ' +')[2]), '/server:.') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-logoff.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $user) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-logoff.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $user)
+        try {
+          $quserMatch = ((quser /server:. | ? { $_ -match $user }) -split ' +')
+        }
+        catch {
+          $quserMatch = $false
+        }
+        if ($quserMatch) {
+          Start-Process 'logoff' -ArgumentList @(($quserMatch[2]), '/server:.') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-logoff.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $user) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-logoff.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $user)
+        }
         Start-Process 'net' -ArgumentList @('user', $user, '/DELETE') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.net-user-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $user) -RedirectStandardError ('{0}\log\{1}.net-user-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $user)
         Write-Log -message ('{0} :: user: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $user) -severity 'INFO'
       }
@@ -718,6 +726,12 @@ if ($locationType -ne 'DataCenter') {
   Write-Log -message ('availabilityZone: {0}, dnsRegion: {1}.' -f $az, $dnsRegion) -severity 'INFO'
 
   # if importing releng amis, do a little housekeeping
+  try {
+    $rootPassword = [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value
+  }
+  catch {
+    $rootPassword = $null
+  }
   switch -wildcard ($workerType) {
     'gecko-t-win7-*' {
       $runDscOnWorker = $false
@@ -725,7 +739,7 @@ if ($locationType -ne 'DataCenter') {
       $setFqdn = $true
       if (-not ($isWorker)) {
         Remove-LegacyStuff -logFile $logFile
-        Set-Credentials -username 'root' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
+        Set-Credentials -username 'root' -password ('{0}' -f $rootPassword)
       }
     }
     'gecko-t-win10-*' {
@@ -734,7 +748,7 @@ if ($locationType -ne 'DataCenter') {
       $setFqdn = $true
       if (-not ($isWorker)) {
         Remove-LegacyStuff -logFile $logFile
-        Set-Credentials -username 'Administrator' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
+        Set-Credentials -username 'Administrator' -password ('{0}' -f $rootPassword)
       }
     }
     default {
@@ -742,7 +756,7 @@ if ($locationType -ne 'DataCenter') {
       $renameInstance = $true
       $setFqdn = $true
       if (-not ($isWorker)) {
-        Set-Credentials -username 'Administrator' -password ('{0}' -f [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value)
+        Set-Credentials -username 'Administrator' -password ('{0}' -f $rootPassword)
       }
     }
   }
