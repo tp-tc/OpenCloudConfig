@@ -1178,6 +1178,13 @@
       "ValueType": "Dword",
       "ValueData": "0x00000001",
       "Hex": true
+    },
+    {
+      "ComponentName": "reg_NewNetworkWindowOff",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1397201#c58",
+      "Key": "HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Network",
+      "ValueName": "NewNetworkWindowOff"
     }
   ]
 }

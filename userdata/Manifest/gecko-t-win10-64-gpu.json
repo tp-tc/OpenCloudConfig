@@ -1254,6 +1254,13 @@
       "ValueName": "NoNewAppAlert",
       "ValueType": "Dword",
       "ValueData": 1
+    },
+    {
+      "ComponentName": "reg_NewNetworkWindowOff",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1397201#c58",
+      "Key": "HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Network",
+      "ValueName": "NewNetworkWindowOff"
     }
   ]
 }
