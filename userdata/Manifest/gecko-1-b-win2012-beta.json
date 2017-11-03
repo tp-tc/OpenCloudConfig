@@ -477,11 +477,11 @@
         "FilesContain": [
           {
             "Path": "C:\\mozilla-build\\VERSION",
-            "Match": "2.2.0"
+            "Match": "3.0"
           }
         ]
       },
-      "sha512": "b593aa4ed9ff34bd4a20860fec478b3638ff1f916a60dc79ebcff46cee279fdb59dd53a36579378f0e11f4be201114578a429bfbfc11eda195a0b1db7aa9831e"
+      "sha512": "43c1b4f20801029bad87bb9b0d1f5a2b820f6e30ce60fde9219ef80d66c2393d8b81e4cf1c4f60d22992e16288e3c93a24df22d9844d97d208ad5baaefce7bc8"
     },
     {
       "ComponentName": "NsisInstall",
