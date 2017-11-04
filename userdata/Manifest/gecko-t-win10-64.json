@@ -1154,8 +1154,7 @@
       "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Wisp\\Touch",
       "ValueName": "TouchGate",
       "ValueType": "Dword",
-      "ValueData": "0x00000000",
-      "Hex": true
+      "ValueData": 0
     },
     {
       "ComponentName": "nircmd",
@@ -1176,8 +1175,7 @@
       "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\Explorer",
       "ValueName": "NoNewAppAlert",
       "ValueType": "Dword",
-      "ValueData": "0x00000001",
-      "Hex": true
+      "ValueData": 1
     },
     {
       "ComponentName": "reg_NewNetworkWindowOff",
