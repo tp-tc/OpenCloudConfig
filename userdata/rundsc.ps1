@@ -607,17 +607,26 @@ function Activate-Windows {
     $productKeyMap = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/product-key-map.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
     $osCaption = (Get-WmiObject -class Win32_OperatingSystem).Caption.Trim()
     $productKey = ($productKeyMap | ? {$_.os_caption -eq $osCaption}).product_key
-    if (-not ($productKey)) {
+    if (-not ([bool]$productKey)) {
       Write-Log -message ('{0} :: failed to determine product key with os caption: {1}.' -f $($MyInvocation.MyCommand.Name), $osCaption) -severity 'INFO'
       return
     }
     try {
-      $kms = (Get-WMIObject -query "select * from SoftwareLicensingService")
-      $kms.SetKeyManagementServiceMachine($keyManagementServiceMachine)
-      $kms.SetKeyManagementServicePort($keyManagementServicePort)
-      $kms.InstallProductKey($productKey)
-      $kms.RefreshLicenseStatus()
+      $sls = (Get-WMIObject SoftwareLicensingService)
+      $sls.SetKeyManagementServiceMachine($keyManagementServiceMachine)
+      $sls.SetKeyManagementServicePort($keyManagementServicePort)
+      $sls.InstallProductKey($productKey)
+      $sls.RefreshLicenseStatus()
+
+      $slp = (Get-WmiObject SoftwareLicensingProduct | ? { (($_.ApplicationId -eq '55c92734-d682-4d71-983e-d6ec3f16059f') -and ($_.PartialProductKey) -and (-not $_.LicenseIsAddon)) })
+      $slp.SetKeyManagementServiceMachine($keyManagementServiceMachine)
+      $slp.SetKeyManagementServicePort($keyManagementServicePort)
+      $slp.Activate()
+
+      $sls.RefreshLicenseStatus()
       Write-Log -message ('{0} :: Windows activated with product key: {1} ({2}) against {3}:{4}.' -f $($MyInvocation.MyCommand.Name), $productKey, $osCaption, $keyManagementServiceMachine, $keyManagementServicePort) -severity 'INFO'
+      $licenseStatus = @('Unlicensed', 'Licensed', 'OOB Grace', 'OOT Grace', 'Non-Genuine Grace', 'Notification', 'Extended Grace')
+      Write-Log -message ('{0} :: Windows licensing status. Product: {1}, Status: {2}.' -f $($MyInvocation.MyCommand.Name), $slp.Name, $licenseStatus[$slp.LicenseStatus]) -severity 'INFO'
     }
     catch {
       Write-Log -message ('{0} :: failed to activate Windows. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
@@ -676,7 +685,7 @@ Get-Service -Name 'w32time' | Stop-Service -PassThru
 tzutil /s UTC
 Write-Log -message 'system timezone set to UTC.' -severity 'INFO'
 w32tm /register
-w32tm /config /syncfromflags:manual /manualpeerlist:"$ntpserverlist",0x8
+w32tm /config /syncfromflags:manual /update /manualpeerlist:"$ntpserverlist",0x8
 Get-Service -Name 'w32time' | Start-Service -PassThru
 w32tm /resync /force
 Write-Log -message 'system clock synchronised.' -severity 'INFO'
