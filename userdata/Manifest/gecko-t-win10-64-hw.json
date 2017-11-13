@@ -145,14 +145,6 @@
       ]
     },
     {
-      "ComponentName": "Vnc_In",
-      "ComponentType": "FirewallRule",
-      "Protocol": "TCP",
-      "LocalPort": 5900,
-      "Direction": "Inbound",
-      "Action": "Allow"
-    },
-    {
       "ComponentName": "Windows_SDK",
       "ComponentType": "ExeInstall",
       "Comment": "This SDK includes Windows toolkit https://bugzilla.mozilla.org/show_bug.cgi?id=1338661",
