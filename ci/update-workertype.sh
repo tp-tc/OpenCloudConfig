@@ -146,7 +146,7 @@ case "${tc_worker_type}" in
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
-    aws_copy_regions=('us-east-1' 'us-west-1' 'eu-central-1')
+    aws_copy_regions=('us-east-1' 'us-west-1')
     block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":40,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdb","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
   *)
