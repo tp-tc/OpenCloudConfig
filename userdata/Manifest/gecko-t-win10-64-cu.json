@@ -381,14 +381,14 @@
     {
       "ComponentName": "reg_WindowsErrorReportingLocalDumps",
       "ComponentType": "RegistryKeySet",
-      "Comment": "",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1261812",
       "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting",
       "ValueName": "LocalDumps"
     },
     {
       "ComponentName": "reg_WindowsErrorReportingDontShowUI",
       "ComponentType": "RegistryValueSet",
-      "Comment": "",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1261812",
       "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting",
       "ValueName": "DontShowUI",
       "ValueType": "Dword",
