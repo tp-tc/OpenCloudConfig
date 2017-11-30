@@ -1212,30 +1212,6 @@
       "ComponentType": "FileDownload",
       "Source": "http://hg.mozilla.org/mozilla-central/raw-file/360ab7771e27/toolkit/components/startup/mozprofilerprobe.mof",
       "Target": "C:\\DSC\\mozprofilerprobe.mof"
-    },
-    {
-      "ComponentName": "mozprofilerprobeinstall",
-      "ComponentType": "CommandRun",
-      "Comment": "depends on Win 7 SDK install, currently instaleld through MDT",
-      "Command": "mofcomp",
-      "Arguments": [
-	      "C:\\DSC\\mozprofilerprobe.mof"
-	    ],
-      "DependsOn": [
-	      {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        },
-        {
-          "ComponentType": "FileDownload",
-          "ComponentName": "mozprofilerprobe"
-	      }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Users\\GenericWorker\\.mozilla\\profiles\\simple"
-        ]
-      }
     }
   ]
 }
