@@ -802,109 +802,6 @@
       ]
     },
     {
-      "ComponentName": "GrantGenericWorkerSeAssignPrimaryTokenPrivilege",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1303455 - grant SeAssignPrimaryTokenPrivilege to g-w user",
-      "Command": "powershell",
-      "Arguments": [
-        "-command",
-        "\"& {&'Import-Module' Carbon}\";",
-        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeAssignPrimaryTokenPrivilege}\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ]
-    },
-    {
-      "ComponentName": "GrantGenericWorkerSeIncreaseQuotaPrivilege",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1303455 - grant SeIncreaseQuotaPrivilege to g-w user",
-      "Command": "powershell",
-      "Arguments": [
-        "-command",
-        "\"& {&'Import-Module' Carbon}\";",
-        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeIncreaseQuotaPrivilege}\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ]
-    },
-    {
-      "ComponentName": "GrantGenericWorkerSeIncreaseBasePriorityPrivilege",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1312383 - grant SeIncreaseBasePriorityPrivilege to g-w user",
-      "Command": "powershell",
-      "Arguments": [
-        "-command",
-        "\"& {&'Import-Module' Carbon}\";",
-        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeIncreaseBasePriorityPrivilege}\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ]
-    },
-    {
-      "ComponentName": "reg_PythonCpuPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\python.exe\\PerfOptions",
-      "ValueName": "CpuPriorityClass",
-      "ValueType": "Dword",
-      "ValueData": "0x00000006",
-      "Hex": true
-    },
-    {
-      "ComponentName": "reg_PythonIoPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\python.exe\\PerfOptions",
-      "ValueName": "IoPriority",
-      "ValueType": "Dword",
-      "ValueData": "0x00000002",
-      "Hex": true
-    },
-    {
-      "ComponentName": "reg_MercurialCpuPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\hg.exe\\PerfOptions",
-      "ValueName": "CpuPriorityClass",
-      "ValueType": "Dword",
-      "ValueData": "0x00000006",
-      "Hex": true
-    },
-    {
-      "ComponentName": "reg_MercurialIoPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\hg.exe\\PerfOptions",
-      "ValueName": "IoPriority",
-      "ValueType": "Dword",
-      "ValueData": "0x00000002",
-      "Hex": true
-    },
-    {
       "ComponentName": "MozillaMaintenanceDir",
       "ComponentType": "DirectoryCreate",
       "Comment": "Working directory for Mozilla Maintenance Service installation",
@@ -1202,16 +1099,6 @@
       "Action": "Allow"
     },
     {
-      "ComponentName": "reg_DisableTouchEvents",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "Bug 1382988 - Disable touch events",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Wisp\\Touch",
-      "ValueName": "TouchGate",
-      "ValueType": "Dword",
-      "ValueData": "0x00000000",
-      "Hex": true
-    },
-    {
       "ComponentName": "nircmd",
       "ComponentType": "FileDownload",
       "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/nircmd/nircmd.exe",
@@ -1230,8 +1117,14 @@
       "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\Explorer",
       "ValueName": "NoNewAppAlert",
       "ValueType": "Dword",
-      "ValueData": "0x00000001",
-      "Hex": true
+      "ValueData": 1
+    },
+    {
+      "ComponentName": "reg_NewNetworkWindowOff",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1397201#c58",
+      "Key": "HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Network",
+      "ValueName": "NewNetworkWindowOff"
     }
   ]
 }

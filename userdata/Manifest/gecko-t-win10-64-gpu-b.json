@@ -32,7 +32,7 @@
       "ComponentName": "NxLogPaperTrailConfiguration",
       "ComponentType": "ChecksumFileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win10.conf",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win10-grenade-elk-debug.conf",
       "Target": "C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf",
       "DependsOn": [
         {
@@ -408,7 +408,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v8.3.0/generic-worker-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.2.3/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
@@ -446,12 +446,46 @@
       "Target": "C:\\Windows\\Temp\\NSSMInstall.zip"
     },
     {
+      "ComponentName": "NSSMInstall",
+      "ComponentType": "CommandRun",
+      "Comment": "NSSM is required to install Generic Worker as a service. Currently ZipInstall fails, so using 7z instead.",
+      "Command": "C:\\Program Files\\7-Zip\\7z.exe",
+      "Arguments": [
+        "x",
+        "-oC:\\",
+        "C:\\Windows\\Temp\\NSSMInstall.zip"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "SevenZip"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "NSSMDownload"
+        }
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe"
+        ]
+      }
+    },
+    {
+      "ComponentName": "NSSMDownload",
+      "ComponentType": "FileDownload",
+      "Source": "https://nssm.cc/ci/nssm-2.24-103-gdee49fc.zip",
+      "Target": "C:\\Windows\\Temp\\NSSMInstall.zip"
+    },
+    {
       "ComponentName": "GenericWorkerInstall",
       "ComponentType": "CommandRun",
       "Command": "C:\\generic-worker\\generic-worker.exe",
       "Arguments": [
         "install",
-        "startup",
+        "service",
+        "--nssm",
+        "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe",
         "--config",
         "C:\\generic-worker\\generic-worker.config"
       ],
@@ -471,6 +505,10 @@
         {
           "ComponentType": "FirewallRule",
           "ComponentName": "LiveLog_Put"
+        },
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "NSSMInstall"
         }
       ],
       "Validate": {
@@ -484,7 +522,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 8.3.0"
+            "Match": "generic-worker 10.2.3"
           }
         ]
       }
@@ -778,109 +816,6 @@
       ]
     },
     {
-      "ComponentName": "GrantGenericWorkerSeAssignPrimaryTokenPrivilege",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1303455 - grant SeAssignPrimaryTokenPrivilege to g-w user",
-      "Command": "powershell",
-      "Arguments": [
-        "-command",
-        "\"& {&'Import-Module' Carbon}\";",
-        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeAssignPrimaryTokenPrivilege}\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ]
-    },
-    {
-      "ComponentName": "GrantGenericWorkerSeIncreaseQuotaPrivilege",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1303455 - grant SeIncreaseQuotaPrivilege to g-w user",
-      "Command": "powershell",
-      "Arguments": [
-        "-command",
-        "\"& {&'Import-Module' Carbon}\";",
-        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeIncreaseQuotaPrivilege}\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ]
-    },
-    {
-      "ComponentName": "GrantGenericWorkerSeIncreaseBasePriorityPrivilege",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1312383 - grant SeIncreaseBasePriorityPrivilege to g-w user",
-      "Command": "powershell",
-      "Arguments": [
-        "-command",
-        "\"& {&'Import-Module' Carbon}\";",
-        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeIncreaseBasePriorityPrivilege}\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ]
-    },
-    {
-      "ComponentName": "reg_PythonCpuPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\python.exe\\PerfOptions",
-      "ValueName": "CpuPriorityClass",
-      "ValueType": "Dword",
-      "ValueData": "0x00000006",
-      "Hex": true
-    },
-    {
-      "ComponentName": "reg_PythonIoPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\python.exe\\PerfOptions",
-      "ValueName": "IoPriority",
-      "ValueType": "Dword",
-      "ValueData": "0x00000002",
-      "Hex": true
-    },
-    {
-      "ComponentName": "reg_MercurialCpuPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\hg.exe\\PerfOptions",
-      "ValueName": "CpuPriorityClass",
-      "ValueType": "Dword",
-      "ValueData": "0x00000006",
-      "Hex": true
-    },
-    {
-      "ComponentName": "reg_MercurialIoPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\hg.exe\\PerfOptions",
-      "ValueName": "IoPriority",
-      "ValueType": "Dword",
-      "ValueData": "0x00000002",
-      "Hex": true
-    },
-    {
       "ComponentName": "MozillaMaintenanceDir",
       "ComponentType": "DirectoryCreate",
       "Comment": "Working directory for Mozilla Maintenance Service installation",
@@ -933,6 +868,23 @@
           "C:\\Program Files (x86)\\Mozilla Maintenance Service\\Uninstall.exe"
         ]
       }
+    },
+    {
+      "ComponentName": "MaintenanceServiceAcessRights",
+      "ComponentType": "CommandRun",
+      "Comment": "See https://bugzilla.mozilla.org/show_bug.cgi?id=1067756#c21",
+      "Command": "icacls.exe",
+      "Arguments": [
+        "\"C:\\Program Files (x86)\\Mozilla Maintenance Service\"",
+        "/grant",
+        "Everyone:(OI)(CI)F"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "maintenanceservice_install"
+        }
+      ]
     },
     {
       "ComponentName": "MozFakeCA_cer",
@@ -1121,7 +1073,7 @@
       "Command": "powershell",
       "Arguments": [
         "-command",
-        "\"& {& (Get-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla').SetAccessRule(New-Object System.Security.AccessControl.RegistryAccessRule ('.\\GenericWorker', 'FullControl', 'Allow'))}\";",
+        "\"& {& (Get-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla').SetAccessRule(New-Object System.Security.AccessControl.RegistryAccessRule ('Everyone', 'FullControl', 'Allow'))}\";",
         "\"& {& ((Get-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla') | Set-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla')}\""
       ],
       "DependsOn": [
@@ -1161,25 +1113,25 @@
       ]
     },
     {
-      "ComponentName": "NvidiaTeslaDriverPackage",
+      "ComponentName": "NvidiaK520DriverPackage",
       "ComponentType": "ExeInstall",
       "Comment": "Required for hardware acceleration on EC2 g2 (GPU) instances. http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/accelerated-computing-instances.html#install-nvidia-driver-windows",
-      "Url": "https://s3.amazonaws.com/windows-opencloudconfig-packages/nvidia/377.35-tesla-desktop-win10-64bit-international-whql.exe",
+      "Url": "http://uk.download.nvidia.com/Windows/Quadro_Certified/GRID/369.95/369.95-quadro-grid-desktop-notebook-win10-64bit-international-whql.exe",
       "Arguments": [
         "/s"
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\NVIDIA\\DisplayDriver\\377.35\\Win10_64\\International\\setup.exe"
+          "C:\\NVIDIA\\369.95\\setup.exe"
         ]
       },
       "sha512": "7fd87a38e5eb760e49bd136d238ec8983a9cdacc1dfc67334c1033f887aab3c8592156a7f876de7c8938279008848ff755ec478aab9c1218f7879ca6758e29f2"
     },
     {
-      "ComponentName": "NvidiaTeslaDriverInstall",
+      "ComponentName": "NvidiaK520DriverInstall",
       "ComponentType": "CommandRun",
       "Comment": "Required for hardware acceleration on EC2 g2 (GPU) instances. http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/accelerated-computing-instances.html#install-nvidia-driver-windows",
-      "Command": "C:\\NVIDIA\\DisplayDriver\\377.35\\Win10_64\\International\\setup.exe",
+      "Command": "C:\\NVIDIA\\369.95\\setup.exe",
       "Arguments": [
         "/s"
       ],
@@ -1191,7 +1143,7 @@
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
-          "ComponentName": "NvidiaTeslaDriverPackage"
+          "ComponentName": "NvidiaK520DriverPackage"
         }
       ]
     },
