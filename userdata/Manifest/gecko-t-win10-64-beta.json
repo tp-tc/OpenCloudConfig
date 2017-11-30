@@ -1202,16 +1202,6 @@
       "Action": "Allow"
     },
     {
-      "ComponentName": "reg_DisableTouchEvents",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "Bug 1382988 - Disable touch events",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Wisp\\Touch",
-      "ValueName": "TouchGate",
-      "ValueType": "Dword",
-      "ValueData": "0x00000000",
-      "Hex": true
-    },
-    {
       "ComponentName": "nircmd",
       "ComponentType": "FileDownload",
       "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/nircmd/nircmd.exe",
@@ -1230,8 +1220,14 @@
       "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\Explorer",
       "ValueName": "NoNewAppAlert",
       "ValueType": "Dword",
-      "ValueData": "0x00000001",
-      "Hex": true
+      "ValueData": 1
+    },
+    {
+      "ComponentName": "reg_NewNetworkWindowOff",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1397201#c58",
+      "Key": "HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Network",
+      "ValueName": "NewNetworkWindowOff"
     }
   ]
 }
