@@ -91,7 +91,6 @@ case "${tc_worker_type}" in
     gw_tasks_dir='Z:\'
     root_username=root
     worker_username=GenericWorker
-    aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
     block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":30,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdb","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdc","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
   gecko-t-win7-32*)
@@ -102,7 +101,6 @@ case "${tc_worker_type}" in
     gw_tasks_dir='Z:\'
     root_username=root
     worker_username=GenericWorker
-    aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
     block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":30,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdb","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdc","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
   gecko-t-win10-64-gpu-b)
@@ -113,7 +111,6 @@ case "${tc_worker_type}" in
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
-    aws_copy_regions=('us-east-1' 'us-east-2' 'eu-central-1')
     block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdb","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
   gecko-t-win10-64-gpu*)
@@ -124,7 +121,6 @@ case "${tc_worker_type}" in
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
-    aws_copy_regions=('us-east-1' 'us-east-2' 'eu-central-1')
     block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdb","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
   gecko-t-win10-64*)
@@ -135,7 +131,6 @@ case "${tc_worker_type}" in
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
-    aws_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
     block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdb","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
   gecko-[123]-b-win2012*)
@@ -146,7 +141,6 @@ case "${tc_worker_type}" in
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
-    aws_copy_regions=('us-east-1' 'us-west-1')
     block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":40,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdb","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
   *)
@@ -255,7 +249,7 @@ jq '.|keys[]' ./instance-delete-queue-${aws_region}.json | while read i; do
 done
 
 # copy ami to each configured region, get copied ami id, tag copied ami, wait for copied ami availability
-for region in "${aws_copy_regions[@]}"; do
+jq -c '[.regions[].region] | .[]' ./${tc_worker_type}.json | xargs -n1 echo | grep -Fvx "${aws_region}" | while read region
   aws_copied_ami_id=`aws ec2 copy-image --region ${region} --source-region ${aws_region} --source-image-id ${aws_ami_id} --name "${tc_worker_type} version ${aws_client_token}" --description "${ami_description}" | sed -n 's/^ *"ImageId": *"\(.*\)" *$/\1/p'`
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ami: ${aws_region} ${aws_ami_id} copy to ${region} ${aws_copied_ami_id} in progress: https://${region}.console.aws.amazon.com/ec2/v2/home?region=${region}#Images:visibility=owned-by-me;search=${aws_copied_ami_id}"
   aws ec2 create-tags --region ${region} --resources "${aws_copied_ami_id}" --tags "Key=WorkerType,Value=${tc_worker_type}"
