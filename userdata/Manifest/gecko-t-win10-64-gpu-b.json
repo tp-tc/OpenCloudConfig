@@ -472,12 +472,6 @@
       }
     },
     {
-      "ComponentName": "NSSMDownload",
-      "ComponentType": "FileDownload",
-      "Source": "https://nssm.cc/ci/nssm-2.24-103-gdee49fc.zip",
-      "Target": "C:\\Windows\\Temp\\NSSMInstall.zip"
-    },
-    {
       "ComponentName": "GenericWorkerInstall",
       "ComponentType": "CommandRun",
       "Command": "C:\\generic-worker\\generic-worker.exe",
