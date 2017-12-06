@@ -776,9 +776,15 @@ if ($locationType -ne 'DataCenter') {
   Mount-DiskOne -lock $lock
   Set-Pagefile -isWorker:$isWorker -lock $lock
   Map-DriveLetters
-  if (($isWorker) -and (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue))) {
-    Write-Log -message 'missing task drive. terminating instance...' -severity 'ERROR'
-    & shutdown @('-s', '-t', '0', '-c', 'missing task drive', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+  if ($isWorker) {
+    if (($isWorker) -and (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue))) {
+      Write-Log -message 'missing task drive. terminating instance...' -severity 'ERROR'
+      & shutdown @('-s', '-t', '0', '-c', 'missing task drive', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+    }
+    if (($isWorker) -and (-not (Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue))) {
+      Write-Log -message 'missing cache drive. terminating instance...' -severity 'ERROR'
+      & shutdown @('-s', '-t', '0', '-c', 'missing cache drive', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+    }
   }
 
   Get-ChildItem -Path $env:SystemRoot\Microsoft.Net -Filter ngen.exe -Recurse | % {
