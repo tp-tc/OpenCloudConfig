@@ -1,6 +1,24 @@
 {
   "Components": [
     {
+      "ComponentName": "DeleteXenDPriv.exe",
+      "ComponentType": "CommandRun",
+      "Comment": "See https://bugzilla.mozilla.org/show_bug.cgi?id=1399401#c43 and https://bugzilla.mozilla.org/show_bug.cgi?id=1394757",
+      "Command": "cmd.exe",
+      "Arguments": [
+        "/c",
+        "del",
+        "/f",
+        "/q",
+        "\"C:\\Program Files\\Citrix\\XenTools\\XenDPriv.exe\""
+      ],
+      "Validate": {
+        "PathsNotExist": [
+          "C:\\Program Files\\Citrix\\XenTools\\XenDPriv.exe"
+        ]
+      }
+    },
+    {
       "ComponentName": "LogDirectory",
       "ComponentType": "DirectoryCreate",
       "Comment": "Required by OpenCloudConfig for DSC logging",
