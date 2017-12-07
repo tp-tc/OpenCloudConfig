@@ -6,8 +6,9 @@
       "Comment": "See https://bugzilla.mozilla.org/show_bug.cgi?id=1399401#c43 and https://bugzilla.mozilla.org/show_bug.cgi?id=1394757",
       "Command": "taskkill",
       "Arguments": [
-        "/IM",
-        "XenDPriv.exe"
+        "/im",
+        "XenDPriv.exe",
+        "/f"
       ],
       "Validate": {
         "PathsNotExist": [
