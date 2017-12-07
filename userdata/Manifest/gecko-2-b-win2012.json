@@ -954,6 +954,27 @@
       "Target": "Machine"
     },
     {
+      "ComponentName": "ToolToolCacheAccessRights",
+      "ComponentType": "CommandRun",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1421114",
+      "Command": "icacls.exe",
+      "Arguments": [
+        "c:\\builds\\tooltool_cache",
+        "/grant",
+        "Everyone:(OI)(CI)F"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "ToolToolPreCacheWin32"
+        },
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "ToolToolPreCacheWin64"
+        }
+      ]
+    },
+    {
       "ComponentName": "env_PATH",
       "ComponentType": "EnvironmentVariableUniquePrepend",
       "DependsOn": [
