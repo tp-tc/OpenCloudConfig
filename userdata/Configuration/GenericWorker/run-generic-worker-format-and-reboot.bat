@@ -9,17 +9,21 @@ if exist C:\Windows\System32\fakemon.vbs cscript C:\Windows\System32\fakemon.vbs
 :CheckForStateFlag
 if exist Z:\loan logoff /f /n
 if exist Z:\loan goto End
+echo Checking for C:\dsc\task-claim-state.valid file... >> C:\generic-worker\generic-worker.log
 if exist C:\dsc\task-claim-state.valid goto RunWorker
+echo Not found >> C:\generic-worker\generic-worker.log
 timeout /t 1 >nul
 goto CheckForStateFlag
 
 :RunWorker
+echo File C:\dsc\task-claim-state.valid found >> C:\generic-worker\generic-worker.log
 if exist Z:\loan logoff /f /n
 if exist Z:\loan goto End
-del /Q /F C:\dsc\task-claim-state.valid
+echo Deleting C:\dsc\task-claim-state.valid file >> C:\generic-worker\generic-worker.log
+del /Q /F C:\dsc\task-claim-state.valid >> C:\generic-worker\generic-worker.log 2>&1
 pushd %~dp0
 set errorlevel=
-.\generic-worker.exe run --configure-for-aws > .\generic-worker.log 2>&1
+.\generic-worker.exe run --configure-for-aws >> .\generic-worker.log 2>&1
 
 rem exit code 67 means generic worker has created a task user and wants to reboot into it
 if %errorlevel% equ 67 goto FormatAndReboot
@@ -37,6 +41,7 @@ goto End
 if exist Z:\loan logoff /f /n
 if exist Z:\loan goto End
 format Z: /fs:ntfs /v:"task" /q /y
+echo Creating file C:\dsc\task-claim-state.valid >> .\generic-worker.log
 <nul (set/p z=) >C:\dsc\task-claim-state.valid
 shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
 
