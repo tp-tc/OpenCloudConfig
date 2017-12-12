@@ -1161,6 +1161,15 @@
       "ComponentType": "FileDownload",
       "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/nircmd/nircmdc.exe",
       "Target": "C:\\Windows\\System32\\nircmdc.exe"
+    },
+    {
+      "ComponentName": "reg_Power_PreferredPlan_HighPerformance",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1362613",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\explorer\\ControlPanel\\NameSpace\\{025A5937-A6BE-4686-A844-36FE4BEC8B6D}",
+      "ValueName": "PreferredPlan",
+      "ValueType": "String",
+      "ValueData": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"
     }
   ]
 }
