@@ -365,7 +365,9 @@ $publicIP = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/la
 $bashArgs = '/kbd:${XFR_K:-409} /w:${XFR_W:-1600} /h:${XFR_H:-1200}'
 "`nremote desktop from Linux:`nxfreerdp /u:$rootUsername /p:'$rootPassword' $bashArgs +clipboard /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
 "`nremote desktop from Windows:`nmstsc /w:1600 /h:1200 /v:$publicIP" | Out-File -filePath ('{0}\{1}.txt' -f $env:Temp, $token) -Encoding 'UTF8' -append
-(New-Object Net.WebClient).DownloadFile($loanRequestPublicKeyUrl, ('{0}\{1}.asc' -f $artifactsPath, $token))
+(New-Object Net.WebClient).DownloadFile($loanRequestPublicKeyUrl, ('{0}\{1}.asc.raw' -f $artifactsPath, $token))
+(Get-Content ('{0}\{1}.asc.raw' -f $artifactsPath, $token)).Where({ $_ -like '*-----BEGIN PGP PUBLIC KEY BLOCK-----*' },'SkipUntil').Where({ $_ -like '*-----END PGP PUBLIC KEY BLOCK-----*' },'Until') | Set-Content ('{0}\{1}.asc' -f $artifactsPath, $token)
+Add-Content ('{0}\{1}.asc' -f $artifactsPath, $token) '-----END PGP PUBLIC KEY BLOCK-----'
 $tempKeyring = ('{0}.gpg' -f $token)
 Start-Process $gpg -ArgumentList @('--no-default-keyring', '--keyring', $tempKeyring, '--fingerprint') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\gpg-create-keyring.stdout.log' -f $artifactsPath) -RedirectStandardError ('{0}\gpg-create-keyring.stderr.log' -f $artifactsPath)
 Start-Process $gpg -ArgumentList @('--no-default-keyring', '--keyring', $tempKeyring, '--import', ('{0}\{1}.asc' -f $artifactsPath, $token)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\gpg-import-key.stdout.log' -f $artifactsPath) -RedirectStandardError ('{0}\gpg-import-key.stderr.log' -f $artifactsPath)
