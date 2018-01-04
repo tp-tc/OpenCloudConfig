@@ -137,6 +137,7 @@ function Remove-LegacyStuff {
       ('{0}\System32\Configuration\Current.mof' -f $env:SystemRoot),
       ('{0}\System32\Configuration\Previous.mof' -f $env:SystemRoot),
       ('{0}\System32\Tasks\runner' -f $env:SystemRoot),
+      ('{0}\TeamViewer' -f ${env:ProgramFiles(x86)}),
       ('{0}\Temp\*.exe' -f $env:SystemRoot),
       ('{0}\Temp\*.msi' -f $env:SystemRoot),
       ('{0}\Temp\*.msu' -f $env:SystemRoot),
@@ -152,7 +153,8 @@ function Remove-LegacyStuff {
     [string[]] $services = @(
       'puppet',
       'Apache2.2',
-      'ViscosityService'
+      'ViscosityService',
+      'TeamViewer'
     ),
     [string[]] $scheduledTasks = @(
       'Disable_maintain',
