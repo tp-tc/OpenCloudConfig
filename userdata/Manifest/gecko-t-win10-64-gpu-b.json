@@ -32,7 +32,7 @@
       "ComponentName": "NxLogPaperTrailConfiguration",
       "ComponentType": "ChecksumFileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win10.conf",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win10-grenade-elk-debug.conf",
       "Target": "C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf",
       "DependsOn": [
         {
@@ -556,6 +556,14 @@
         {
           "ComponentType": "ChecksumFileDownload",
           "ComponentName": "DisableDesktopInterrupt"
+        },
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "fakemon"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "configmymonitor"
         }
       ],
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker-format-and-reboot.bat",
@@ -1132,6 +1140,18 @@
           "ComponentName": "NvidiaK520DriverPackage"
         }
       ]
+    },
+    {
+      "ComponentName": "fakemon",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fakemon.vbs",
+      "Target": "C:\\Windows\\System32\\fakemon.vbs"
+    },
+    {
+      "ComponentName": "configmymonitor",
+      "ComponentType": "FileDownload",
+      "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/fakemon/configmymonitor.exe",
+      "Target": "C:\\Windows\\System32\\configmymonitor.exe"
     },
     {
       "ComponentName": "nircmd",
