@@ -6,6 +6,15 @@ if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-w
 if exist C:\generic-worker\SetDefaultPrinter.ps1 powershell -NoLogo -file C:\generic-worker\SetDefaultPrinter.ps1 -WindowStyle hidden -NoProfile -ExecutionPolicy bypass
 if exist C:\Windows\System32\fakemon.vbs cscript C:\Windows\System32\fakemon.vbs > C:\log\fakemon-stdout.log 2> C:\log\fakemon-stderr.log
 
+if "%USERNAME%" != "GenericWorker" goto :CheckForStateFlag
+:CheckForUserProfile
+echo Checking user registry hive is loaded... >> C:\generic-worker\generic-worker.log
+reg query HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects /ve
+if %ERRORLEVEL% EQU 0 goto :CheckForStateFlag
+echo User registry hive is not loaded >> C:\generic-worker\generic-worker.log
+timeout /t 1 >nul
+goto CheckForUserProfile
+
 :CheckForStateFlag
 if exist Z:\loan logoff /f /n
 if exist Z:\loan goto End
