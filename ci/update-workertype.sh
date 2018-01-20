@@ -103,18 +103,6 @@ case "${tc_worker_type}" in
     worker_username=GenericWorker
     block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":30,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdb","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdc","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
     ;;
-  # currently not testing these alternative settings, so commenting out until they are tested again
-  #
-  # gecko-t-win10-64-gpu-b)
-  #   aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win10-64-gpu-tesla-base-20171108'}
-  #   aws_instance_type=${aws_instance_type:='g3.4xlarge'}
-  #   aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-  #   ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
-  #   gw_tasks_dir='Z:\'
-  #   root_username=Administrator
-  #   worker_username=GenericWorker
-  #   block_device_mappings='[{"DeviceName":"/dev/sda1","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}},{"DeviceName":"/dev/sdb","Ebs":{"VolumeType":"gp2","VolumeSize":120,"DeleteOnTermination":true}}]'
-  #   ;;
   gecko-t-win10-64-gpu*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win10-64-gpu-base-20170921'}
     aws_instance_type=${aws_instance_type:='g2.2xlarge'}
@@ -263,8 +251,8 @@ jq -c '[.regions[].region] | .[]' ./${tc_worker_type}.json | sed 's/"//g' | grep
   cat ./${tc_worker_type}.json | jq --arg ec2region $region --arg amiid $aws_copied_ami_id -c '(.regions[] | select(.region == $ec2region) | .launchSpec.ImageId) = $amiid' > ./.${tc_worker_type}.json && rm ./${tc_worker_type}.json && mv ./.${tc_worker_type}.json ./${tc_worker_type}.json
   cat ./workertype-secrets.json | jq --arg ec2region $region --arg amiid $aws_copied_ami_id -c '.secret.latest.amis |= . + [{region:$ec2region,"ami-id":$amiid}]' > ./.workertype-secrets.json && rm ./workertype-secrets.json && mv ./.workertype-secrets.json ./workertype-secrets.json
 
-  # purge all but 3 newest workertype amis in region
-  aws ec2 describe-images --region ${region} --owners self --filters "Name=name,Values=${tc_worker_type} version*" | jq '[ .Images[] | { ImageId, CreationDate, SnapshotId: .BlockDeviceMappings[0].Ebs.SnapshotId } ] | sort_by(.CreationDate) [ 0 : -3 ]' > ./delete-queue-${region}.json
+  # purge all but 10 newest workertype amis in region
+  aws ec2 describe-images --region ${region} --owners self --filters "Name=name,Values=${tc_worker_type} version*" | jq '[ .Images[] | { ImageId, CreationDate, SnapshotId: .BlockDeviceMappings[0].Ebs.SnapshotId } ] | sort_by(.CreationDate) [ 0 : -10 ]' > ./delete-queue-${region}.json
   jq '.|keys[]' ./delete-queue-${region}.json | while read i; do
     old_ami=$(jq -r ".[$i].ImageId" ./delete-queue-${region}.json)
     old_snap=$(jq -r ".[$i].SnapshotId" ./delete-queue-${region}.json)
