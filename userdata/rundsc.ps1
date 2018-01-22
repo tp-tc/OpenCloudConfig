@@ -793,6 +793,7 @@ if ($locationType -ne 'DataCenter') {
   $driveMapTimeout = (Get-Date).AddMinutes(10)
   do {
     Map-DriveLetters
+    Sleep 60
   } while (((-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) -or (-not (Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue))) -and (Get-Date) -lt $driveMapTimeout)
   if ($isWorker) {
     if (($isWorker) -and (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue))) {
