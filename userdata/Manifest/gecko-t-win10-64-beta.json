@@ -408,7 +408,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.5.0alpha4/generic-worker-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v8.3.0/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
@@ -440,46 +440,12 @@
       "Action": "Allow"
     },
     {
-      "ComponentName": "NSSMDownload",
-      "ComponentType": "FileDownload",
-      "Source": "https://nssm.cc/ci/nssm-2.24-103-gdee49fc.zip",
-      "Target": "C:\\Windows\\Temp\\NSSMInstall.zip"
-    },
-    {
-      "ComponentName": "NSSMInstall",
-      "ComponentType": "CommandRun",
-      "Comment": "NSSM is required to install Generic Worker as a service. Currently ZipInstall fails, so using 7z instead.",
-      "Command": "C:\\Program Files\\7-Zip\\7z.exe",
-      "Arguments": [
-        "x",
-        "-oC:\\",
-        "C:\\Windows\\Temp\\NSSMInstall.zip"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "SevenZip"
-        },
-        {
-          "ComponentType": "FileDownload",
-          "ComponentName": "NSSMDownload"
-        }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe"
-        ]
-      }
-    },
-    {
       "ComponentName": "GenericWorkerInstall",
       "ComponentType": "CommandRun",
       "Command": "C:\\generic-worker\\generic-worker.exe",
       "Arguments": [
         "install",
-        "service",
-        "--nssm",
-        "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe",
+        "startup",
         "--config",
         "C:\\generic-worker\\generic-worker.config"
       ],
@@ -499,10 +465,6 @@
         {
           "ComponentType": "FirewallRule",
           "ComponentName": "LiveLog_Put"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "NSSMInstall"
         }
       ],
       "Validate": {
@@ -516,7 +478,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 10.5.0alpha4"
+            "Match": "generic-worker 8.3.0"
           }
         ]
       }
@@ -558,7 +520,7 @@
           "ComponentName": "DisableDesktopInterrupt"
         }
       ],
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker-format-and-reboot.bat",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker-format-and-reboot-beta.bat",
       "Target": "C:\\generic-worker\\run-generic-worker.bat"
     },
     {
@@ -802,6 +764,109 @@
       ]
     },
     {
+      "ComponentName": "GrantGenericWorkerSeAssignPrimaryTokenPrivilege",
+      "ComponentType": "CommandRun",
+      "Comment": "Bug 1303455 - grant SeAssignPrimaryTokenPrivilege to g-w user",
+      "Command": "powershell",
+      "Arguments": [
+        "-command",
+        "\"& {&'Import-Module' Carbon}\";",
+        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeAssignPrimaryTokenPrivilege}\""
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "CarbonInstall"
+        },
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "GenericWorkerInstall"
+        }
+      ]
+    },
+    {
+      "ComponentName": "GrantGenericWorkerSeIncreaseQuotaPrivilege",
+      "ComponentType": "CommandRun",
+      "Comment": "Bug 1303455 - grant SeIncreaseQuotaPrivilege to g-w user",
+      "Command": "powershell",
+      "Arguments": [
+        "-command",
+        "\"& {&'Import-Module' Carbon}\";",
+        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeIncreaseQuotaPrivilege}\""
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "CarbonInstall"
+        },
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "GenericWorkerInstall"
+        }
+      ]
+    },
+    {
+      "ComponentName": "GrantGenericWorkerSeIncreaseBasePriorityPrivilege",
+      "ComponentType": "CommandRun",
+      "Comment": "Bug 1312383 - grant SeIncreaseBasePriorityPrivilege to g-w user",
+      "Command": "powershell",
+      "Arguments": [
+        "-command",
+        "\"& {&'Import-Module' Carbon}\";",
+        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeIncreaseBasePriorityPrivilege}\""
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "CarbonInstall"
+        },
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "GenericWorkerInstall"
+        }
+      ]
+    },
+    {
+      "ComponentName": "reg_PythonCpuPriority",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\python.exe\\PerfOptions",
+      "ValueName": "CpuPriorityClass",
+      "ValueType": "Dword",
+      "ValueData": "0x00000006",
+      "Hex": true
+    },
+    {
+      "ComponentName": "reg_PythonIoPriority",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\python.exe\\PerfOptions",
+      "ValueName": "IoPriority",
+      "ValueType": "Dword",
+      "ValueData": "0x00000002",
+      "Hex": true
+    },
+    {
+      "ComponentName": "reg_MercurialCpuPriority",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\hg.exe\\PerfOptions",
+      "ValueName": "CpuPriorityClass",
+      "ValueType": "Dword",
+      "ValueData": "0x00000006",
+      "Hex": true
+    },
+    {
+      "ComponentName": "reg_MercurialIoPriority",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\hg.exe\\PerfOptions",
+      "ValueName": "IoPriority",
+      "ValueType": "Dword",
+      "ValueData": "0x00000002",
+      "Hex": true
+    },
+    {
       "ComponentName": "MozillaMaintenanceDir",
       "ComponentType": "DirectoryCreate",
       "Comment": "Working directory for Mozilla Maintenance Service installation",
@@ -854,23 +919,6 @@
           "C:\\Program Files (x86)\\Mozilla Maintenance Service\\Uninstall.exe"
         ]
       }
-    },
-    {
-      "ComponentName": "MaintenanceServiceAcessRights",
-      "ComponentType": "CommandRun",
-      "Comment": "See https://bugzilla.mozilla.org/show_bug.cgi?id=1067756#c21",
-      "Command": "icacls.exe",
-      "Arguments": [
-        "\"C:\\Program Files (x86)\\Mozilla Maintenance Service\"",
-        "/grant",
-        "Everyone:(OI)(CI)F"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "maintenanceservice_install"
-        }
-      ]
     },
     {
       "ComponentName": "MozFakeCA_cer",
@@ -1059,7 +1107,7 @@
       "Command": "powershell",
       "Arguments": [
         "-command",
-        "\"& {& (Get-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla').SetAccessRule(New-Object System.Security.AccessControl.RegistryAccessRule ('Everyone', 'FullControl', 'Allow'))}\";",
+        "\"& {& (Get-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla').SetAccessRule(New-Object System.Security.AccessControl.RegistryAccessRule ('.\\GenericWorker', 'FullControl', 'Allow'))}\";",
         "\"& {& ((Get-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla') | Set-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla')}\""
       ],
       "DependsOn": [
