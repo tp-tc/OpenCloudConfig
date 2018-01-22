@@ -4,7 +4,6 @@ if "%USERNAME%" == "GenericWorker" ftype txtfile="C:\Windows\System32\Notepad.ex
 if "%USERNAME%" == "GenericWorker" if exist "C:\Program Files (x86)" powershell -command "&{$p='HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3';$v=(Get-ItemProperty -Path $p).Settings;$v[8]=3;&Set-ItemProperty -Path $p -Name Settings -Value $v;&Stop-Process -ProcessName explorer}" > C:\log\taskbar-auto-hide-stdout.log 2> C:\log\taskbar-auto-hide-stderr.log
 if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-worker\disable-desktop-interrupt.reg
 if exist C:\generic-worker\SetDefaultPrinter.ps1 powershell -NoLogo -file C:\generic-worker\SetDefaultPrinter.ps1 -WindowStyle hidden -NoProfile -ExecutionPolicy bypass
-if exist C:\Windows\System32\fakemon.vbs cscript C:\Windows\System32\fakemon.vbs > C:\log\fakemon-stdout.log 2> C:\log\fakemon-stderr.log
 
 if "%USERNAME%" != "GenericWorker" goto :CheckForStateFlag
 :CheckForUserProfile
