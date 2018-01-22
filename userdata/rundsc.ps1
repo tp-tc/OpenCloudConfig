@@ -411,10 +411,12 @@ function Set-Pagefile {
             Write-Log -message ('{0} :: failed to create pagefile: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $name, $_.Exception.Message) -severity 'ERROR'
           }
         } else {
-          if ($isWorker) {
-            Write-Log -message ('{0} :: skipping pagefile creation ({1} exists).' -f $($MyInvocation.MyCommand.Name), $name) -severity 'INFO'
-          } else {
+          if (-not ($isWorker)) {
             Write-Log -message ('{0} :: skipping pagefile creation (not a worker).' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+          } elseif (-not (Test-Path -Path ('{0}:\' -f $name[0]) -ErrorAction SilentlyContinue)) {
+            Write-Log -message ('{0} :: skipping pagefile creation ({1}: drive missing).' -f $($MyInvocation.MyCommand.Name), $name[0]) -severity 'INFO'
+          } else {
+            Write-Log -message ('{0} :: skipping pagefile creation ({1} exists).' -f $($MyInvocation.MyCommand.Name), $name) -severity 'INFO'
           }
         }
       }
@@ -442,7 +444,7 @@ function Map-DriveLetters {
       $old = $_
       $new = $driveLetterMap.Item($_)
       if (Test-Path -Path ('{0}\' -f $old) -ErrorAction SilentlyContinue) {
-        $volume = Get-WmiObject -Class win32_volume -Filter "DriveLetter='$old'"
+        $volume = Get-WmiObject -Class Win32_Volume -Filter "DriveLetter='$old'"
         if ($null -ne $volume) {
           $volume.DriveLetter = $new
           $volume.Put()
@@ -457,6 +459,16 @@ function Map-DriveLetters {
         $volume.Put()
         Write-Log -message ('{0} :: drive Y: assigned new drive letter: Z:.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
       }
+    }
+    $volumes = @(Get-WmiObject -Class Win32_Volume | sort-object { $_.Name })
+    Write-Log -message ('{0} :: {1} volumes detected.' -f $($MyInvocation.MyCommand.Name), $volumes.length) -severity 'INFO'
+    foreach ($volume in $volumes) {
+      Write-Log -message ('{0} :: {1} {2}gb' -f $($MyInvocation.MyCommand.Name), $volume.Name.Trim('\'), [math]::Round($volume.Capacity/1GB,2)) -severity 'DEBUG'
+    }
+    $partitions = @(Get-WmiObject -Class Win32_DiskPartition | sort-object { $_.Name })
+    Write-Log -message ('{0} :: {1} disk partitions detected.' -f $($MyInvocation.MyCommand.Name), $partitions.length) -severity 'INFO'
+    foreach ($partition in $partitions) {
+      Write-Log -message ('{0} :: {1}: {2}gb' -f $($MyInvocation.MyCommand.Name), $partition.Name, [math]::Round($partition.Size/1GB,2)) -severity 'DEBUG'
     }
   }
   end {
@@ -777,7 +789,11 @@ if ($locationType -ne 'DataCenter') {
   }
   Mount-DiskOne -lock $lock
   Set-Pagefile -isWorker:$isWorker -lock $lock
-  Map-DriveLetters
+  # reattempt drive mapping for up to 10 minutes
+  $driveMapTimeout = (Get-Date).AddMinutes(10)
+  do {
+    Map-DriveLetters
+  } while (((-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) -or (-not (Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue))) -and (Get-Date) -lt $driveMapTimeout)
   if ($isWorker) {
     if (($isWorker) -and (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue))) {
       Write-Log -message 'missing task drive. terminating instance...' -severity 'ERROR'
