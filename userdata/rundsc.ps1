@@ -654,6 +654,62 @@ function Activate-Windows {
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
+function Set-DefaultProfileProperties {
+  param (
+    [string] $path = 'C:\Users\Default\NTUSER.DAT',
+    [object[]] $entries = @(
+      New-Object PSObject -Property @{
+        Key = 'Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects';
+        ValueName = 'VisualFXSetting';
+        ValueType = 'DWord';
+        ValueData = 1
+      }
+    )
+  )
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    if (Get-Command 'Import-RegistryHive' -errorAction SilentlyContinue) {
+      try {
+        Import-RegistryHive -File $path -Key 'HKLM\TEMP_HIVE' -Name TempHive
+        foreach ($entry in $entries) {
+          if (-not (Test-Path -Path ('TempHive:\{0}' -f $entry.Key) -ErrorAction SilentlyContinue)) {
+            New-Item -Path ('TempHive:\{0}' -f $entry.Key) -Force
+            Write-Log -message ('{0} :: {1} created' -f $($MyInvocation.MyCommand.Name), $entry.Key) -severity 'DEBUG'
+          }
+          New-ItemProperty -Path ('TempHive:\{0}' -f $entry.Key) -Name $entry.ValueName -PropertyType $entry.ValueType -Value $entry.ValueData
+          Write-Log -message ('{0} :: {1}\{2} set to {3}' -f $($MyInvocation.MyCommand.Name), $entry.Key, $entry.ValueName, $entry.ValueData) -severity 'DEBUG'
+        }
+        $attempt = 0 # attempt Remove-RegistryHive up to 3 times
+        while($attempt -le 3) {
+          try {
+            $attempt++
+            Remove-RegistryHive -Name TempHive
+            Write-Log -message ('{0} :: temporary hive unloaded' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+            break
+          }
+          catch {
+            if ($attempt -eq 3) {
+              throw
+            }
+            Write-Log -message ('{0} :: temporary hive unload failed. retrying...' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+            Start-Sleep -Milliseconds 100
+            [System.GC]::Collect()
+          }
+        }
+      }
+      catch {
+        Write-Log -message ('{0} :: failed to set default profile properties. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+      }
+    } else {
+      Write-Log -message ('{0} :: registry hive powershell module is not loaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+}
 # SourceRepo is in place to toggle between production and testing environments
 $SourceRepo = 'mozilla-releng'
 
@@ -876,12 +932,18 @@ if ($rebootReasons.length) {
         ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) }
         # this setting persists only for the current session
         Enable-PSRemoting -Force
+        if (-not ($isWorker)) {
+          Set-DefaultProfileProperties
+        }
       }
       'Microsoft Windows 10*' {
         # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
         ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) }
         # this setting persists only for the current session
         Enable-PSRemoting -SkipNetworkProfileCheck -Force
+        if (-not ($isWorker)) {
+          Set-DefaultProfileProperties
+        }
       }
       default {
         # this setting persists only for the current session
