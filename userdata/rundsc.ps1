@@ -654,6 +654,95 @@ function Activate-Windows {
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
+function Import-RegistryHive {
+  param(
+    [string] $file,
+    [string] $key,
+    [string] $name
+  )
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    # check whether the drive name is available
+    $testDrive = Get-PSDrive -Name $Name -ErrorAction SilentlyContinue
+    if ($testDrive -ne $null) {
+      $errorRecord = New-Object Management.Automation.ErrorRecord (
+        (New-Object Management.Automation.SessionStateException("A drive with the name '$Name' already exists.")),
+        'DriveNameUnavailable', [Management.Automation.ErrorCategory]::ResourceUnavailable, $null
+      )
+      $PSCmdlet.ThrowTerminatingError($errorRecord)
+    }
+    # load the registry hive from file using reg.exe
+    $process = Start-Process -FilePath "$env:WINDIR\system32\reg.exe" -ArgumentList "load $Key $File" -WindowStyle Hidden -PassThru -Wait
+    if ($process.ExitCode) {
+      $errorRecord = New-Object Management.Automation.ErrorRecord(
+        (New-Object Management.Automation.PSInvalidOperationException("The registry hive '$File' failed to load. Verify the source path or target registry key.")),
+        'HiveLoadFailure', [Management.Automation.ErrorCategory]::ObjectNotFound, $null
+      )
+      $PSCmdlet.ThrowTerminatingError($errorRecord)
+    }
+    try {
+      # create a global drive using the registry provider, with the root path as the previously loaded registry hive
+      New-PSDrive -Name $Name -PSProvider Registry -Root $Key -Scope Global -ErrorAction Stop | Out-Null
+    }
+    catch {
+      # validate patten on $Name in the Params and the drive name check at the start make it very unlikely New-PSDrive will fail
+      $errorRecord = New-Object Management.Automation.ErrorRecord(
+        (New-Object Management.Automation.PSInvalidOperationException("An unrecoverable error creating drive '$Name' has caused the registy key '$Key' to be left loaded, this must be unloaded manually.")),
+        'DriveCreateFailure', [Management.Automation.ErrorCategory]::InvalidOperation, $null
+      )
+      $PSCmdlet.ThrowTerminatingError($errorRecord);
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+}
+function Remove-RegistryHive {
+  param (
+    [string] $name
+  )
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    # get the drive that was used to map the registry hive
+    $drive = Get-PSDrive -Name $Name -ErrorAction SilentlyContinue
+    # if $drive is $null the drive name was incorrect
+    if ($drive -eq $null) {
+      $errorRecord = New-Object Management.Automation.ErrorRecord(
+        (New-Object Management.Automation.DriveNotFoundException("The drive '$Name' does not exist.")),
+        'DriveNotFound', [Management.Automation.ErrorCategory]::ResourceUnavailable, $null
+      )
+      $PSCmdlet.ThrowTerminatingError($errorRecord)
+    }
+    # $drive.Root is the path to the registry key, save this before the drive is removed
+    $drive = $drive.Root
+    try {
+      # remove the drive, the only reason this should fail is if the reasource is busy
+      Remove-PSDrive $Name -ErrorAction Stop
+    }
+    catch {
+      $errorRecord = New-Object Management.Automation.ErrorRecord(
+        (New-Object Management.Automation.PSInvalidOperationException("The drive '$Name' could not be removed, it may still be in use.")),
+        'DriveRemoveFailure', [Management.Automation.ErrorCategory]::ResourceBusy, $null)
+      $PSCmdlet.ThrowTerminatingError($errorRecord)
+    }
+    $process = Start-Process -FilePath "$env:WINDIR\system32\reg.exe" -ArgumentList "unload $Key" -WindowStyle Hidden -PassThru -Wait
+    if ($process.ExitCode) {
+      # if "reg unload" fails due to the resource being busy, the drive gets added back to keep the original state
+      New-PSDrive -Name $Name -PSProvider Registry -Root $Key -Scope Global -ErrorAction Stop | Out-Null
+      $errorRecord = New-Object Management.Automation.ErrorRecord(
+        (New-Object Management.Automation.PSInvalidOperationException("The registry key '$Key' could not be unloaded, it may still be in use.")),
+        'HiveUnloadFailure', [Management.Automation.ErrorCategory]::ResourceBusy, $null)
+      $PSCmdlet.ThrowTerminatingError($errorRecord)
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+}
 function Set-DefaultProfileProperties {
   param (
     [string] $path = 'C:\Users\Default\NTUSER.DAT',
@@ -670,40 +759,36 @@ function Set-DefaultProfileProperties {
     Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
   process {
-    if (Get-Command 'Import-RegistryHive' -errorAction SilentlyContinue) {
-      try {
-        Import-RegistryHive -File $path -Key 'HKLM\TEMP_HIVE' -Name TempHive
-        foreach ($entry in $entries) {
-          if (-not (Test-Path -Path ('TempHive:\{0}' -f $entry.Key) -ErrorAction SilentlyContinue)) {
-            New-Item -Path ('TempHive:\{0}' -f $entry.Key) -Force
-            Write-Log -message ('{0} :: {1} created' -f $($MyInvocation.MyCommand.Name), $entry.Key) -severity 'DEBUG'
-          }
-          New-ItemProperty -Path ('TempHive:\{0}' -f $entry.Key) -Name $entry.ValueName -PropertyType $entry.ValueType -Value $entry.ValueData
-          Write-Log -message ('{0} :: {1}\{2} set to {3}' -f $($MyInvocation.MyCommand.Name), $entry.Key, $entry.ValueName, $entry.ValueData) -severity 'DEBUG'
+    try {
+      Import-RegistryHive -File $path -Key 'HKLM\TEMP_HIVE' -Name TempHive
+      foreach ($entry in $entries) {
+        if (-not (Test-Path -Path ('TempHive:\{0}' -f $entry.Key) -ErrorAction SilentlyContinue)) {
+          New-Item -Path ('TempHive:\{0}' -f $entry.Key) -Force
+          Write-Log -message ('{0} :: {1} created' -f $($MyInvocation.MyCommand.Name), $entry.Key) -severity 'DEBUG'
         }
-        $attempt = 0 # attempt Remove-RegistryHive up to 3 times
-        while($attempt -le 3) {
-          try {
-            $attempt++
-            Remove-RegistryHive -Name TempHive
-            Write-Log -message ('{0} :: temporary hive unloaded' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
-            break
+        New-ItemProperty -Path ('TempHive:\{0}' -f $entry.Key) -Name $entry.ValueName -PropertyType $entry.ValueType -Value $entry.ValueData
+        Write-Log -message ('{0} :: {1}\{2} set to {3}' -f $($MyInvocation.MyCommand.Name), $entry.Key, $entry.ValueName, $entry.ValueData) -severity 'DEBUG'
+      }
+      $attempt = 0 # attempt Remove-RegistryHive up to 3 times
+      while($attempt -le 3) {
+        try {
+          $attempt++
+          Remove-RegistryHive -Name TempHive
+          Write-Log -message ('{0} :: temporary hive unloaded' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+          break
+        }
+        catch {
+          if ($attempt -eq 3) {
+            throw
           }
-          catch {
-            if ($attempt -eq 3) {
-              throw
-            }
-            Write-Log -message ('{0} :: temporary hive unload failed. retrying...' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
-            Start-Sleep -Milliseconds 100
-            [System.GC]::Collect()
-          }
+          Write-Log -message ('{0} :: temporary hive unload failed. retrying...' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+          Start-Sleep -Milliseconds 100
+          [System.GC]::Collect()
         }
       }
-      catch {
-        Write-Log -message ('{0} :: failed to set default profile properties. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
-      }
-    } else {
-      Write-Log -message ('{0} :: registry hive powershell module is not loaded.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+    }
+    catch {
+      Write-Log -message ('{0} :: failed to set default profile properties. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
     }
   }
   end {
