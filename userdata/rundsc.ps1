@@ -708,33 +708,36 @@ function Remove-RegistryHive {
   }
   process {
     # get the drive that was used to map the registry hive
-    $drive = Get-PSDrive -Name $Name -ErrorAction SilentlyContinue
+    $drive = Get-PSDrive -Name $name -ErrorAction SilentlyContinue
     # if $drive is $null the drive name was incorrect
     if ($drive -eq $null) {
+      Write-Log -message ('{0} :: failed to load ps drive: "{1}"' -f $($MyInvocation.MyCommand.Name), $name) -severity 'Error'
       $errorRecord = New-Object Management.Automation.ErrorRecord(
-        (New-Object Management.Automation.DriveNotFoundException("The drive '$Name' does not exist.")),
+        (New-Object Management.Automation.DriveNotFoundException('The drive "{0}" does not exist.' -f $name)),
         'DriveNotFound', [Management.Automation.ErrorCategory]::ResourceUnavailable, $null
       )
       $PSCmdlet.ThrowTerminatingError($errorRecord)
     }
     # $drive.Root is the path to the registry key, save this before the drive is removed
-    $drive = $drive.Root
+    $key = $drive.Root
     try {
-      # remove the drive, the only reason this should fail is if the reasource is busy
-      Remove-PSDrive $Name -ErrorAction Stop
+      # remove the drive, the only reason this should fail is if the resource is busy
+      Remove-PSDrive $name -ErrorAction Stop
     }
     catch {
+      Write-Log -message ('{0} :: failed to remove ps drive: "{1}"' -f $($MyInvocation.MyCommand.Name), $name) -severity 'Error'
       $errorRecord = New-Object Management.Automation.ErrorRecord(
-        (New-Object Management.Automation.PSInvalidOperationException("The drive '$Name' could not be removed, it may still be in use.")),
+        (New-Object Management.Automation.PSInvalidOperationException('The drive "{0}" could not be removed, it may still be in use.' -f $name)),
         'DriveRemoveFailure', [Management.Automation.ErrorCategory]::ResourceBusy, $null)
       $PSCmdlet.ThrowTerminatingError($errorRecord)
     }
-    $process = Start-Process -FilePath "$env:WINDIR\system32\reg.exe" -ArgumentList "unload $Key" -WindowStyle Hidden -PassThru -Wait
+    $process = Start-Process -FilePath "$env:WINDIR\system32\reg.exe" -ArgumentList @('unload', $key) -WindowStyle Hidden -PassThru -Wait
     if ($process.ExitCode) {
+      Write-Log -message ('{0} :: failed to unload registry key: "{1}"' -f $($MyInvocation.MyCommand.Name), $key) -severity 'Error'
       # if "reg unload" fails due to the resource being busy, the drive gets added back to keep the original state
-      New-PSDrive -Name $Name -PSProvider Registry -Root $Key -Scope Global -ErrorAction Stop | Out-Null
+      New-PSDrive -Name $Name -PSProvider Registry -Root $key -Scope Global -ErrorAction Stop | Out-Null
       $errorRecord = New-Object Management.Automation.ErrorRecord(
-        (New-Object Management.Automation.PSInvalidOperationException("The registry key '$Key' could not be unloaded, it may still be in use.")),
+        (New-Object Management.Automation.PSInvalidOperationException('The registry key "{0}" could not be unloaded, it may still be in use.' -f $key)),
         'HiveUnloadFailure', [Management.Automation.ErrorCategory]::ResourceBusy, $null)
       $PSCmdlet.ThrowTerminatingError($errorRecord)
     }
