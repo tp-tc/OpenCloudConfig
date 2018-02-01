@@ -1,9 +1,19 @@
 @echo off
 
+echo Running generic-worker startup script (run-generic-worker.bat) ... >> C:\generic-worker\generic-worker.log
 if "%USERNAME%" == "GenericWorker" ftype txtfile="C:\Windows\System32\Notepad.exe" "%%1"
 if "%USERNAME%" == "GenericWorker" if exist "C:\Program Files (x86)" powershell -command "&{$p='HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3';$v=(Get-ItemProperty -Path $p).Settings;$v[8]=3;&Set-ItemProperty -Path $p -Name Settings -Value $v;&Stop-Process -ProcessName explorer}" > C:\log\taskbar-auto-hide-stdout.log 2> C:\log\taskbar-auto-hide-stderr.log
 if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-worker\disable-desktop-interrupt.reg
 if exist C:\generic-worker\SetDefaultPrinter.ps1 powershell -NoLogo -file C:\generic-worker\SetDefaultPrinter.ps1 -WindowStyle hidden -NoProfile -ExecutionPolicy bypass
+
+if not "%USERNAME%" == "GenericWorker" goto CheckForStateFlag
+:CheckForUserProfile
+echo Checking user registry hive is loaded... >> C:\generic-worker\generic-worker.log
+reg query HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects /ve
+if %ERRORLEVEL% EQU 0 goto CheckForStateFlag
+echo User registry hive is not loaded >> C:\generic-worker\generic-worker.log
+timeout /t 1 >nul
+goto CheckForUserProfile
 
 :CheckForStateFlag
 if exist Z:\loan logoff /f /n
