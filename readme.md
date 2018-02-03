@@ -3,7 +3,7 @@
 [![Docker pulls](https://img.shields.io/docker/pulls/grenade/opencloudconfig.svg?style=plastic)](https://hub.docker.com/r/grenade/opencloudconfig/)
 [![Deploy status](https://github.taskcluster.net/v1/repository/mozilla-releng/OpenCloudConfig/master/badge.svg)](https://github.taskcluster.net/v1/repository/mozilla-releng/OpenCloudConfig/master/latest)
 
-OCC is a small, fast, lightweight tool for creating Windows cloud (they don't really have to be in a cloud though) instances with a specific configuration in a repeatable, source controlled manner. Think of it as Puppet or Chef, without all the Orchestration. There isn't even anything to install. It's implemented in a few powershell scripts, hosted in this repository.
+OCC is a small, fast, lightweight tool for creating Windows cloud (they don't really have to be in a cloud though) instances with a specific configuration in a repeatable, source controlled manner. Think of it as Puppet or Chef, without all the orchestration. There isn't even anything to install. It's implemented in a few powershell scripts, hosted in this repository.
 
 OCC has no dependencies other than powershell so you shouldn't have to install anything on the instances where you want it to run. In EC2 for example, you can provide a single command in your userdata (and a great big json manifest out on the web somewhere), in order to build a specific instance configuration at startup.
 
@@ -341,3 +341,93 @@ Instance configuration is defined in json format and currently includes implemen
   }
   ```
 
+# OpenCloudConfig CI
+
+When a commit is pushed to the
+[mozilla-releng/OpenCloudConfig](https://github.com/mozilla-releng/OpenCloudConfig/)
+master branch, a set of tasks will be run.
+
+## Previous tasks
+
+To see previous tasks that have run, visit the [commits
+page](https://github.com/mozilla-releng/OpenCloudConfig/commits/master) and
+look for green ticks, or heaven forbid, red crosses.
+
+## Implementation
+
+Those tasks are generated from the `/.taskclsuter.yml` file in the root of this
+repository via a
+[taskcluster-github](https://github.com/taskcluster/taskcluster-github)
+integration.
+
+### AMI building
+
+They will build [Amazon Machine
+Images](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) for a
+set of [taskcluster worker
+types](https://docs.taskcluster.net/manual/task-execution/worker-types), which
+are defined in the `/userdata/Manifest` directory of this git repository. Each
+json manifest file represents one specific worker type.
+
+### Updating live worker type definitions
+
+In addition to rebuilding the AMIs, the CI will also update [live production
+AWS worker type definitions](https://tools.taskcluster.net/aws-provisioner) to
+use the new images.
+
+## Defining which worker types to update
+
+Tasks can be filtered based on the syntax of the commit message of the master
+branch commit head. To update all OCC worker types, include `deploy: all` in
+your commit message. To rebuild a selection of worker types, provide a space
+delimited list in your deploy message, e.g. `deploy: <workertype1>
+<workertype2> ...` in your commit message.
+
+This is usually most easily accomplished using two messages in the commit
+command; the first the regular commit message, and the second for the
+deployment instruction, e.g.:
+
+```
+git commit -m 'Something important for GPU beta worker types' \
+           -m 'deploy: gecko-t-win10-64-gpu-b gecko-t-win7-32-gpu-b'
+```
+
+**Note - a task will still be created for each possible workertype, however
+it will immediately exit when it runs, if it is not included in the deploy
+syntax.**
+
+**Also note, if you do not include deploy syntax in your commit, nothing will get
+deployed. This is to safeguard automatic deploys from accidental pushes.**
+
+## Redeploying without changes
+
+If you find yourself needing to retrigger a deployment, or deploy to an
+additional worker type, but without making source code changes, this can be
+accomplished with an empty commit as follows:
+
+```
+git commit --allow-empty \
+           -m "Doing this because I'm special." \
+           -m 'deploy: gecko-t-win10-64-gpu-b gecko-t-win7-32-gpu-b'
+```
+
+## AMI retention
+
+OCC will automatically retain 10 previous images when building new images, so
+that rollback is possible via manual updating of the aws provisioner worker
+type definitions. However if you wish to rollback many versions, you may need
+to rebuild. In any case it is best to follow up a rollback with a `git revert`
+and push to master branch, so that the OCC repository is always in sync with
+the production versions.
+
+# OpenCloudConfig architecture
+
+Here are some of the more important files in this repository.
+
+| File | Description |
+| ---- | ----------- |
+| `/ci/update-workertype.sh` | CI script to rebuild AMIs and update live production worker type definitions. |
+| `/userdata/xDynamicConfig.ps1` | Defines the allowed `ComponentType`s accepted by OpenCloudConfig, as documented above. |
+| `/userdata/rundsc.ps1` | Script to run on vanilla environment, to apply configuration. |
+| `/userdata/HaltOnIdle.ps1` | Checks machine activity and decides whether to terminate it due to inactivity / bad state / etc. |
+| `/userdata/PrepLoaner.ps1` | Prepares machine for a self-serve loan as per [these instructions](https://wiki.mozilla.org/ReleaseEngineering/How_To/Self_Provision_a_TaskCluster_Windows_Instance). |
