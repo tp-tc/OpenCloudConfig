@@ -1103,6 +1103,8 @@ if ($rebootReasons.length) {
             Sleep 60
           }
           if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
+            & icacls @('C:\generic-worker\cot.key', '/grant', 'Administrators:(GA)')
+            & icacls @('C:\generic-worker\cot.key', '/inheritance:r')
             Write-Log -message 'cot key detected. shutting down.' -severity 'INFO'
             & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
           } else {
