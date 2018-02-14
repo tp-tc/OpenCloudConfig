@@ -1187,10 +1187,10 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\Program Files (x86)\\Microsoft SDKs\\Windows Kits\\10\ExtensionSDKs\\Microsoft.UniversalCRT.Debug\\10.0.10240.0\\SDKManifest.xml",
-          "C:\Program Files (x86)\\Microsoft SDKs\\Windows Kits\\10\\ExtensionSDKs\\Microsoft.UniversalCRT.Debug\\10.0.10240.0\\Redist\\Debug\\arm\\ucrtbased.dll"
+          "C:\\Program Files (x86)\\Microsoft SDKs\\Windows Kits\\10\\ExtensionSDKs\\Microsoft.UniversalCRT.Debug\\10.0.10240.0\\SDKManifest.xml",
+          "C:\\Program Files (x86)\\Microsoft SDKs\\Windows Kits\\10\\ExtensionSDKs\\Microsoft.UniversalCRT.Debug\\10.0.10240.0\\Redist\\Debug\\arm\\ucrtbased.dll"
         ]
-      },
+      }
      }, 
     {
       "ComponentName": "reg_Power_PreferredPlan_HighPerformance",
