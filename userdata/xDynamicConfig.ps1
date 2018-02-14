@@ -95,20 +95,15 @@ Configuration xDynamicConfig {
 
   if ($locationType -eq 'AWS') { 
     $instancekey = (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/meta-data/public-keys' -UseBasicParsing).Content
-    if ($instancekey.StartsWith('0=aws-provisioner-v1-managed:')) {
-      # provisioned worker
-      $workerType = $instancekey.Split(':')[1]
-    } else {
+    if ($instancekey.StartsWith('0=mozilla-taskcluster-worker-')) {
       # ami creation instance
       $workerType = $instancekey.Replace('0=mozilla-taskcluster-worker-', '')
+    } else {
+      # provisioned worker
+      $workerType = (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/user-data' -UseBasicParsing | ConvertFrom-Json).workerType
     }
     if ($workerType) {
-      if ($workerType.StartsWith('loan-')) {
-        # loan workers share a manifest with gecko parent worker type.
-        $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/Manifest/{1}.json?{2}' -f $sourceRepo, ($workerType.Replace('loan-', 'gecko-') -replace ".{3}$"), [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
-      } else {
-        $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/Manifest/{1}.json?{2}' -f $sourceRepo, $workerType, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
-      }
+      $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/Manifest/{1}.json?{2}' -f $sourceRepo, $workerType, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
     }
   } else {
     switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
