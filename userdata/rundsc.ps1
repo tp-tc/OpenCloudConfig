@@ -864,15 +864,15 @@ if ($locationType -ne 'DataCenter') {
   }
   $publicKeys = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys')
 
-  if ($publicKeys.StartsWith('0=aws-provisioner-v1-managed:')) {
-    # provisioned worker
-    $isWorker = $true
-    $workerType = $publicKeys.Split(':')[1]
-  } else {
+  if ($publicKeys.StartsWith('0=mozilla-taskcluster-worker-')) {
     # ami creation instance
     $isWorker = $false
     $workerType = $publicKeys.Replace('0=mozilla-taskcluster-worker-', '')
     Activate-Windows
+  } else {
+    # provisioned worker
+    $isWorker = $true
+    $workerType = (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/user-data' -UseBasicParsing | ConvertFrom-Json).workerType
   }
   Write-Log -message ('isWorker: {0}.' -f $isWorker) -severity 'INFO'
   $az = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone')
