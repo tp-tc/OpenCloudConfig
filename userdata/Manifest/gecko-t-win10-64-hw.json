@@ -1178,6 +1178,21 @@
       "Action": "Allow"
     },
     {
+      "ComponentName": "cppbuildtools",
+      "ComponentType": "ExeInstall",
+      "Comment": " c++ toolchain",
+      "Url": "http://go.microsoft.com/fwlink/?LinkId=691126&fixForIE=.exe&__hstc=268264337.a5d21ad3115e000b70cefcf71ef00ced.1513876127127.1513887656302.1518629799131.3&__hssc=268264337.1.1518629799131&__hsfp=2623587065",
+      "Arguments": [
+        "/Q"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files (x86)\\Microsoft SDKs\\Windows Kits\\10\ExtensionSDKs\\Microsoft.UniversalCRT.Debug\\10.0.10240.0\\SDKManifest.xml",
+          "C:\Program Files (x86)\\Microsoft SDKs\\Windows Kits\\10\\ExtensionSDKs\\Microsoft.UniversalCRT.Debug\\10.0.10240.0\\Redist\\Debug\\arm\\ucrtbased.dll"
+        ]
+      },
+     }, 
+    {
       "ComponentName": "reg_Power_PreferredPlan_HighPerformance",
       "ComponentType": "RegistryValueSet",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1362613",
