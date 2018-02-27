@@ -646,7 +646,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": " 	https://s3-us-west-2.amazonaws.com/occ-package/generic-worker.exe",
+      "Source": "https://s3-us-west-2.amazonaws.com/occ-package/generic-worker.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
