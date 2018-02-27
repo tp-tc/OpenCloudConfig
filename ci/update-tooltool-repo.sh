@@ -33,11 +33,11 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
           ;;
         FileDownload)
           target=$(jq --arg componentName ${ComponentName} --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and .ComponentName == $componentName) | .Target' ${manifest})
-          filename=./$(basename "$target")
+          filename=./${target##*\\}
           ;;
         ChecksumFileDownload)
           target=$(jq --arg componentName ${ComponentName} --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and .ComponentName == $componentName) | .Target' ${manifest})
-          filename=./$(basename "$target")
+          filename=./${target##*\\}
           ;;
       esac
       www_url=$(jq --arg ComponentName ${ComponentName} --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and .ComponentName == $ComponentName) | .Url' ${manifest})
