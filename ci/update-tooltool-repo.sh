@@ -21,26 +21,31 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
       case "${ComponentType}" in
         ExeInstall)
           filename=./${ComponentName}.exe
+          www_url=$(jq --arg ComponentName ${ComponentName} --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and .ComponentName == $ComponentName) | .Url' ${manifest})
           ;;
         MsiInstall)
           filename=./${ComponentName}.msi
+          www_url=$(jq --arg ComponentName ${ComponentName} --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and .ComponentName == $ComponentName) | .Url' ${manifest})
           ;;
         MsuInstall)
           filename=./${ComponentName}.msu
+          www_url=$(jq --arg ComponentName ${ComponentName} --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and .ComponentName == $ComponentName) | .Url' ${manifest})
           ;;
         ZipInstall)
           filename=./${ComponentName}.zip
+          www_url=$(jq --arg ComponentName ${ComponentName} --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and .ComponentName == $ComponentName) | .Url' ${manifest})
           ;;
         FileDownload)
           target=$(jq --arg componentName ${ComponentName} --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and .ComponentName == $componentName) | .Target' ${manifest})
           filename=./${target##*\\}
+          www_url=$(jq --arg ComponentName ${ComponentName} --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and .ComponentName == $ComponentName) | .Source' ${manifest})
           ;;
         ChecksumFileDownload)
           target=$(jq --arg componentName ${ComponentName} --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and .ComponentName == $componentName) | .Target' ${manifest})
           filename=./${target##*\\}
+          www_url=$(jq --arg ComponentName ${ComponentName} --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and .ComponentName == $ComponentName) | .Source' ${manifest})
           ;;
       esac
-      www_url=$(jq --arg ComponentName ${ComponentName} --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and .ComponentName == $ComponentName) | .Url' ${manifest})
 
       if curl -L -o ${filename} ${www_url} && [ -s ${filename} ]; then
         echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${filename} downloaded from ${www_url}"
