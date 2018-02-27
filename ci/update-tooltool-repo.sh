@@ -43,7 +43,7 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
       www_url=$(jq --arg ComponentName ${ComponentName} --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and .ComponentName == $ComponentName) | .Url' ${manifest})
 
       if curl -L -o ${filename} ${www_url} && [ -s ${filename} ]; then
-        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${filename} downloaded"
+        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${filename} downloaded from ${www_url}"
         sha512=$(sha512sum ${filename} | { read sha _; echo $sha; })
         tt_url="https://api.pub.build.mozilla.org/tooltool/sha512/${sha512}"
         if curl --header "Authorization: Bearer $(cat ./.tooltool.token)" --output /dev/null --silent --head --fail ${tt_url}; then
@@ -59,7 +59,7 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
         rm ${manifest}
         mv ${manifest}.tmp ${manifest}
       else
-        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${filename} download failed"
+        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${filename} download from ${www_url} failed"
       fi
     done
   done
