@@ -1,8 +1,8 @@
 @echo off
 
 rem needed for the generic worker 8.* to keep disk space free https://bugzilla.mozilla.org/show_bug.cgi?id=1441208#c12
-del /s /q C:\Users\GenericWorker\AppData\Local\Temp
-rmdir /s /q C:\Users\GenericWorker\AppData\Local\Temp
+IF EXIST C:\Users\GenericWorker\AppData\Local\Temp del /s /q C:\Users\GenericWorker\AppData\Local\Temp
+IF EXIST C:\Users\GenericWorker\AppData\Local\Temp rmdir /s /q C:\Users\GenericWorker\AppData\Local\Temp
 
 cat C:\generic-worker\master-generic-worker.json | jq ".  | .workerId=\"%COMPUTERNAME%\"" > C:\generic-worker\gen_worker.config
 
