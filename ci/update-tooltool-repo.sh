@@ -16,7 +16,7 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
   tt=${json::-5}.tt
 
   for ComponentType in ExeInstall MsiInstall MsuInstall ZipInstall FileDownload ChecksumFileDownload; do
-    jq --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and (.sha512 == "" or .sha512 == null)) | .ComponentName' ${manifest} | while read ComponentName; do
+    jq --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and (.sha512 == "" or .sha512 == null) and (((.ComponentType != "FileDownload") and (.ComponentType != "ChecksumFileDownload")) or ((.Target|endswith(".exe")) or (.Target|endswith(".zip")) or (.Target|endswith(".msi")) or (.Target|endswith(".msu"))))) | .ComponentName' ${manifest} | while read ComponentName; do
       echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] processing ${ComponentType} ${ComponentName}"
       case "${ComponentType}" in
         ExeInstall)
