@@ -15,28 +15,35 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
   json=$(basename $manifest)
   tt=${json::-5}.tt
 
-  for ComponentType in ExeInstall MsiInstall MsuInstall ZipInstall; do
+  for ComponentType in ExeInstall MsiInstall MsuInstall ZipInstall FileDownload ChecksumFileDownload; do
     jq --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and (.sha512 == "" or .sha512 == null)) | .ComponentName' ${manifest} | while read ComponentName; do
       echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] processing ${ComponentType} ${ComponentName}"
       case "${ComponentType}" in
         ExeInstall)
-          ext=exe
+          filename=./${ComponentName}.exe
           ;;
         MsiInstall)
-          ext=msi
+          filename=./${ComponentName}.msi
           ;;
         MsuInstall)
-          ext=msu
+          filename=./${ComponentName}.msu
           ;;
         ZipInstall)
-          ext=zip
+          filename=./${ComponentName}.zip
+          ;;
+        FileDownload)
+          target=$(jq --arg componentName ${ComponentName} --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and .ComponentName == $componentName) | .Target' ${manifest})
+          filename=./$(basename "$target")
+          ;;
+        ChecksumFileDownload)
+          target=$(jq --arg componentName ${ComponentName} --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and .ComponentName == $componentName) | .Target' ${manifest})
+          filename=./$(basename "$target")
           ;;
       esac
-      filename=./${ComponentName}.${ext}
       www_url=$(jq --arg ComponentName ${ComponentName} --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and .ComponentName == $ComponentName) | .Url' ${manifest})
 
       if curl -L -o ${filename} ${www_url} && [ -s ${filename} ]; then
-        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName}.${ext} downloaded"
+        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${filename} downloaded"
         sha512=$(sha512sum ${filename} | { read sha _; echo $sha; })
         tt_url="https://api.pub.build.mozilla.org/tooltool/sha512/${sha512}"
         if curl --header "Authorization: Bearer $(cat ./.tooltool.token)" --output /dev/null --silent --head --fail ${tt_url}; then
@@ -52,7 +59,7 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
         rm ${manifest}
         mv ${manifest}.tmp ${manifest}
       else
-        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName}.${ext} download failed"
+        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${filename} download failed"
       fi
     done
   done

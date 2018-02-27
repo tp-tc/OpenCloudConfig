@@ -221,13 +221,19 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ FileDownload = $item.ComponentName }"
           SetScript = {
-            try {
-              (New-Object Net.WebClient).DownloadFile($using:item.Source, $using:item.Target)
-              Write-Verbose ('Downloaded {0} to {1} on first attempt' -f $using:item.Source, $using:item.Target)
-            } catch {
-              # handle redirects (eg: sourceforge)
-              Invoke-WebRequest -Uri $using:item.Source -OutFile $using:item.Target -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
-              Write-Verbose ('Downloaded {0} to {1} on second attempt' -f $using:item.Source, $using:item.Target)
+            if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
+              $webClient = New-Object System.Net.WebClient
+              $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
+              $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), $using:item.Target)
+            } else {
+              try {
+                (New-Object Net.WebClient).DownloadFile($using:item.Source, $using:item.Target)
+                Write-Verbose ('Downloaded {0} to {1} on first attempt' -f $using:item.Source, $using:item.Target)
+              } catch {
+                # handle redirects (eg: sourceforge)
+                Invoke-WebRequest -Uri $using:item.Source -OutFile $using:item.Target -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+                Write-Verbose ('Downloaded {0} to {1} on second attempt' -f $using:item.Source, $using:item.Target)
+              }
             }
             Unblock-File -Path $using:item.Target
           }
@@ -250,13 +256,19 @@ Configuration xDynamicConfig {
               Remove-Item -Path $tempTarget -Force
               Write-Verbose ('Deleted {0}' -f $tempTarget)
             }
-            try {
-              (New-Object Net.WebClient).DownloadFile($using:item.Source, $tempTarget)
-              Write-Verbose ('Downloaded {0} to {1} on first attempt' -f $using:item.Source, $tempTarget)
-            } catch {
-              # handle redirects (eg: sourceforge)
-              Invoke-WebRequest -Uri $using:item.Source -OutFile $tempTarget -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
-              Write-Verbose ('Downloaded {0} to {1} on second attempt' -f $using:item.Source, $tempTarget)
+            if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
+              $webClient = New-Object System.Net.WebClient
+              $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
+              $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), $tempTarget)
+            } else {
+              try {
+                (New-Object Net.WebClient).DownloadFile($using:item.Source, $tempTarget)
+                Write-Verbose ('Downloaded {0} to {1} on first attempt' -f $using:item.Source, $tempTarget)
+              } catch {
+                # handle redirects (eg: sourceforge)
+                Invoke-WebRequest -Uri $using:item.Source -OutFile $tempTarget -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+                Write-Verbose ('Downloaded {0} to {1} on second attempt' -f $using:item.Source, $tempTarget)
+              }
             }
             Unblock-File -Path $tempTarget
           }
