@@ -647,7 +647,7 @@
         }
       ],
       "Source": "https://s3-us-west-2.amazonaws.com/occ-package/generic-worker.exe",
-      "sha512": "f0fe389dd0c6afe08e061718150f7e3de166f2a05002f799bd8a88d8a90a4fab43abd767c52f5e2618735cc6597ace24290aa4d064584f6c08238fb2d2d72a77",
+      "sha512": "fd30426e247896922a0ba8ff79b8f7882ec817ea6b88c00ed11eeb6d97c4cfd33bf52e2947a77bc50f6e6594f5f0bb02a08c9ffee22ca3e3271a8607c9bd34ff",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
