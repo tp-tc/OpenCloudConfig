@@ -56,6 +56,10 @@ Configuration xDynamicConfig {
         } else{
           $gpg = ('{0}\GNU\GnuPG\pub\gpg.exe' -f $env:ProgramFiles)
         }
+        if ([Net.ServicePointManager]::SecurityProtocol -notcontains 'Tls12') {
+          [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
+          Write-Verbose 'Added TLS v1.2 to security protocol support list'
+        }
         $files = Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/releng-secrets.json' -UseBasicParsing | ConvertFrom-Json
         foreach ($file in $files) {
           (New-Object Net.WebClient).DownloadFile(('https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/FirefoxBuildResources/{0}.gpg?raw=true' -f $file), ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file))
@@ -226,6 +230,10 @@ Configuration xDynamicConfig {
               $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
               $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), $using:item.Target)
             } else {
+              if ([Net.ServicePointManager]::SecurityProtocol -notcontains 'Tls12') {
+                [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
+                Write-Verbose 'Added TLS v1.2 to security protocol support list'
+              }
               try {
                 (New-Object Net.WebClient).DownloadFile($using:item.Source, $using:item.Target)
                 Write-Verbose ('Downloaded {0} to {1} on first attempt' -f $using:item.Source, $using:item.Target)
@@ -261,6 +269,10 @@ Configuration xDynamicConfig {
               $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
               $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), $tempTarget)
             } else {
+              if ([Net.ServicePointManager]::SecurityProtocol -notcontains 'Tls12') {
+                [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
+                Write-Verbose 'Added TLS v1.2 to security protocol support list'
+              }
               try {
                 (New-Object Net.WebClient).DownloadFile($using:item.Source, $tempTarget)
                 Write-Verbose ('Downloaded {0} to {1} on first attempt' -f $using:item.Source, $tempTarget)
@@ -318,7 +330,10 @@ Configuration xDynamicConfig {
               $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
               $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName))
             } else {
-              # todo: handle non-http fetches
+              if ([Net.ServicePointManager]::SecurityProtocol -notcontains 'Tls12') {
+                [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
+                Write-Verbose 'Added TLS v1.2 to security protocol support list'
+              }
               try {
                 (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName))
               } catch {
@@ -363,7 +378,10 @@ Configuration xDynamicConfig {
               $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
               $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $using:item.ComponentName))
             } else {
-              # todo: handle non-http fetches
+              if ([Net.ServicePointManager]::SecurityProtocol -notcontains 'Tls12') {
+                [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
+                Write-Verbose 'Added TLS v1.2 to security protocol support list'
+              }
               try {
                 (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $using:item.ComponentName))
               } catch {
@@ -402,7 +420,10 @@ Configuration xDynamicConfig {
               $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
               $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $using:item.ComponentName))
             } else {
-            # todo: handle non-http fetches
+              if ([Net.ServicePointManager]::SecurityProtocol -notcontains 'Tls12') {
+                [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
+                Write-Verbose 'Added TLS v1.2 to security protocol support list'
+              }
               try {
                 (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $using:item.ComponentName))
               } catch {
@@ -450,7 +471,10 @@ Configuration xDynamicConfig {
               $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
               $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName))
             } else {
-            # todo: handle non-http fetches
+              if ([Net.ServicePointManager]::SecurityProtocol -notcontains 'Tls12') {
+                [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
+                Write-Verbose 'Added TLS v1.2 to security protocol support list'
+              }
               try {
                 (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName))
               } catch {
