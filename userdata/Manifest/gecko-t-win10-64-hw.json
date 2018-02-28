@@ -647,6 +647,7 @@
         }
       ],
       "Source": "https://s3-us-west-2.amazonaws.com/occ-package/generic-worker.exe",
+      "sha512": "f0fe389dd0c6afe08e061718150f7e3de166f2a05002f799bd8a88d8a90a4fab43abd767c52f5e2618735cc6597ace24290aa4d064584f6c08238fb2d2d72a77",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
@@ -659,6 +660,7 @@
         }
       ],
       "Source": "https://github.com/taskcluster/livelog/releases/download/v1.1.0/livelog-windows-amd64.exe",
+      "sha512": "80cc08012a766c1f4c9da82b3d82af1612d6994714e775182d6ffa1e2b61d5fac4eefc2b5031f5d5ff28caa35dd9a5c6ada9147dc80289226b6f8722f0234a95",
       "Target": "C:\\generic-worker\\livelog.exe"
     },
     {
@@ -1161,6 +1163,7 @@
       "ComponentName": "jqInstall",
       "ComponentType": "FileDownload",
       "Source": "https://s3-us-west-2.amazonaws.com/occ-package/jq-win64.exe",
+      "sha512": "0fc326228b61fdc64b88b9cd3b976bc4f3de542a1ae1818cb6acbc7b146b0a20ebbd935e07f1b2179e2a2ded614b309259ea944b5e217d3a137458cb5d165ccc",
       "Target": "C:\\Windows\\System32\\jq.exe"
     },
     {
