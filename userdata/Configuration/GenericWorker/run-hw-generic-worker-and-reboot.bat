@@ -18,8 +18,9 @@ del /Q /F C:\dsc\task-claim-state.valid
 pushd %~dp0
 set errorlevel=
 C:\generic-worker\generic-worker.exe run --config C:\generic-worker\gen_worker.config >> C:\generic-worker\generic-worker.log 2>&1
-if %errorlevel% equ 67 goto RmLock
-if %errorlevel% equ 1 shutdown /s /t 0 /f /c "Halting as worker is impaired"
+set GW_EXIT_CODE=%errorlevel%
+if %GW_EXIT_CODE% equ 1 shutdown /s /t 0 /f /c "Halting as worker is impaired"
+if %GW_EXIT_CODE% equ 67 goto RmLock
 
 <nul (set/p z=) >C:\dsc\task-claim-state.valid
 shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
