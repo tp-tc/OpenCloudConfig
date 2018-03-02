@@ -3,10 +3,11 @@
 echo Running generic-worker startup script (run-generic-worker.bat) ... >> C:\generic-worker\generic-worker.log
 
 rem needed for the generic worker 8.* to keep disk space free https://bugzilla.mozilla.org/show_bug.cgi?id=1441208#c12
-move C:\Users\GenericWorker\AppData\Local\Temp\live* C:\dsc\
-IF EXIST C:\Users\GenericWorker\AppData\Local\Temp del /s /q C:\Users\GenericWorker\AppData\Local\Temp
-IF EXIST C:\Users\GenericWorker\AppData\Local\Temp rmdir /s /q C:\Users\GenericWorker\AppData\Local\Temp
-move C:\dsc\live* C:\Users\GenericWorker\AppData\Local\Temp\
+echo Clearing temp directory  >> C:\generic-worker\generic-worker.log 
+move C:\Users\GenericWorker\AppData\Local\Temp\live* C:\dsc\  >> C:\generic-worker\generic-worker.log
+IF EXIST C:\Users\GenericWorker\AppData\Local\Temp del /s /q C:\Users\GenericWorker\AppData\Local\Temp  >> C:\generic-worker\generic-worker.log
+IF EXIST C:\Users\GenericWorker\AppData\Local\Temp rmdir /s /q C:\Users\GenericWorker\AppData\Local\Temp  >> C:\generic-worker\generic-worker.log
+move C:\dsc\live* C:\Users\GenericWorker\AppData\Local\Temp\  >> C:\generic-worker\generic-worker.log
 
 cat C:\generic-worker\master-generic-worker.json | jq ".  | .workerId=\"%COMPUTERNAME%\"" > C:\generic-worker\gen_worker.config
 
