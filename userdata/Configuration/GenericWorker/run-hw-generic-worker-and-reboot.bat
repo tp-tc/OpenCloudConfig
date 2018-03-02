@@ -1,5 +1,7 @@
 @echo off
 
+echo Running generic-worker startup script (run-generic-worker.bat) ... >> C:\generic-worker\generic-worker.log
+
 rem needed for the generic worker 8.* to keep disk space free https://bugzilla.mozilla.org/show_bug.cgi?id=1441208#c12
 move C:\Users\GenericWorker\AppData\Local\Temp\live* C:\dsc\
 IF EXIST C:\Users\GenericWorker\AppData\Local\Temp del /s /q C:\Users\GenericWorker\AppData\Local\Temp
@@ -11,12 +13,15 @@ cat C:\generic-worker\master-generic-worker.json | jq ".  | .workerId=\"%COMPUTE
 if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-worker\disable-desktop-interrupt.reg
 
 :CheckForStateFlag
+echo Checking for C:\dsc\task-claim-state.valid file... >> C:\generic-worker\generic-worker.log
+echo Deleting C:\dsc\task-claim-state.valid file >> C:\generic-worker\generic-worker.log
 if exist C:\dsc\task-claim-state.valid goto RunWorker
 timeout /t 1 >nul
 goto CheckForStateFlag
 
 :RunWorker
-del /Q /F C:\dsc\task-claim-state.valid
+echo File C:\dsc\task-claim-state.valid found >> C:\generic-worker\generic-worker.log
+del /Q /F C:\dsc\task-claim-state.valid >> C:\generic-worker\generic-worker.log 2>&1
 pushd %~dp0
 set errorlevel=
 C:\generic-worker\generic-worker.exe run --config C:\generic-worker\gen_worker.config >> C:\generic-worker\generic-worker.log 2>&1
