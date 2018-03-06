@@ -449,7 +449,7 @@
       "ComponentName": "BinScope",
       "ComponentType": "MsiInstall",
       "Comment": "https://dxr.mozilla.org/mozilla-central/search?q=BinScope&redirect=false&case=false",
-      "Url": "https://github.com/mozilla-releng/OpenCloudConfig/raw/master/userdata/Configuration/FirefoxBuildResources/BinScope_x64.msi",
+      "Url": "https://s3.amazonaws.com/windows-opencloudconfig-packages/binscope/BinScope_x64.msi",
       "Name": "Microsoft BinScope 2014",
       "ProductId": "C7F11A71-09AA-43CC-9DFC-8CB12E678F21",
       "sha512": "3a36ed88690112d5ae1fc67d4af16973727e987a744a982c2357d72c955e21fcd20abc1ed48a23c376340d320463d91b2dd828454303075276a403f30d1d01aa"
@@ -1001,7 +1001,8 @@
         }
       ],
       "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.2.3/generic-worker-windows-amd64.exe",
-      "Target": "C:\\generic-worker\\generic-worker.exe"
+      "Target": "C:\\generic-worker\\generic-worker.exe",
+      "sha512": "dceae809dbb3df6d6c6f8ee7d6222cf09a74019e7238010b01bf71db3a2bb266a99e343de14a11bd45cbf94517d544fe5d5699ba0732bc9d8700794f16a46849"
     },
     {
       "ComponentName": "LiveLogDownload",
@@ -1013,7 +1014,8 @@
         }
       ],
       "Source": "https://github.com/taskcluster/livelog/releases/download/v1.1.0/livelog-windows-amd64.exe",
-      "Target": "C:\\generic-worker\\livelog.exe"
+      "Target": "C:\\generic-worker\\livelog.exe",
+      "sha512": "80cc08012a766c1f4c9da82b3d82af1612d6994714e775182d6ffa1e2b61d5fac4eefc2b5031f5d5ff28caa35dd9a5c6ada9147dc80289226b6f8722f0234a95"
     },
     {
       "ComponentName": "LiveLog_Get",
