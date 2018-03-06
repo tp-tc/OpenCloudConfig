@@ -9,6 +9,9 @@ IF EXIST C:\Users\GenericWorker\AppData\Local\Temp del /s /q C:\Users\GenericWor
 IF EXIST C:\Users\GenericWorker\AppData\Local\Temp rmdir /s /q C:\Users\GenericWorker\AppData\Local\Temp  >> C:\generic-worker\generic-worker.log
 move C:\dsc\live* C:\Users\GenericWorker\AppData\Local\Temp\  >> C:\generic-worker\generic-worker.log
 
+echo Disk space stats of C:\ >> C:\generic-worker\generic-worker.log
+fsutil volume diskfree c: >> C:\generic-worker\generic-worker.log
+
 cat C:\generic-worker\master-generic-worker.json | jq ".  | .workerId=\"%COMPUTERNAME%\"" > C:\generic-worker\gen_worker.config
 
 if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-worker\disable-desktop-interrupt.reg
