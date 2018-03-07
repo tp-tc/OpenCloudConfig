@@ -680,12 +680,46 @@
       "Action": "Allow"
     },
     {
+      "ComponentName": "NSSMDownload",
+      "ComponentType": "FileDownload",
+      "Source": "https://nssm.cc/ci/nssm-2.24-103-gdee49fc.zip",
+      "Target": "C:\\Windows\\Temp\\NSSMInstall.zip"
+    },
+    {
+      "ComponentName": "NSSMInstall",
+      "ComponentType": "CommandRun",
+      "Comment": "NSSM is required to install Generic Worker as a service. Currently ZipInstall fails, so using 7z instead.",
+      "Command": "C:\\Program Files\\7-Zip\\7z.exe",
+      "Arguments": [
+        "x",
+        "-oC:\\",
+        "C:\\Windows\\Temp\\NSSMInstall.zip"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "SevenZip"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "NSSMDownload"
+        }
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe"
+        ]
+      }
+    },
+    {
       "ComponentName": "GenericWorkerInstall",
       "ComponentType": "CommandRun",
       "Command": "C:\\generic-worker\\generic-worker.exe",
       "Arguments": [
         "install",
-        "startup",
+        "service",
+        "--nssm",
+        "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe",
         "--config",
         "C:\\generic-worker\\generic-worker.config"
       ],
@@ -705,6 +739,10 @@
         {
           "ComponentType": "FirewallRule",
           "ComponentName": "LiveLog_Put"
+        },
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "NSSMInstall"
         }
       ],
       "Validate": {
