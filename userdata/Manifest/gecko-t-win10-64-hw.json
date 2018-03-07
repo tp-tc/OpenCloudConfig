@@ -646,8 +646,8 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://s3-us-west-2.amazonaws.com/occ-package/generic-worker.exe",
-      "sha512": "fd30426e247896922a0ba8ff79b8f7882ec817ea6b88c00ed11eeb6d97c4cfd33bf52e2947a77bc50f6e6594f5f0bb02a08c9ffee22ca3e3271a8607c9bd34ff",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.6.0/generic-worker-windows-amd64.exe",
+      "sha512": "dceae809dbb3df6d6c6f8ee7d6222cf09a74019e7238010b01bf71db3a2bb266a99e343de14a11bd45cbf94517d544fe5d5699ba0732bc9d8700794f16a46849",
       "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
@@ -718,7 +718,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 8.3.0"
+            "Match": "generic-worker 10.6.0"
           }
         ]
       }
