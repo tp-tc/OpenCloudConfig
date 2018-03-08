@@ -30,6 +30,7 @@ del /Q /F C:\dsc\task-claim-state.valid >> C:\generic-worker\generic-worker.log 
 pushd %~dp0
 set errorlevel=
 C:\generic-worker\generic-worker.exe run --config C:\generic-worker\gen_worker.config >> C:\generic-worker\generic-worker.log 2>&1
+Pause
 set GW_EXIT_CODE=%errorlevel%
 if %GW_EXIT_CODE% equ 1 goto AwaitRepair
 if %GW_EXIT_CODE% equ 67 goto RmLock
