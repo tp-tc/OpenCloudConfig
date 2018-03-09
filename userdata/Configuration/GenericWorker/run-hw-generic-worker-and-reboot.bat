@@ -19,13 +19,13 @@ if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-w
 
 :CheckForStateFlag
 echo Checking for C:\dsc\task-claim-state.valid file... >> C:\generic-worker\generic-worker.log
-echo Deleting C:\dsc\task-claim-state.valid file >> C:\generic-worker\generic-worker.log
 if exist C:\dsc\task-claim-state.valid goto RunWorker
 timeout /t 1 >nul
 goto CheckForStateFlag
 
 :RunWorker
 echo File C:\dsc\task-claim-state.valid found >> C:\generic-worker\generic-worker.log
+echo Deleting C:\dsc\task-claim-state.valid file >> C:\generic-worker\generic-worker.log
 del /Q /F C:\dsc\task-claim-state.valid >> C:\generic-worker\generic-worker.log 2>&1
 pushd %~dp0
 set errorlevel=
@@ -34,7 +34,7 @@ set GW_EXIT_CODE=%errorlevel%
 if %GW_EXIT_CODE% neq 0 goto Reboot
 
 <nul (set/p z=) >C:\dsc\task-claim-state.valid
-if exist C:\generic-worker\rebootcount.txt del C:\generic-worker\rebootcount.txt
+if exist C:\generic-worker\rebootcount.txt del /Q /F  C:\generic-worker\rebootcount.txt
 shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
 exit
 
