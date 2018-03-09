@@ -39,6 +39,7 @@ shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
 exit
 
 :Reboot
+if exist C:DSC\in-progress.lock del /Q /F C:DSC\in-progress.lock
 if exist C:\generic-worker\rebootcount.txt GoTo AdditonalReboots
 echo 1 >> C:\generic-worker\rebootcount.txt
 echo Generic worker exit with code %GW_EXIT_CODE%; Rebooting to recover  >> C:\generic-worker\generic-worker.log
