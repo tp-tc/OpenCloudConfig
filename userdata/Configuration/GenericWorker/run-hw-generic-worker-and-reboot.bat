@@ -31,21 +31,25 @@ pushd %~dp0
 set errorlevel=
 C:\generic-worker\generic-worker.exe run --config C:\generic-worker\gen_worker.config >> C:\generic-worker\generic-worker.log 2>&1
 set GW_EXIT_CODE=%errorlevel%
-if %GW_EXIT_CODE% equ 1 goto AwaitRepair
-if %GW_EXIT_CODE% equ 67 goto AwaitRepair
+if %GW_EXIT_CODE% neq 0 goto Reboot
 
 <nul (set/p z=) >C:\dsc\task-claim-state.valid
+if exist C:\generic-worker\rebootcount.txt del C:\generic-worker\rebootcount.txt
 shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
 exit
 
-:RmLock
-net stop winrm
-del C:DSC\in-progress.lock
-shutdown /r /t 0 /f /c "Rebooting as generic worker exit with code 67"
-exit
-
-:AwaitRepair
-echo last exit code from gw indicates unhealthy instance >> C:\generic-worker\generic-worker.log
-echo this instance is idling while awaiting repair >> C:\generic-worker\generic-worker.log
-timeout /t 600 >nul
-goto AwaitRepair
+:Reboot
+if exist C:\generic-worker\rebootcount.txt GoTo AdditonalReboots
+echo 1 >> C:\generic-worker\rebootcount.txt
+echo Generic worker exit with code %GW_EXIT_CODE%; Rebooting to recover  >> C:\generic-worker\generic-worker.log
+shutdown /r /t 0 /f /c "Generic worker exit with code %GW_EXIT_CODE%; Attempting reboot to recover" 
+:AdditonalReboots
+for /f "delims=" %%a in ('type "C:\generic-worker\rebootcount" ' ) do set num=%%a
+set /a num=num + 1 > C:\generic-worker\rebootcount.txt
+if %num% GTR 5 GoTo WaitReboot
+echo Generic worker exit with code %GW_EXIT_CODE% more than once; Rebooting to recover  >> C:\generic-worker\generic-worker.log
+shutdown /r /t 0 /f /c "Generic worker has not recovered;  Rebooting"
+:WaitReboot
+echo Generic worker exit with code %GW_EXIT_CODE% %num% times; 1800 second delay and then rebooting  >> C:\generic-worker\generic-worker.log
+sleep 1800
+shutdown /r /t 0 /f /c "Generic worker has not recovered;  Rebooting"
