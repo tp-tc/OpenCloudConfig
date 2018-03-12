@@ -798,6 +798,11 @@ function Set-DefaultProfileProperties {
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
+
+# Before doing anything else, make sure we are using TLS 1.2
+# See https://bugzilla.mozilla.org/show_bug.cgi?id=1443595 for context.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 # SourceRepo is in place to toggle between production and testing environments
 $SourceRepo = 'mozilla-releng'
 
