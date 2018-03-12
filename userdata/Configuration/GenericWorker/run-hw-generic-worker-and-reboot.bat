@@ -43,14 +43,17 @@ if exist C:DSC\in-progress.lock del /Q /F C:DSC\in-progress.lock
 if exist C:\generic-worker\rebootcount.txt GoTo AdditonalReboots
 echo 1 >> C:\generic-worker\rebootcount.txt
 echo Generic worker exit with code %GW_EXIT_CODE%; Rebooting to recover  >> C:\generic-worker\generic-worker.log
-shutdown /r /t 0 /f /c "Generic worker exit with code %GW_EXIT_CODE%; Attempting reboot to recover" 
+shutdown /r /t 0 /f /c "Generic worker exit with code %GW_EXIT_CODE%; Attempting reboot to recover"
+exit
 :AdditonalReboots
 for /f "delims=" %%a in ('type "C:\generic-worker\rebootcount" ' ) do set num=%%a
 set /a num=num + 1 > C:\generic-worker\rebootcount.txt
 if %num% GTR 5 GoTo WaitReboot
 echo Generic worker exit with code %GW_EXIT_CODE% more than once; Rebooting to recover  >> C:\generic-worker\generic-worker.log
 shutdown /r /t 0 /f /c "Generic worker has not recovered;  Rebooting"
+exit
 :WaitReboot
 echo Generic worker exit with code %GW_EXIT_CODE% %num% times; 1800 second delay and then rebooting  >> C:\generic-worker\generic-worker.log
 sleep 1800
 shutdown /r /t 0 /f /c "Generic worker has not recovered;  Rebooting"
+exit
