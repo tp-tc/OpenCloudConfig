@@ -31,7 +31,6 @@ pushd %~dp0
 set errorlevel=
 C:\generic-worker\generic-worker.exe run --config C:\generic-worker\gen_worker.config >> C:\generic-worker\generic-worker.log 2>&1
 set GW_EXIT_CODE=%errorlevel%
-if %GW_EXIT_CODE% EQU 1 goto ErrorReboot
 if %GW_EXIT_CODE% EQU 67 goto ErrorReboot
 if %GW_EXIT_CODE% EQU 69 goto ErrorReboot
 
