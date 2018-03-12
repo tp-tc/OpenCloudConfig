@@ -31,14 +31,16 @@ pushd %~dp0
 set errorlevel=
 C:\generic-worker\generic-worker.exe run --config C:\generic-worker\gen_worker.config >> C:\generic-worker\generic-worker.log 2>&1
 set GW_EXIT_CODE=%errorlevel%
-if %GW_EXIT_CODE% neq 0 goto Reboot
+if %GW_EXIT_CODE% EQU 1 goto ErrorReboot
+if %GW_EXIT_CODE% EQU 67 goto ErrorReboot
+if %GW_EXIT_CODE% EQU 69 goto ErrorReboot
 
 <nul (set/p z=) >C:\dsc\task-claim-state.valid
 if exist C:\generic-worker\rebootcount.txt del /Q /F  C:\generic-worker\rebootcount.txt
 shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
 exit
 
-:Reboot
+:ErrorReboot
 if exist C:DSC\in-progress.lock del /Q /F C:DSC\in-progress.lock
 if exist C:\generic-worker\rebootcount.txt GoTo AdditonalReboots
 echo 1 >> C:\generic-worker\rebootcount.txt
