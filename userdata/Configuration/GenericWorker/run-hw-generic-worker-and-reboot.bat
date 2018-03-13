@@ -5,7 +5,7 @@ If exist C:\generic-worker\generic-worker-gpg-signing-key.key echo Key pair pres
 If not exist C:\generic-worker\generic-worker-gpg-signing-key.key echo Generating key pair >> C:\generic-worker\generic-worker.log
 If not exist C:\generic-worker\generic-worker-gpg-signing-key.key C:\generic-worker\generic-worker.exe new-openpgp-keypair --file C:\generic-worker\generic-worker-gpg-signing-key.key"
 If exist C:\generic-worker\generic-worker-gpg-signing-key.key echo Key pair created >> C:\generic-worker\generic-worker.log
-If not exist C:\generic-worker\generic-worker-gpg-signing-key.key GoTo AwaitRepair
+If not exist C:\generic-worker\generic-worker-gpg-signing-key.key shutdown /r /t 0 /f /c "Rebooting as key generation failed"
 
 
 echo Running generic-worker startup script (run-generic-worker.bat) ... >> C:\generic-worker\generic-worker.log
@@ -13,8 +13,11 @@ echo Running generic-worker startup script (run-generic-worker.bat) ... >> C:\ge
 echo Disk space stats of C:\ >> C:\generic-worker\generic-worker.log
 fsutil volume diskfree c: >> C:\generic-worker\generic-worker.log
 
-cat C:\generic-worker\master-generic-worker.json | jq ".  | .workerId=\"%COMPUTERNAME%\"" > C:\generic-worker\gen_worker.config
+If exist C:\generic-worker\gen_worker.config GoTo PreWorker
+for /F "tokens=14" %%i in ('"ipconfig | findstr IPv4"') do SET LOCAL_IP=%%i
+cat C:\generic-worker\master-generic-worker.json | jq ". | .workerId=\"%COMPUTERNAME%\",. | .publicIP=\"%LOCAL_IP%\"" > C:\generic-worker\gen_worker.config
 
+:PreWorker
 if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-worker\disable-desktop-interrupt.reg
 
 :CheckForStateFlag
