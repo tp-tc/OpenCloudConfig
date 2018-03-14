@@ -15,7 +15,9 @@ fsutil volume diskfree c: >> C:\generic-worker\generic-worker.log
 
 If exist C:\generic-worker\gen_worker.config GoTo PreWorker
 for /F "tokens=14" %%i in ('"ipconfig | findstr IPv4"') do SET LOCAL_IP=%%i
-cat C:\generic-worker\master-generic-worker.json | jq ". | .workerId=\"%COMPUTERNAME%\",. | .publicIP=\"%LOCAL_IP%\"" > C:\generic-worker\gen_worker.config
+cat C:\generic-worker\master-generic-worker.json | jq ".  | .workerId=\"%COMPUTERNAME%\"" > C:\generic-worker\gen_worker.json
+cat C:\generic-worker\gen_worker.json | jq ".  | .publicIP=\"%LOCAL_IP%\"" > C:\generic-worker\gen_worker.config
+
 
 :PreWorker
 if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-worker\disable-desktop-interrupt.reg
