@@ -29,6 +29,9 @@ timeout /t 1 >nul
 goto CheckForStateFlag
 
 :RunWorker
+rem Bug 1445779 
+del /s /q /f  C:\Windows\SoftwareDistribution\Download\*
+
 echo File C:\dsc\task-claim-state.valid found >> C:\generic-worker\generic-worker.log
 echo Deleting C:\dsc\task-claim-state.valid file >> C:\generic-worker\generic-worker.log
 del /Q /F C:\dsc\task-claim-state.valid >> C:\generic-worker\generic-worker.log 2>&1
