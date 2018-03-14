@@ -1116,8 +1116,8 @@ if ($rebootReasons.length) {
             Write-Log -message 'cot key intervention failed. awaiting timeout or cancellation.' -severity 'ERROR'
           }
         }
-        # level 1 and 2 builders can generate new keys. these don't require trust from cot repo
-        '^gecko-[12]-b-win2012(-beta)?$' {
+        # all other workers can generate new keys. these don't require trust from cot repo
+        default {
           if (-not (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue)) {
             Write-Log -message 'cot key missing. generating key.' -severity 'WARN'
             & 'C:\generic-worker\generic-worker.exe' @('new-openpgp-keypair', '--file', 'C:\generic-worker\cot.key') | Out-File -filePath $logFile -append
@@ -1133,9 +1133,6 @@ if ($rebootReasons.length) {
           } else {
             Write-Log -message 'cot key missing. awaiting timeout or cancellation.' -severity 'INFO'
           }
-        }
-        # testers don't need keys
-        default {
           if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
             & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
           }

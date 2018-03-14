@@ -654,8 +654,7 @@ Configuration xDynamicConfig {
       }
     }
   }
-  $builderWorkerTypes = @('gecko-1-b-win2012', 'gecko-1-b-win2012-beta', 'gecko-2-b-win2012', 'gecko-3-b-win2012')
-  if (($locationType -eq 'AWS') -and ($workerType) -and $builderWorkerTypes.Contains($workerType)) {
+  if (($locationType -eq 'AWS') -and ($workerType)) {
     Script CotGpgKeyImport {
       DependsOn = @('[Script]InstallSupportingModules', '[Script]ExeInstall_GpgForWin', '[File]DirectoryCreate_GenericWorkerDirectory')
       GetScript = "@{ Script = CotGpgKeyImport }"
