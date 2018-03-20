@@ -33,7 +33,7 @@ if %GW_EXIT_CODE% EQU 69 goto ErrorReboot
 
 <nul (set/p z=) >C:\dsc\task-claim-state.valid
 echo Removing temp dir contents >> C:\generic-worker\generic-worker.log 2>&1
-del /s /q C:\Users\GenericWorker\AppData\Local\Temp  >> C:\generic-worker\generic-worker.log
+del /s /q C:\Users\GenericWorker\AppData\Local\Temp\*  >> C:\generic-worker\generic-worker.log
 shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
 exit
 
