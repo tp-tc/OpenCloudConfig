@@ -798,25 +798,37 @@ function Set-DefaultProfileProperties {
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
+function Set-DefaultStrongCryptography {
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    try {
+      if ([Net.ServicePointManager]::SecurityProtocol -notcontains 'Tls12') {
+        [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
+        Write-Log -message ('{0} :: Added TLS v1.2 to security protocol support list for current powershell session' -f $($MyInvocation.MyCommand.Name))
+      } else {
+        Write-Log -message ('{0} :: Detected TLS v1.2 in security protocol support list' -f $($MyInvocation.MyCommand.Name))
+      }
+      if (-not (Get-WmiObject -class Win32_OperatingSystem).Caption.StartsWith('Microsoft Windows 7')) {
+        Set-ItemProperty -Path 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\.NetFramework\v4.0.30319' -Name 'SchUseStrongCrypto' -Value '1' -Type DWord
+        Write-Log -message ('{0} :: Registry updated to use strong cryptography on 64 bit .Net Framework' -f $($MyInvocation.MyCommand.Name))
+      }
+      Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\.NetFramework\v4.0.30319' -Name 'SchUseStrongCrypto' -Value '1' -Type DWord
+      Write-Log -message ('{0} :: Registry updated to use strong cryptography on 32 bit .Net Framework' -f $($MyInvocation.MyCommand.Name))
+    }
+    catch {
+      Write-Log -message ('{0} :: failed to add strong cryptography (TLS v1.2) support. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+}
 
 # Before doing anything else, make sure we are using TLS 1.2
 # See https://bugzilla.mozilla.org/show_bug.cgi?id=1443595 for context.
-try {
-  if ([Net.ServicePointManager]::SecurityProtocol -notcontains 'Tls12') {
-    [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
-    Write-Log -message 'Added TLS v1.2 to security protocol support list for current powershell session'
-  } else {
-    Write-Log -message 'Detected TLS v1.2 in security protocol support list'
-  }
-  if (-not (Get-WmiObject -class Win32_OperatingSystem).Caption.StartsWith('Microsoft Windows 7')) {
-    Set-ItemProperty -Path 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\.NetFramework\v4.0.30319' -Name 'SchUseStrongCrypto' -Value '1' -Type DWord
-    Write-Log -message 'Registry updated to use strong cryptography on 64 bit .Net Framework'
-  }
-  Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\.NetFramework\v4.0.30319' -Name 'SchUseStrongCrypto' -Value '1' -Type DWord
-  Write-Log -message 'Registry updated to use strong cryptography on 32 bit .Net Framework'
-} catch {
-  Write-Log -message ('failed to add strong cryptography (TLS v1.2) support' -f $_.Exception.Message) -severity 'ERROR'
-}
+Set-DefaultStrongCryptography
 
 # SourceRepo is in place to toggle between production and testing environments
 $SourceRepo = 'mozilla-releng'
