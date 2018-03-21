@@ -31,6 +31,10 @@ function Write-Log {
     }
   }
   Write-EventLog -LogName $logName -Source $source -EntryType $entryType -Category 0 -EventID $eventId -Message $message
+  if ([Environment]::UserInteractive -and $env:OccConsoleOutput) {
+    $fc = @{ 'Information' = 'White'; 'Error' = 'Red'; 'Warning' = 'DarkYellow'; 'SuccessAudit' = 'DarkGray' }[$entryType]
+    Write-Host -object $message -ForegroundColor $fc
+  }
 }
 function Run-RemoteDesiredStateConfig {
   param (
@@ -801,6 +805,7 @@ function Set-DefaultProfileProperties {
 function Set-DefaultStrongCryptography {
   begin {
     Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: CLRVersion: {1}, PSVersion: {2}' -f $($MyInvocation.MyCommand.Name), $PSVersionTable['CLRVersion'], $PSVersionTable['PSVersion']) -severity 'DEBUG'
   }
   process {
     try {
