@@ -810,7 +810,7 @@ function Set-DefaultStrongCryptography {
   }
   process {
     try {
-      if ([Net.ServicePointManager]::SecurityProtocol -notcontains 'Tls12') {
+      if ([Net.ServicePointManager]::SecurityProtocol -notcontains [Net.SecurityProtocolType]::Tls12) {
         [Net.ServicePointManager]::SecurityProtocol += [Net.SecurityProtocolType]::Tls12
         Write-Log -message ('{0} :: Added TLS v1.2 to security protocol support list for current powershell session' -f $($MyInvocation.MyCommand.Name))
       } else {
