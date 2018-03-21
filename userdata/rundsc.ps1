@@ -333,7 +333,7 @@ function Mount-DiskOne {
       }
       if ($pagefileName) {
         Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
-        & shutdown @('-r', '-t', '0', '-c', ('page file {0} removed' -f $pagefileName), '-f', '-d', 'p:4:1')
+        & shutdown @('-r', '-t', '0', '-c', ('page file {0} removed' -f $pagefileName), '-f', '-d', 'p:2:4')
       }
       try {
         Clear-Disk -Number 1 -RemoveData -Confirm:$false
@@ -409,7 +409,7 @@ function Set-Pagefile {
             Set-WmiInstance -class Win32_PageFileSetting -Arguments @{name=$name;InitialSize=$initialSize;MaximumSize=$maximumSize}
             Write-Log -message ('{0} :: page file: {1}, created.' -f $($MyInvocation.MyCommand.Name), $name) -severity 'INFO'
             Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
-            & shutdown @('-r', '-t', '0', '-c', ('page file {0} created' -f $name), '-f', '-d', 'p:4:1')
+            & shutdown @('-r', '-t', '0', '-c', ('page file {0} created' -f $name), '-f', '-d', 'p:2:4')
           }
           catch {
             Write-Log -message ('{0} :: failed to create pagefile: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $name, $_.Exception.Message) -severity 'ERROR'
@@ -981,11 +981,11 @@ if ($locationType -ne 'DataCenter') {
   if ($isWorker) {
     if (($isWorker) -and (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue))) {
       Write-Log -message 'missing task drive. terminating instance...' -severity 'ERROR'
-      & shutdown @('-s', '-t', '0', '-c', 'missing task drive', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+      & shutdown @('-s', '-t', '0', '-c', 'missing task drive', '-f', '-d', '1:1') | Out-File -filePath $logFile -append
     }
     if (($isWorker) -and (-not (Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue))) {
       Write-Log -message 'missing cache drive. terminating instance...' -severity 'ERROR'
-      & shutdown @('-s', '-t', '0', '-c', 'missing cache drive', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+      & shutdown @('-s', '-t', '0', '-c', 'missing cache drive', '-f', '-d', '1:1') | Out-File -filePath $logFile -append
     }
   }
 
@@ -1095,7 +1095,7 @@ if ($rebootReasons.length) {
     # post dsc teardown ###########################################################################################################################################
     if (((Get-Content $transcript) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
       Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
-      & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+      & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:2') | Out-File -filePath $logFile -append
     }
     switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
       'Microsoft Windows 7*' {
@@ -1145,7 +1145,7 @@ if ($rebootReasons.length) {
             & icacls @('C:\generic-worker\cot.key', '/grant', 'Administrators:(GA)')
             & icacls @('C:\generic-worker\cot.key', '/inheritance:r')
             Write-Log -message 'cot key detected. shutting down.' -severity 'INFO'
-            & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+            & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
           } else {
             Write-Log -message 'cot key intervention failed. awaiting timeout or cancellation.' -severity 'ERROR'
           }
@@ -1163,12 +1163,12 @@ if ($rebootReasons.length) {
           }
           if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
             Write-Log -message 'cot key detected. shutting down.' -severity 'INFO'
-            & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+            & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
           } else {
             Write-Log -message 'cot key missing. awaiting timeout or cancellation.' -severity 'INFO'
           }
           if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
-            & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+            & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
           }
         }
       }
@@ -1198,7 +1198,7 @@ if ($rebootReasons.length) {
         Write-Log -message 'Z: drive formatted.' -severity 'INFO'
         #& net @('user', 'GenericWorker', (Get-ItemProperty -path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -name 'DefaultPassword').DefaultPassword)
         Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
-        & shutdown @('-r', '-t', '0', '-c', 'reboot to rouse the generic worker', '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+        & shutdown @('-r', '-t', '0', '-c', 'reboot to rouse the generic worker', '-f', '-d', '4:5') | Out-File -filePath $logFile -append
       } else {
         $timer.Stop()
         Write-Log -message ('generic-worker running process detected {0} ms after task-claim-state.valid flag set.' -f $timer.ElapsedMilliseconds) -severity 'INFO'
