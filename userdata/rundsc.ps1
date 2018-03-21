@@ -806,6 +806,7 @@ function Set-DefaultStrongCryptography {
   begin {
     Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
     Write-Log -message ('{0} :: CLRVersion: {1}, PSVersion: {2}' -f $($MyInvocation.MyCommand.Name), $PSVersionTable['CLRVersion'], $PSVersionTable['PSVersion']) -severity 'DEBUG'
+    Write-Log -message ('{0} :: SecurityProtocol: {1}' -f $($MyInvocation.MyCommand.Name), [Net.ServicePointManager]::SecurityProtocol) -severity 'DEBUG'
   }
   process {
     try {
@@ -827,6 +828,7 @@ function Set-DefaultStrongCryptography {
     }
   }
   end {
+    Write-Log -message ('{0} :: SecurityProtocol: {1}' -f $($MyInvocation.MyCommand.Name), [Net.ServicePointManager]::SecurityProtocol) -severity 'DEBUG'
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
