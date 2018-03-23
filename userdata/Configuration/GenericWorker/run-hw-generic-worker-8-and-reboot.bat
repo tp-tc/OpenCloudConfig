@@ -15,13 +15,13 @@ if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-w
 
 :CheckForStateFlag
 echo Checking for C:\dsc\task-claim-state.valid file... >> C:\generic-worker\generic-worker.log
-echo Deleting C:\dsc\task-claim-state.valid file >> C:\generic-worker\generic-worker.log
 if exist C:\dsc\task-claim-state.valid goto RunWorker
 timeout /t 1 >nul
 goto CheckForStateFlag
 
 :RunWorker
 echo File C:\dsc\task-claim-state.valid found >> C:\generic-worker\generic-worker.log
+echo Deleting C:\dsc\task-claim-state.valid file >> C:\generic-worker\generic-worker.log
 del /Q /F C:\dsc\task-claim-state.valid >> C:\generic-worker\generic-worker.log 2>&1
 pushd %~dp0
 set errorlevel=
