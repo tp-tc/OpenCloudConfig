@@ -33,9 +33,10 @@ if %GW_EXIT_CODE% EQU 69 goto ErrorReboot
 
 <nul (set/p z=) >C:\dsc\task-claim-state.valid
 echo Removing temp dir contents >> C:\generic-worker\generic-worker.log 2>&1
-rem Bug 1445779 
-del /s /q /f  C:\Windows\SoftwareDistribution\Download\*
 del /s /q C:\Users\GenericWorker\AppData\Local\Temp\*  >> C:\generic-worker\generic-worker.log
+rem Bug 1445779 Cleanup some left overs from the OCC run
+del /s /q /f  C:\Windows\SoftwareDistribution\Download\*
+Dism.exe /online /Cleanup-Image /StartComponentCleanup
 shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
 exit
 
