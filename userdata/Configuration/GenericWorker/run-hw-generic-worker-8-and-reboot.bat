@@ -1,5 +1,6 @@
 @echo off
 
+copy /y C:\generic-worker\generic-worker.log c:\log\generic-worker%time:~-5%.log 
 echo Running generic-worker startup script (run-generic-worker.bat) ... >> C:\generic-worker\generic-worker.log
 
 echo Disk space stats of C:\ >> C:\generic-worker\generic-worker.log
