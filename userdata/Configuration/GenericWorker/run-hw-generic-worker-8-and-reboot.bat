@@ -43,7 +43,7 @@ del /s /q C:\Users\GenericWorker\AppData\Local\Temp\*  >> C:\generic-worker\gene
 rem Bug 1445779 Cleanup some left overs from the OCC run
 del /s /q /f  C:\Windows\SoftwareDistribution\Download\*
 Dism.exe /online /Cleanup-Image /StartComponentCleanup
-forfiles -p "C:\log" -s -m *.* -d -2 -c "cmd /c del @path"
+forfiles -p "C:\log" -s -m *.* -d -1 -c "cmd /c del @path"
 shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
 exit
 
