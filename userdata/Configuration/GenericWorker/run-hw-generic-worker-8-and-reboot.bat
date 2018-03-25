@@ -43,6 +43,8 @@ echo Removing temp dir contents >> C:\generic-worker\generic-worker.log 2>&1
 del /s /q C:\Users\GenericWorker\AppData\Local\Temp\*  >> C:\generic-worker\generic-worker.log
 rem Bug 1445779 Cleanup some left overs from the OCC run
 del /s /q /f  C:\Windows\SoftwareDistribution\Download\*
+del /s /q /f "C:\Program Files\rempl\Logs\*"
+del /s /q /f "C:\ProgramData\Package Cache\*"
 Dism.exe /online /Cleanup-Image /StartComponentCleanup
 forfiles -p "C:\log" -s -m *.* -d -1 -c "cmd /c del @path"
 rmdir /s /q  %systemdrive%\$Recycle.bin
