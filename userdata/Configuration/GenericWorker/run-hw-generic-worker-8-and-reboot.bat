@@ -1,7 +1,6 @@
 @echo off
 
 copy /y C:\generic-worker\generic-worker.log c:\log\generic-worker%time:~-5%.log 
-del /Q /F C:\generic-worker\generic-worker.log
 type NUL > C:\generic-worker\generic-worker.log
 echo Running generic-worker startup script (run-generic-worker.bat) ... >> C:\generic-worker\generic-worker.log
 
