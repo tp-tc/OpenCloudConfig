@@ -45,6 +45,7 @@ rem Bug 1445779 Cleanup some left overs from the OCC run
 del /s /q /f  C:\Windows\SoftwareDistribution\Download\*
 Dism.exe /online /Cleanup-Image /StartComponentCleanup
 forfiles -p "C:\log" -s -m *.* -d -1 -c "cmd /c del @path"
+rmdir /s /q  %systemdrive%\$Recycle.bin
 shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
 exit
 
