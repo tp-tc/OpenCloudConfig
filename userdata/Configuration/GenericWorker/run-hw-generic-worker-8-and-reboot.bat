@@ -45,6 +45,7 @@ rem Bug 1445779 Cleanup some left overs from the OCC run
 del /s /q /f  C:\Windows\SoftwareDistribution\Download\*
 del /s /q /f "C:\Program Files\rempl\Logs\*"
 del /s /q /f "C:\ProgramData\Package Cache\*"
+if exist C:\$WINDOWS.~BT del /s /f /q C:\$WINDOWS.~BT
 Dism.exe /online /Cleanup-Image /StartComponentCleanup
 forfiles -p "C:\log" -s -m *.* -d -1 -c "cmd /c del @path"
 rmdir /s /q  %systemdrive%\$Recycle.bin
