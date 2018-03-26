@@ -1194,7 +1194,14 @@
           "C:\\Program Files (x86)\\Microsoft SDKs\\Windows Kits\\10\\ExtensionSDKs\\Microsoft.UniversalCRT.Debug\\10.0.10240.0\\Redist\\Debug\\arm\\ucrtbased.dll"
         ]
       }
-     }, 
+     },
+    {
+      "ComponentName": "nircmd",
+      "ComponentType": "FileDownload",
+      "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/nircmd/nircmd.exe",
+      "Target": "C:\\Windows\\System32\\nircmd.exe",
+	  "sha512": "560aaadebcbd425d35fc3a567c987a5f15a5f091962328f0479c1ec2378c732cca892eb3252179c8895413b0f3d08f44fbcf8c9d2375877c81622f42e6549c86" 
+	  },
     {
       "ComponentName": "reg_Power_PreferredPlan_HighPerformance",
       "ComponentType": "RegistryValueSet",
