@@ -8,7 +8,7 @@ echo Disk space stats of C:\ >> C:\generic-worker\generic-worker.log
 SETLOCAL EnableDelayedExpansion
 FOR /f "usebackq delims== tokens=2" %%x IN (`wmic logicaldisk where "DeviceID='C:'" get FreeSpace /format:value`) DO SET "FreeSpaceBig=%%x"
 SET FreeSpace=!FreeSpaceBig:~0,-7!
-IF %FreeSpace% GTR 15240 echo %FreeSpace% MB available disk space >> C:\generic-worker\generic-worker.log
+IF %FreeSpace% GTR 25240 echo %FreeSpace% MB available disk space >> C:\generic-worker\generic-worker.log
 IF %FreeSpace% LSS 25240 echo Disk space ABNORMALLY low  %FreeSpace% MB available >> C:\generic-worker\generic-worker.log
 IF %FreeSpace% LSS 15240 echo ALERT disk space is low %FreeSpace% MB available >> C:\generic-worker\generic-worker.log
 ENDLOCAL
