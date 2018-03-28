@@ -4,7 +4,7 @@ if exist C:\generic-worker\wait.semaphore GoTo wait
 
 for /F "tokens=* skip=1" %%n in ('WMIC path Win32_VideoController get Name ^| findstr "."') do set GPU_NAME=%%n
 echo Graphic Card being used "%GPU_NAME%" >> C:\generic-worker\generic-worker.log
-if not "%GPU_NAME%"=="Intel(R) Iris(R) Pro Graphics P580  "  Goto Graphic_Card_Reboot >> C:\generic-worker\generic-worker.log
+if not "%GPU_NAME%"=="Intel(R) Iris(R) Pro Graphics P580  "  Goto Graphic_Card_Reboot
 
 copy /y C:\generic-worker\generic-worker.log c:\log\generic-worker%time:~-5%.log 
 type NUL > C:\generic-worker\generic-worker.log
