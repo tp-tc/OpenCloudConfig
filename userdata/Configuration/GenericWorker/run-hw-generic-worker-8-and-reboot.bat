@@ -2,13 +2,13 @@
 
 if exist C:\generic-worker\wait.semaphore GoTo wait
 
-for /F "tokens=* skip=1" %%n in ('WMIC path Win32_VideoController get Name ^| findstr "."') do set GPU_NAME=%%n
-echo Graphic Card being used "%GPU_NAME%" >> C:\generic-worker\generic-worker.log
-if not "%GPU_NAME%"=="Intel(R) Iris(R) Pro Graphics P580  "  Goto Graphic_Card_Reboot
-
 copy /y C:\generic-worker\generic-worker.log c:\log\generic-worker%time:~-5%.log 
 type NUL > C:\generic-worker\generic-worker.log
 echo Running generic-worker startup script (run-generic-worker.bat) ... >> C:\generic-worker\generic-worker.log
+
+for /F "tokens=* skip=1" %%n in ('WMIC path Win32_VideoController get Name ^| findstr "."') do set GPU_NAME=%%n
+echo Graphic Card being used "%GPU_NAME%" >> C:\generic-worker\generic-worker.log
+if not "%GPU_NAME%"=="Intel(R) Iris(R) Pro Graphics P580  "  Goto Graphic_Card_Reboot
 
 echo Disk space stats of C:\ >> C:\generic-worker\generic-worker.log
 SETLOCAL EnableDelayedExpansion
