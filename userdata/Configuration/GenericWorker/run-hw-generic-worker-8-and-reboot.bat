@@ -31,7 +31,9 @@ goto CheckForStateFlag
 
 :RunWorker
 rem Change resolution to 1280 x 1024 Re: Bug 1437615
+echo Changing resolution to 1280 x 1024 >> C:\generic-worker\generic-worker.log 2>&1
 c:\dsc\configmymonitor.exe r8 v0 
+wmic path Win32_VideoController get VideoModeDescription,CurrentVerticalResolution,CurrentHorizontalResolution /format:value >> C:\generic-worker\generic-worker.log 2>&1
 echo File C:\dsc\task-claim-state.valid found >> C:\generic-worker\generic-worker.log
 echo Deleting C:\dsc\task-claim-state.valid file >> C:\generic-worker\generic-worker.log
 del /Q /F C:\dsc\task-claim-state.valid >> C:\generic-worker\generic-worker.log 2>&1
