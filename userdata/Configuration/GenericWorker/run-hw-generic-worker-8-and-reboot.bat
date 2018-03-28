@@ -30,6 +30,8 @@ timeout /t 1 >nul
 goto CheckForStateFlag
 
 :RunWorker
+for /F "tokens=* skip=1" %%n in ('WMIC path Win32_VideoController get Name ^| findstr "."') do set GPU_NAME=%%n
+echo Graphic Crad being used %GPU_NAME% >> C:\generic-worker\generic-worker.log
 rem Change resolution to 1280 x 1024 Re: Bug 1437615
 echo Changing resolution to 1280 x 1024 >> C:\generic-worker\generic-worker.log 2>&1
 c:\dsc\configmymonitor.exe r8 v0 
