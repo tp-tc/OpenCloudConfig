@@ -1,6 +1,10 @@
 @echo off
 
+if exist C:\generic-worker\wait.semaphore GoTo wait
 
+for /F "tokens=* skip=1" %%n in ('WMIC path Win32_VideoController get Name ^| findstr "."') do set GPU_NAME=%%n
+echo Graphic Card being used "%GPU_NAME%" >> C:\generic-worker\generic-worker.log
+if not "%GPU_NAME%"=="Intel(R) Iris(R) Pro Graphics P580  "  Goto Graphic_Card_Reboot >> C:\generic-worker\generic-worker.log
 
 copy /y C:\generic-worker\generic-worker.log c:\log\generic-worker%time:~-5%.log 
 type NUL > C:\generic-worker\generic-worker.log
@@ -30,8 +34,6 @@ timeout /t 1 >nul
 goto CheckForStateFlag
 
 :RunWorker
-for /F "tokens=* skip=1" %%n in ('WMIC path Win32_VideoController get Name ^| findstr "."') do set GPU_NAME=%%n
-echo Graphic Crad being used %GPU_NAME% >> C:\generic-worker\generic-worker.log
 rem Change resolution to 1280 x 1024 Re: Bug 1437615
 echo Changing resolution to 1280 x 1024 >> C:\generic-worker\generic-worker.log 2>&1
 c:\dsc\configmymonitor.exe r8 v0 
@@ -48,6 +50,11 @@ if %GW_EXIT_CODE% equ 67 goto ErrorReboot
 if %GW_EXIT_CODE% EQU 69 goto ErrorReboot
 
 <nul (set/p z=) >C:\dsc\task-claim-state.valid
+for /F "tokens=* skip=1" %%n in ('WMIC path Win32_VideoController get Name ^| findstr "."') do set GPU_NAME=%%n
+echo Graphic Card being used "%GPU_NAME%" >> C:\generic-worker\generic-worker.log
+if not "%GPU_NAME%"=="Intel(R) Iris(R) Pro Graphics P580  " echo Graphic card is in an unexpected state post test >> C:\generic-worker\generic-worker.log
+if not "%GPU_NAME%"=="Intel(R) Iris(R) Pro Graphics P580  "  Goto Graphic_Card_Reboot >> C:\generic-worker\generic-worker.log
+
 echo Removing temp dir contents >> C:\generic-worker\generic-worker.log 2>&1
 del /s /q C:\Users\GenericWorker\AppData\Local\Temp\*  >> C:\generic-worker\generic-worker.log
 rem Bug 1445779 Cleanup some left overs from the OCC run
@@ -80,3 +87,16 @@ echo Generic worker exit with code %GW_EXIT_CODE% %num% times; 1800 second delay
 sleep 1800
 shutdown /r /t 0 /f /c "Generic worker has not recovered;  Rebooting"
 exit
+
+Graphic_Card_Reboot
+type NUL > C:\generic-worker\wait.semaphore
+echo Graphics card is in an unexpected state! >> C:\generic-worker\generic-worker.log
+echo enable basic display and rebooting  >> C:\generic-worker\generic-worker.log
+sc config "basicdisplay" start=enable 
+shutdown /r /t 0 /f /c "Graphics card is in an unexpected state!"
+exit
+
+:wait 
+echo Waiting on human interaction to fix! 
+sleep 120
+GoTo wait
