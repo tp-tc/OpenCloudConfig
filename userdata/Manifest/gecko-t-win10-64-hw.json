@@ -1226,6 +1226,16 @@
       "sha512": "2c89bc76937868750c028282855c56e86e0438ba48cc0eeffaeaf04a36469072a53b6ebd4e7d611f11baf1cc837296dabf6c623ffc9e7b711319bf323ab15de5"
     },
     {
+      "ComponentName": "disabeldriverupdate",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DriverSearching",
+      "ValueName": "SearchOrderConfig",
+      "ValueType": "Dword",
+      "ValueData": "0x00000000",
+      "Hex": true
+    },
+    {
       "ComponentName": "reg_Power_PreferredPlan_HighPerformance",
       "ComponentType": "RegistryValueSet",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1362613",
