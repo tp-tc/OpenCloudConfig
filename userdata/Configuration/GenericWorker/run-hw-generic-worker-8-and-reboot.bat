@@ -88,7 +88,7 @@ sleep 1800
 shutdown /r /t 0 /f /c "Generic worker has not recovered;  Rebooting"
 exit
 
-Graphic_Card_Reboot
+:Graphic_Card_Reboot
 type NUL > C:\generic-worker\wait.semaphore
 echo Graphics card is in an unexpected state! >> C:\generic-worker\generic-worker.log
 echo enable basic display and rebooting  >> C:\generic-worker\generic-worker.log
