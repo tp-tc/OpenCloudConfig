@@ -1236,6 +1236,16 @@
       "Hex": true
     },
     {
+      "ComponentName": "Donnotupdate",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\Windows\\AU",
+      "ValueName": "AUOptions",
+      "ValueType": "Dword",
+      "ValueData": "0x00000002",
+      "Hex": true
+    },
+    {
       "ComponentName": "reg_Power_PreferredPlan_HighPerformance",
       "ComponentType": "RegistryValueSet",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1362613",
