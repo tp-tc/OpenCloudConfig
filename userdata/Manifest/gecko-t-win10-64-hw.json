@@ -1236,6 +1236,16 @@
       "Hex": true
     },
     {
+      "ComponentName": "pauseupdate",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\Windows\\AU",
+      "ValueName": "NoAutoUpdate",
+      "ValueType": "Dword",
+      "ValueData": "0x00000001",
+      "Hex": true
+    },
+    {
       "ComponentName": "Donnotupdate",
       "ComponentType": "RegistryKeySet",
       "Comment": "",
