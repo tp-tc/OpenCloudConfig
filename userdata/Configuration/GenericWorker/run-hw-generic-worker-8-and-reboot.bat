@@ -96,6 +96,6 @@ shutdown /r /t 0 /f /c "Graphics card is in an unexpected state!"
 exit
 
 :wait 
-echo Waiting on human interaction to fix! 
+echo Waiting on human interaction to fix!  >> C:\generic-worker\generic-worker.log
 sleep 120
 GoTo wait
