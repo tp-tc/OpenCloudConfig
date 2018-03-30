@@ -30,14 +30,13 @@ if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-w
 :CheckForStateFlag
 echo Checking for C:\dsc\task-claim-state.valid file... >> C:\generic-worker\generic-worker.log
 if exist C:\dsc\task-claim-state.valid goto RunWorker
-timeout /t 1 >nul
+timeout /t 5 >nul
 goto CheckForStateFlag
 
 :RunWorker
 rem Change resolution to 1280 x 1024 Re: Bug 1437615
 echo Changing resolution to 1280 x 1024 >> C:\generic-worker\generic-worker.log 2>&1
 c:\dsc\configmymonitor.exe r8 v0 
-wmic path Win32_VideoController get VideoModeDescription,CurrentVerticalResolution,CurrentHorizontalResolution /format:value >> C:\generic-worker\generic-worker.log 2>&1
 echo File C:\dsc\task-claim-state.valid found >> C:\generic-worker\generic-worker.log
 echo Deleting C:\dsc\task-claim-state.valid file >> C:\generic-worker\generic-worker.log
 del /Q /F C:\dsc\task-claim-state.valid >> C:\generic-worker\generic-worker.log 2>&1
@@ -58,13 +57,13 @@ if not "%GPU_NAME%"=="Intel(R) Iris(R) Pro Graphics P580  "  Goto Graphic_Card_R
 echo Removing temp dir contents >> C:\generic-worker\generic-worker.log 2>&1
 del /s /q C:\Users\GenericWorker\AppData\Local\Temp\*  >> C:\generic-worker\generic-worker.log
 rem Bug 1445779 Cleanup some left overs from the OCC run
-del /s /q /f  C:\Windows\SoftwareDistribution\Download\* >> C:\generic-worker\generic-worker.log
-del /s /q /f "C:\Program Files\rempl\Logs\*"  >> C:\generic-worker\generic-worker.log
-del /s /q /f "C:\ProgramData\Package Cache\*"  >> C:\generic-worker\generic-worker.log
-if exist C:\$WINDOWS.~BT del /s /f /q C:\$WINDOWS.~BT  >> C:\generic-worker\generic-worker.log
-Dism.exe /online /Cleanup-Image /StartComponentCleanup  >> C:\generic-worker\generic-worker.log
+del /s /q /f  C:\Windows\SoftwareDistribution\Download\*
+del /s /q /f "C:\Program Files\rempl\Logs\*" 
+del /s /q /f "C:\ProgramData\Package Cache\*" 
+if exist C:\$WINDOWS.~BT del /s /f /q C:\$WINDOWS.~BT  
+Dism.exe /online /Cleanup-Image /StartComponentCleanup 
 forfiles -p "C:\log" -s -m *.* -d -1 -c "cmd /c del @path"
-rmdir /s /q  %systemdrive%\$Recycle.bin  >> C:\generic-worker\generic-worker.log
+rmdir /s /q  %systemdrive%\$Recycle.bin 
 shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
 exit
 
