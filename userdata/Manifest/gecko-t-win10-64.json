@@ -408,9 +408,9 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v8.3.0/generic-worker-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.7.8/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe",
-      "sha512": "fd30426e247896922a0ba8ff79b8f7882ec817ea6b88c00ed11eeb6d97c4cfd33bf52e2947a77bc50f6e6594f5f0bb02a08c9ffee22ca3e3271a8607c9bd34ff"
+      "sha512": "03f9d8c75d58c3397cd8104dc63596d01443d19fccd9f2e3bc7f6508acbc0002c92ec883fd16a201a5cd831e58e52309530a904705e0ba9e042d23b24414ce13"
     },
     {
       "ComponentName": "LiveLogDownload",
@@ -424,6 +424,19 @@
       "Source": "https://github.com/taskcluster/livelog/releases/download/v1.1.0/livelog-windows-amd64.exe",
       "Target": "C:\\generic-worker\\livelog.exe",
       "sha512": "80cc08012a766c1f4c9da82b3d82af1612d6994714e775182d6ffa1e2b61d5fac4eefc2b5031f5d5ff28caa35dd9a5c6ada9147dc80289226b6f8722f0234a95"
+    },
+    {
+      "ComponentName": "TaskClusterProxyDownload",
+      "ComponentType": "FileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "GenericWorkerDirectory"
+        }
+      ],
+      "Source": "https://github.com/taskcluster/taskcluster-proxy/releases/download/v4.1.0/taskcluster-proxy-windows-amd64.exe",
+      "Target": "C:\\generic-worker\\taskcluster-proxy.exe",
+      "sha512": "83dd123441f6bc0336103b65716ad016715864840055e07ec1959f74cd68b7e9cf5fc6e7e1034d7d4802486f1cbddc342475a61e49da06a878c3f74b8652d193"
     },
     {
       "ComponentName": "LiveLog_Get",
@@ -442,12 +455,46 @@
       "Action": "Allow"
     },
     {
+      "ComponentName": "NSSMDownload",
+      "ComponentType": "FileDownload",
+      "Source": "https://nssm.cc/ci/nssm-2.24-103-gdee49fc.zip",
+      "Target": "C:\\Windows\\Temp\\NSSMInstall.zip"
+    },
+    {
+      "ComponentName": "NSSMInstall",
+      "ComponentType": "CommandRun",
+      "Comment": "NSSM is required to install Generic Worker as a service. Currently ZipInstall fails, so using 7z instead.",
+      "Command": "C:\\Program Files\\7-Zip\\7z.exe",
+      "Arguments": [
+        "x",
+        "-oC:\\",
+        "C:\\Windows\\Temp\\NSSMInstall.zip"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "SevenZip"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "NSSMDownload"
+        }
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe"
+        ]
+      }
+    },
+    {
       "ComponentName": "GenericWorkerInstall",
       "ComponentType": "CommandRun",
       "Command": "C:\\generic-worker\\generic-worker.exe",
       "Arguments": [
         "install",
-        "startup",
+        "service",
+        "--nssm",
+        "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe",
         "--config",
         "C:\\generic-worker\\generic-worker.config"
       ],
@@ -467,6 +514,10 @@
         {
           "ComponentType": "FirewallRule",
           "ComponentName": "LiveLog_Put"
+        },
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "NSSMInstall"
         }
       ],
       "Validate": {
@@ -480,7 +531,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 8.3.0"
+            "Match": "generic-worker 10.7.8"
           }
         ]
       }
@@ -766,109 +817,6 @@
       ]
     },
     {
-      "ComponentName": "GrantGenericWorkerSeAssignPrimaryTokenPrivilege",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1303455 - grant SeAssignPrimaryTokenPrivilege to g-w user",
-      "Command": "powershell",
-      "Arguments": [
-        "-command",
-        "\"& {&'Import-Module' Carbon}\";",
-        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeAssignPrimaryTokenPrivilege}\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ]
-    },
-    {
-      "ComponentName": "GrantGenericWorkerSeIncreaseQuotaPrivilege",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1303455 - grant SeIncreaseQuotaPrivilege to g-w user",
-      "Command": "powershell",
-      "Arguments": [
-        "-command",
-        "\"& {&'Import-Module' Carbon}\";",
-        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeIncreaseQuotaPrivilege}\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ]
-    },
-    {
-      "ComponentName": "GrantGenericWorkerSeIncreaseBasePriorityPrivilege",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1312383 - grant SeIncreaseBasePriorityPrivilege to g-w user",
-      "Command": "powershell",
-      "Arguments": [
-        "-command",
-        "\"& {&'Import-Module' Carbon}\";",
-        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeIncreaseBasePriorityPrivilege}\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ]
-    },
-    {
-      "ComponentName": "reg_PythonCpuPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\python.exe\\PerfOptions",
-      "ValueName": "CpuPriorityClass",
-      "ValueType": "Dword",
-      "ValueData": "0x00000006",
-      "Hex": true
-    },
-    {
-      "ComponentName": "reg_PythonIoPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\python.exe\\PerfOptions",
-      "ValueName": "IoPriority",
-      "ValueType": "Dword",
-      "ValueData": "0x00000002",
-      "Hex": true
-    },
-    {
-      "ComponentName": "reg_MercurialCpuPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\hg.exe\\PerfOptions",
-      "ValueName": "CpuPriorityClass",
-      "ValueType": "Dword",
-      "ValueData": "0x00000006",
-      "Hex": true
-    },
-    {
-      "ComponentName": "reg_MercurialIoPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\hg.exe\\PerfOptions",
-      "ValueName": "IoPriority",
-      "ValueType": "Dword",
-      "ValueData": "0x00000002",
-      "Hex": true
-    },
-    {
       "ComponentName": "MozillaMaintenanceDir",
       "ComponentType": "DirectoryCreate",
       "Comment": "Working directory for Mozilla Maintenance Service installation",
@@ -923,6 +871,23 @@
           "C:\\Program Files (x86)\\Mozilla Maintenance Service\\Uninstall.exe"
         ]
       }
+    },
+    {
+      "ComponentName": "MaintenanceServiceAcessRights",
+      "ComponentType": "CommandRun",
+      "Comment": "See https://bugzilla.mozilla.org/show_bug.cgi?id=1067756#c21",
+      "Command": "icacls.exe",
+      "Arguments": [
+        "\"C:\\Program Files (x86)\\Mozilla Maintenance Service\"",
+        "/grant",
+        "Everyone:(OI)(CI)F"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "maintenanceservice_install"
+        }
+      ]
     },
     {
       "ComponentName": "MozFakeCA_cer",
@@ -1111,7 +1076,7 @@
       "Command": "powershell",
       "Arguments": [
         "-command",
-        "\"& {& (Get-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla').SetAccessRule(New-Object System.Security.AccessControl.RegistryAccessRule ('.\\GenericWorker', 'FullControl', 'Allow'))}\";",
+        "\"& {& (Get-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla').SetAccessRule(New-Object System.Security.AccessControl.RegistryAccessRule ('Everyone', 'FullControl', 'Allow'))}\";",
         "\"& {& ((Get-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla') | Set-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla')}\""
       ],
       "DependsOn": [

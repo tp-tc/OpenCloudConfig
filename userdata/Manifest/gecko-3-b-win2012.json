@@ -1000,9 +1000,9 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.6.0/generic-worker-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.7.8/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe",
-      "sha512": "dceae809dbb3df6d6c6f8ee7d6222cf09a74019e7238010b01bf71db3a2bb266a99e343de14a11bd45cbf94517d544fe5d5699ba0732bc9d8700794f16a46849"
+      "sha512": "03f9d8c75d58c3397cd8104dc63596d01443d19fccd9f2e3bc7f6508acbc0002c92ec883fd16a201a5cd831e58e52309530a904705e0ba9e042d23b24414ce13"
     },
     {
       "ComponentName": "LiveLogDownload",
@@ -1016,6 +1016,19 @@
       "Source": "https://github.com/taskcluster/livelog/releases/download/v1.1.0/livelog-windows-amd64.exe",
       "Target": "C:\\generic-worker\\livelog.exe",
       "sha512": "80cc08012a766c1f4c9da82b3d82af1612d6994714e775182d6ffa1e2b61d5fac4eefc2b5031f5d5ff28caa35dd9a5c6ada9147dc80289226b6f8722f0234a95"
+    },
+    {
+      "ComponentName": "TaskClusterProxyDownload",
+      "ComponentType": "FileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "GenericWorkerDirectory"
+        }
+      ],
+      "Source": "https://github.com/taskcluster/taskcluster-proxy/releases/download/v4.1.0/taskcluster-proxy-windows-amd64.exe",
+      "Target": "C:\\generic-worker\\taskcluster-proxy.exe",
+      "sha512": "83dd123441f6bc0336103b65716ad016715864840055e07ec1959f74cd68b7e9cf5fc6e7e1034d7d4802486f1cbddc342475a61e49da06a878c3f74b8652d193"
     },
     {
       "ComponentName": "LiveLog_Get",
@@ -1110,7 +1123,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 10.6.0"
+            "Match": "generic-worker 10.7.8"
           }
         ]
       }
@@ -1126,6 +1139,19 @@
       ],
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker-format-and-reboot.bat",
       "Target": "C:\\generic-worker\\run-generic-worker.bat"
+    },
+    {
+      "ComponentName": "TaskUserInitScript",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "Bug 1433851 - wait for user registry to initialise before running a task",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/task-user-init-win2012.cmd",
+      "Target": "C:\\generic-worker\\task-user-init.cmd",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "GenericWorkerDirectory"
+        }
+      ]
     },
     {
       "ComponentName": "HgShared",
@@ -1249,109 +1275,6 @@
           "ComponentName": "CarbonInstall"
         }
       ]
-    },
-    {
-      "ComponentName": "GrantGenericWorkerSeAssignPrimaryTokenPrivilege",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1303455 - grant SeAssignPrimaryTokenPrivilege to g-w user",
-      "Command": "powershell",
-      "Arguments": [
-        "-command",
-        "\"& {&'Import-Module' Carbon}\";",
-        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeAssignPrimaryTokenPrivilege}\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ]
-    },
-    {
-      "ComponentName": "GrantGenericWorkerSeIncreaseQuotaPrivilege",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1303455 - grant SeIncreaseQuotaPrivilege to g-w user",
-      "Command": "powershell",
-      "Arguments": [
-        "-command",
-        "\"& {&'Import-Module' Carbon}\";",
-        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeIncreaseQuotaPrivilege}\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ]
-    },
-    {
-      "ComponentName": "GrantGenericWorkerSeIncreaseBasePriorityPrivilege",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1312383 - grant SeIncreaseBasePriorityPrivilege to g-w user",
-      "Command": "powershell",
-      "Arguments": [
-        "-command",
-        "\"& {&'Import-Module' Carbon}\";",
-        "\"& {&'Grant-Privilege' -Identity GenericWorker -Privilege SeIncreaseBasePriorityPrivilege}\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CarbonInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ]
-    },
-    {
-      "ComponentName": "reg_PythonCpuPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\python.exe\\PerfOptions",
-      "ValueName": "CpuPriorityClass",
-      "ValueType": "Dword",
-      "ValueData": "0x00000006",
-      "Hex": true
-    },
-    {
-      "ComponentName": "reg_PythonIoPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\python.exe\\PerfOptions",
-      "ValueName": "IoPriority",
-      "ValueType": "Dword",
-      "ValueData": "0x00000002",
-      "Hex": true
-    },
-    {
-      "ComponentName": "reg_MercurialCpuPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\hg.exe\\PerfOptions",
-      "ValueName": "CpuPriorityClass",
-      "ValueType": "Dword",
-      "ValueData": "0x00000006",
-      "Hex": true
-    },
-    {
-      "ComponentName": "reg_MercurialIoPriority",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\hg.exe\\PerfOptions",
-      "ValueName": "IoPriority",
-      "ValueType": "Dword",
-      "ValueData": "0x00000002",
-      "Hex": true
     },
     {
       "ComponentName": "ZDriveAccessRights",

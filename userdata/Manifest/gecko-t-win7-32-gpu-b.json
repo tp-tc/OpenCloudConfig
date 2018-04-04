@@ -638,6 +638,19 @@
       "Target": "C:\\generic-worker\\run-generic-worker.bat"
     },
     {
+      "ComponentName": "TaskUserInitScript",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1433851#c19",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/task-user-init-win7.cmd",
+      "Target": "C:\\generic-worker\\task-user-init.cmd",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "GenericWorkerDirectory"
+        }
+      ]
+    },
+    {
       "ComponentName": "PipConfDirectory",
       "ComponentType": "DirectoryCreate",
       "Comment": "https://pip.pypa.io/en/stable/user_guide/#config-file",
