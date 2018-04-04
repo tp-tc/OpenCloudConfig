@@ -12,7 +12,7 @@ echo Checking user registry hive is loaded... >> C:\generic-worker\generic-worke
 reg query HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects /ve
 if %ERRORLEVEL% EQU 0 goto CheckForStateFlag
 echo User registry hive is not loaded >> C:\generic-worker\generic-worker.log
-timeout /t 1 >nul
+ping -n 2 127.0.0.1 1>/nul
 goto CheckForUserProfile
 
 :CheckForStateFlag
@@ -21,7 +21,7 @@ if exist Z:\loan goto End
 echo Checking for C:\dsc\task-claim-state.valid file... >> C:\generic-worker\generic-worker.log
 if exist C:\dsc\task-claim-state.valid goto RunWorker
 echo Not found >> C:\generic-worker\generic-worker.log
-timeout /t 1 >nul
+ping -n 2 127.0.0.1 1>/nul
 goto CheckForStateFlag
 
 :RunWorker

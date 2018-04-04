@@ -7,7 +7,7 @@ if exist C:\generic-worker\SetDefaultPrinter.ps1 powershell -NoLogo -file C:\gen
 echo Checking for C:\dsc\task-claim-state.valid file... >> C:\generic-worker\generic-worker.log
 if exist C:\dsc\task-claim-state.valid goto RunWorker
 echo Not found >> C:\generic-worker\generic-worker.log
-timeout /t 1 >nul
+ping -n 2 127.0.0.1 1>/nul
 goto CheckForStateFlag
 
 :RunWorker

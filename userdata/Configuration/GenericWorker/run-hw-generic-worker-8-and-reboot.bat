@@ -30,7 +30,7 @@ if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-w
 :CheckForStateFlag
 echo Checking for C:\dsc\task-claim-state.valid file... >> C:\generic-worker\generic-worker.log
 if exist C:\dsc\task-claim-state.valid goto RunWorker
-timeout /t 5 >nul
+ping -n 6 127.0.0.1 1>/nul
 goto CheckForStateFlag
 
 :RunWorker
