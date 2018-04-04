@@ -499,6 +499,19 @@
       "sha512": "34cdece120f03e3f6b0ae2576d846c3fc38385fc976a5f20d60a50871e1519fc8a938355a607f6a5a4c658c838089571c435f01731d10600513ea63b3b1be01c"
     },
     {
+      "ComponentName": "TaskClusterProxyDownload",
+      "ComponentType": "FileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "GenericWorkerDirectory"
+        }
+      ],
+      "Source": "https://github.com/taskcluster/taskcluster-proxy/releases/download/v4.1.0/taskcluster-proxy-windows-386.exe",
+      "Target": "C:\\generic-worker\\taskcluster-proxy.exe",
+      "sha512": "367a9f942206c1e74ec7b7f2f0dd09bde55ad37f3e5a62380effcde85bb030dcf85c580bc6d2e21b06df6ad1eefc8322a484e2efdc22566db649d61421f35d66"
+    },
+    {
       "ComponentName": "LiveLog_Get",
       "ComponentType": "FirewallRule",
       "Protocol": "TCP",
@@ -623,6 +636,19 @@
       ],
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker-format-and-reboot.bat",
       "Target": "C:\\generic-worker\\run-generic-worker.bat"
+    },
+    {
+      "ComponentName": "TaskUserInitScript",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1433851#c19",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/task-user-init-win7.cmd",
+      "Target": "C:\\generic-worker\\task-user-init.cmd",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "GenericWorkerDirectory"
+        }
+      ]
     },
     {
       "ComponentName": "PipConfDirectory",
