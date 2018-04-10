@@ -1203,6 +1203,14 @@
       "ValueName": "PreferredPlan",
       "ValueType": "String",
       "ValueData": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"
+    },
+    {
+      "ComponentName": "DisableWinDefend",
+      "ComponentType": "ServiceControl",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1365909",
+      "Name": "WinDefend",
+      "StartupType": "Disabled",
+      "State": "Stopped"
     }
   ]
 }
