@@ -110,7 +110,7 @@ if (-not (Is-Loaner)) {
       $uptime = (Get-Uptime)
       if (($uptime) -and ($uptime -gt (New-TimeSpan -minutes 5))) {
         if ((-not (Is-RdpSessionActive)) -and (-not (Is-DriveFormatInProgress))) {
-          Write-Log -message 'instance failed validity check and will be halted.' -severity 'ERROR'
+          Write-Log -message ('instance failed validity check and will be halted. uptime: {0}' -f $uptime) -severity 'ERROR'
           & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: instance failed validity checks', '-f', '-d', 'p:4:1')
         } else {
           Write-Log -message 'instance failed validity check and would be halted, but has rdp session in progress or is formatting a drive.' -severity 'DEBUG'

@@ -33,17 +33,22 @@ del /Q /F C:\dsc\task-claim-state.valid >> C:\generic-worker\generic-worker.log 
 pushd %~dp0
 set errorlevel=
 .\generic-worker.exe run --configure-for-aws >> .\generic-worker.log 2>&1
+set gw_exit_code=%errorlevel%
 
 rem exit code 67 means generic worker has created a task user and wants to reboot into it
-if %errorlevel% equ 67 goto FormatAndReboot
+if %gw_exit_code% equ 67 goto FormatAndReboot
+
+rem exit code 68 means generic worker has reached it's idle timeout and the instance should be retired
+if %gw_exit_code% equ 68 goto RetireIdleInstance
 
 rem exit code 0 handled for legacy reasons (needed when generic-worker version < 9.0.0)
-if %errorlevel% equ 0 goto FormatAndReboot
+if %gw_exit_code% equ 0 goto FormatAndReboot
 
-rem commented shutdown as it interferes with loaner provisioning [occ kills gw in order to re-provision as loaner].
-rem HaltOnIdle manages terminations with consideration to other instance states and requirements.
-rem this script does not have the awareness of other considerations to manage this.
-rem shutdown /s /t 0 /f /c "Killing worker, as generic worker crashed or had a problem"
+rem for all other exit codes, simply end script execution and allow halt-on-idle or prep-loaner to do its thing 
+goto End
+
+:RetireIdleInstance
+shutdown /s /t 10 /c "shutting down; max idle time reached" /d p:4:1
 goto End
 
 :FormatAndReboot
@@ -52,6 +57,6 @@ if exist Z:\loan goto End
 format Z: /fs:ntfs /v:"task" /q /y
 echo Creating file C:\dsc\task-claim-state.valid >> .\generic-worker.log
 <nul (set/p z=) >C:\dsc\task-claim-state.valid
-shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
+shutdown /r /t 0 /f /c "rebooting; generic worker task run completed" /d p:4:1
 
 :End
