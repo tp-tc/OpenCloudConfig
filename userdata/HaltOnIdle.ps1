@@ -63,17 +63,17 @@ function Is-ConditionTrue {
 function Is-Terminating {
   try {
     $response = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/spot/termination-time')
+    $result = (-not ($response.Contains('(404)')))
   }
   catch {
-    $response = $_.Exception.Message
+    $result = $false
   }
-  if (-not ($response.Contains('(404)'))) {
+  if (($result) -and ($response)) {
     Write-Log -message ('{0} :: spot termination notice received: {1}.' -f $($MyInvocation.MyCommand.Name), $response) -severity 'WARN'
-    return $true
   } else {
-    Write-Log -message ('{0} :: spot termination notice not detected.' -f $($MyInvocation.MyCommand.Name), $proc) -severity 'DEBUG'
-    return $false
+    Write-Log -message ('{0} :: spot termination notice not detected.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
+  return [bool](($result) -and ($response))
 }
 
 function Is-OpenCloudConfigRunning {
