@@ -1271,6 +1271,31 @@
       "Name": "WinDefend",
       "StartupType": "Disabled",
       "State": "Stopped"
+    },
+    {
+      "ComponentName": "reg_SystemRestore",
+      "ComponentType": "RegistryKeySet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1453138",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows NT",
+      "ValueName": "SystemRestore"
+    },
+    {
+      "ComponentName": "reg_SystemRestoreDisableConfig",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1453138",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\SystemRestore",
+      "ValueName": "DisableConfig",
+      "ValueType": "Dword",
+      "ValueData": "0x00000001",
+      "Hex": true
+    },
+    {
+      "ComponentName": "DisableShadowCopy",
+      "ComponentType": "ServiceControl",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1453138",
+      "Name": "VSS",
+      "StartupType": "Disabled",
+      "State": "Stopped"
     }
   ]
 }
