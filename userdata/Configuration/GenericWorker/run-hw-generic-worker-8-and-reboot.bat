@@ -61,7 +61,7 @@ del /s /q /f  C:\Windows\SoftwareDistribution\Download\* >> C:\generic-worker\ge
 del /s /q /f "C:\Program Files\rempl\Logs\*"  >> C:\generic-worker\generic-worker.log
 del /s /q /f "C:\ProgramData\Package Cache\*" >> C:\generic-worker\generic-worker.log 
 if exist C:\$WINDOWS.~BT del /s /f /q C:\$WINDOWS.~BT  >> C:\generic-worker\generic-worker.log
-Dism.exe /online /Cleanup-Image /StartComponentCleanup >> C:\generic-worker\generic-worker.log
+rem Dism.exe /online /Cleanup-Image /StartComponentCleanup
 forfiles -p "C:\log" -s -m *.* -d -1 -c "cmd /c del @path" >> C:\generic-worker\generic-worker.log
 forfiles -p "C:\Windows\Logs" -s -m *.* -d -7 -c "cmd /c del @path" >> C:\generic-worker\generic-worker.log
 rmdir /s /q  %systemdrive%\$Recycle.bin >> C:\generic-worker\generic-worker.log
