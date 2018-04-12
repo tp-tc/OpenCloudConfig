@@ -57,15 +57,15 @@ if not "%GPU_NAME%"=="Intel(R) Iris(R) Pro Graphics P580  "  Goto Graphic_Card_R
 echo Removing temp dir contents >> C:\generic-worker\generic-worker.log 2>&1
 del /s /q C:\Users\GenericWorker\AppData\Local\Temp\*  >> C:\generic-worker\generic-worker.log
 rem Bug 1445779 Cleanup some left overs from the OCC run
-del /s /q /f  C:\Windows\SoftwareDistribution\Download\*
-del /s /q /f "C:\Program Files\rempl\Logs\*" 
-del /s /q /f "C:\ProgramData\Package Cache\*" 
-if exist C:\$WINDOWS.~BT del /s /f /q C:\$WINDOWS.~BT  
-Dism.exe /online /Cleanup-Image /StartComponentCleanup 
-forfiles -p "C:\log" -s -m *.* -d -1 -c "cmd /c del @path"
-forfiles -p "C:\Windows\Logs" -s -m *.* -d -7 -c "cmd /c del @path"
-rmdir /s /q  %systemdrive%\$Recycle.bin 
-shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
+del /s /q /f  C:\Windows\SoftwareDistribution\Download\* >> C:\generic-worker\generic-worker.log
+del /s /q /f "C:\Program Files\rempl\Logs\*"  >> C:\generic-worker\generic-worker.log
+del /s /q /f "C:\ProgramData\Package Cache\*" >> C:\generic-worker\generic-worker.log 
+if exist C:\$WINDOWS.~BT del /s /f /q C:\$WINDOWS.~BT  >> C:\generic-worker\generic-worker.log
+Dism.exe /online /Cleanup-Image /StartComponentCleanup >> C:\generic-worker\generic-worker.log
+forfiles -p "C:\log" -s -m *.* -d -1 -c "cmd /c del @path" >> C:\generic-worker\generic-worker.log
+forfiles -p "C:\Windows\Logs" -s -m *.* -d -7 -c "cmd /c del @path" >> C:\generic-worker\generic-worker.log
+rmdir /s /q  %systemdrive%\$Recycle.bin >> C:\generic-worker\generic-worker.log
+shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully" >> C:\generic-worker\generic-worker.log
 exit
 
 :ErrorReboot
