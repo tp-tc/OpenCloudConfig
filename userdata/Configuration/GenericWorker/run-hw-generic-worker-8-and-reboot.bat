@@ -60,7 +60,7 @@ rem Bug 1445779 Cleanup some left overs from the OCC run
 del /s /q /f  C:\Windows\SoftwareDistribution\Download\* >> C:\generic-worker\generic-worker.log
 del /s /q /f "C:\Program Files\rempl\Logs\*"  >> C:\generic-worker\generic-worker.log
 del /s /q /f "C:\ProgramData\Package Cache\*" >> C:\generic-worker\generic-worker.log 
-if exist C:\$WINDOWS.~BT echo if exist C:\$WINDOWS.~BT
+if exist C:\$WINDOWS.~BT echo Removing failed update files >> C:\generic-worker\generic-worker.log
 if exist C:\$WINDOWS.~BT del /s /f /q C:\$WINDOWS.~BT  >> C:\generic-worker\generic-worker.log
 rem Dism.exe /online /Cleanup-Image /StartComponentCleanup >> C:\generic-worker\generic-worker.log
 echo Removing log files older than 1 day >> C:\generic-worker\generic-worker.log
