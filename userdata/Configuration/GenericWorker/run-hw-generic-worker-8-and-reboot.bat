@@ -60,10 +60,14 @@ rem Bug 1445779 Cleanup some left overs from the OCC run
 del /s /q /f  C:\Windows\SoftwareDistribution\Download\* >> C:\generic-worker\generic-worker.log
 del /s /q /f "C:\Program Files\rempl\Logs\*"  >> C:\generic-worker\generic-worker.log
 del /s /q /f "C:\ProgramData\Package Cache\*" >> C:\generic-worker\generic-worker.log 
+if exist C:\$WINDOWS.~BT echo if exist C:\$WINDOWS.~BT
 if exist C:\$WINDOWS.~BT del /s /f /q C:\$WINDOWS.~BT  >> C:\generic-worker\generic-worker.log
-rem Dism.exe /online /Cleanup-Image /StartComponentCleanup
+rem Dism.exe /online /Cleanup-Image /StartComponentCleanup >> C:\generic-worker\generic-worker.log
+echo Removing log files older than 1 day >> C:\generic-worker\generic-worker.log
 forfiles -p "C:\log" -s -m *.* -d -1 -c "cmd /c del @path" >> C:\generic-worker\generic-worker.log
+echo Removing Windows log files older than 7 days >> C:\generic-worker\generic-worker.log
 forfiles -p "C:\Windows\Logs" -s -m *.* -d -7 -c "cmd /c del @path" >> C:\generic-worker\generic-worker.log
+echo Removing Recycle.bin contents  >> C:\generic-worker\generic-worker.log
 rmdir /s /q  %systemdrive%\$Recycle.bin >> C:\generic-worker\generic-worker.log
 shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully" >> C:\generic-worker\generic-worker.log
 exit
