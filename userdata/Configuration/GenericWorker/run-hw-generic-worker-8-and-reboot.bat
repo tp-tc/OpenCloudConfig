@@ -56,6 +56,7 @@ if not "%GPU_NAME%"=="Intel(R) Iris(R) Pro Graphics P580  "  Goto Graphic_Card_R
 
 echo Removing temp dir contents >> C:\generic-worker\generic-worker.log 2>&1
 del /s /q C:\Users\GenericWorker\AppData\Local\Temp\*  >> C:\generic-worker\generic-worker.log
+del /s /q  /f C:\Users\GenericWorker\.mozilla\* >> C:\generic-worker\generic-worker.log
 rem Bug 1445779 Cleanup some left overs from the OCC run
 del /s /q /f  C:\Windows\SoftwareDistribution\Download\* >> C:\generic-worker\generic-worker.log
 del /s /q /f "C:\Program Files\rempl\Logs\*"  >> C:\generic-worker\generic-worker.log
