@@ -1272,7 +1272,27 @@
           "ComponentType": "CommandRun",
           "ComponentName": "OpenSshUnzip"
         }
-      ]
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "sc",
+            "Arguments": [
+              "query",
+              "sshd"
+            ],
+            "Match": "SERVICE_NAME: sshd"
+          },
+          {
+            "Command": "sc",
+            "Arguments": [
+              "query",
+              "ssh-agent"
+            ],
+            "Match": "SERVICE_NAME: ssh-agent"
+          }
+        ]
+      }
     },
     {
       "ComponentName": "reg_OpenSSH_DefaultShell",
