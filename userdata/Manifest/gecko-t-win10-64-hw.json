@@ -1296,6 +1296,133 @@
       "Name": "VSS",
       "StartupType": "Disabled",
       "State": "Stopped"
+    },
+    {
+      "ComponentName": "OpenSshDownload",
+      "ComponentType": "FileDownload",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
+      "Source": "https://github.com/PowerShell/Win32-OpenSSH/releases/download/v7.6.1.0p1-Beta/OpenSSH-Win64.zip",
+      "Target": "C:\\Windows\\Temp\\OpenSSH-Win64.zip",
+      "sha512": "340f2be8bbddf2552a1d2d55b17f06f09bc1bc6ff2bbba6c8653f8fc3b91f5d9e2bd47e57d537f81df69fca776bf6ecbd533a7ac8bcbb6012f03676530e6d9df"
+    },
+    {
+      "ComponentName": "OpenSshUnzip",
+      "ComponentType": "CommandRun",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
+      "Command": "C:\\Program Files\\7-Zip\\7z.exe",
+      "Arguments": [
+        "x",
+        "-o\"C:\\Program Files\"",
+        "C:\\Windows\\Temp\\OpenSSH-Win64.zip"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "SevenZip"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "OpenSshDownload"
+        }
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files\\OpenSSH-Win64\\sshd.exe",
+          "C:\\Program Files\\OpenSSH-Win64\\ssh-agent.exe",
+          "C:\\Program Files\\OpenSSH-Win64\\install-sshd.ps1"
+        ]
+      }
+    },
+    {
+      "ComponentName": "SshIn",
+      "ComponentType": "FirewallRule",
+      "Protocol": "TCP",
+      "LocalPort": 22,
+      "Direction": "Inbound",
+      "Action": "Allow"
+    },
+    {
+      "ComponentName": "InstallOpenSSH",
+      "ComponentType": "CommandRun",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
+      "Command": "powershell.exe",
+      "Arguments": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "\"C:\\Program Files\\OpenSSH-Win64\\install-sshd.ps1\""
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "OpenSshUnzip"
+        }
+      ]
+    },
+    {
+      "ComponentName": "reg_OpenSSH_DefaultShell",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\OpenSSH",
+      "ValueName": "DefaultShell",
+      "ValueType": "String",
+      "ValueData": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+    },
+    {
+      "ComponentName": "reg_OpenSSH_DefaultShellCommandOption",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\OpenSSH",
+      "ValueName": "DefaultShellCommandOption",
+      "ValueType": "String",
+      "ValueData": "/c"
+    },
+    {
+      "ComponentName": "AdministratorSshDir",
+      "ComponentType": "DirectoryCreate",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
+      "Path": "C:\\Users\\Administrator\\.ssh"
+    },
+    {
+      "ComponentName": "AdministratorSshAuthorisedKeys",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/ssh/authorized_keys",
+      "Target": "C:\\Users\\Administrator\\.ssh\\authorized_keys",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "AdministratorSshDir"
+        }
+      ]
+    },
+    {
+      "ComponentName": "Start_sshd",
+      "ComponentType": "ServiceControl",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
+      "Name": "sshd",
+      "StartupType": "Automatic",
+      "State": "Running",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "InstallOpenSSH"
+        }
+      ]
+    },
+    {
+      "ComponentName": "Start_sshagent",
+      "ComponentType": "ServiceControl",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
+      "Name": "ssh-agent",
+      "StartupType": "Automatic",
+      "State": "Running",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "InstallOpenSSH"
+        }
+      ]
     }
   ]
 }
