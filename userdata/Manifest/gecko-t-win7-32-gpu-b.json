@@ -1206,7 +1206,8 @@
       "ComponentType": "FileDownload",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
       "Source": "https://github.com/PowerShell/Win32-OpenSSH/releases/download/v7.6.1.0p1-Beta/OpenSSH-Win32.zip",
-      "Target": "C:\\Windows\\Temp\\OpenSSH-Win32.zip"
+      "Target": "C:\\Windows\\Temp\\OpenSSH-Win32.zip",
+      "sha512": "2a9b3b43e7791c117931c612cb59659abebb0d680f4df24563ec2bf660af6b80d9459a8d07072f7c7ad549fd176a140494605486f7d681c9889ae35440396a4f"
     },
     {
       "ComponentName": "OpenSshUnzip",
