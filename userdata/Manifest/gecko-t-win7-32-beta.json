@@ -1202,14 +1202,6 @@
       "State": "Stopped"
     },
     {
-      "ComponentName": "DisableWinDefend",
-      "ComponentType": "ServiceControl",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1365909",
-      "Name": "WinDefend",
-      "StartupType": "Disabled",
-      "State": "Stopped"
-    },
-    {
       "ComponentName": "OpenSshDownload",
       "ComponentType": "FileDownload",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
