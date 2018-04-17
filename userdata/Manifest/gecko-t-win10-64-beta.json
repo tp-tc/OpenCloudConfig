@@ -1212,7 +1212,7 @@
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        "C:\\Program Files\\OpenSSH-Win64\\install-sshd.ps1"
+        "\"C:\\Program Files\\OpenSSH-Win64\\install-sshd.ps1\""
       ],
       "DependsOn": [
         {
