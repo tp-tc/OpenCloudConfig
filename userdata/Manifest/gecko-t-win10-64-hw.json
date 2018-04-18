@@ -1425,15 +1425,11 @@
       ]
     },
     {
-    	"ComponentName": "EndofManifest",
-    	"ComponentType": "CommandRun",
-    	"Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1442472",
-    	"Command": "echo",
-    	"Arguments": [
-    		"EndofManifest",
-    		">>",
-    		"C:\\DSC\\EndofManifest.semaphore"
-    	]
+      "ComponentName": "EndOfManifest.semaphore",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/EndOfManifest.semaphore",
+      "Target": "C:\\DSC\\EndOfManifest.semaphore"
     }
   ]
 }
