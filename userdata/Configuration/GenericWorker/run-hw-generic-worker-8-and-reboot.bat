@@ -1,5 +1,11 @@
 @echo off
 
+:ManifestCheck 
+rem https://bugzilla.mozilla.org/show_bug.cgi?id=1442472
+ping -n 6 127.0.0.1 1>/nul
+echo Checking for manifest completetion >> C:\generic-worker\generic-worker.log
+if Not exist C:\DSC\EndOfManifest.semaphore GoTo ManifestCheck
+
 if exist C:\generic-worker\wait.semaphore GoTo wait
 
 copy /y C:\generic-worker\generic-worker.log c:\log\generic-worker%time:~-5%.log 
@@ -40,6 +46,7 @@ c:\dsc\configmymonitor.exe r8 v0
 echo File C:\dsc\task-claim-state.valid found >> C:\generic-worker\generic-worker.log
 echo Deleting C:\dsc\task-claim-state.valid file >> C:\generic-worker\generic-worker.log
 del /Q /F C:\dsc\task-claim-state.valid >> C:\generic-worker\generic-worker.log 2>&1
+del /Q /F C:\DSC\EndOfManifest.semaphore
 pushd %~dp0
 set errorlevel=
 C:\generic-worker\generic-worker.exe run --config C:\generic-worker\gen_worker.config >> C:\generic-worker\generic-worker.log 2>&1
