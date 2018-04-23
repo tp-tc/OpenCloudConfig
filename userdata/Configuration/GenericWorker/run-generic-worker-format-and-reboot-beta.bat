@@ -50,8 +50,6 @@ goto End
 if exist Z:\loan logoff /f /n
 if exist Z:\loan goto End
 format Z: /fs:ntfs /v:"task" /q /y
-echo Creating file C:\dsc\task-claim-state.valid >> .\generic-worker.log
-<nul (set/p z=) >C:\dsc\task-claim-state.valid
 shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
 
 :End
