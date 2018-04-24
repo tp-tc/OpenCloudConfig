@@ -1,8 +1,9 @@
 import boto3
+import datetime
 import json
-import requests
 import os
 import re
+import requests
 from ConfigParser import ConfigParser
 
 
@@ -66,13 +67,20 @@ def get_commit_message(sha, org='mozilla-releng', repo='OpenCloudConfig'):
 
 
 def filter_by_sha(ami_list, sha):
-   for ami in ami_list:
+    """
+    filters the specified ami list by the specified git sha
+    """
+    for ami in ami_list:
        if ami['GitSha'].startswith(sha) or sha.startswith(ami['GitSha']): yield ami
+
+
+def log_prefix():
+    return '[occ-rollback {0}Z]'.format(datetime.datetime.utcnow().isoformat(sep=' ')[:-3])
 
 
 current_sha = os.environ.get('GITHUB_HEAD_SHA')
 if current_sha is None:
-    print 'environment variable "GITHUB_HEAD_SHA" not found.'
+    print '{} environment variable "GITHUB_HEAD_SHA" not found.'.format(log_prefix())
 else:
     current_commit_message = get_commit_message(current_sha)
     rollback_syntax_match = re.search('rollback: (gecko-[123]-b-win2012(-beta)?|gecko-t-win(7-32|10-64)(-[^ ])?) ([0-9a-f]{7,40})', current_commit_message, re.IGNORECASE)
@@ -82,9 +90,9 @@ else:
         ami_list = get_ami_list(name_patterns=[worker_type + ' version *'])
         sha_list = set([ami['GitSha'] for ami in ami_list])
         if True in (sha.startswith(rollback_sha) or rollback_sha.startswith(sha) for sha in sha_list):
-            print 'rollback in progress for worker type: {} to amis with git sha: {}'.format(worker_type, rollback_sha)
+            print '{} rollback in progress for worker type: {} to amis with git sha: {}'.format(log_prefix(), worker_type, rollback_sha)
             print json.dumps(list(filter_by_sha(ami_list, rollback_sha)), indent=2, sort_keys=True)
         else:
-            print 'rollback aborted. no amis found matching worker type: {}, and git sha: {}'.format(worker_type, rollback_sha)
+            print '{} rollback aborted. no amis found matching worker type: {}, and git sha: {}'.format(log_prefix(), worker_type, rollback_sha)
     else:
-        print 'rollback request not detected in commit syntax.'
+        print '{} rollback request not detected in commit syntax.'.format(log_prefix())
