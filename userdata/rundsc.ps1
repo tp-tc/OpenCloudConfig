@@ -964,7 +964,7 @@ if ($locationType -ne 'DataCenter') {
   }
   switch -wildcard ($workerType) {
     'gecko-t-win7-*' {
-      $runDscOnWorker = $false
+      $runDscOnWorker = $true
       $renameInstance = $true
       $setFqdn = $true
       if (-not ($isWorker)) {
@@ -973,7 +973,7 @@ if ($locationType -ne 'DataCenter') {
       }
     }
     'gecko-t-win10-*' {
-      $runDscOnWorker = $false
+      $runDscOnWorker = $true
       $renameInstance = $true
       $setFqdn = $true
       if (-not ($isWorker)) {
