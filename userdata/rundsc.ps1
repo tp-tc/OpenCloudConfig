@@ -383,6 +383,36 @@ function Mount-DiskOne {
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
+function Resize-DiskZero {
+  param (
+    [char] $drive = 'C'
+  )
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    if ((Get-Command 'Resize-Partition' -errorAction SilentlyContinue) -and (Get-Command 'Get-PartitionSupportedSize' -errorAction SilentlyContinue)) {
+      $oldSize = (Get-WmiObject Win32_LogicalDisk | ? { $_.DeviceID -eq ('{0}:' -f $drive)}).Size
+      $maxSize = (Get-PartitionSupportedSize -DriveLetter $drive).SizeMax
+      if ($oldSize -lt $maxSize) {
+        try {
+          Resize-Partition -DriveLetter $drive -Size $maxSize
+          Write-Log -message ('{0} :: system drive {1}: resized from {2} to {3}.' -f $($MyInvocation.MyCommand.Name), $drive, [math]::Round($oldSize/1GB, 2), [math]::Round($maxSize/1GB, 2)) -severity 'INFO'
+        }
+        catch {
+          Write-Log -message ('{0} :: failed to resize partition for system drive {1}:. {2}' -f $($MyInvocation.MyCommand.Name), $drive, $_.Exception.Message) -severity 'ERROR'
+        }
+      } else {
+        Write-Log -message ('{0} :: partition resizing skipped. drive {1}: at maximum size ({2})' -f $($MyInvocation.MyCommand.Name, $drive, [math]::Round($oldSize/1GB, 2))) -severity 'DEBUG'
+      }
+    } else {
+      Write-Log -message ('{0} :: partition resizing skipped on unsupported os' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+}
 function Set-Pagefile {
   param (
     [switch] $isWorker = $false,
@@ -991,6 +1021,7 @@ if ($locationType -ne 'DataCenter') {
     }
   }
   Mount-DiskOne -lock $lock
+  Resize-DiskZero
   Set-Pagefile -isWorker:$isWorker -lock $lock
   # reattempt drive mapping for up to 10 minutes
   $driveMapTimeout = (Get-Date).AddMinutes(10)
