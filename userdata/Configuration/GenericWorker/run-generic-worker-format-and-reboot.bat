@@ -1,26 +1,13 @@
 @echo off
 
 echo Running generic-worker startup script (run-generic-worker.bat) ... >> C:\generic-worker\generic-worker.log
-if "%USERNAME%" == "GenericWorker" ftype txtfile="C:\Windows\System32\Notepad.exe" "%%1"
-if "%USERNAME%" == "GenericWorker" if exist "C:\Program Files (x86)" powershell -command "&{$p='HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3';$v=(Get-ItemProperty -Path $p).Settings;$v[8]=3;&Set-ItemProperty -Path $p -Name Settings -Value $v;&Stop-Process -ProcessName explorer}" > C:\log\taskbar-auto-hide-stdout.log 2> C:\log\taskbar-auto-hide-stderr.log
 if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-worker\disable-desktop-interrupt.reg
 if exist C:\generic-worker\SetDefaultPrinter.ps1 powershell -NoLogo -file C:\generic-worker\SetDefaultPrinter.ps1 -WindowStyle hidden -NoProfile -ExecutionPolicy bypass
-
-if not "%USERNAME%" == "GenericWorker" goto CheckForStateFlag
-:CheckForUserProfile
-echo Checking user registry hive is loaded... >> C:\generic-worker\generic-worker.log
-reg query HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects /ve
-if %ERRORLEVEL% EQU 0 goto CheckForStateFlag
-echo User registry hive is not loaded >> C:\generic-worker\generic-worker.log
-ping -n 2 127.0.0.1 1>/nul
-goto CheckForUserProfile
 
 :CheckForStateFlag
 if exist Z:\loan logoff /f /n
 if exist Z:\loan goto End
-echo Checking for C:\dsc\task-claim-state.valid file... >> C:\generic-worker\generic-worker.log
 if exist C:\dsc\task-claim-state.valid goto RunWorker
-echo Not found >> C:\generic-worker\generic-worker.log
 ping -n 2 127.0.0.1 1>/nul
 goto CheckForStateFlag
 
@@ -40,9 +27,6 @@ if %gw_exit_code% equ 67 goto FormatAndReboot
 
 rem exit code 68 means generic worker has reached it's idle timeout and the instance should be retired
 if %gw_exit_code% equ 68 goto RetireIdleInstance
-
-rem exit code 0 handled for legacy reasons (needed when generic-worker version < 9.0.0)
-if %gw_exit_code% equ 0 goto FormatAndReboot
 
 rem for all other exit codes, simply end script execution and allow halt-on-idle or prep-loaner to do its thing 
 goto End
