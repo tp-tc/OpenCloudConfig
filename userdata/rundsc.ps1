@@ -394,7 +394,8 @@ function Resize-DiskZero {
     if ((Get-Command 'Resize-Partition' -errorAction SilentlyContinue) -and (Get-Command 'Get-PartitionSupportedSize' -errorAction SilentlyContinue)) {
       $oldSize = (Get-WmiObject Win32_LogicalDisk | ? { $_.DeviceID -eq ('{0}:' -f $drive)}).Size
       $maxSize = (Get-PartitionSupportedSize -DriveLetter $drive).SizeMax
-      if ($oldSize -lt $maxSize) {
+      # if at least 1gb can be gained from a resize, perform a resize
+      if ((($maxSize - $oldSize)/1GB) -gt 1GB) {
         try {
           Resize-Partition -DriveLetter $drive -Size $maxSize
           Write-Log -message ('{0} :: system drive {1}: resized from {2} to {3}.' -f $($MyInvocation.MyCommand.Name), $drive, [math]::Round($oldSize/1GB, 2), [math]::Round($maxSize/1GB, 2)) -severity 'INFO'
