@@ -1022,7 +1022,9 @@ if ($locationType -ne 'DataCenter') {
     }
   }
   Mount-DiskOne -lock $lock
-  Resize-DiskZero
+  if ($isWorker) {
+    Resize-DiskZero
+  }
   Set-Pagefile -isWorker:$isWorker -lock $lock
   # reattempt drive mapping for up to 10 minutes
   $driveMapTimeout = (Get-Date).AddMinutes(10)
