@@ -4,23 +4,15 @@ import json
 import os
 import re
 import requests
-from ConfigParser import ConfigParser
 
 
 def get_aws_creds():
     """
-    fetch aws credentials
-    - from taskcluster secrets when running as a taskcluster github job
-    - from aws credentials file when debugging
+    fetch aws credentials from taskcluster secrets.
     """
-    credentials_config = os.path.join(os.path.expanduser('~'), '.aws', 'credentials')
-    if os.path.isfile(credentials_config):
-        config = ConfigParser()
-        config.read(credentials_config)
-        return config.get('occ-taskcluster', 'aws_account_id'), config.get('occ-taskcluster', 'aws_access_key_id'), config.get('occ-taskcluster', 'aws_secret_access_key')
-    url = 'http://taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype'
-    secret = requests.get(url).json().secret
-    return secret.aws_tc_account_id, secret.TASKCLUSTER_AWS_ACCESS_KEY, secret.TASKCLUSTER_AWS_SECRET_KEY
+    url = 'http://{}/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype'.format(os.environ.get('TC_PROXY', 'taskcluster'))
+    secret = requests.get(url).json()['secret']
+    return secret['aws_tc_account_id'], secret['TASKCLUSTER_AWS_ACCESS_KEY'], secret['TASKCLUSTER_AWS_SECRET_KEY']
 
 
 def mutate(image, region_name):
@@ -38,15 +30,12 @@ def mutate(image, region_name):
 
 
 def get_ami_list(
+    aws_account_id,
     regions=['eu-central-1', 'us-west-1', 'us-west-2', 'us-east-1', 'us-east-2'],
     name_patterns=['gecko-*-b-win* version *', 'gecko-t-win* version *']):
     """
     retrieves a list of amis in the specified regions and matching the specified name patterns
     """
-    aws_account_id, aws_access_key_id, aws_secret_access_key = get_aws_creds()
-    boto3.setup_default_session(
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key)
     images = []
     for region_name in regions:
         ec2 = boto3.client('ec2', region_name=region_name)
@@ -57,13 +46,26 @@ def get_ami_list(
     return images
 
 
+def get_security_groups(
+    region,
+    groups=['ssh-only', 'rdp-only', 'livelog-direct']):
+    """
+    retrieves a list of security group ids
+    - for the specified security group names
+    - in the specified region
+    """
+    ec2 = boto3.client('ec2', region_name=region)
+    response = ec2.describe_security_groups(GroupNames=groups)
+    return [x['GroupId'] for x in response['SecurityGroups']]
+
+
 def get_commit_message(sha, org='mozilla-releng', repo='OpenCloudConfig'):
     """
     retrieves the git commit message associated with the given org, repo and sha 
     """
     url = 'https://api.github.com/repos/{}/{}/commits/{}'.format(org, repo, sha)
     return requests.get(url).json()['commit']['message']
-    #return 'blah blah\nrollback: gecko-1-b-win2012 d9db25eaf90c'
+    #return 'blah blah\nrollback: gecko-1-b-win2012 23b390b'
 
 
 def filter_by_sha(ami_list, sha):
@@ -81,18 +83,46 @@ def log_prefix():
 current_sha = os.environ.get('GITHUB_HEAD_SHA')
 if current_sha is None:
     print '{} environment variable "GITHUB_HEAD_SHA" not found.'.format(log_prefix())
-else:
-    current_commit_message = get_commit_message(current_sha)
-    rollback_syntax_match = re.search('rollback: (gecko-[123]-b-win2012(-beta)?|gecko-t-win(7-32|10-64)(-[^ ])?) ([0-9a-f]{7,40})', current_commit_message, re.IGNORECASE)
-    if rollback_syntax_match:
-        worker_type = rollback_syntax_match.group(1)
-        rollback_sha = rollback_syntax_match.group(5)
-        ami_list = get_ami_list(name_patterns=[worker_type + ' version *'])
-        sha_list = set([ami['GitSha'] for ami in ami_list])
-        if True in (sha.startswith(rollback_sha) or rollback_sha.startswith(sha) for sha in sha_list):
-            print '{} rollback in progress for worker type: {} to amis with git sha: {}'.format(log_prefix(), worker_type, rollback_sha)
-            print json.dumps(list(filter_by_sha(ami_list, rollback_sha)), indent=2, sort_keys=True)
-        else:
-            print '{} rollback aborted. no amis found matching worker type: {}, and git sha: {}'.format(log_prefix(), worker_type, rollback_sha)
+    quit()
+
+
+aws_account_id, aws_access_key_id, aws_secret_access_key = get_aws_creds()
+boto3.setup_default_session(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
+
+current_commit_message = get_commit_message(current_sha)
+rollback_syntax_match = re.search('rollback: (gecko-[123]-b-win2012(-beta)?|gecko-t-win(7-32|10-64)(-[^ ])?) ([0-9a-f]{7,40})', current_commit_message, re.IGNORECASE)
+if rollback_syntax_match:
+    worker_type = rollback_syntax_match.group(1)
+    rollback_sha = rollback_syntax_match.group(5)
+    ami_list = get_ami_list(aws_account_id, name_patterns=[worker_type + ' version *'])
+    sha_list = set([ami['GitSha'] for ami in ami_list])
+    print 'rollback available for shas: {}'.format(', '.join(sha_list))
+    if True in (sha.startswith(rollback_sha) or rollback_sha.startswith(sha) for sha in sha_list):
+        print '{} rollback in progress for worker type: {} to amis with git sha: {}'.format(log_prefix(), worker_type, rollback_sha)
+        ami_dict = dict((x['Region'], x['ImageId']) for x in filter_by_sha(ami_list, rollback_sha))
+        url = 'http://{}/aws-provisioner/v1/worker-type/{}'.format(os.environ.get('TC_PROXY', 'taskcluster'), worker_type)
+        provisioner_config = requests.get(url).json()
+        provisioner_config.pop('workerType', None)
+        provisioner_config.pop('lastModified', None)
+        old_regions_config = provisioner_config['regions']
+        print '{} old config'.format(log_prefix())
+        print json.dumps(old_regions_config, indent=2, sort_keys=True)
+        new_regions_config = [
+            {
+                'launchSpec': {
+                    'ImageId': ami_id,
+                    'SecurityGroupIds': get_security_groups(region=region_name)
+                },
+                'region': region_name,
+                'scopes': [],
+                'secrets': {},
+                'userData': {}
+            } for region_name, ami_id in ami_dict.iteritems()]
+        print '{} new config'.format(log_prefix())
+        print json.dumps(new_regions_config, indent=2, sort_keys=True)
+        provisioner_config['regions'] = new_regions_config
+        # todo: push new (rollback) config back to aws provisioner
     else:
-        print '{} rollback request not detected in commit syntax.'.format(log_prefix())
+        print '{} rollback aborted. no amis found matching worker type: {}, and git sha: {}'.format(log_prefix(), worker_type, rollback_sha)
+else:
+    print '{} rollback request not detected in commit syntax.'.format(log_prefix())
