@@ -185,11 +185,12 @@ else:
     print '{} available rollbacks:'.format(log_prefix())
     for worker_type in sorted(set([ami['WorkerType'] for ami in ami_list])):
         print '- {}'.format(worker_type)
-        sha_list = set([ami['GitSha'] for ami in filter(lambda x: x['WorkerType'] == worker_type, ami_list)])
+        worker_type_ami_list = filter(lambda x: x['WorkerType'] == worker_type, ami_list)
+        sha_list = set([ami['GitSha'] for ami in worker_type_ami_list])
         available_rollbacks = sorted([{
             'sha': sha[:7],
             'commit': get_commit(sha),
-            'amis': filter_by_sha(ami_list, sha)
+            'amis': filter_by_sha(worker_type_ami_list, sha)
         } for sha in sha_list], key=lambda x: x['commit']['committer']['date'], reverse=True)
         for r in available_rollbacks:
             print '  - {} {} {} ({})'.format(r['commit']['committer']['date'], r['sha'], r['commit']['committer']['name'], r['commit']['committer']['email'])
