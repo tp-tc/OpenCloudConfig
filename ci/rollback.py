@@ -121,6 +121,10 @@ aws_account_id, aws_access_key_id, aws_secret_access_key = get_aws_creds()
 boto3.setup_default_session(aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
 
 current_commit_message = get_commit_message(current_sha)
+if current_commit_message is None:
+    print '{} unable to reach github api (rate throttled)'.format(log_prefix())
+    quit()
+
 rollback_syntax_match = re.search('rollback: (gecko-[123]-b-win2012(-beta)?|gecko-t-win(7-32|10-64)(-[^ ])?) ([0-9a-f]{7,40})', current_commit_message, re.IGNORECASE)
 if rollback_syntax_match:
     worker_type = rollback_syntax_match.group(1)
