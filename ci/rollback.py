@@ -76,11 +76,19 @@ def get_commit(sha, org='mozilla-releng', repo='OpenCloudConfig'):
         return cache[sha]
     url = 'https://api.github.com/repos/{}/{}/commits/{}'.format(org, repo, sha)
     gh_token = os.environ.get('GH_TOKEN')
-    if (gh_token is not None):
-        cache[sha] = requests.get(url, headers={'Authorization': 'token {}'.format(gh_token)}).json()['commit']
-    else:
-        cache[sha] = requests.get(url).json()['commit']
-    return cache[sha]
+    response = requests.get(url).json() if gh_token is None else requests.get(url, headers={'Authorization': 'token {}'.format(gh_token)}).json()
+    if 'commit' in response:
+        cache[sha] = response['commit']
+        return cache[sha]
+    # if we get throttled by github, just return uncached blanks
+    return {
+        'message': None,
+        'committer': {
+            'date': None,
+            'email': None,
+            'name': None
+        }
+    }
 
 
 def filter_by_sha(ami_list, sha):
@@ -127,7 +135,7 @@ if rollback_syntax_match:
     print '{} available rollbacks:'.format(log_prefix())
     for r in available_rollbacks:
         print '- {} {} {} ({})'.format(r['commit']['committer']['date'], r['sha'], r['commit']['committer']['name'], r['commit']['committer']['email'])
-        print '  {}'.format(r['commit']['message'].replace('\n\n', '\n').replace('\n', '\n  '))
+        print '  {}'.format(None if r['commit']['message'] is None else re.sub(r'(\r?\n)+', '\n', r['commit']['message']).strip().replace('\n', '\n  '))
         print '  {}'.format(', '.join(['{} ({})'.format(x['ImageId'], x['Region']) for x in r['amis']]))
     if True in (sha.startswith(rollback_sha) or rollback_sha.startswith(sha) for sha in sha_list):
         print '{} rollback in progress for worker type: {} to amis with git sha: {}'.format(log_prefix(), worker_type, rollback_sha)
@@ -185,5 +193,5 @@ else:
         } for sha in sha_list], key=lambda x: x['commit']['committer']['date'], reverse=True)
         for r in available_rollbacks:
             print '  - {} {} {} ({})'.format(r['commit']['committer']['date'], r['sha'], r['commit']['committer']['name'], r['commit']['committer']['email'])
-            print '    {}'.format(r['commit']['message'].replace('\n\n', '\n').replace('\n', '\n    '))
+            print '    {}'.format(None if r['commit']['message'] is None else re.sub(r'(\r?\n)+', '\n', r['commit']['message']).strip().replace('\n', '\n    '))
             print '    {}'.format(', '.join(['{} ({})'.format(x['ImageId'], x['Region']) for x in r['amis']]))
