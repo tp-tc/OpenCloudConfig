@@ -84,6 +84,55 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       retries: 0
       scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
+          - aws-provisioner:manage-worker-type:gecko-1-b-win2012
+          - aws-provisioner:manage-worker-type:gecko-1-b-win2012-beta
+          - aws-provisioner:manage-worker-type:gecko-2-b-win2012
+          - aws-provisioner:manage-worker-type:gecko-3-b-win2012
+          - aws-provisioner:manage-worker-type:gecko-t-win7-32
+          - aws-provisioner:manage-worker-type:gecko-t-win7-32-beta
+          - aws-provisioner:manage-worker-type:gecko-t-win7-32-cu
+          - aws-provisioner:manage-worker-type:gecko-t-win7-32-gpu
+          - aws-provisioner:manage-worker-type:gecko-t-win7-32-gpu-b
+          - aws-provisioner:manage-worker-type:gecko-t-win10-64
+          - aws-provisioner:manage-worker-type:gecko-t-win10-64-beta
+          - aws-provisioner:manage-worker-type:gecko-t-win10-64-cu
+          - aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu
+          - aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu-b
+      routes:
+          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.rollback'
+      workerType: '{{taskcluster.docker.workerType}}'
+      extra:
+          github:
+              env: true
+              events:
+                  - push
+              branches:
+                - master
+          data:
+              head:
+                  sha: '{{event.head.sha}}'
+                  user:
+                      email: '{{event.head.user.email}}'
+      payload:
+          maxRunTime: 1200
+          image: 'grenade/opencloudconfig'
+          features:
+              taskclusterProxy: true
+          command:
+              - '/bin/bash'
+              - '--login'
+              - '-c'
+              - 'git clone --quiet {{event.head.repo.url}} && python ./OpenCloudConfig/ci/rollback.py'
+      metadata:
+          name: 'Rollback'
+          description: 'Roll back AMIs and TaskCluster AWS Provisoner config for a given worker type when requested in commit syntax'
+          owner: '{{event.head.user.email}}'
+          source: '{{event.head.repo.url}}'
+
+    - provisionerId: '{{taskcluster.docker.provisionerId}}'
+      retries: 0
+      scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-gecko-1-b-win2012-beta
