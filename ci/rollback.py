@@ -63,9 +63,18 @@ def get_commit_message(sha, org='mozilla-releng', repo='OpenCloudConfig'):
     """
     retrieves the git commit message associated with the given org, repo and sha 
     """
+    return get_commit(sha=sha, org=org, repo=repo)['message']
+
+
+def get_commit(sha, org='mozilla-releng', repo='OpenCloudConfig'):
+    """
+    retrieves the git commit push date associated with the given org, repo and sha 
+    """
     url = 'https://api.github.com/repos/{}/{}/commits/{}'.format(org, repo, sha)
-    return requests.get(url).json()['commit']['message']
-    #return 'blah blah\nrollback: gecko-1-b-win2012 23b390b'
+    gh_token = os.environ.get('GH_TOKEN')
+    if (gh_token is not None):
+        return requests.get(url, headers={'Authorization': 'token {}'.format(gh_token)}).json()['commit']
+    return requests.get(url).json()['commit']
 
 
 def filter_by_sha(ami_list, sha):
@@ -77,7 +86,15 @@ def filter_by_sha(ami_list, sha):
 
 
 def log_prefix():
-    return '[occ-rollback {0}Z]'.format(datetime.datetime.utcnow().isoformat(sep=' ')[:-3])
+    return '[occ-rollback {}Z]'.format(datetime.datetime.utcnow().isoformat(sep=' ')[:-3])
+
+
+def post_provisioner_config(worker_type, provisioner_config):
+    """
+    send provisioner configuration for the specified worker type to taskcluster.
+    """
+    url = 'http://{}/aws-provisioner/v1/worker-type/{}/update'.format(os.environ.get('TC_PROXY', 'taskcluster'), worker_type)
+    return requests.post(url, json=provisioner_config)
 
 
 current_sha = os.environ.get('GITHUB_HEAD_SHA')
@@ -96,16 +113,26 @@ if rollback_syntax_match:
     rollback_sha = rollback_syntax_match.group(5)
     ami_list = get_ami_list(aws_account_id, name_patterns=[worker_type + ' version *'])
     sha_list = set([ami['GitSha'] for ami in ami_list])
-    print 'rollback available for shas: {}'.format(', '.join(sha_list))
+    available_rollbacks = sorted([{
+        'sha': sha[:7],
+        'commit': get_commit(sha),
+        'amis': filter_by_sha(ami_list, sha)
+    } for sha in sha_list], key=lambda x: x['commit']['committer']['date'], reverse=True)
+    print '{} available rollbacks:'.format(log_prefix())
+    for r in available_rollbacks:
+        print '- {} {} {} ({})'.format(r['commit']['committer']['date'], r['sha'], r['commit']['committer']['name'], r['commit']['committer']['email'])
+        print '  {}'.format(r['commit']['message'].replace('\n\n', '\n').replace('\n', '\n  '))
+        print '  {}'.format(', '.join(['{} ({})'.format(x['ImageId'], x['Region']) for x in r['amis']]))
     if True in (sha.startswith(rollback_sha) or rollback_sha.startswith(sha) for sha in sha_list):
         print '{} rollback in progress for worker type: {} to amis with git sha: {}'.format(log_prefix(), worker_type, rollback_sha)
-        ami_dict = dict((x['Region'], x['ImageId']) for x in filter_by_sha(ami_list, rollback_sha))
+        ami_list_for_rollback = filter_by_sha(ami_list, rollback_sha)
+        ami_dict = dict((x['Region'], x['ImageId']) for x in ami_list_for_rollback)
         url = 'http://{}/aws-provisioner/v1/worker-type/{}'.format(os.environ.get('TC_PROXY', 'taskcluster'), worker_type)
         provisioner_config = requests.get(url).json()
         provisioner_config.pop('workerType', None)
         provisioner_config.pop('lastModified', None)
         old_regions_config = provisioner_config['regions']
-        print '{} old config'.format(log_prefix())
+        print '{} old config:'.format(log_prefix())
         print json.dumps(old_regions_config, indent=2, sort_keys=True)
         new_regions_config = [
             {
@@ -118,10 +145,24 @@ if rollback_syntax_match:
                 'secrets': {},
                 'userData': {}
             } for region_name, ami_id in ami_dict.iteritems()]
-        print '{} new config'.format(log_prefix())
+        print '{} new config:'.format(log_prefix())
         print json.dumps(new_regions_config, indent=2, sort_keys=True)
         provisioner_config['regions'] = new_regions_config
-        # todo: push new (rollback) config back to aws provisioner
+        #creation_date = next((x for x in ami_list_for_rollback if x['Region'] == 'us-west-2'), None)['CreationDate']
+        creation_date = get_commit(rollback_sha)['committer']['date']
+        manifest_url = 'https://github.com/mozilla-releng/OpenCloudConfig/blob/{}/userdata/Manifest/{}.json'.format(rollback_sha, worker_type)
+        provisioner_config['secrets']['generic-worker']['config']['deploymentId'] = current_sha[:12]
+        provisioner_config['secrets']['generic-worker']['config']['workerTypeMetadata']['machine-setup'] = {
+            'ami-created': creation_date,
+            'manifest': manifest_url,
+            'note': 'configuration generated with automated rollback at: {}Z'.format(datetime.datetime.utcnow().isoformat(sep=' ')[:-3]),
+            'rollback': 'https://github.com/mozilla-releng/OpenCloudConfig/commit/{}'.format(current_sha)
+        }
+        response = post_provisioner_config(worker_type=worker_type, provisioner_config=provisioner_config)
+        if response.status_code == 200:
+            print '{} rollback complete.'.format(log_prefix())
+        else:
+            print '{} rollback failed with status code: {}'.format(log_prefix(), response.status_code)
     else:
         print '{} rollback aborted. no amis found matching worker type: {}, and git sha: {}'.format(log_prefix(), worker_type, rollback_sha)
 else:
