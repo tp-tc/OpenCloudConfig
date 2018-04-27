@@ -5,6 +5,8 @@ import os
 import re
 import requests
 
+cache = {}
+
 
 def get_aws_creds():
     """
@@ -70,11 +72,15 @@ def get_commit(sha, org='mozilla-releng', repo='OpenCloudConfig'):
     """
     retrieves the git commit push date associated with the given org, repo and sha 
     """
+    if sha in cache:
+        return cache[sha]
     url = 'https://api.github.com/repos/{}/{}/commits/{}'.format(org, repo, sha)
     gh_token = os.environ.get('GH_TOKEN')
     if (gh_token is not None):
-        return requests.get(url, headers={'Authorization': 'token {}'.format(gh_token)}).json()['commit']
-    return requests.get(url).json()['commit']
+        cache[sha] = requests.get(url, headers={'Authorization': 'token {}'.format(gh_token)}).json()['commit']
+    else:
+        cache[sha] = requests.get(url).json()['commit']
+    return cache[sha]
 
 
 def filter_by_sha(ami_list, sha):
@@ -167,3 +173,17 @@ if rollback_syntax_match:
         print '{} rollback aborted. no amis found matching worker type: {}, and git sha: {}'.format(log_prefix(), worker_type, rollback_sha)
 else:
     print '{} rollback request not detected in commit syntax.'.format(log_prefix())
+    ami_list = get_ami_list(aws_account_id)
+    print '{} available rollbacks:'.format(log_prefix())
+    for worker_type in sorted(set([ami['WorkerType'] for ami in ami_list])):
+        print '- {}'.format(worker_type)
+        sha_list = set([ami['GitSha'] for ami in filter(lambda x: x['WorkerType'] == worker_type, ami_list)])
+        available_rollbacks = sorted([{
+            'sha': sha[:7],
+            'commit': get_commit(sha),
+            'amis': filter_by_sha(ami_list, sha)
+        } for sha in sha_list], key=lambda x: x['commit']['committer']['date'], reverse=True)
+        for r in available_rollbacks:
+            print '  - {} {} {} ({})'.format(r['commit']['committer']['date'], r['sha'], r['commit']['committer']['name'], r['commit']['committer']['email'])
+            print '    {}'.format(r['commit']['message'].replace('\n\n', '\n').replace('\n', '\n    '))
+            print '    {}'.format(', '.join(['{} ({})'.format(x['ImageId'], x['Region']) for x in r['amis']]))
