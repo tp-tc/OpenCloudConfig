@@ -96,6 +96,10 @@ function Is-Loaner {
   return ((Test-Path -Path 'Z:\loan-request.json' -ErrorAction SilentlyContinue) -or (Test-Path -Path 'HKLM:\SOFTWARE\OpenCloudConfig\Loan' -ErrorAction SilentlyContinue))
 }
 
+function Is-ExplorerCrashingRepeatedly {
+  return (Is-ConditionTrue -proc 'Explorer' -activity 'crashing repeatedy' -predicate (@(Get-EventLog -logName 'Application' -message '*Faulting application name: explorer.exe*' -newest 30 -ErrorAction SilentlyContinue).length -eq 30))
+}
+
 if (Is-Terminating) {
   exit
 }
@@ -122,6 +126,11 @@ if (-not (Is-Loaner)) {
       Write-Log -message 'instance appears to be initialising.' -severity 'INFO'
     }
   } else {
+    if (Is-ExplorerCrashingRepeatedly) {
+      Write-Log -message ('instance failed validity check and will be halted. uptime: {0}' -f $uptime) -severity 'ERROR'
+      & shutdown @('-s', '-t', '10', '-c', 'HaltOnIdle :: instance failed validity checks', '-f', '-d', 'p:4:1')
+      exit
+    }
     Write-Log -message 'instance appears to be productive.' -severity 'DEBUG'
     $gwProcess = (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })
     if (($gwProcess) -and ($gwProcess.PriorityClass) -and ($gwProcess.PriorityClass -ne [Diagnostics.ProcessPriorityClass]::AboveNormal)) {
