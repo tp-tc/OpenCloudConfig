@@ -104,6 +104,10 @@ function Is-InstanceTwentyFourHoursOld {
   return (Is-ConditionTrue -proc 'launch time' -activity 'more than 24 hours ago' -predicate (([DateTime]::Now - @(Get-EventLog -logName 'Application' -source 'OpenCloudConfig' -message 'host renamed *' -newest 1)[0].TimeGenerated) -ge (New-TimeSpan -Hours 24)))
 }
 
+function Is-GenericWorkerIdle {
+  return (Is-ConditionTrue -proc 'generic-worker' -activity 'idle more than 20 minutes' -predicate (([DateTime]::Now - (Get-Item 'C:\generic-worker\generic-worker.log').LastWriteTime) -gt (New-TimeSpan -Minutes 20)))
+}
+
 if (Is-Terminating) {
   exit
 }
@@ -135,7 +139,7 @@ if (-not (Is-Loaner)) {
       Write-Log -message 'instance appears to be initialising.' -severity 'INFO'
     }
   } else {
-    if (Is-ExplorerCrashingRepeatedly) {
+    if ((Is-GenericWorkerIdle) -or (Is-ExplorerCrashingRepeatedly)) {
       Write-Log -message ('instance failed reliability check and will be halted. uptime: {0}' -f $uptime) -severity 'ERROR'
       & shutdown @('-s', '-t', '30', '-c', 'HaltOnIdle :: instance failed reliability check', '-d', 'p:4:1')
       exit
