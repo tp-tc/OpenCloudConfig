@@ -100,6 +100,10 @@ function Is-ExplorerCrashingRepeatedly {
   return (Is-ConditionTrue -proc 'Explorer' -activity 'crashing repeatedy' -predicate (@(Get-EventLog -logName 'Application' -message '*Faulting application name: explorer.exe*' -newest 30 -ErrorAction SilentlyContinue).length -eq 30))
 }
 
+function Is-InstanceTwentyFourHoursOld {
+  return (Is-ConditionTrue -proc 'launch time' -activity 'more than 24 hours ago' -predicate (([DateTime]::Now - @(Get-EventLog -logName 'Application' -source 'OpenCloudConfig' -message 'host renamed *' -newest 1)[0].TimeGenerated) -ge (New-TimeSpan -Hours 24)))
+}
+
 if (Is-Terminating) {
   exit
 }
@@ -114,21 +118,26 @@ if (-not (Is-Loaner)) {
       $uptime = (Get-Uptime)
       if (($uptime) -and ($uptime -gt (New-TimeSpan -minutes 5))) {
         if ((-not (Is-RdpSessionActive)) -and (-not (Is-DriveFormatInProgress))) {
-          Write-Log -message ('instance failed validity check and will be halted. uptime: {0}' -f $uptime) -severity 'ERROR'
-          & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: instance failed validity checks', '-f', '-d', 'p:4:1')
+          Write-Log -message ('instance failed productivity check and will be halted. uptime: {0}' -f $uptime) -severity 'ERROR'
+          & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: instance failed productivity checks', '-f', '-d', 'p:4:1')
         } else {
-          Write-Log -message 'instance failed validity check and would be halted, but has rdp session in progress or is formatting a drive.' -severity 'DEBUG'
+          Write-Log -message 'instance failed productivity checks and would be halted, but has rdp session in progress or is formatting a drive.' -severity 'DEBUG'
         }
       } else {
-        Write-Log -message 'instance failed some validity checks and will be retested shortly.' -severity 'WARN'
+        Write-Log -message 'instance failed productivity checks and will be retested shortly.' -severity 'WARN'
       }
     } else {
+      if (Is-InstanceTwentyFourHoursOld) {
+        Write-Log -message ('instance failed age check and will be halted. uptime: {0}' -f $uptime) -severity 'ERROR'
+        & shutdown @('-s', '-t', '30', '-c', 'HaltOnIdle :: instance failed age check', '-d', 'p:4:1')
+        exit
+      }
       Write-Log -message 'instance appears to be initialising.' -severity 'INFO'
     }
   } else {
     if (Is-ExplorerCrashingRepeatedly) {
-      Write-Log -message ('instance failed validity check and will be halted. uptime: {0}' -f $uptime) -severity 'ERROR'
-      & shutdown @('-s', '-t', '10', '-c', 'HaltOnIdle :: instance failed validity checks', '-f', '-d', 'p:4:1')
+      Write-Log -message ('instance failed reliability check and will be halted. uptime: {0}' -f $uptime) -severity 'ERROR'
+      & shutdown @('-s', '-t', '30', '-c', 'HaltOnIdle :: instance failed reliability check', '-d', 'p:4:1')
       exit
     }
     Write-Log -message 'instance appears to be productive.' -severity 'DEBUG'
