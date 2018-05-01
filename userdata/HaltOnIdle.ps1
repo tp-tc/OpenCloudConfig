@@ -105,7 +105,7 @@ function Is-InstanceTwentyFourHoursOld {
 }
 
 function Is-GenericWorkerIdle {
-  return (Is-ConditionTrue -proc 'generic-worker' -activity 'idle more than 20 minutes' -predicate (([DateTime]::Now - (Get-Item 'C:\generic-worker\generic-worker.log').LastWriteTime) -gt (New-TimeSpan -Minutes 20)))
+  return (Is-ConditionTrue -proc 'generic-worker' -activity 'idle more than 5 hours' -predicate (([DateTime]::Now - (Get-Item 'C:\generic-worker\generic-worker.log').LastWriteTime) -gt (New-TimeSpan -Hours 5)))
 }
 
 if (Is-Terminating) {
