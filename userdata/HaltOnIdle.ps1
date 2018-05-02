@@ -139,7 +139,10 @@ if (-not (Is-Loaner)) {
       Write-Log -message 'instance appears to be initialising.' -severity 'INFO'
     }
   } else {
-    if ((Is-GenericWorkerIdle) -or (Is-ExplorerCrashingRepeatedly)) {
+    if (Is-GenericWorkerIdle) {
+      Write-Log -message ('last write to generic-worker.log was: {2:u}' -f (Get-Item 'C:\generic-worker\generic-worker.log').LastWriteTime) -severity 'ERROR'
+    }
+    if (Is-ExplorerCrashingRepeatedly) {
       Write-Log -message ('instance failed reliability check and will be halted. uptime: {0}' -f $uptime) -severity 'ERROR'
       & shutdown @('-s', '-t', '30', '-c', 'HaltOnIdle :: instance failed reliability check', '-d', 'p:4:1')
       exit
