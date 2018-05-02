@@ -131,6 +131,20 @@ if (-not (Is-Loaner)) {
         Write-Log -message 'instance failed productivity checks and will be retested shortly.' -severity 'WARN'
       }
     } else {
+      try {
+        $lastOccEventLog = (@(Get-EventLog -logName 'Application' -source 'OpenCloudConfig' -newest 1)[0])
+        if (($lastOccEventLog.TimeGenerated) -lt ((Get-Date).AddHours(-1))) {
+          Write-Log -message ('occ completed over an hour ago at: {0:u}, with message: {1}.' -f $lastOccEventLog.TimeGenerated, $lastOccEventLog.Message) -severity 'WARN'
+          $gwLastLogWrite = (Get-Item 'C:\generic-worker\generic-worker.log').LastWriteTime
+          if (($gwLastLogWrite) -lt ((Get-Date).AddHours(-1))) {
+            Write-Log -message ('generic worker log was last updated at: {0:u}, with message: {1}.' -f $gwLastLogWrite, (Get-Content 'C:\generic-worker\generic-worker.log' -Tail 1)) -severity 'WARN'
+            & shutdown @('-s', '-t', '30', '-c', 'HaltOnIdle :: instance failed to start generic worker', '-d', 'p:4:1')
+          }
+        }
+      }
+      catch {
+        Write-Log -message ('failed to determine occ or gw state: {0}' -f $_.Exception.Message) -severity 'ERROR'
+      }
       if (Is-InstanceTwentyFourHoursOld) {
         Write-Log -message ('instance failed age check and will be halted. uptime: {0}' -f $uptime) -severity 'ERROR'
         & shutdown @('-s', '-t', '30', '-c', 'HaltOnIdle :: instance failed age check', '-d', 'p:4:1')
@@ -139,10 +153,11 @@ if (-not (Is-Loaner)) {
       Write-Log -message 'instance appears to be initialising.' -severity 'INFO'
     }
   } else {
-    if (Is-GenericWorkerIdle) {
-      Write-Log -message ('last write to generic-worker.log was: {2:u}' -f (Get-Item 'C:\generic-worker\generic-worker.log').LastWriteTime) -severity 'ERROR'
+    $isGenericWorkerIdle = Is-GenericWorkerIdle
+    if ($isGenericWorkerIdle) {
+      Write-Log -message ('last write to generic-worker.log was: {0:u}' -f (Get-Item 'C:\generic-worker\generic-worker.log').LastWriteTime) -severity 'ERROR'
     }
-    if (Is-ExplorerCrashingRepeatedly) {
+    if (($isGenericWorkerIdle) -or (Is-ExplorerCrashingRepeatedly)) {
       Write-Log -message ('instance failed reliability check and will be halted. uptime: {0}' -f $uptime) -severity 'ERROR'
       & shutdown @('-s', '-t', '30', '-c', 'HaltOnIdle :: instance failed reliability check', '-d', 'p:4:1')
       exit
