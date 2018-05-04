@@ -96,10 +96,6 @@ function Is-Loaner {
   return ((Test-Path -Path 'Z:\loan-request.json' -ErrorAction SilentlyContinue) -or (Test-Path -Path 'HKLM:\SOFTWARE\OpenCloudConfig\Loan' -ErrorAction SilentlyContinue))
 }
 
-function Is-ExplorerCrashingRepeatedly {
-  return (Is-ConditionTrue -proc 'Explorer' -activity 'crashing repeatedy' -predicate (@(Get-EventLog -logName 'Application' -message '*Faulting application name: explorer.exe*' -newest 30 -ErrorAction SilentlyContinue).length -eq 30))
-}
-
 function Is-InstanceTwentyFourHoursOld {
   return (Is-ConditionTrue -proc 'launch time' -activity 'more than 24 hours ago' -predicate (([DateTime]::Now - @(Get-EventLog -logName 'Application' -source 'OpenCloudConfig' -message 'host renamed *' -newest 1)[0].TimeGenerated) -ge (New-TimeSpan -Hours 24)))
 }
@@ -157,7 +153,7 @@ if (-not (Is-Loaner)) {
     if ($isGenericWorkerIdle) {
       Write-Log -message ('last write to generic-worker.log was: {0:u}' -f (Get-Item 'C:\generic-worker\generic-worker.log').LastWriteTime) -severity 'ERROR'
     }
-    if (($isGenericWorkerIdle) -or (Is-ExplorerCrashingRepeatedly)) {
+    if ($isGenericWorkerIdle) {
       Write-Log -message ('instance failed reliability check and will be halted. uptime: {0}' -f $uptime) -severity 'ERROR'
       & shutdown @('-s', '-t', '30', '-c', 'HaltOnIdle :: instance failed reliability check', '-d', 'p:4:1')
       exit
