@@ -1290,7 +1290,7 @@
     {
       "ComponentName": "vcredist_vs2015_x86",
       "ComponentType": "ExeInstall",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1370636",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1460042",
       "Url": "http://download.microsoft.com/download/f/3/9/f39b30ec-f8ef-4ba3-8cb4-e301fcf0e0aa/vc_redist.x86.exe",
       "Arguments": [
         "/install",
@@ -1309,7 +1309,7 @@
     {
       "ComponentName": "vcredist_vs2015_x64",
       "ComponentType": "ExeInstall",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1370636",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1460042",
       "Url": "http://download.microsoft.com/download/4/c/b/4cbd5757-0dd4-43a7-bac0-2a492cedbacb/vc_redist.x64.exe",
       "Arguments": [
         "/install",
