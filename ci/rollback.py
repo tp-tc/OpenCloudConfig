@@ -91,6 +91,17 @@ def get_commit(sha, org='mozilla-releng', repo='OpenCloudConfig'):
     }
 
 
+def seed_commit_cache(repo_id='52878668', pages=5):
+    if cache == {}:
+        for page in range(1, pages):
+            url = 'https://api.github.com/repositories/{}/commits?page={}'.format(repo_id, pages)
+            gh_token = os.environ.get('GH_TOKEN')
+            response = requests.get(url) if gh_token is None else requests.get(url, headers={'Authorization': 'token {}'.format(gh_token)})
+            if response.status_code == 200:
+                for commit in response.json():
+                    cache[commit['sha']] = commit
+
+
 def filter_by_sha(ami_list, sha):
     """
     filters the specified ami list by the specified git sha
@@ -111,6 +122,7 @@ def post_provisioner_config(worker_type, provisioner_config):
     return requests.post(url, json=provisioner_config)
 
 
+seed_commit_cache()
 current_sha = os.environ.get('GITHUB_HEAD_SHA')
 if current_sha is None:
     print '{} environment variable "GITHUB_HEAD_SHA" not found.'.format(log_prefix())
