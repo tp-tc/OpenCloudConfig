@@ -72,14 +72,14 @@ def get_commit(sha, org='mozilla-releng', repo='OpenCloudConfig'):
     """
     retrieves the git commit push date associated with the given org, repo and sha 
     """
-    if sha in cache:
-        return cache[sha]
+    if sha[:7] in cache:
+        return cache[sha[:7]]
     url = 'https://api.github.com/repos/{}/{}/commits/{}'.format(org, repo, sha)
     gh_token = os.environ.get('GH_TOKEN')
     response = requests.get(url).json() if gh_token is None else requests.get(url, headers={'Authorization': 'token {}'.format(gh_token)}).json()
     if 'commit' in response:
-        cache[sha] = response['commit']
-        return cache[sha]
+        cache[sha[:7]] = response['commit']
+        return cache[sha[:7]]
     # if we get throttled by github, just return uncached blanks
     return {
         'message': None,
@@ -99,7 +99,7 @@ def seed_commit_cache(repo_id='52878668', pages=5):
             response = requests.get(url) if gh_token is None else requests.get(url, headers={'Authorization': 'token {}'.format(gh_token)})
             if response.status_code == 200:
                 for commit in response.json():
-                    cache[commit['sha']] = commit
+                    cache[commit['sha'][:7]] = commit
 
 
 def filter_by_sha(ami_list, sha):
