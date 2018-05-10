@@ -99,7 +99,7 @@ def seed_commit_cache(repo_id='52878668', pages=5):
             response = requests.get(url) if gh_token is None else requests.get(url, headers={'Authorization': 'token {}'.format(gh_token)})
             if response.status_code == 200:
                 for commit in response.json():
-                    cache[commit['sha'][:7]] = commit
+                    cache[commit['sha'][:7]] = commit['commit']
 
 
 def filter_by_sha(ami_list, sha):
