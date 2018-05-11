@@ -3,6 +3,11 @@
 [![Docker pulls](https://img.shields.io/docker/pulls/grenade/opencloudconfig.svg?style=plastic)](https://hub.docker.com/r/grenade/opencloudconfig/)
 [![Deploy status](https://github.taskcluster.net/v1/repository/mozilla-releng/OpenCloudConfig/master/badge.svg)](https://github.taskcluster.net/v1/repository/mozilla-releng/OpenCloudConfig/master/latest)
 
+## Issues
+To file bugs, raise issues or request features, please use: [b.m.o/infra-ops/occ](https://bugzilla.mozilla.org/enter_bug.cgi?product=Infrastructure%20%26%20Operations&component=Relops%3A%20OpenCloudConfig).
+
+## Usage
+
 OCC is a small, fast, lightweight tool for creating Windows cloud (they don't really have to be in a cloud though) instances with a specific configuration in a repeatable, source controlled manner. Think of it as Puppet or Chef, without all the orchestration. There isn't even anything to install. It's implemented in a few powershell scripts, hosted in this repository.
 
 OCC has no dependencies other than powershell so you shouldn't have to install anything on the instances where you want it to run. In EC2 for example, you can provide a single command in your userdata (and a great big json manifest out on the web somewhere), in order to build a specific instance configuration at startup.
