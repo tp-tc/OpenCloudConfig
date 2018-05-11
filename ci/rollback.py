@@ -74,13 +74,12 @@ def get_commit(sha, org='mozilla-releng', repo='OpenCloudConfig'):
     """
     if sha[:7] in cache:
         return cache[sha[:7]]
-    url = 'https://api.github.com/repos/{}/{}/commits/{}'.format(org, repo, sha)
     gh_token = os.environ.get('GH_TOKEN')
-    response = requests.get(url).json() if gh_token is None else requests.get(url, headers={'Authorization': 'token {}'.format(gh_token)}).json()
-    if 'commit' in response:
-        cache[sha[:7]] = response['commit']
-        return cache[sha[:7]]
-    # if we get throttled by github, just return uncached blanks
+    if gh_token is not None:
+        response = requests.get(url, headers={'Authorization': 'token {}'.format(gh_token)}).json()
+        if 'commit' in response:
+            cache[sha[:7]] = response['commit']
+            return cache[sha[:7]]
     return {
         'message': None,
         'committer': {
