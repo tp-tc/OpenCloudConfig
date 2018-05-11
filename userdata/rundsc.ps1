@@ -883,6 +883,27 @@ function Set-DefaultStrongCryptography {
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
+function Conserve-DiskSpace {
+  param (
+    [string[]] $paths = @(
+      ('{0}\SoftwareDistribution\Download\*' -f $env:SystemRoot),
+    )
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    # delete paths
+    foreach ($path in $paths) {
+      if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
+        Remove-Item $path -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+        Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'INFO'
+      }
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+}
 
 # Before doing anything else, make sure we are using TLS 1.2
 # See https://bugzilla.mozilla.org/show_bug.cgi?id=1443595 for context.
@@ -1177,6 +1198,9 @@ if ($rebootReasons.length) {
     Stop-DesiredStateConfig
     Remove-DesiredStateConfigTriggers
     New-LocalCache
+  }
+  if ($isWorker) {
+    Conserve-DiskSpace
   }
 
   # archive dsc logs
