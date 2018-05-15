@@ -481,9 +481,9 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.7.12/generic-worker-windows-386.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.8.0/generic-worker-windows-386.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe",
-      "sha512": "e50b27f56141bc816f91ba9aa3aeeefd944c80a3ffebd6577512d3690d1591e978e8a70a8ba8d42f082030184900c398089833817e1927652b952c342e3b24be"
+      "sha512": "549e59dc4d6fcd11b2d2bcd0259b565078830d56f43b11210c9bcb295db8870e8997ba5a1044c6a722832a639b53568d5350b942c70fc3194ddf04f8b0ea80cb"
     },
     {
       "ComponentName": "LiveLogDownload",
@@ -604,7 +604,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 10.7.12"
+            "Match": "generic-worker 10.8.0"
           }
         ]
       }
