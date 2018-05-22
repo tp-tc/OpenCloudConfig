@@ -96,8 +96,12 @@ function Is-Loaner {
   return ((Test-Path -Path 'Z:\loan-request.json' -ErrorAction SilentlyContinue) -or (Test-Path -Path 'HKLM:\SOFTWARE\OpenCloudConfig\Loan' -ErrorAction SilentlyContinue))
 }
 
-function Is-InstanceTwentyFourHoursOld {
-  return (Is-ConditionTrue -proc 'launch time' -activity 'more than 24 hours ago' -predicate (([DateTime]::Now - @(Get-EventLog -logName 'Application' -source 'OpenCloudConfig' -message 'host renamed *' -newest 1)[0].TimeGenerated) -ge (New-TimeSpan -Hours 24)))
+function Is-InstanceOld {
+  param (
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=1463508
+    [int] $allowedAgeInHours = 29
+  )
+  return (Is-ConditionTrue -proc 'launch time' -activity ('more than {0} hours ago' -f $allowedAgeInHours) -predicate (([DateTime]::Now - @(Get-EventLog -logName 'Application' -source 'OpenCloudConfig' -message 'host renamed *' -newest 1)[0].TimeGenerated) -ge (New-TimeSpan -Hours $allowedAgeInHours)))
 }
 
 function Is-GenericWorkerIdle {
@@ -141,7 +145,7 @@ if (-not (Is-Loaner)) {
       catch {
         Write-Log -message ('failed to determine occ or gw state: {0}' -f $_.Exception.Message) -severity 'ERROR'
       }
-      if (Is-InstanceTwentyFourHoursOld) {
+      if (Is-InstanceOld) {
         Write-Log -message ('instance failed age check and will be halted. uptime: {0}' -f $uptime) -severity 'ERROR'
         & shutdown @('-s', '-t', '30', '-c', 'HaltOnIdle :: instance failed age check', '-d', 'p:4:1')
         exit
