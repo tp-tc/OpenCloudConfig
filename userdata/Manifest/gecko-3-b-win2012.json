@@ -1000,9 +1000,9 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.8.1/generic-worker-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.8.3/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe",
-      "sha512": "0e9a03b5717e51b720e44b97368b50f3ad511becb6717504bd33eda16bdededd79c7444c7cb2f74857c85629abcbc189f72b3745a1efc9fa63f71b4e4da459c7"
+      "sha512": "c0d2a658f5fb6e6e99fa84b64a91b34dd521cacdf7795f81061b170e345658e3c817a25e6f46cd06d072d33b25cc1c364b0aeccb5cffd36479aeef347f251266"
     },
     {
       "ComponentName": "LiveLogDownload",
@@ -1123,7 +1123,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 10.8.1"
+            "Match": "generic-worker 10.8.3"
           }
         ]
       }
