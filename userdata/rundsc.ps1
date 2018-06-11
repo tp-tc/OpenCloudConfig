@@ -905,7 +905,65 @@ function Conserve-DiskSpace {
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
-
+function hw-DiskManage {
+  param (
+    [string[]] $paths = @(
+      ('{0}Program Files\rempl\Logs' -f $env:SystemDrive),
+      ('{0}\SoftwareDistribution\Download\*' -f $env:SystemRoot),
+      ('{0}\ProgramData\Package Cache' -f $env:SystemDrive)
+    ),
+	[string] $olddscfiles = '{0}\log' -f $env:SystemDrive,
+	[string] $oldwindowslog = '{0}\Windows\logs' -f $env:SystemDrive,
+	[string] $driveletter = (get-location).Drive.Name,
+	[string] $WarnPercent = .55,
+	[string] $StopPercent = .20
+	)
+  process {
+    foreach ($path in $paths) {
+      if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
+      Remove-Item $path -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+      Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'INFO'
+      }
+    }
+    Get-ChildItem $olddscfiles -Recurse | ? {-Not $_.PsIsContainer -And ($_.LastWriteTime -lt (Get-Date).AddDays(-1))} | Remove-Item -force -ErrorAction SilentlyContinue
+    Get-ChildItem $oldwindowslog -Recurse | ? {-Not $_.PsIsContainer -And ($_.LastWriteTime -lt (Get-Date).AddDays(-7))} |  Remove-Item -force -ErrorAction SilentlyContinue
+    Clear-RecycleBin -force -ErrorAction SilentlyContinue
+	
+    $freespace = Get-WmiObject -Class Win32_logicalDisk | ? {$_.DriveType -eq '3'}
+    $percentfree = $freespace.FreeSpace / $freespace.Size
+    $freeB = $freespace.FreeSpace
+    $freeMB =  [math]::Round($freeB / 1000000)
+    $perfree = [math]::Round($percentfree,2)*100
+    Write-Log -message "Current free space of drive $driveletter $freeMB MB"  -severity 'INFO' 
+    Write-Log -message "Current free space percentage of drive $driveletter $perfree%" -severity 'INFO'
+      if ($percentfree -lt $WarnPercent){
+	Write-Log -message "Current available disk space WARNING $perfree%" -severity 'WARN'
+	Write-Log -message "Attempting to clean and optimize disk" -severity 'WARN'
+	Start-Process -Wait Dism.exe /online /Cleanup-Image /StartComponentCleanup
+	Start-Process -Wait cleanmgr.exe /autoclean
+	optimize-Volume $driveletter
+	$freespace = Get-WmiObject -Class Win32_logicalDisk | ? {$_.DriveType -eq '3'}
+        $percentfree = $freespace.FreeSpace / $freespace.Size
+	$freeMB =  [math]::Round($freeB / 1000000)
+	$perfree = [math]::Round($percentfree,2)*100
+  	Write-Log -message "Current free space of drive post clean and optimize disk $driveletter $freeMB MB"  -severity 'INFO' 
+	Write-Log -message "Current free space percentage of drive post clean and optimize disk $driveletter $perfree %" -severity 'INFO'
+    }
+      if ($percentfree -lt $StopPercent){
+      $TimeStart = Get-Date
+      $TimeEnd = $timeStart.addminutes(1)
+        Do {
+	  $TimeNow = Get-Date
+	  Write-Log -message "Current available disk space CRITCAL $perfree% free. Will not start Generic-Worker!" -severity 'Error' 
+        Sleep 15
+        }
+        Until ($TimeNow -ge $TimeEnd)
+	  Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+	  shutdown @('-s', '-t', '0', '-c', 'Restarting disk space Critical', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
+	  exit
+     }
+   }
+} 
 
 # Before doing anything else, make sure we are using TLS 1.2
 # See https://bugzilla.mozilla.org/show_bug.cgi?id=1443595 for context.
@@ -913,6 +971,7 @@ Set-DefaultStrongCryptography
 
 # SourceRepo is in place to toggle between production and testing environments
 $SourceRepo = 'mozilla-releng'
+$SourceRepo = 'markcor'
 
 # The Windows update service needs to be enabled for OCC to process but needs to be disabled during testing. 
 $UpdateService = Get-Service -Name wuauserv
@@ -949,9 +1008,12 @@ if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
   }
   New-Item $lock -type file -force
 }
+if ($locationType -eq 'DataCenter') {
+  hw-DiskManage  
+}
 Write-Log -message 'userdata run starting.' -severity 'INFO'
 if ($locationType -eq 'DataCenter') {
-  $ntpserverlist = 'infoblox1.private.mdc1.mozilla.com'
+  $ntpserverlist = 'infoblox1.private.mdc1.mozilla.com infoblox1.private.mdc2.mozilla.com'
 } else {
   $ntpserverlist = '0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org'
 }
