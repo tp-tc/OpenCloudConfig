@@ -1180,14 +1180,6 @@
       "State": "Stopped"
     },
     {
-      "ComponentName": "KTS_ssh",
-      "ComponentType": "ServiceControl",
-      "Comment": "Enabled ssh",
-      "Name": "KpyM Telnet SSH Server v1.19",
-      "StartupType": "automatic",
-      "State": "running"
-    },
-    {
       "ComponentName": "W32Time",
       "ComponentType": "ServiceControl",
       "Comment": "Enable time service",
