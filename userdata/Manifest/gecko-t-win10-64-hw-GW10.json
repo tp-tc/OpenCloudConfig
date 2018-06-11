@@ -749,50 +749,6 @@
       "Action": "Allow"
     },
     {
-      "ComponentName": "GenericWorkerInstall",
-      "ComponentType": "CommandRun",
-      "Command": "C:\\generic-worker\\generic-worker.exe",
-      "Arguments": [
-        "install",
-        "startup",
-        "--config",
-        "C:\\generic-worker\\generic-worker.config"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "ChecksumFileDownload",
-          "ComponentName": "GenericWorkerDownload"
-        },
-        {
-          "ComponentType": "FileDownload",
-          "ComponentName": "LiveLogDownload"
-        },
-        {
-          "ComponentType": "FirewallRule",
-          "ComponentName": "LiveLog_Get"
-        },
-        {
-          "ComponentType": "FirewallRule",
-          "ComponentName": "LiveLog_Put"
-        }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\generic-worker\\run-generic-worker.bat",
-          "C:\\generic-worker\\generic-worker.exe"
-        ],
-        "CommandsReturn": [
-          {
-            "Command": "C:\\generic-worker\\generic-worker.exe",
-            "Arguments": [
-              "--version"
-            ],
-            "Match": "generic-worker 10.8.4"
-          }
-        ]
-      }
-    },
-    {
       "ComponentName": "DisableDesktopInterrupt",
       "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
