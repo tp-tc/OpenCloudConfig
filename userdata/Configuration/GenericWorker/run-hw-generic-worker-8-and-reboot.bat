@@ -22,6 +22,7 @@ FOR /f "usebackq delims== tokens=2" %%x IN (`wmic logicaldisk where "DeviceID='C
 SET FreeSpace=!FreeSpaceBig:~0,-7!
 IF %FreeSpace% GTR 25240 echo %FreeSpace% MB available disk space >> C:\generic-worker\generic-worker.log
 IF %FreeSpace% LSS 25240 echo Disk space ABNORMALLY low  %FreeSpace% MB available >> C:\generic-worker\generic-worker.log
+IF %FreeSpace% LSS 25240 Dism.exe /online /Cleanup-Image /StartComponentCleanup >> C:\generic-worker\generic-worker.log
 IF %FreeSpace% LSS 15240 echo ALERT disk space is low %FreeSpace% MB available >> C:\generic-worker\generic-worker.log
 ENDLOCAL
 
