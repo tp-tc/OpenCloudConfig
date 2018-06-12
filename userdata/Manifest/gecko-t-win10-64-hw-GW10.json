@@ -638,11 +638,6 @@
       "Path": "C:\\generic-worker"
     },
     {
-      "ComponentName": "GenericWorkerDirectory",
-      "ComponentType": "DirectoryCreate",
-      "Path": "C:\\generic-worker"
-    },
-    {
       "ComponentName": "GenericWorkerDownload",
       "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
