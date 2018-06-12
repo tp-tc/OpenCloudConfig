@@ -63,6 +63,7 @@ echo Generic worker exit with code %GW_EXIT_CODE%; Rebooting to recover  >> C:\g
 shutdown /r /t 0 /f /c "Generic worker exit with code %GW_EXIT_CODE%; Attempting reboot to recover"
 exit
 :AdditonalReboots
+sleep 6000
 for /f "delims=" %%a in ('type "C:\generic-worker\rebootcount" ' ) do set num=%%a
 set /a num=num + 1 > C:\generic-worker\rebootcount.txt
 if %num% GTR 5 GoTo WaitReboot
