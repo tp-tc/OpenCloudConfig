@@ -35,8 +35,6 @@ ping -n 2 127.0.0.1 1>/nul
 goto CheckForStateFlag
 
 :RunWorker
-rem Bug 1445779 
-rem del /s /q /f  C:\Windows\SoftwareDistribution\Download\*
 
 echo File C:\dsc\task-claim-state.valid found >> C:\generic-worker\generic-worker.log
 echo Deleting C:\dsc\task-claim-state.valid file >> C:\generic-worker\generic-worker.log
@@ -63,7 +61,7 @@ echo Generic worker exit with code %GW_EXIT_CODE%; Rebooting to recover  >> C:\g
 shutdown /r /t 0 /f /c "Generic worker exit with code %GW_EXIT_CODE%; Attempting reboot to recover"
 exit
 :AdditonalReboots
-sleep 6000
+ping -n 10 127.0.0.1 1>/nul
 for /f "delims=" %%a in ('type "C:\generic-worker\rebootcount" ' ) do set num=%%a
 set /a num=num + 1 > C:\generic-worker\rebootcount.txt
 if %num% GTR 5 GoTo WaitReboot
@@ -72,6 +70,6 @@ shutdown /r /t 0 /f /c "Generic worker has not recovered;  Rebooting"
 exit
 :WaitReboot
 echo Generic worker exit with code %GW_EXIT_CODE% %num% times; 1800 second delay and then rebooting  >> C:\generic-worker\generic-worker.log
-sleep 1800
+ping -n 1800 127.0.0.1 1>/nul
 shutdown /r /t 0 /f /c "Generic worker has not recovered;  Rebooting"
 exit
