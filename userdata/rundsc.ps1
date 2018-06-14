@@ -915,6 +915,7 @@ function hw-DiskManage {
 	[string] $olddscfiles = '{0}\log' -f $env:SystemDrive,
 	[string] $oldwindowslog = '{0}\Windows\logs' -f $env:SystemDrive,
 	[string] $driveletter = (get-location).Drive.Name,
+	[string] $lock = 'c:\dsc\in-progress.lock',
 	[string] $WarnPercent = .55,
 	[string] $StopPercent = .20
 	)
