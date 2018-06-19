@@ -111,8 +111,12 @@ Configuration xDynamicConfig {
         $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/Manifest/gecko-t-win7-32-hw.json?{1}' -f $sourceRepo, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
       }
       'Microsoft Windows 10*' {
-        $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/Manifest/gecko-t-win10-64-hw.json?{1}' -f $sourceRepo, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
-      }
+        if (Test-Path  C:\dsc\GW10.semaphore) {
+          $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/Manifest/gecko-t-win10-64-hw-GW10.json?{1}' -f $sourceRepo, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
+        } else {
+          $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/Manifest/gecko-t-win10-64-hw.json?{1}' -f $sourceRepo, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
+        }
+      }	
       'Microsoft Windows Server 2012*' {
         $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/Manifest/gecko-1-b-win2012.json?{1}' -f $sourceRepo, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
       }

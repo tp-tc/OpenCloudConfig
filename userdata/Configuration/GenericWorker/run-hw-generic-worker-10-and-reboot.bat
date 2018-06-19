@@ -1,5 +1,11 @@
 @echo off
 
+:ManifestCheck 
+rem https://bugzilla.mozilla.org/show_bug.cgi?id=1442472
+ping -n 6 127.0.0.1 1>/nul
+echo Checking for manifest completetion >> C:\generic-worker\generic-worker.log
+if Not exist C:\DSC\EndOfManifest.semaphore GoTo ManifestCheck
+
 echo Checking for key pair >> C:\generic-worker\generic-worker.log
 If exist C:\generic-worker\generic-worker-gpg-signing-key.key echo Key pair present >> C:\generic-worker\generic-worker.log
 If not exist C:\generic-worker\generic-worker-gpg-signing-key.key echo Generating key pair >> C:\generic-worker\generic-worker.log
@@ -29,12 +35,11 @@ ping -n 2 127.0.0.1 1>/nul
 goto CheckForStateFlag
 
 :RunWorker
-rem Bug 1445779 
-del /s /q /f  C:\Windows\SoftwareDistribution\Download\*
 
 echo File C:\dsc\task-claim-state.valid found >> C:\generic-worker\generic-worker.log
 echo Deleting C:\dsc\task-claim-state.valid file >> C:\generic-worker\generic-worker.log
 del /Q /F C:\dsc\task-claim-state.valid >> C:\generic-worker\generic-worker.log 2>&1
+del /Q /F C:\DSC\EndOfManifest.semaphore
 pushd %~dp0
 set errorlevel=
 C:\generic-worker\generic-worker.exe run --config C:\generic-worker\gen_worker.config >> C:\generic-worker\generic-worker.log 2>&1
@@ -56,6 +61,7 @@ echo Generic worker exit with code %GW_EXIT_CODE%; Rebooting to recover  >> C:\g
 shutdown /r /t 0 /f /c "Generic worker exit with code %GW_EXIT_CODE%; Attempting reboot to recover"
 exit
 :AdditonalReboots
+ping -n 10 127.0.0.1 1>/nul
 for /f "delims=" %%a in ('type "C:\generic-worker\rebootcount" ' ) do set num=%%a
 set /a num=num + 1 > C:\generic-worker\rebootcount.txt
 if %num% GTR 5 GoTo WaitReboot
@@ -64,6 +70,6 @@ shutdown /r /t 0 /f /c "Generic worker has not recovered;  Rebooting"
 exit
 :WaitReboot
 echo Generic worker exit with code %GW_EXIT_CODE% %num% times; 1800 second delay and then rebooting  >> C:\generic-worker\generic-worker.log
-sleep 1800
+ping -n 1800 127.0.0.1 1>/nul
 shutdown /r /t 0 /f /c "Generic worker has not recovered;  Rebooting"
 exit
