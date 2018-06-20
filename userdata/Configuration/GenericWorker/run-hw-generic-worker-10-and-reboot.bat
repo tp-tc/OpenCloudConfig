@@ -1,12 +1,12 @@
 @echo off
 
-set mcheck 0
+
 
 :ManifestCheck 
 rem https://bugzilla.mozilla.org/show_bug.cgi?id=1442472
 ping -n 6 127.0.0.1 1>/nul
 echo Checking for manifest completetion >> C:\generic-worker\generic-worker.log
-if %mcheck% GTR  150 GoTo loop_reboot
+
 if Not exist C:\DSC\EndOfManifest.semaphore GoTo ManifestCheck
 
 echo Checking for key pair >> C:\generic-worker\generic-worker.log
