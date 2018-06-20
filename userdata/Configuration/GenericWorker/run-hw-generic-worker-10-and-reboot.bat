@@ -1,9 +1,12 @@
 @echo off
 
+set mcheck 0
+
 :ManifestCheck 
 rem https://bugzilla.mozilla.org/show_bug.cgi?id=1442472
 ping -n 6 127.0.0.1 1>/nul
 echo Checking for manifest completetion >> C:\generic-worker\generic-worker.log
+if %mcheck% GTR  150 GoTo loop_reboot
 if Not exist C:\DSC\EndOfManifest.semaphore GoTo ManifestCheck
 
 echo Checking for key pair >> C:\generic-worker\generic-worker.log
@@ -50,11 +53,12 @@ if %GW_EXIT_CODE% EQU 69 goto ErrorReboot
 <nul (set/p z=) >C:\dsc\task-claim-state.valid
 echo Generic worker ran successfully (exit code %GW_EXIT_CODE%) rebooting
 if exist C:\generic-worker\rebootcount.txt del /Q /F  C:\generic-worker\rebootcount.txt
+if exist C:\DSC\in-progress.lock del /Q /F C:\DSC\in-progress.lock
 shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"
 exit
 
 :ErrorReboot
-if exist C:DSC\in-progress.lock del /Q /F C:DSC\in-progress.lock
+if exist C:\DSC\in-progress.lock del /Q /F C:\DSC\in-progress.lock
 if exist C:\generic-worker\rebootcount.txt GoTo AdditonalReboots
 echo 1 >> C:\generic-worker\rebootcount.txt
 echo Generic worker exit with code %GW_EXIT_CODE%; Rebooting to recover  >> C:\generic-worker\generic-worker.log
@@ -72,4 +76,9 @@ exit
 echo Generic worker exit with code %GW_EXIT_CODE% %num% times; 1800 second delay and then rebooting  >> C:\generic-worker\generic-worker.log
 ping -n 1800 127.0.0.1 1>/nul
 shutdown /r /t 0 /f /c "Generic worker has not recovered;  Rebooting"
+exit
+
+:loop_reboot 
+if exist C:\DSC\in-progress.lock del /Q /F C:\DSC\in-progress.lock
+shutdown /r /t 0 /f /c "OCC manifest did not apply in the expected time;  Rebooting"
 exit
