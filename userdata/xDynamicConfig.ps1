@@ -228,7 +228,7 @@ Configuration xDynamicConfig {
             if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
               $webClient = New-Object System.Net.WebClient
               $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
-              $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), $using:item.Target)
+              $webClient.DownloadFile(('https://tooltool.mozilla-releng.net/sha512/{0}' -f $using:item.sha512), $using:item.Target)
             } else {
               try {
                 (New-Object Net.WebClient).DownloadFile($using:item.Source, $using:item.Target)
@@ -263,7 +263,7 @@ Configuration xDynamicConfig {
             if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
               $webClient = New-Object System.Net.WebClient
               $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
-              $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), $tempTarget)
+              $webClient.DownloadFile(('https://tooltool.mozilla-releng.net/sha512/{0}' -f $using:item.sha512), $tempTarget)
             } else {
               try {
                 (New-Object Net.WebClient).DownloadFile($using:item.Source, $tempTarget)
@@ -320,7 +320,7 @@ Configuration xDynamicConfig {
             if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
               $webClient = New-Object System.Net.WebClient
               $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
-              $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName))
+              $webClient.DownloadFile(('https://tooltool.mozilla-releng.net/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName))
             } else {
               try {
                 (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName))
@@ -364,7 +364,7 @@ Configuration xDynamicConfig {
             if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
               $webClient = New-Object System.Net.WebClient
               $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
-              $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $using:item.ComponentName))
+              $webClient.DownloadFile(('https://tooltool.mozilla-releng.net/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $using:item.ComponentName))
             } else {
               try {
                 (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.msi' -f $env:SystemRoot, $using:item.ComponentName))
@@ -402,7 +402,7 @@ Configuration xDynamicConfig {
             if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
               $webClient = New-Object System.Net.WebClient
               $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
-              $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $using:item.ComponentName))
+              $webClient.DownloadFile(('https://tooltool.mozilla-releng.net/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $using:item.ComponentName))
             } else {
               try {
                 (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $using:item.ComponentName))
@@ -449,7 +449,7 @@ Configuration xDynamicConfig {
             if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
               $webClient = New-Object System.Net.WebClient
               $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
-              $webClient.DownloadFile(('https://api.pub.build.mozilla.org/tooltool/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName))
+              $webClient.DownloadFile(('https://tooltool.mozilla-releng.net/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName))
             } else {
               try {
                 (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName))
