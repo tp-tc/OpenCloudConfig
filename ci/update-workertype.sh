@@ -19,7 +19,7 @@ for ComponentType in ExeInstall MsiInstall MsuInstall ZipInstall; do
   jq --arg componentType ${ComponentType} -r '.Components[] | select(.ComponentType == $componentType and (.sha512 != "" and .sha512 != null)) | .sha512' ${manifest} | while read sha512; do
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] validating ${ComponentType} ${sha512}"
 
-    tt_url="https://api.pub.build.mozilla.org/tooltool/sha512/${sha512}"
+    tt_url="https://tooltool.mozilla-releng.net/sha512/${sha512}"
     if curl --header "Authorization: Bearer $(cat ./.tooltool.token)" --output /dev/null --silent --head --fail ${tt_url}; then
       echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${sha512} found in tooltool: ${tt_url}"
     else
