@@ -335,6 +335,15 @@
       "Validate": {
         "PathsExist": [
           "C:\\mozilla-build\\python3\\python.exe"
+        ],
+        "CommandsReturn": [
+          {
+            "Command": "C:\\mozilla-build\\python3\\python.exe",
+            "Arguments": [
+              "--version"
+            ],
+            "Match": "Python 3.6.3"
+          }
         ]
       },
       "DependsOn": [
