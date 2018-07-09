@@ -1468,16 +1468,6 @@
       ]
     },
     {
-      "ComponentName": "reg_DisableAntiSpyware",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1453138",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows Defender",
-      "ValueName": "DisableConfig",
-      "ValueType": "Dword",
-      "ValueData": "0x00000001",
-      "Hex": true
-    },
-    {
       "ComponentName": "vcredist_vs2015_x86",
       "ComponentType": "ExeInstall",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1460042",
