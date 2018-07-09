@@ -1265,12 +1265,42 @@
       "ValueData": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"
     },
     {
+      "ComponentName": "Reg_WinDefend_DisableConfig",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1365909",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows Defender",
+      "ValueName": "DisableConfig",
+      "ValueType": "Dword",
+      "ValueData": "0x00000001",
+      "Hex": true
+    },
+    {
+      "ComponentName": "Reg_WinDefend_DisableAntiSpyware",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1365909",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows Defender",
+      "ValueName": "DisableAntiSpyware",
+      "ValueType": "Dword",
+      "ValueData": "0x00000001",
+      "Hex": true
+    },
+    {
       "ComponentName": "DisableWinDefend",
       "ComponentType": "ServiceControl",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1365909",
       "Name": "WinDefend",
-      "StartupType": "Disabled",
-      "State": "Stopped"
+      "StartupType": "Manual",
+      "State": "Stopped",
+      "DependsOn": [
+        {
+          "ComponentType": "RegistryValueSet",
+          "ComponentName": "Reg_WinDefend_DisableConfig"
+        },
+        {
+          "ComponentType": "RegistryValueSet",
+          "ComponentName": "Reg_WinDefend_DisableAntiSpyware"
+        }
+      ]
     },
     {
       "ComponentName": "reg_SystemRestore",
