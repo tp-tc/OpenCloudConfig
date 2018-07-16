@@ -42,6 +42,19 @@
       ]
     },
     {
+      "ComponentName": "SetLogAggregator",
+      "ComponentType": "ReplaceInFile",
+      "Path": "C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf",
+      "Match": "mdc1.mozilla.com",
+      "Replace": "((Get-ItemProperty 'HKLM:SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters').'NV Domain').Replace('wintest.releng.', '')",
+      "DependsOn": [
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "NxLogPaperTrailConfiguration"
+        }
+      ]
+    },
+    {
       "ComponentName": "Start_nxlog",
       "ComponentType": "ServiceControl",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
@@ -50,8 +63,8 @@
       "State": "Running",
       "DependsOn": [
         {
-          "ComponentType": "ChecksumFileDownload",
-          "ComponentName": "NxLogPaperTrailConfiguration"
+          "ComponentType": "ReplaceInFile",
+          "ComponentName": "SetLogAggregator"
         }
       ]
     },
