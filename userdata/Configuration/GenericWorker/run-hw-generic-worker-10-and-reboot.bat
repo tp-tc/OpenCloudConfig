@@ -72,7 +72,6 @@ if exist C:\generic-worker\rebootcount.txt del /Q /F  C:\generic-worker\rebootco
 if exist C:\DSC\in-progress.lock del /Q /F C:\DSC\in-progress.lock
 if exist C:\dsc\task-claim-state.valid del /Q /F C:\dsc\task-claim-state.valid
 ping -n 10 127.0.0.1 1>/nul
-tasklist  >> C:\generic-worker\generic-worker.log
 shutdown /r /t 0 /f /c "Rebooting as generic worker ran successfully"  >> C:\generic-worker\generic-worker.log
 
 
