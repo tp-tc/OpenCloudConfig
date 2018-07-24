@@ -656,8 +656,22 @@ Configuration xDynamicConfig {
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
-    }
-  }
+      'ReplaceInFile' {
+        Script ('ReplaceInFile_{0}' -f $item.ComponentName) {
+          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          GetScript = "@{ ReplaceInFile = $item.ComponentName }"
+          SetScript = {
+            (Get-Content $using:item.Path) | Foreach-Object { $_ -replace $using:item.Match, (Invoke-Expression -Command $using:item.Replace) } | Out-File $using:item.Path
+          }
+          TestScript = { return $false }
+        }
+        Log ('Log_ReplaceInFile__{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]ReplaceInFile__{0}' -f $item.ComponentName)
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
+        }
+      }
+     }
+   }
   if (($locationType -eq 'AWS') -and ($workerType)) {
     Script CotGpgKeyImport {
       DependsOn = @('[Script]InstallSupportingModules', '[Script]ExeInstall_GpgForWin', '[File]DirectoryCreate_GenericWorkerDirectory')
