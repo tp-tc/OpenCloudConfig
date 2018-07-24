@@ -971,7 +971,7 @@ function hw-DiskManage {
 Set-DefaultStrongCryptography
 
 # SourceRepo is in place to toggle between production and testing environments
-$SourceRepo = 'mozilla-releng'
+$SourceRepo = 'markcor'
 
 # The Windows update service needs to be enabled for OCC to process but needs to be disabled during testing. 
 $UpdateService = Get-Service -Name wuauserv
@@ -1344,6 +1344,9 @@ if ($rebootReasons.length) {
         Write-Log -message 'Z: drive formatted.' -severity 'INFO'
         #& net @('user', 'GenericWorker', (Get-ItemProperty -path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -name 'DefaultPassword').DefaultPassword)
         Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+	if ($locationType -eq 'DataCenter') {
+	  Remove-Item -Path C:\dsc\task-claim-state.valid -force -ErrorAction SilentlyContinue
+	}
         & shutdown @('-r', '-t', '0', '-c', 'reboot to rouse the generic worker', '-f', '-d', '4:5') | Out-File -filePath $logFile -append
       } else {
         $timer.Stop()
