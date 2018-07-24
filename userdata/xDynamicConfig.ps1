@@ -150,7 +150,8 @@ Configuration xDynamicConfig {
     'RegistryKeySet' = 'Registry';
     'RegistryValueSet' = 'Registry';
     'DisableIndexing' = 'Script';
-    'FirewallRule' = 'Script'
+    'FirewallRule' = 'Script';
+    'ReplaceInFile' = 'script'
   }
   Log Manifest {
     Message = ('Manifest: {0}' -f $manifest)
