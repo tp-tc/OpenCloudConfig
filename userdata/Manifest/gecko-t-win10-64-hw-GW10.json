@@ -50,7 +50,7 @@
       "DependsOn": [
         {
           "ComponentType": "ChecksumFileDownload",
-          "ComponentName": "NxLogPaperTrailConfiguration"
+          "ComponentName": "PaperTrailEncryptionCertificate"
         }
       ]
     },
