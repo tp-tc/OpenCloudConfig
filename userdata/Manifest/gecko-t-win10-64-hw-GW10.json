@@ -1235,20 +1235,6 @@
       "Target": "C:\\Windows\\System32\\jq.exe"
     },
     {
-      "ComponentName": "ICMPv4In",
-      "ComponentType": "FirewallRule",
-      "Protocol": "ICMPv4",
-      "Direction": "Inbound",
-      "Action": "Allow"
-    },
-    {
-      "ComponentName": "ICMPv6In",
-      "ComponentType": "FirewallRule",
-      "Protocol": "ICMPv6",
-      "Direction": "Inbound",
-      "Action": "Allow"
-    },
-    {
       "ComponentName": "cppbuildtools",
       "ComponentType": "ExeInstall",
       "Comment": " c++ toolchain",
