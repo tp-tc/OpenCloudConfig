@@ -666,8 +666,8 @@ Configuration xDynamicConfig {
           }
           TestScript = { return $false }
         }
-        Log ('Log_ReplaceInFile__{0}' -f $item.ComponentName) {
-          DependsOn = ('[Script]ReplaceInFile__{0}' -f $item.ComponentName)
+        Log ('Log_ReplaceInFile_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]ReplaceInFile_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
