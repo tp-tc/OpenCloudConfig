@@ -662,8 +662,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ ReplaceInFile = $item.ComponentName }"
           SetScript = {
-            (Get-Content $using:item.Path) | Foreach-Object { $_ -replace $using:item.Match, (Invoke-Expression -Command $using:item.Replace) } | Out-File $using:item.Path
-          }
+          (Get-Content -Path $using:item.Path) | Foreach-Object { $_ -replace $using:item.Match, (Invoke-Expression -Command $using:item.Replace) } | Out-File -FilePath $using:item.Path -Encoding 'UTF8'
           TestScript = { return $false }
         }
         Log ('Log_ReplaceInFile_{0}' -f $item.ComponentName) {
