@@ -663,6 +663,7 @@ Configuration xDynamicConfig {
           GetScript = "@{ ReplaceInFile = $item.ComponentName }"
           SetScript = {
           (Get-Content -Path $using:item.Path) | Foreach-Object { $_ -replace $using:item.Match, (Invoke-Expression -Command $using:item.Replace) } | Out-File -FilePath $using:item.Path -Encoding 'UTF8'
+          }
           TestScript = { return $false }
         }
         Log ('Log_ReplaceInFile_{0}' -f $item.ComponentName) {
