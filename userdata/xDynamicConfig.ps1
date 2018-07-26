@@ -150,7 +150,8 @@ Configuration xDynamicConfig {
     'RegistryKeySet' = 'Registry';
     'RegistryValueSet' = 'Registry';
     'DisableIndexing' = 'Script';
-    'FirewallRule' = 'Script'
+    'FirewallRule' = 'Script';
+    'ReplaceInFile' = 'Script'
   }
   Log Manifest {
     Message = ('Manifest: {0}' -f $manifest)
@@ -653,6 +654,21 @@ Configuration xDynamicConfig {
         }
         Log ('Log_FirewallRule_{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]FirewallRule_{0}' -f $item.ComponentName)
+          Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
+        }
+      }
+      'ReplaceInFile' {
+        Script ('ReplaceInFile_{0}' -f $item.ComponentName) {
+          DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
+          GetScript = "@{ ReplaceInFile = $item.ComponentName }"
+          SetScript = {
+            $content = ((Get-Content -Path $using:item.Path) | Foreach-Object { $_ -replace $using:item.Match, (Invoke-Expression -Command $using:item.Replace) })
+            [System.IO.File]::WriteAllLines($using:item.Path, $content, (New-Object System.Text.UTF8Encoding $false))
+          }
+          TestScript = { return $false }
+        }
+        Log ('Log_ReplaceInFile_{0}' -f $item.ComponentName) {
+          DependsOn = ('[Script]ReplaceInFile_{0}' -f $item.ComponentName)
           Message = ('{0}: {1}, completed' -f $item.ComponentType, $item.ComponentName)
         }
       }
