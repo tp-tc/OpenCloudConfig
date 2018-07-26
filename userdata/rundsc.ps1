@@ -1223,9 +1223,16 @@ if ($rebootReasons.length) {
 
     # run dsc #####################################################################################################################################################
     Start-Transcript -Path $transcript -Append
-    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-    Install-Module -Name xPSDesiredStateConfiguration -Force
-    Install-Module -Name xWindowsUpdate -Force
+    $nugetPackageProvider = (Get-PackageProvider -Name NuGet)
+    if ((-not ($nugetPackageProvider)) -or ($nugetPackageProvider.Version -lt 2.8.5.201)) {
+      Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+    }
+    if (-not (Get-Module -ListAvailable -Name xPSDesiredStateConfiguration)) {
+      Install-Module -Name xPSDesiredStateConfiguration -Force
+    }
+    if (-not (Get-Module -ListAvailable -Name xWindowsUpdate)) {
+      Install-Module -Name xWindowsUpdate -Force
+    }
     Run-RemoteDesiredStateConfig -url "https://raw.githubusercontent.com/$SourceRepo/OpenCloudConfig/master/userdata/xDynamicConfig.ps1" -workerType $workerType
     
     Stop-Transcript
