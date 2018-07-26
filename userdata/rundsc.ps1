@@ -1223,10 +1223,7 @@ if ($rebootReasons.length) {
 
     # run dsc #####################################################################################################################################################
     Start-Transcript -Path $transcript -Append
-    $nugetPackageProvider = (Get-PackageProvider -Name NuGet)
-    if ((-not ($nugetPackageProvider)) -or ($nugetPackageProvider.Version -lt 2.8.5.201)) {
-      Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-    }
+    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.208 -Force
     if (-not (Get-Module -ListAvailable -Name xPSDesiredStateConfiguration)) {
       Install-Module -Name xPSDesiredStateConfiguration -Force
     }
