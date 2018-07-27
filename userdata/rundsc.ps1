@@ -1217,7 +1217,7 @@ if ($rebootReasons.length) {
       }
     }
     Set-ExecutionPolicy RemoteSigned -force | Out-File -filePath $logFile -append
-    & cmd @('/c', 'winrm', 'set', 'winrm/config', '@{MaxEnvelopeSizekb="16384"}')
+    & cmd @('/c', 'winrm', 'set', 'winrm/config', '@{MaxEnvelopeSizekb="32696"}')
     $transcript = ('{0}\log\{1}.dsc-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     # end pre dsc setup ###########################################################################################################################################
 
