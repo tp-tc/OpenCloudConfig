@@ -1010,12 +1010,6 @@ if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
 }
 if ($locationType -eq 'DataCenter') {
   hw-DiskManage
-  if (!(Test-Path C:\dsc\hw-startup-check.ps1)) {
-    (New-Object Net.WebClient).DownloadFile(("https://raw.githubusercontent.com/$SourceRepo/OpenCloudConfig/master/userdata/hw-startup-check.ps1?{0}" -f [Guid]::NewGuid()), 'hw-startup-check.ps1')
-     Write-Log -message 'C:\dsc\hw-startup-check.ps1 downloaded.' -severity 'INFO'
-     & schtasks @('/create', '/tn', 'hw-startup-check', '/sc', 'onstart', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', 'powershell.exe -File C:\dsc\hw-startup-check.ps1', '/f')
-     Write-Log -message 'scheduled task: hw-startup-check, created.' -severity 'INFO'
-  }  
 }
 Write-Log -message 'userdata run starting.' -severity 'INFO'
 if ($locationType -eq 'DataCenter') {
