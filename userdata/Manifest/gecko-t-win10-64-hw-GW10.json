@@ -709,6 +709,7 @@
       "ComponentName": "NSSMDownload",
       "ComponentType": "FileDownload",
       "Source": "https://nssm.cc/ci/nssm-2.24-103-gdee49fc.zip",
+      "sha512": "517945e1452f0784e46843ab713f1103a2b2d76100b793031e7ab9c9f662dbdd57c5ae8c02931d3cc821d41558464eed926e84d21b0d0a9c43d7f4b768dc9b17",
       "Target": "C:\\Windows\\Temp\\NSSMInstall.zip"
     },
     {
