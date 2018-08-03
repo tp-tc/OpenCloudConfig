@@ -513,9 +513,9 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.8.5/generic-worker-windows-386.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.11.2/generic-worker-windows-386.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe",
-      "sha512": "1b36ae8486c2e03e3674a6e1d3abefefaf43b81c9e26602177daf3b6d24a434f122a31b6a48a31fe53cfcb12ef8d279da0bd0ec943356ea6b13ca7422db7b8d1"
+      "sha512": "0672ca55ad6b1144253613267315ae060639c5e06ded501b313eca6d3a6a96888c8fa2c26d76862108a0eea65faa31ecefe0cd708095a51e361d3e351fa18548"
     },
     {
       "ComponentName": "LiveLogDownload",
@@ -563,6 +563,7 @@
       "ComponentName": "NSSMDownload",
       "ComponentType": "FileDownload",
       "Source": "https://nssm.cc/ci/nssm-2.24-103-gdee49fc.zip",
+      "sha512": "05835a8b28fc3d8573c8fc6b627c885990468e29144d5523ce2c065835ff3f9341ced5e15fa246ab7af36cadfa0e96be854b9fafa24ab47cd11319d8a873681b",
       "Target": "C:\\Windows\\Temp\\NSSMInstall.zip"
     },
     {
@@ -636,7 +637,7 @@
             "Arguments": [
               "--version"
             ],
-            "Like": "generic-worker 10.8.5 *"
+            "Like": "generic-worker 10.11.2 *"
           }
         ]
       }
