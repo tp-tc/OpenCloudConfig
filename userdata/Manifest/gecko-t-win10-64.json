@@ -1369,5 +1369,37 @@
       },
       "sha512": "729b1e37aefdf708df6a787b2eecd0e4e186c4e8a6d6f3028b0134f81c4216f889e67645d9279cb0ae60079a8f6f68ac88ec5d1fe27ee54f8de563b5209698f3"
     }
-  ]
+  ],
+  "ProvisionerConfiguration": {
+    "instanceTypes": [
+      {
+        "instanceType": "c4.2xlarge",
+        "capacity": 1,
+        "utility": 1,
+        "secrets": {},
+        "scopes": [],
+        "userData": {},
+        "launchSpec": {
+          "BlockDeviceMappings": [
+            {
+              "DeviceName": "/dev/sda1",
+              "Ebs": {
+                "VolumeType": "gp2",
+                "VolumeSize": 120,
+                "DeleteOnTermination": true
+              }
+            },
+            {
+              "DeviceName": "/dev/sdb",
+              "Ebs": {
+                "VolumeType": "gp2",
+                "VolumeSize": 120,
+                "DeleteOnTermination": true
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
 }
