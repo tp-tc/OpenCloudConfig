@@ -466,7 +466,8 @@
         "C:\\mozilla-build\\python\\Scripts",
         "C:\\mozilla-build\\upx391w",
         "C:\\mozilla-build\\wget",
-        "C:\\mozilla-build\\yasm"
+        "C:\\mozilla-build\\yasm",
+        "C:\\Program Files\\Microsoft Windows Performance Toolkit"
       ],
       "Target": "Machine"
     },
