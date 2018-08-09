@@ -1453,5 +1453,65 @@
         }
       ]
     }
-  ]
+  ],
+  "ProvisionerConfiguration": {
+    "instanceTypes": [
+      {
+        "instanceType": "c4.4xlarge",
+        "capacity": 1,
+        "utility": 0.9,
+        "launchSpec": {
+          "BlockDeviceMappings": [
+            {
+              "DeviceName": "/dev/sda1",
+              "Ebs": {
+                "DeleteOnTermination": true,
+                "VolumeSize": 40,
+                "VolumeType": "gp2"
+              }
+            },
+            {
+              "DeviceName": "/dev/sdb",
+              "Ebs": {
+                "DeleteOnTermination": true,
+                "VolumeSize": 120,
+                "VolumeType": "gp2"
+              }
+            }
+          ]
+        },
+        "scopes": [],
+        "secrets": {},
+        "userData": {}
+      },
+      {
+        "instanceType": "c5.4xlarge",
+        "capacity": 1,
+        "utility": 1,
+        "launchSpec": {
+          "BlockDeviceMappings": [
+            {
+              "DeviceName": "/dev/sda1",
+              "Ebs": {
+                "DeleteOnTermination": true,
+                "VolumeSize": 40,
+                "VolumeType": "gp2"
+              }
+            },
+            {
+              "DeviceName": "/dev/sdb",
+              "Ebs": {
+                "DeleteOnTermination": true,
+                "VolumeSize": 120,
+                "VolumeType": "gp2"
+              }
+            }
+          ]
+        },
+        "scopes": [],
+        "secrets": {},
+        "userData": {}
+      }
+    ]
+  }
 }
