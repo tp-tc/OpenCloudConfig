@@ -904,74 +904,67 @@ function Conserve-DiskSpace {
   end {
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
-  Function isException($Foldername) {
-    Switch($Foldername) {
-      "All Users"
-      { $True} 
-      "Default User" 
-      { $True }
-      "Default" 
-      { $True }
-      "LocalService" 
-      { $True }
-      "NetworkService" 
-      { $True } 
-      "Administrator" 
-      { $True }
-      "Adm-Pass" 
-      { $True }
-      "AppData" 
-      { $True }
-      "Classic .NET AppPool" 
-      { $True}
-      "Public" 
-      { $True}
-      default 
-      { $False}
-    }
-  }
-  If(Test-Path -Path "C:\Documents and Settings\")
-  {
-    $UserParentFolder = "C:\Documents and Settings\"
-  }
-  If(Test-Path -Path "C:\Users\")
-  {
-    $UserParentFolder = "C:\Users\"
-  }
-  $PeriodDays = 1 
-  $Result = @()
-  $userFolders = Get-ChildItem -Path $UserParentFolder 
-
-  Foreach($Folder in $userFolders)
-  {
-    #get lastaccesstime
-    $LastAccessTime = $Folder.LastAccessTime
-    $CurrentDate = Get-Date 
-    $Tim = New-TimeSpan $LastAccessTime $CurrentDate 
-    $Days = $Tim.days 
-    If((isException $Folder.Name )-eq $false -and  ($Days -gt $PeriodDays) )
-    {
-    $temp = New-Object  psobject -Property @{
-      "FileName" = $Folder.FullName;
-      "LastAccessTime" = $Folder.LastAccessTime;
-      "UnusedDays" = $Days
-    }
-      $Result += $Temp
-    }
-  }
-
-  foreach($Folder in $Result)
-    {
-        #Remove user folder
-        $path = $Folder.FileName 
-        cmd.exe /c "RD /S /Q `"$path`""
-        If((test-path $path) -eq $false)
-      {
-        Write-Log -message "Delete old user folder $path successfully!"
+}
+function hw-DiskManage {
+  param (
+    [string[]] $paths = @(
+      ('{0}Program Files\rempl\Logs' -f $env:SystemDrive),
+      ('{0}\SoftwareDistribution\Download\*' -f $env:SystemRoot),
+      ('{0}\ProgramData\Package Cache' -f $env:SystemDrive)
+    ),
+	[string] $olddscfiles = '{0}\log' -f $env:SystemDrive,
+	[string] $oldwindowslog = '{0}\Windows\logs' -f $env:SystemDrive,
+	[string] $driveletter = (get-location).Drive.Name,
+	[string] $lock = 'c:\dsc\in-progress.lock',
+	[string] $WarnPercent = .55,
+	[string] $StopPercent = .20
+	)
+  process {
+    foreach ($path in $paths) {
+      if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
+      Remove-Item $path -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
+      Write-Log -message ('{0} :: path: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $path) -severity 'INFO'
       }
     }
-  }
-}
+    Get-ChildItem $olddscfiles -Recurse | ? {-Not $_.PsIsContainer -And ($_.LastWriteTime -lt (Get-Date).AddDays(-1))} | Remove-Item -force -ErrorAction SilentlyContinue
+    Get-ChildItem $oldwindowslog -Recurse | ? {-Not $_.PsIsContainer -And ($_.LastWriteTime -lt (Get-Date).AddDays(-7))} |  Remove-Item -force -ErrorAction SilentlyContinue
+    Clear-RecycleBin -force -ErrorAction SilentlyContinue
+	
+    $freespace = Get-WmiObject -Class Win32_logicalDisk | ? {$_.DriveType -eq '3'}
+    $percentfree = $freespace.FreeSpace / $freespace.Size
+    $freeB = $freespace.FreeSpace
+    $freeMB =  [math]::Round($freeB / 1000000)
+    $perfree = [math]::Round($percentfree,2)*100
+    Write-Log -message "Current free space of drive $driveletter $freeMB MB"  -severity 'INFO' 
+    Write-Log -message "Current free space percentage of drive $driveletter $perfree%" -severity 'INFO'
+      if ($percentfree -lt $WarnPercent){
+	Write-Log -message "Current available disk space WARNING $perfree%" -severity 'WARN'
+	Write-Log -message "Attempting to clean and optimize disk" -severity 'WARN'
+	Start-Process -Wait Dism.exe /online /Cleanup-Image /StartComponentCleanup
+	Start-Process -Wait cleanmgr.exe /autoclean
+	optimize-Volume $driveletter
+	$freespace = Get-WmiObject -Class Win32_logicalDisk | ? {$_.DriveType -eq '3'}
+        $percentfree = $freespace.FreeSpace / $freespace.Size
+	$freeMB =  [math]::Round($freeB / 1000000)
+	$perfree = [math]::Round($percentfree,2)*100
+  	Write-Log -message "Current free space of drive post clean and optimize disk $driveletter $freeMB MB"  -severity 'INFO' 
+	Write-Log -message "Current free space percentage of drive post clean and optimize disk $driveletter $perfree %" -severity 'INFO'
+    }
+      if ($percentfree -lt $StopPercent){
+      $TimeStart = Get-Date
+      $TimeEnd = $timeStart.addminutes(1)
+        Do {
+	  $TimeNow = Get-Date
+	  Write-Log -message "Current available disk space CRITCAL $perfree% free. Will not start Generic-Worker!" -severity 'Error' 
+        Sleep 15
+        }
+        Until ($TimeNow -ge $TimeEnd)
+	  Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+	  shutdown @('-s', '-t', '0', '-c', 'Restarting disk space Critical', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
+	  exit
+     }
+   }
+} 
 
 # Before doing anything else, make sure we are using TLS 1.2
 # See https://bugzilla.mozilla.org/show_bug.cgi?id=1443595 for context.
