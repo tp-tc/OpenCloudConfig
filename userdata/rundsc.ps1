@@ -1031,7 +1031,6 @@ function hw-DiskManage {
       }
     }
   }
-} 
 
 # Before doing anything else, make sure we are using TLS 1.2
 # See https://bugzilla.mozilla.org/show_bug.cgi?id=1443595 for context.
