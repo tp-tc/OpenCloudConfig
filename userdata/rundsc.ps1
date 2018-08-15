@@ -963,74 +963,8 @@ function hw-DiskManage {
 	  shutdown @('-s', '-t', '0', '-c', 'Restarting disk space Critical', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
 	  exit
      }
-   }
-  Function isException($Foldername) {
-    Switch($Foldername) {
-      "All Users"
-      { $True} 
-      "Default User" 
-      { $True }
-      "Default" 
-      { $True }
-      "LocalService" 
-      { $True }
-      "NetworkService" 
-      { $True } 
-      "Administrator" 
-      { $True }
-      "Adm-Pass" 
-      { $True }
-      "AppData" 
-      { $True }
-      "Classic .NET AppPool" 
-      { $True}
-      "Public" 
-      { $True}
-      default 
-      { $False}
-    }
   }
-  If(Test-Path -Path "C:\Documents and Settings\")
-  {
-    $UserParentFolder = "C:\Documents and Settings\"
-  }
-  If(Test-Path -Path "C:\Users\")
-  {
-    $UserParentFolder = "C:\Users\"
-  }
-  $PeriodDays = 1 
-  $Result = @()
-  $userFolders = Get-ChildItem -Path $UserParentFolder 
-
-  Foreach($Folder in $userFolders)
-  {
-    #get lastaccesstime
-    $LastAccessTime = $Folder.LastAccessTime
-    $CurrentDate = Get-Date 
-    $Tim = New-TimeSpan $LastAccessTime $CurrentDate 
-    $Days = $Tim.days 
-    If((isException $Folder.Name )-eq $false -and  ($Days -gt $PeriodDays) )
-    {
-    $temp = New-Object  psobject -Property @{
-      "FileName" = $Folder.FullName;
-      "LastAccessTime" = $Folder.LastAccessTime;
-      "UnusedDays" = $Days
-    }
-      $Result += $Temp
-    }
-  }
-
-  foreach($Folder in $Result)
-    {
-        #Remove user folder
-        $path = $Folder.FileName 
-        cmd.exe /c "RD /S /Q `"$path`""
-        If((test-path $path) -eq $false)
-      {
-        Write-Log -message "Delete old user folder $path successfully!"
-      }
-    }
-  }
+}
 
 # Before doing anything else, make sure we are using TLS 1.2
 # See https://bugzilla.mozilla.org/show_bug.cgi?id=1443595 for context.
