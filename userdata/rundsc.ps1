@@ -1253,12 +1253,6 @@ if ($rebootReasons.length) {
       Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
       Write-Log -message 'C:\dsc\rundsc.ps1 deleted.' -severity 'INFO'
     }
-    if ($locationType -eq 'DataCenter') {
-      if (!(Test-Connection github.com -quiet)) {
-        Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
-        shutdown @('-r', '-t', '0', '-c', 'reboot; external resources are not available', '-f', '-d', '4:5') | Out-File -filePath $logFile -append
-      }
-    }
     (New-Object Net.WebClient).DownloadFile(("https://raw.githubusercontent.com/$SourceRepo/OpenCloudConfig/master/userdata/rundsc.ps1?{0}" -f [Guid]::NewGuid()), 'C:\dsc\rundsc.ps1')
     Write-Log -message 'C:\dsc\rundsc.ps1 downloaded.' -severity 'INFO'
     & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/sc', 'onstart', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', 'powershell.exe -File C:\dsc\rundsc.ps1', '/f')
