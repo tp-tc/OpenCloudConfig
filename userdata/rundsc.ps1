@@ -882,7 +882,8 @@ function Set-DefaultStrongCryptography {
     Write-Log -message ('{0} :: SecurityProtocol: {1}' -f $($MyInvocation.MyCommand.Name), [Net.ServicePointManager]::SecurityProtocol) -severity 'DEBUG'
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
-}function Conserve-DiskSpace {
+}
+function Conserve-DiskSpace {
   param (
     [string[]] $paths = @(
       ('{0}\SoftwareDistribution\Download\*' -f $env:SystemRoot)
@@ -903,8 +904,7 @@ function Set-DefaultStrongCryptography {
   end {
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
-}
- Function isException($Foldername) {
+  Function isException($Foldername) {
     Switch($Foldername) {
       "All Users"
       { $True} 
@@ -971,7 +971,6 @@ function Set-DefaultStrongCryptography {
       }
     }
   }
-}
 
 # Before doing anything else, make sure we are using TLS 1.2
 # See https://bugzilla.mozilla.org/show_bug.cgi?id=1443595 for context.
