@@ -981,6 +981,12 @@ if ($UpdateService.Status -ne 'Running') {
 } else {
   Write-Log -message 'Windows update service is running'
 }
+if ($locationType -eq 'DataCenter') {
+  if (!(Test-Connection github.com -quiet)) {
+    Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+    shutdown @('-r', '-t', '0', '-c', 'reboot; external resources are not available', '-f', '-d', '4:5') | Out-File -filePath $logFile -append
+  }
+}
 if ((Get-Service 'Ec2Config' -ErrorAction SilentlyContinue) -or (Get-Service 'AmazonSSMAgent' -ErrorAction SilentlyContinue)) {
   $locationType = 'AWS'
 } else {
