@@ -965,6 +965,69 @@ function hw-DiskManage {
      }
   }
 }
+Function hw-Remove-User-Dirs {
+  Function isException($Foldername) {
+    Switch($Foldername) {
+      "All Users"
+      { $True} 
+      "Default User" 
+      { $True }
+      "Default" 
+      { $True }
+      "LocalService" 
+      { $True }
+      "NetworkService" 
+      { $True } 
+      "Administrator" 
+      { $True }
+      "Adm-Pass" 
+      { $True }
+      "AppData" 
+      { $True }
+      "Classic .NET AppPool" 
+      { $True}
+      "Public" 
+      { $True}
+      default 
+      { $False}
+    }
+  }
+  {
+    $UserParentFolder = "C:\Documents and Settings\"
+  }
+  If(Test-Path -Path "C:\Users\")
+  {
+    $UserParentFolder = "C:\Users\"
+  }
+  $PeriodDays = 1
+  $Result = @()
+  $userFolders = Get-ChildItem -Path $UserParentFolder 
+  Foreach($Folder in $userFolders) {
+  $LastAccessTime = $Folder.LastAccessTime
+  $CurrentDate = Get-Date 
+  $Tim = New-TimeSpan $LastAccessTime $CurrentDate 
+  $Days = $Tim.days
+  If((isException $Folder.Name )-eq $false -and  ($Days -gt $PeriodDays) ) {
+    $temp = New-Object  psobject -Property @{
+      "FileName" = $Folder.FullName;
+      "LastAccessTime" = $Folder.LastAccessTime;
+      "UnusedDays" = $Days
+    }
+    $Result += $Temp
+    }
+  }
+  If($Result) {
+    $Result
+    foreach($Folder in $Result) {
+      $path = $Folder.FileName 
+      cmd.exe /c "RD /S /Q `"$path`""
+      If((test-path $path) -eq $false) { 
+        Write-Host "Deleted old user folder $path successfully!"
+      }
+    }
+  }
+}
+
 
 # Before doing anything else, make sure we are using TLS 1.2
 # See https://bugzilla.mozilla.org/show_bug.cgi?id=1443595 for context.
@@ -1016,6 +1079,7 @@ if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
 }
 if ($locationType -eq 'DataCenter') {
   hw-DiskManage
+  hw-Remove-User-Dirs
 }
 Write-Log -message 'userdata run starting.' -severity 'INFO'
 if ($locationType -eq 'DataCenter') {
