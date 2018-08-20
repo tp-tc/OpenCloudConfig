@@ -929,9 +929,11 @@ function hw-DiskManage {
     Get-ChildItem $olddscfiles -Recurse | ? {-Not $_.PsIsContainer -And ($_.LastWriteTime -lt (Get-Date).AddDays(-1))} | Remove-Item -force -ErrorAction SilentlyContinue
     Get-ChildItem $oldwindowslog -Recurse | ? {-Not $_.PsIsContainer -And ($_.LastWriteTime -lt (Get-Date).AddDays(-7))} |  Remove-Item -force -ErrorAction SilentlyContinue
     Clear-RecycleBin -force -ErrorAction SilentlyContinue
-    $currenttaskuser = get-localuser -name task*
-    $currenttaskname = $currenttaskuser.name
-      Get-ChildItem "c:\Users" -exclude "$currenttaskname", "Default", "Administrator","Public" | Remove-Item -Force -Recurse
+    if (Test-Path C:\dsc\GW10.semaphore) {
+      $currenttaskuser = get-localuser -name task*
+      $currenttaskname = $currenttaskuser.name
+        Get-ChildItem "c:\Users" -exclude "$currenttaskname", "Default", "Administrator","Public" | Remove-Item -Force -Recurse
+    }
     $freespace = Get-WmiObject -Class Win32_logicalDisk | ? {$_.DriveType -eq '3'}
     $percentfree = $freespace.FreeSpace / $freespace.Size
     $freeB = $freespace.FreeSpace
