@@ -120,5 +120,5 @@ ping -n 7200 127.0.0.1 1>/nul
 if exist C:\DSC\EndOfManifest.semaphore del /Q /F C:\DSC\EndOfManifest.semaphore >> C:\generic-worker\generic-worker.log
 if exist C:\generic-worker\rebootcount.txt del /Q /F  C:\generic-worker\rebootcount.txt
 if exist C:\DSC\in-progress.lock del /Q /F C:\DSC\in-progress.lock
-shutdown /r /t 0 /f /c "OCC did complete and is not running;  Rebooting"
+shutdown /r /t 0 /f /c "OCC did not complete and is not running;  Rebooting"
 exit
