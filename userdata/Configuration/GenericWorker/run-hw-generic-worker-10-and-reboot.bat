@@ -14,8 +14,6 @@ if %ERRORLEVEL% == 1 goto loop_reboot
 GoTo ManifestCheck
 
 :key_pair
-
-:keypair
 del /Q /F C:\DSC\EndOfManifest.semaphore  >> C:\generic-worker\generic-worker.log
 echo Checking for key pair >> C:\generic-worker\generic-worker.log
 If exist C:\generic-worker\generic-worker-gpg-signing-key.key echo Key pair present >> C:\generic-worker\generic-worker.log
