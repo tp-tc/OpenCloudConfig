@@ -673,7 +673,7 @@ Configuration xDynamicConfig {
         }
       }
     }
-}
+  }
   if (($locationType -eq 'AWS') -and ($workerType)) {
     Script CotGpgKeyImport {
       DependsOn = @('[Script]InstallSupportingModules', '[Script]ExeInstall_GpgForWin', '[File]DirectoryCreate_GenericWorkerDirectory')
