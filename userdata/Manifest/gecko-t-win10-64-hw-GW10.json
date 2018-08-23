@@ -32,7 +32,7 @@
       "ComponentName": "NxLogPaperTrailConfiguration",
       "ComponentType": "ChecksumFileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Source": "https://raw.githubusercontent.com/markcor/OpenCloudConfig/master/userdata/Configuration/nxlog/hw-win10.conf",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/hw-win10.conf",
       "Target": "C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf",
       "DependsOn": [
         {
@@ -825,7 +825,7 @@
           "ComponentName": "DisableDesktopInterrupt"
         }
       ],
-      "Source": "https://raw.githubusercontent.com/markcor/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-hw-generic-worker-10-and-reboot.bat",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-hw-generic-worker-10-and-reboot.bat",
       "Target": "C:\\generic-worker\\run-generic-worker.bat"
     },
     {
