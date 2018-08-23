@@ -929,7 +929,6 @@ function hw-DiskManage {
     Get-ChildItem $olddscfiles -Recurse | ? {-Not $_.PsIsContainer -And ($_.LastWriteTime -lt (Get-Date).AddDays(-1))} | Remove-Item -force -ErrorAction SilentlyContinue
     Get-ChildItem $oldwindowslog -Recurse | ? {-Not $_.PsIsContainer -And ($_.LastWriteTime -lt (Get-Date).AddDays(-7))} |  Remove-Item -force -ErrorAction SilentlyContinue
     Clear-RecycleBin -force -ErrorAction SilentlyContinue
-	
     $freespace = Get-WmiObject -Class Win32_logicalDisk | ? {$_.DriveType -eq '3'}
     $percentfree = $freespace.FreeSpace / $freespace.Size
     $freeB = $freespace.FreeSpace
@@ -963,8 +962,8 @@ function hw-DiskManage {
 	  shutdown @('-s', '-t', '0', '-c', 'Restarting disk space Critical', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
 	  exit
      }
-   }
-} 
+  }
+}
 
 # Before doing anything else, make sure we are using TLS 1.2
 # See https://bugzilla.mozilla.org/show_bug.cgi?id=1443595 for context.
@@ -980,6 +979,12 @@ if ($UpdateService.Status -ne 'Running') {
   Write-Log -message 'Enabling Windows update service'
 } else {
   Write-Log -message 'Windows update service is running'
+}
+if ($locationType -eq 'DataCenter') {
+  if (!(Test-Connection github.com -quiet)) {
+    Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+    shutdown @('-r', '-t', '0', '-c', 'reboot; external resources are not available', '-f', '-d', '4:5') | Out-File -filePath $logFile -append
+  }
 }
 if ((Get-Service 'Ec2Config' -ErrorAction SilentlyContinue) -or (Get-Service 'AmazonSSMAgent' -ErrorAction SilentlyContinue)) {
   $locationType = 'AWS'
@@ -1009,7 +1014,7 @@ if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
   New-Item $lock -type file -force
 }
 if ($locationType -eq 'DataCenter') {
-  hw-DiskManage  
+  hw-DiskManage
 }
 Write-Log -message 'userdata run starting.' -severity 'INFO'
 if ($locationType -eq 'DataCenter') {
@@ -1217,7 +1222,7 @@ if ($rebootReasons.length) {
       }
     }
     Set-ExecutionPolicy RemoteSigned -force | Out-File -filePath $logFile -append
-    & cmd @('/c', 'winrm', 'set', 'winrm/config', '@{MaxEnvelopeSizekb="8192"}')
+    & cmd @('/c', 'winrm', 'set', 'winrm/config', '@{MaxEnvelopeSizekb="32696"}')
     $transcript = ('{0}\log\{1}.dsc-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     # end pre dsc setup ###########################################################################################################################################
 
@@ -1348,6 +1353,9 @@ if ($rebootReasons.length) {
         Write-Log -message 'Z: drive formatted.' -severity 'INFO'
         #& net @('user', 'GenericWorker', (Get-ItemProperty -path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -name 'DefaultPassword').DefaultPassword)
         Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+	if ($locationType -eq 'DataCenter') {
+	  Remove-Item -Path C:\dsc\task-claim-state.valid -force -ErrorAction SilentlyContinue
+	}
         & shutdown @('-r', '-t', '0', '-c', 'reboot to rouse the generic worker', '-f', '-d', '4:5') | Out-File -filePath $logFile -append
       } else {
         $timer.Stop()

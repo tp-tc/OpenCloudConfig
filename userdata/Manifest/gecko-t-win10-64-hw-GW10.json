@@ -41,6 +41,19 @@
         }
       ]
     },
+   {
+      "ComponentName": "SetLogAggregator",
+      "ComponentType": "ReplaceInFile",
+      "Path": "C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf",
+      "Match": "mdc1.mozilla.com",
+      "Replace": "((Get-ItemProperty 'HKLM:SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters').'NV Domain').Replace('wintest.releng.', '')",
+      "DependsOn": [
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "NxLogPaperTrailConfiguration"
+        }
+      ]
+    },
     {
       "ComponentName": "SetLogAggregator",
       "ComponentType": "ReplaceInFile",
@@ -661,7 +674,7 @@
       ],
       "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.8.5/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe",
-      "sha512": "645d69d59d554f23b5778878e55d1f682adc05a8af3273a8d696de3da9a9387430b0d8f4b28c11ea113bc9e964408415224c1c78dc1886a1384e8c9a987b12b0"
+      "sha512": "f26832cfe4647877e4665c1f7e2f9283d28f31f6a321378205d1de01df404b35c903a0024721eef35bdd8375f0b994dd99e537d4ae72077a749fe6b3ed2515f3"
     },
     {
       "ComponentName": "LiveLogDownload",
@@ -709,6 +722,7 @@
       "ComponentName": "NSSMDownload",
       "ComponentType": "FileDownload",
       "Source": "https://nssm.cc/ci/nssm-2.24-103-gdee49fc.zip",
+      "sha512": "517945e1452f0784e46843ab713f1103a2b2d76100b793031e7ab9c9f662dbdd57c5ae8c02931d3cc821d41558464eed926e84d21b0d0a9c43d7f4b768dc9b17",
       "Target": "C:\\Windows\\Temp\\NSSMInstall.zip"
     },
     {
@@ -1235,20 +1249,6 @@
       "Target": "C:\\Windows\\System32\\jq.exe"
     },
     {
-      "ComponentName": "ICMPv4In",
-      "ComponentType": "FirewallRule",
-      "Protocol": "ICMPv4",
-      "Direction": "Inbound",
-      "Action": "Allow"
-    },
-    {
-      "ComponentName": "ICMPv6In",
-      "ComponentType": "FirewallRule",
-      "Protocol": "ICMPv6",
-      "Direction": "Inbound",
-      "Action": "Allow"
-    },
-    {
       "ComponentName": "cppbuildtools",
       "ComponentType": "ExeInstall",
       "Comment": " c++ toolchain",
@@ -1333,42 +1333,12 @@
       "ValueData": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"
     },
     {
-      "ComponentName": "Reg_WinDefend_DisableConfig",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1365909",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows Defender",
-      "ValueName": "DisableConfig",
-      "ValueType": "Dword",
-      "ValueData": "0x00000001",
-      "Hex": true
-    },
-    {
-      "ComponentName": "Reg_WinDefend_DisableAntiSpyware",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1365909",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows Defender",
-      "ValueName": "DisableAntiSpyware",
-      "ValueType": "Dword",
-      "ValueData": "0x00000001",
-      "Hex": true
-    },
-    {
       "ComponentName": "DisableWinDefend",
       "ComponentType": "ServiceControl",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1365909",
       "Name": "WinDefend",
       "StartupType": "Manual",
-      "State": "Stopped",
-      "DependsOn": [
-        {
-          "ComponentType": "RegistryValueSet",
-          "ComponentName": "Reg_WinDefend_DisableConfig"
-        },
-        {
-          "ComponentType": "RegistryValueSet",
-          "ComponentName": "Reg_WinDefend_DisableAntiSpyware"
-        }
-      ]
+      "State": "Stopped"
     },
     {
       "ComponentName": "reg_SystemRestore",
@@ -1534,6 +1504,26 @@
           "ComponentName": "InstallOpenSSH"
         }
       ]
+    },
+    {
+      "ComponentName": "reg_DisableAntiSpyware",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1453138",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows Defender",
+      "ValueName": "DisableConfig",
+      "ValueType": "Dword",
+      "ValueData": "0x00000001",
+      "Hex": true
+    },
+    {
+      "ComponentName": "reg_DisableAntiSpyware_exe",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1453138",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows Defender",
+      "ValueName": "DisableAntiSpyware",
+      "ValueType": "Dword",
+      "ValueData": "0x00000001",
+      "Hex": true
     },
     {
       "ComponentName": "vcredist_vs2015_x86",
