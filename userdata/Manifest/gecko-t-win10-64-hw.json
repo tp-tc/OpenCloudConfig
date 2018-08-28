@@ -1524,6 +1524,15 @@
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/EndOfManifest.semaphore",
       "Target": "C:\\DSC\\EndOfManifest.semaphore"
+    },
+    {
+      "ComponentName": "WindowsPerformanceToolkit",
+      "ComponentType": "MsiInstall",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485757",
+      "Url": "https://s3.amazonaws.com/windows-opencloudconfig-packages/WindowsPerformanceToolkit/WPTx64-x86_en-us.msi",
+      "Name": "WPTx64",
+      "ProductId": "39D259B7-9ECF-65EB-66ED-5344F3E1E7B2",
+      "sha512": "53912e8d6826631ec3def889c7c76a2039d684582986345f1747bac5f09bb17cdf96d68bb15514fb5ce064b41427b3c031a26730f75cbef1079ffae737cd71b0"
     }
   ]
 }
