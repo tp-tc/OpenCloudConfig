@@ -1402,7 +1402,7 @@
       "DependsOn": [
         {
           "ComponentType": "ChecksumFileDownload",
-          "ComponentName": "mofcomp_mozprofilerprobe"
+          "ComponentName": "mozprofilerprobe"
         }
       ]
     }
