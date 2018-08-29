@@ -1565,6 +1565,34 @@
       "Name": "WPTx64",
       "ProductId": "39D259B7-9ECF-65EB-66ED-5344F3E1E7B2",
       "sha512": "53912e8d6826631ec3def889c7c76a2039d684582986345f1747bac5f09bb17cdf96d68bb15514fb5ce064b41427b3c031a26730f75cbef1079ffae737cd71b0"
+    },
+    {
+      "ComponentName": "mozprofilerprobe",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485757",
+      "Source": "http://hg.mozilla.org/mozilla-central/raw-file/360ab7771e27/toolkit/components/startup/mozprofilerprobe.mof",
+      "Target": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\mozprofilerprobe.mof",
+      "DependsOn": [
+        {
+          "ComponentType": "MsiInstall",
+          "ComponentName": "WindowsPerformanceToolkit"
+        }
+      ]
+    },
+    {
+      "ComponentName": "mofcomp_mozprofilerprobe",
+      "ComponentType": "CommandRun",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485757",
+      "Command": "mofcomp",
+      "Arguments": [
+        "\"C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\mozprofilerprobe.mof\""
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "mozprofilerprobe"
+        }
+      ]
     }
   ]
 }
