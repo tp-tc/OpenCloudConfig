@@ -269,8 +269,8 @@ if [ "$(cat OpenCloudConfig/userdata/Manifest/${tc_worker_type}.json | sed -n 's
   cat ${tc_worker_type}.json | jq --sort-keys --slurpfile 'gwconfig' merged-gw-config.json '.secrets."generic-worker".config=$gwconfig[0]' > .${tc_worker_type}.json && rm ${tc_worker_type}.json && mv .${tc_worker_type}.json ${tc_worker_type}.json
 fi
 
-cat ./${tc_worker_type}.json | curl -i --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ./update-response.json
-if ! grep -q "HTTP/1.1 200 OK" ./update-response.json; then
+cat ./${tc_worker_type}.json | curl -D ./update-response-headers.txt --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ./update-response.json
+if ! grep -q "HTTP/1.1 200 OK" ./update-response-headers.txt; then
   echo "ERROR: failed to update provisioner configuration"
   exit 70
 fi
