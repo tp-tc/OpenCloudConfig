@@ -1405,6 +1405,20 @@
           "ComponentName": "mozprofilerprobe"
         }
       ]
+    },
+    {
+      "ComponentName": "IntentionalBustage",
+      "ComponentType": "CommandRun",
+      "Comment": "This component will always fail to validate and is used to simulate bustage.",
+      "Command": "echo",
+      "Arguments": [
+        "bustage"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\path\\does\\not\\exist"
+        ]
+      }
     }
   ],
   "ProvisionerConfiguration": {
