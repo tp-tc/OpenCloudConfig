@@ -1250,7 +1250,12 @@ if ($rebootReasons.length) {
       if (-not ($isWorker)) {
         # if this is the ami creation instance, we don't have a way to communicate with the taskcluster-github job to tell it that the dsc run has failed.
         # the best we can do is sleep until the taskcluster-github job fails, because of a task timeout.
-        Start-Sleep -Seconds (60 * 60 * 24)
+        $timer = [Diagnostics.Stopwatch]::StartNew()
+        while ($timer.Elapsed.TotalHours -lt 5) {
+          Write-Log -message ('waiting for occ ci task to fail due to timeout. shutdown in {0} minutes.' -f [Math]::Round(((5 * 60) - $timer.Elapsed.TotalMinutes))) -severity 'WARN'
+          Start-Sleep -Seconds 600
+        }
+        & shutdown @('-s', '-t', '0', '-c', 'dsc run failed', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
       }
     }
     switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
