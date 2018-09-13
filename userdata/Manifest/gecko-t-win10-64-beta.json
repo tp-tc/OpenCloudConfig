@@ -1423,7 +1423,7 @@
               }
             },
             {
-              "DeviceName": "/dev/sdb",
+              "DeviceName": "xvdf",
               "Ebs": {
                 "DeleteOnTermination": true,
                 "VolumeSize": 120,
