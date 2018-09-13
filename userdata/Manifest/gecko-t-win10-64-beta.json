@@ -1411,7 +1411,7 @@
     "instanceTypes": [
       {
         "capacity": 1,
-        "instanceType": "c4.2xlarge",
+        "instanceType": "c5.2xlarge",
         "launchSpec": {
           "BlockDeviceMappings": [
             {
