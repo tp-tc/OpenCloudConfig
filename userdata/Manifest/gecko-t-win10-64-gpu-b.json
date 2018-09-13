@@ -1463,7 +1463,7 @@
     "instanceTypes": [
       {
         "capacity": 1,
-        "instanceType": "g3.4xlarge",
+        "instanceType": "g2.2xlarge",
         "launchSpec": {
           "BlockDeviceMappings": [
             {
@@ -1475,7 +1475,7 @@
               }
             },
             {
-              "DeviceName": "xvdf",
+              "DeviceName": "/dev/sdb",
               "Ebs": {
                 "DeleteOnTermination": true,
                 "VolumeSize": 120,

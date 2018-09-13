@@ -99,7 +99,7 @@ case "${tc_worker_type}" in
     root_username=root
     worker_username=GenericWorker
     ;;
-  gecko-t-win10-64-gpu-b|gecko-t-win10-64-beta)
+  gecko-t-win10-64-beta)
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_10_Professional_1803_17134_en-US_x64_MBR'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
@@ -203,6 +203,13 @@ while [ -z "$aws_ami_id" ]; do
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdb_volume_id} detached from ${aws_instance_id} /dev/sdb"
     aws ec2 delete-volume --region ${aws_region} --volume-id ${dev_sdb_volume_id}
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdb_volume_id} deleted"
+  fi
+  if [[ $snapshot_block_device_mappings == *"xvdf"* ]]; then
+    xvdf_volume_id=$(aws ec2 describe-instances --region ${aws_region} --instance-id ${aws_instance_id} --query 'Reservations[*].Instances[*].BlockDeviceMappings[1].Ebs.VolumeId' --output text)
+    aws ec2 detach-volume --region ${aws_region} --instance-id ${aws_instance_id} --device xvdf --volume-id ${xvdf_volume_id}
+    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${xvdf_volume_id} detached from ${aws_instance_id} xvdf"
+    aws ec2 delete-volume --region ${aws_region} --volume-id ${xvdf_volume_id}
+    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${xvdf_volume_id} deleted"
   fi
   aws_ami_id=`aws ec2 create-image --region ${aws_region} --instance-id ${aws_instance_id} --name "${tc_worker_type} version ${aws_client_token}" --description "${ami_description}" | sed -n 's/^ *"ImageId": *"\(.*\)" *$/\1/p'`
   if [ -z "$aws_ami_id" ]; then
