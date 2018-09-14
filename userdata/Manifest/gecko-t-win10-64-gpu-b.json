@@ -1463,7 +1463,7 @@
     "instanceTypes": [
       {
         "capacity": 1,
-        "instanceType": "g2.2xlarge",
+        "instanceType": "g3.4xlarge",
         "launchSpec": {
           "BlockDeviceMappings": [
             {
