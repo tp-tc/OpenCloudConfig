@@ -1467,7 +1467,7 @@
         "launchSpec": {
           "BlockDeviceMappings": [
             {
-              "DeviceName": "/dev/sda1",
+              "DeviceName": "/dev/xvda",
               "Ebs": {
                 "DeleteOnTermination": true,
                 "VolumeSize": 120,
@@ -1475,7 +1475,7 @@
               }
             },
             {
-              "DeviceName": "/dev/sdb",
+              "DeviceName": "xvdf",
               "Ebs": {
                 "DeleteOnTermination": true,
                 "VolumeSize": 120,
