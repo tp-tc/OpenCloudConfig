@@ -1174,24 +1174,6 @@
       "Hex": true
     },
     {
-      "ComponentName": "DisableWinDefend",
-      "ComponentType": "ServiceControl",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1365909",
-      "Name": "WinDefend",
-      "StartupType": "Manual",
-      "State": "Stopped",
-      "DependsOn": [
-        {
-          "ComponentType": "RegistryValueSet",
-          "ComponentName": "Reg_WinDefend_DisableConfig"
-        },
-        {
-          "ComponentType": "RegistryValueSet",
-          "ComponentName": "Reg_WinDefend_DisableAntiSpyware"
-        }
-      ]
-    },
-    {
       "ComponentName": "OpenSshDownload",
       "ComponentType": "FileDownload",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
