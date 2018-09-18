@@ -480,7 +480,8 @@
             "Match": "3.2"
           }
         ]
-      }
+      },
+      "sha512": "db77e882de30f5050489852353d6c171c09b3e70bfd3285d7cda4ea3fc8e7b8df9537ba6430f605c68a1a8c3f33e4763a03d353f915fd755df2a7e26409974c2"
     },
     {
       "ComponentName": "msys_home",
