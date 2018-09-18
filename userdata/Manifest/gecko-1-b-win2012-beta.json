@@ -953,7 +953,6 @@
         "C:\\mozilla-build\\python\\Scripts",
         "C:\\mozilla-build\\bin\\upx394w",
         "C:\\mozilla-build\\bin\\wget-1.19.4",
-        "C:\\mozilla-build\\yasm",
         "C:\\mozilla-build\\node-v8.11.1-win-x64"
       ],
       "Target": "Machine"
