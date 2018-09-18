@@ -216,7 +216,7 @@
         "/S",
         "/D=C:\\mozilla-build"
       ],
-      "Url": "http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-3.1.exe",
+      "Url": "http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-3.2.exe",
       "Validate": {
         "PathsExist": [
           "C:\\mozilla-build\\info-zip\\unzip.exe",
@@ -231,11 +231,11 @@
         "FilesContain": [
           {
             "Path": "C:\\mozilla-build\\VERSION",
-            "Match": "3.1"
+            "Match": "3.2"
           }
         ]
       },
-      "sha512": "24312d28297b44e802069702628806d2c7f2c3e6ba536be1ab66caf08d8a818cfbcf861ef32cff88eb4275d25d66f376ae96af423e2a979bf729071b157b4dd2"
+      "sha512": "db77e882de30f5050489852353d6c171c09b3e70bfd3285d7cda4ea3fc8e7b8df9537ba6430f605c68a1a8c3f33e4763a03d353f915fd755df2a7e26409974c2"
     },
     {
       "ComponentName": "msys_home",
