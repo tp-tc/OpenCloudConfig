@@ -1190,6 +1190,8 @@ if ($rebootReasons.length) {
   }
   # create a scheduled task to run PrepLoaner every minute (only preps loaner if appropriate flags exist. flags are created by user tasks)
   Create-ScheduledPowershellTask -taskName 'PrepLoaner' -scriptUrl ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/PrepLoaner.ps1?{1}' -f $SourceRepo, [Guid]::NewGuid()) -scriptPath 'C:\dsc\PrepLoaner.ps1' -sc 'minute' -mo '1'
+  # create a scheduled task to run system maintenance every minute
+  Create-ScheduledPowershellTask -taskName 'MaintainSystem' -scriptUrl ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/MaintainSystem.ps1?{1}' -f $SourceRepo, [Guid]::NewGuid()) -scriptPath 'C:\dsc\MaintainSystem.ps1' -sc 'minute' -mo '1'
   if ($locationType -eq 'DataCenter') {
     $isWorker = $true
     $runDscOnWorker = $true
