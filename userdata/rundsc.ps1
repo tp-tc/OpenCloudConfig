@@ -1327,12 +1327,12 @@ if ($rebootReasons.length) {
     Remove-DesiredStateConfigTriggers
     New-LocalCache
   }
-  if ($isWorker) {
+  #if ($isWorker) {
     # test disk conservation on beta workers only
-    if ($workerType.EndsWith('-beta') -or $workerType.EndsWith('-gpu-b')) {
-      Conserve-DiskSpace
-    }
-  }
+    #if ($workerType.EndsWith('-beta') -or $workerType.EndsWith('-gpu-b')) {
+    #  Conserve-DiskSpace
+    #}
+  #}
 
 
   # archive dsc logs
