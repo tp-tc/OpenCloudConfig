@@ -414,6 +414,46 @@ function Resize-DiskZero {
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
+function Resize-DiskOne {
+  param (
+    [char] $drive = 'Z',
+    [UInt64] $newSize = 100GB,
+    [char] $newDrive = 'Y'
+  )
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    if ((Get-Command 'Resize-Partition' -errorAction SilentlyContinue) -and (Get-Command 'New-Partition' -errorAction SilentlyContinue) -and (Get-Command 'Format-Volume' -errorAction SilentlyContinue)) {
+      $oldSize = (Get-WmiObject Win32_LogicalDisk | ? { $_.DeviceID -eq ('{0}:' -f $drive)}).Size
+      # if the current partition size is larger than expected
+      if ($oldSize -gt ($newSize + 2GB)) {
+        try {
+          Resize-Partition -DriveLetter $drive -Size $newSize
+          Write-Log -message ('{0} :: task drive {1}: resized from {2} to {3}.' -f $($MyInvocation.MyCommand.Name), $drive, [math]::Round($oldSize/1GB, 2), [math]::Round($newSize/1GB, 2)) -severity 'INFO'
+          try {
+            New-Partition -DiskNumber 1 -DriveLetter $newDrive -UseMaximumSize
+            Format-Volume -FileSystem 'NTFS' -DriveLetter $newDrive -NewFileSystemLabel 'cache' -Confirm:$false
+            Write-Log -message ('{0} :: cache drive {1}: partition created and formatted.' -f $($MyInvocation.MyCommand.Name), $newDrive) -severity 'INFO'
+          }
+          catch {
+            Write-Log -message ('{0} :: failed to create or format partition for cache drive {1}:. {2}' -f $($MyInvocation.MyCommand.Name), $newDrive, $_.Exception.Message) -severity 'ERROR'
+          }
+        }
+        catch {
+          Write-Log -message ('{0} :: failed to resize partition for task drive {1}:. {2}' -f $($MyInvocation.MyCommand.Name), $drive, $_.Exception.Message) -severity 'ERROR'
+        }
+      } else {
+        Write-Log -message ('{0} :: partition resizing skipped. drive {1}: ({2}) within expected size ({3})' -f $($MyInvocation.MyCommand.Name, $drive, [math]::Round($oldSize/1GB, 2), [math]::Round($newSize/1GB, 2))) -severity 'DEBUG'
+      }
+    } else {
+      Write-Log -message ('{0} :: partition resizing skipped on unsupported os' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+}
 function Set-Pagefile {
   param (
     [switch] $isWorker = $false,
@@ -1111,6 +1151,9 @@ if ($locationType -ne 'DataCenter') {
       }
     }
   }
+  $instanceType = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-type'))
+  Write-Log -message ('instanceType: {0}.' -f $instanceType) -severity 'INFO'
+  [Environment]::SetEnvironmentVariable("TASKCLUSTER_INSTANCE_TYPE", "$instanceType", "Machine")
   Mount-DiskOne -lock $lock
   if ($isWorker) {
     Resize-DiskZero
@@ -1119,6 +1162,9 @@ if ($locationType -ne 'DataCenter') {
   # reattempt drive mapping for up to 10 minutes
   $driveMapTimeout = (Get-Date).AddMinutes(10)
   do {
+    if (((Get-WmiObject -class Win32_OperatingSystem).Caption.Contains('Windows 10')) -and (($instanceType.StartsWith('c5.')) -or ($instanceType.StartsWith('g3.'))) -and (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue) -and (-not (Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue)) -and ((Get-WmiObject Win32_LogicalDisk | ? { $_.DeviceID -eq 'Z:' }).Size -ge 119GB)) {
+      Resize-DiskOne
+    }
     Map-DriveLetters
     Sleep 60
   } while (((-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) -or (-not (Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue))) -and (Get-Date) -lt $driveMapTimeout)
@@ -1175,10 +1221,6 @@ if ($locationType -ne 'DataCenter') {
       $nic.SetDynamicDNSRegistration($false)
     }
   }
-
-  $instanceType = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-type'))
-  Write-Log -message ('instanceType: {0}.' -f $instanceType) -severity 'INFO'
-  [Environment]::SetEnvironmentVariable("TASKCLUSTER_INSTANCE_TYPE", "$instanceType", "Machine")
 }
 if ($rebootReasons.length) {
   Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
