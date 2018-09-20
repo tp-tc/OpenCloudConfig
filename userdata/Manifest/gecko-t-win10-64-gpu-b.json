@@ -1118,6 +1118,41 @@
       ]
     },
     {
+      "ComponentName": "NvidiaK520DriverPackage",
+      "ComponentType": "ExeInstall",
+      "Comment": "Required for hardware acceleration on EC2 g2 (GPU) instances. http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/accelerated-computing-instances.html#install-nvidia-driver-windows",
+      "Url": "http://uk.download.nvidia.com/Windows/Quadro_Certified/GRID/369.95/369.95-quadro-grid-desktop-notebook-win10-64bit-international-whql.exe",
+      "Arguments": [
+        "/s"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\NVIDIA\\369.95\\setup.exe"
+        ]
+      },
+      "sha512": "7fd87a38e5eb760e49bd136d238ec8983a9cdacc1dfc67334c1033f887aab3c8592156a7f876de7c8938279008848ff755ec478aab9c1218f7879ca6758e29f2"
+    },
+    {
+      "ComponentName": "NvidiaK520DriverInstall",
+      "ComponentType": "CommandRun",
+      "Comment": "Required for hardware acceleration on EC2 g2 (GPU) instances. http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/accelerated-computing-instances.html#install-nvidia-driver-windows",
+      "Command": "C:\\NVIDIA\\369.95\\setup.exe",
+      "Arguments": [
+        "/s"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files\\NVIDIA Corporation\\license.txt"
+        ]
+      },
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "NvidiaK520DriverPackage"
+        }
+      ]
+    },
+    {
       "ComponentName": "nircmd",
       "ComponentType": "FileDownload",
       "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/nircmd/nircmd.exe",
@@ -1190,6 +1225,24 @@
       "ValueType": "Dword",
       "ValueData": "0x00000001",
       "Hex": true
+    },
+    {
+      "ComponentName": "DisableWinDefend",
+      "ComponentType": "ServiceControl",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1365909",
+      "Name": "WinDefend",
+      "StartupType": "Manual",
+      "State": "Stopped",
+      "DependsOn": [
+        {
+          "ComponentType": "RegistryValueSet",
+          "ComponentName": "Reg_WinDefend_DisableConfig"
+        },
+        {
+          "ComponentType": "RegistryValueSet",
+          "ComponentName": "Reg_WinDefend_DisableAntiSpyware"
+        }
+      ]
     },
     {
       "ComponentName": "OpenSshDownload",
@@ -1411,11 +1464,11 @@
     "instanceTypes": [
       {
         "capacity": 1,
-        "instanceType": "g3.4xlarge",
+        "instanceType": "g2.2xlarge",
         "launchSpec": {
           "BlockDeviceMappings": [
             {
-              "DeviceName": "/dev/xvda",
+              "DeviceName": "/dev/sda1",
               "Ebs": {
                 "DeleteOnTermination": true,
                 "VolumeSize": 120,
@@ -1423,7 +1476,7 @@
               }
             },
             {
-              "DeviceName": "xvdf",
+              "DeviceName": "/dev/sdb",
               "Ebs": {
                 "DeleteOnTermination": true,
                 "VolumeSize": 120,
