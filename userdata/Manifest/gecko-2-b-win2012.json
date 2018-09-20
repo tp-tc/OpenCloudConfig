@@ -457,31 +457,31 @@
     {
       "ComponentName": "MozillaBuildSetup",
       "ComponentType": "ExeInstall",
-      "Comment": "Base Firefox on Windows build requirement",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1461340",
       "Arguments": [
         "/S",
         "/D=C:\\mozilla-build"
       ],
-      "Url": "http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-3.1.exe",
+      "Url": "http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-3.2.exe",
       "Validate": {
         "PathsExist": [
-          "C:\\mozilla-build\\info-zip\\unzip.exe",
-          "C:\\mozilla-build\\info-zip\\zip.exe",
+          "C:\\mozilla-build\\bin\\info-zip\\unzip.exe",
+          "C:\\mozilla-build\\bin\\info-zip\\zip.exe",
           "C:\\mozilla-build\\msys\\bin\\sh.exe",
           "C:\\mozilla-build\\msys\\local\\bin\\make.exe",
           "C:\\mozilla-build\\msys\\local\\bin\\autoconf-2.13",
           "C:\\mozilla-build\\python\\python.exe",
-          "C:\\mozilla-build\\upx394w\\upx.exe",
-          "C:\\mozilla-build\\yasm\\yasm.exe"
+          "C:\\mozilla-build\\bin\\upx394w\\upx.exe",
+          "C:\\mozilla-build\\bin\\yasm.exe"
         ],
         "FilesContain": [
           {
             "Path": "C:\\mozilla-build\\VERSION",
-            "Match": "3.1"
+            "Match": "3.2"
           }
         ]
       },
-      "sha512": "24312d28297b44e802069702628806d2c7f2c3e6ba536be1ab66caf08d8a818cfbcf861ef32cff88eb4275d25d66f376ae96af423e2a979bf729071b157b4dd2"
+      "sha512": "db77e882de30f5050489852353d6c171c09b3e70bfd3285d7cda4ea3fc8e7b8df9537ba6430f605c68a1a8c3f33e4763a03d353f915fd755df2a7e26409974c2"
     },
     {
       "ComponentName": "msys_home",
@@ -940,8 +940,9 @@
       "Name": "PATH",
       "Values": [
         "C:\\Program Files\\Mercurial",
-        "C:\\mozilla-build\\7zip",
-        "C:\\mozilla-build\\info-zip",
+        "C:\\mozilla-build\\bin",
+        "C:\\mozilla-build\\bin\\7zip",
+        "C:\\mozilla-build\\bin\\info-zip",
         "C:\\mozilla-build\\kdiff3",
         "C:\\mozilla-build\\moztools-x64\\bin",
         "C:\\mozilla-build\\mozmake",
@@ -950,9 +951,9 @@
         "C:\\mozilla-build\\nsis-3.01",
         "C:\\mozilla-build\\python",
         "C:\\mozilla-build\\python\\Scripts",
-        "C:\\mozilla-build\\upx394w",
-        "C:\\mozilla-build\\wget",
-        "C:\\mozilla-build\\yasm"
+        "C:\\mozilla-build\\bin\\upx394w",
+        "C:\\mozilla-build\\bin\\wget-1.19.4",
+        "C:\\mozilla-build\\node-v8.11.1-win-x64"
       ],
       "Target": "Machine"
     },

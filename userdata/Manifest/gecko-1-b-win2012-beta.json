@@ -457,7 +457,7 @@
     {
       "ComponentName": "MozillaBuildSetup",
       "ComponentType": "ExeInstall",
-      "Comment": "Base Firefox on Windows build requirement",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1461340",
       "Arguments": [
         "/S",
         "/D=C:\\mozilla-build"
