@@ -1175,24 +1175,6 @@
       "Hex": true
     },
     {
-      "ComponentName": "DisableWinDefend",
-      "ComponentType": "ServiceControl",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1365909",
-      "Name": "WinDefend",
-      "StartupType": "Manual",
-      "State": "Stopped",
-      "DependsOn": [
-        {
-          "ComponentType": "RegistryValueSet",
-          "ComponentName": "Reg_WinDefend_DisableConfig"
-        },
-        {
-          "ComponentType": "RegistryValueSet",
-          "ComponentName": "Reg_WinDefend_DisableAntiSpyware"
-        }
-      ]
-    },
-    {
       "ComponentName": "OpenSshDownload",
       "ComponentType": "FileDownload",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
@@ -1412,11 +1394,11 @@
     "instanceTypes": [
       {
         "capacity": 1,
-        "instanceType": "c4.2xlarge",
+        "instanceType": "c5.2xlarge",
         "launchSpec": {
           "BlockDeviceMappings": [
             {
-              "DeviceName": "/dev/sda1",
+              "DeviceName": "/dev/xvda",
               "Ebs": {
                 "DeleteOnTermination": true,
                 "VolumeSize": 120,
@@ -1424,7 +1406,7 @@
               }
             },
             {
-              "DeviceName": "/dev/sdb",
+              "DeviceName": "xvdf",
               "Ebs": {
                 "DeleteOnTermination": true,
                 "VolumeSize": 120,
