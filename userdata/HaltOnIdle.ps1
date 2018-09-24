@@ -120,7 +120,7 @@ if (-not (Is-Loaner)) {
   if (-not (Is-GenericWorkerRunning)) {
     if (-not (Is-OpenCloudConfigRunning)) {
       $uptime = (Get-Uptime)
-      if (($uptime) -and ($uptime -gt (New-TimeSpan -minutes 5))) {
+      if (($uptime) -and ($uptime -gt (New-TimeSpan -minutes 8))) {
         if ((-not (Is-RdpSessionActive)) -and (-not (Is-DriveFormatInProgress))) {
           Write-Log -message ('instance failed productivity check and will be halted. uptime: {0}' -f $uptime) -severity 'ERROR'
           & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: instance failed productivity checks', '-f', '-d', 'p:4:1')
