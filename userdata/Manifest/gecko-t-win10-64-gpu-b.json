@@ -1405,6 +1405,23 @@
           "ComponentName": "mozprofilerprobe"
         }
       ]
+    },
+    {
+      "ComponentName": "ProgramData_Mozilla_AccessRights",
+      "ComponentType": "CommandRun",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1494048",
+      "Command": "icacls.exe",
+      "Arguments": [
+        "c:\\ProgramData\\Mozilla",
+        "/grant",
+        "Everyone:(OI)(CI)F"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "maintenanceservice_install"
+        }
+      ]
     }
   ],
   "ProvisionerConfiguration": {
