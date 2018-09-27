@@ -1439,6 +1439,23 @@
         ]
       },
       "sha512": "729b1e37aefdf708df6a787b2eecd0e4e186c4e8a6d6f3028b0134f81c4216f889e67645d9279cb0ae60079a8f6f68ac88ec5d1fe27ee54f8de563b5209698f3"
+    },
+    {
+      "ComponentName": "ProgramData_Mozilla_AccessRights",
+      "ComponentType": "CommandRun",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1494048",
+      "Command": "icacls.exe",
+      "Arguments": [
+        "c:\\ProgramData\\Mozilla",
+        "/grant",
+        "Everyone:(OI)(CI)F"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "maintenanceservice_install"
+        }
+      ]
     }
   ]
 }
