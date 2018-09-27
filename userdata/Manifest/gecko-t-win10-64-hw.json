@@ -470,14 +470,14 @@
       "Url": "http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-3.2.exe",
       "Validate": {
         "PathsExist": [
-          "C:\\mozilla-build\\bin\\info-zip\\unzip.exe",
-          "C:\\mozilla-build\\bin\\info-zip\\zip.exe",
+          "C:\\mozilla-build\\bin\\unzip.exe",
+          "C:\\mozilla-build\\bin\\upx.exe",
+          "C:\\mozilla-build\\bin\\yasm.exe",
+          "C:\\mozilla-build\\bin\\zip.exe",
           "C:\\mozilla-build\\msys\\bin\\sh.exe",
-          "C:\\mozilla-build\\msys\\local\\bin\\make.exe",
           "C:\\mozilla-build\\msys\\local\\bin\\autoconf-2.13",
-          "C:\\mozilla-build\\python\\python.exe",
-          "C:\\mozilla-build\\bin\\upx394w\\upx.exe",
-          "C:\\mozilla-build\\bin\\yasm.exe"
+          "C:\\mozilla-build\\msys\\local\\bin\\make.exe",
+          "C:\\mozilla-build\\python\\python.exe"
         ],
         "FilesContain": [
           {
