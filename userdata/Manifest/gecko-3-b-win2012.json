@@ -941,8 +941,6 @@
       "Values": [
         "C:\\Program Files\\Mercurial",
         "C:\\mozilla-build\\bin",
-        "C:\\mozilla-build\\bin\\7zip",
-        "C:\\mozilla-build\\bin\\info-zip",
         "C:\\mozilla-build\\kdiff3",
         "C:\\mozilla-build\\moztools-x64\\bin",
         "C:\\mozilla-build\\mozmake",
@@ -950,10 +948,7 @@
         "C:\\mozilla-build\\msys\\local\\bin",
         "C:\\mozilla-build\\nsis-3.01",
         "C:\\mozilla-build\\python",
-        "C:\\mozilla-build\\python\\Scripts",
-        "C:\\mozilla-build\\bin\\upx394w",
-        "C:\\mozilla-build\\bin\\wget-1.19.4",
-        "C:\\mozilla-build\\node-v8.11.1-win-x64"
+        "C:\\mozilla-build\\python\\Scripts"
       ],
       "Target": "Machine"
     },
