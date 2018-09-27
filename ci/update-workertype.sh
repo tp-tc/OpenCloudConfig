@@ -200,11 +200,11 @@ while [ -z "$aws_ami_id" ]; do
       echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdc_volume_id} deleted"
     fi
     aws ec2 detach-volume --region ${aws_region} --instance-id ${aws_instance_id} --device /dev/sdb --volume-id ${dev_sdb_volume_id}
-    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdb_volume_id} detached from ${aws_instance_id} /dev/sdb"
     until `aws ec2 wait volume-available --region ${aws_region} --volume-ids "${dev_sdb_volume_id}" >/dev/null 2>&1`;
     do
       echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdb_volume_id} detaching..."
     done
+    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdb_volume_id} detached from ${aws_instance_id} /dev/sdb"
     aws ec2 delete-volume --region ${aws_region} --volume-id ${dev_sdb_volume_id}
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdb_volume_id} deleted"
   fi
