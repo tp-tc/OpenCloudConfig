@@ -1431,13 +1431,16 @@ if ($rebootReasons.length) {
         Write-Log -message 'Z: drive formatted.' -severity 'INFO'
         #& net @('user', 'GenericWorker', (Get-ItemProperty -path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -name 'DefaultPassword').DefaultPassword)
         Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
-	if ($locationType -eq 'DataCenter') {
-	  Remove-Item -Path C:\dsc\task-claim-state.valid -force -ErrorAction SilentlyContinue
-	}
+        if ($locationType -eq 'DataCenter') {
+          Remove-Item -Path C:\dsc\task-claim-state.valid -force -ErrorAction SilentlyContinue
+        }
         & shutdown @('-r', '-t', '0', '-c', 'reboot to rouse the generic worker', '-f', '-d', '4:5') | Out-File -filePath $logFile -append
       } else {
         $timer.Stop()
         Write-Log -message ('generic-worker running process detected {0} ms after task-claim-state.valid flag set.' -f $timer.ElapsedMilliseconds) -severity 'INFO'
+        if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
+          Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+        }
         $gwProcess = (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })
         if (($gwProcess) -and ($gwProcess.PriorityClass) -and ($gwProcess.PriorityClass -ne [Diagnostics.ProcessPriorityClass]::AboveNormal)) {
           $priorityClass = $gwProcess.PriorityClass
@@ -1449,5 +1452,7 @@ if ($rebootReasons.length) {
     }
   }
 }
-Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
+  Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+}
 Write-Log -message 'userdata run completed' -severity 'INFO'
