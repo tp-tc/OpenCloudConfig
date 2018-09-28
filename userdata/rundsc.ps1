@@ -1041,11 +1041,11 @@ if ((Get-Service 'Ec2Config' -ErrorAction SilentlyContinue) -or (Get-Service 'Am
 }
 $lock = 'C:\dsc\in-progress.lock'
 if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
-  if ((Get-CimInstance Win32_Process -Filter "name = 'powershell.exe'" | ? { $_.CommandLine -eq 'powershell.exe -File C:\dsc\rundsc.ps1' }).Length -gt 0) {
-    Write-Log -message 'userdata run aborted. lock file exists and powershell rundsc process detected.' -severity 'INFO'
+  if ((Get-CimInstance Win32_Process -Filter "name = 'powershell.exe'" | ? { $_.CommandLine -eq 'powershell.exe -File C:\dsc\rundsc.ps1' }).Length -gt 1) {
+    Write-Log -message 'userdata run aborted. lock file exists and alternate powershell rundsc process detected.' -severity 'INFO'
     exit
   }
-  Write-Log -message 'lock file exists but powershell rundsc process not detected.' -severity 'WARN'
+  Write-Log -message 'lock file exists but alternate powershell rundsc process not detected.' -severity 'WARN'
 } elseif ((@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -gt 0)) {
   Write-Log -message 'userdata run aborted. generic-worker is running.' -severity 'INFO'
   exit
