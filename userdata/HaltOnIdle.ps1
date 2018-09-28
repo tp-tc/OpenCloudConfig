@@ -77,7 +77,7 @@ function Is-Terminating {
 }
 
 function Is-OpenCloudConfigRunning {
-  return (Is-ConditionTrue -proc 'OpenCloudConfig' -predicate (Test-Path -Path 'C:\dsc\in-progress.lock' -ErrorAction SilentlyContinue))
+  return ((Is-ConditionTrue -proc 'OpenCloudConfig semaphore' -activity 'present' -predicate (Test-Path -Path 'C:\dsc\in-progress.lock' -ErrorAction SilentlyContinue)) -and (Is-ConditionTrue -proc 'OpenCloudConfig' -predicate ((Get-CimInstance Win32_Process -Filter "name = 'powershell.exe'" | ? { $_.CommandLine -eq 'powershell.exe -File C:\dsc\rundsc.ps1' }).Length -gt 0)))
 }
 
 function Is-GenericWorkerRunning {
