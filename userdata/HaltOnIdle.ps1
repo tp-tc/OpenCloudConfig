@@ -116,6 +116,15 @@ if (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue) {
 } else {
   Write-Log -message 'drive z: does not exist' -severity 'DEBUG'
 }
+
+# prevent HaltOnIdle running before host rename has occured.
+$instanceId = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-id'))
+$dnsHostname = ([System.Net.Dns]::GetHostName())
+if ($instanceId -ne $dnsHostname) {
+  Write-Log -message ('productivity checks skipped. instance id: {0} does not match hostname: {1}.' -f $instanceId, $dnsHostname) -severity 'DEBUG'
+  exit
+}
+
 if (-not (Is-Loaner)) {
   if (-not (Is-GenericWorkerRunning)) {
     if (-not (Is-OpenCloudConfigRunning)) {
