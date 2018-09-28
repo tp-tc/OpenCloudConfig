@@ -158,15 +158,21 @@ function Validate-FilesContainOrNotRequested {
         $fc = $_
         Write-Verbose ('Path: {0}' -f $fc.Path)
         Write-Verbose ('Search: {0}' -f $fc.Match)
-        (((Get-Content $fc.Path) | % {
-          if ($_ -match $fc.Match) {
-            Write-Verbose ('Contents matched: {0}' -f $_)
-            $true
-          } else {
-            $false
-          }
-        }) -contains $true) # a line within the file contained a match
-      }) -contains $false)) # no files failed to contain a match (see '-not' above)
+        if (Test-Path -Path $fc.Path -ErrorAction SilentlyContinue) {
+          Write-Verbose ('Path present: {0}' -f $fc.Path)
+          (((Get-Content -Path $fc.Path) | % {
+            if ($_ -match $fc.Match) {
+              Write-Verbose ('Contents matched: {0}' -f $_)
+              $true
+            } else {
+              $false
+            }
+          }) -contains $true) # a line within the file contained a match
+        } else {
+          Write-Verbose ('Path absent: {0}' -f $fc.Path)
+          $false
+        }
+      }) -contains $false)) # all files existed and no files failed to contain a match (see '-not' above)
     ))
   }
   end {}
