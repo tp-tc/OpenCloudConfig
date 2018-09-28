@@ -1160,22 +1160,22 @@ if ($locationType -ne 'DataCenter') {
 
   # workaround for windows update failures on g3 instances
   # https://support.microsoft.com/en-us/help/10164/fix-windows-update-errors
-  if ($instanceType.StartsWith('g3.')) {
-    try {
-      & dism.exe @('/Online', '/Cleanup-image', '/Restorehealth') | Out-File -filePath $logFile -append
-      Write-Log -message 'executed: dism cleanup.' -severity 'DEBUG'
-    }
-    catch {
-      Write-Log -message ('failed to run dism cleanup. {0}' -f $_.Exception.Message) -severity 'ERROR'
-    }
-    try {
-      & sfc @('/scannow') | Out-File -filePath $logFile -append
-      Write-Log -message 'executed: sfc scan.' -severity 'DEBUG'
-    }
-    catch {
-      Write-Log -message ('failed to run sfc scan. {0}' -f $_.Exception.Message) -severity 'ERROR'
-    }
-  }
+  #if ($instanceType.StartsWith('g3.')) {
+  #  try {
+  #    & dism.exe @('/Online', '/Cleanup-image', '/Restorehealth') | Out-File -filePath $logFile -append
+  #    Write-Log -message 'executed: dism cleanup.' -severity 'DEBUG'
+  #  }
+  #  catch {
+  #    Write-Log -message ('failed to run dism cleanup. {0}' -f $_.Exception.Message) -severity 'ERROR'
+  #  }
+  #  try {
+  #    & sfc @('/scannow') | Out-File -filePath $logFile -append
+  #    Write-Log -message 'executed: sfc scan.' -severity 'DEBUG'
+  #  }
+  #  catch {
+  #    Write-Log -message ('failed to run sfc scan. {0}' -f $_.Exception.Message) -severity 'ERROR'
+  #  }
+  #}
 
   Mount-DiskOne -lock $lock
   if ($isWorker) {
