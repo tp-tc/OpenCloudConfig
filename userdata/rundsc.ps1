@@ -1154,6 +1154,26 @@ if ($locationType -ne 'DataCenter') {
   $instanceType = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-type'))
   Write-Log -message ('instanceType: {0}.' -f $instanceType) -severity 'INFO'
   [Environment]::SetEnvironmentVariable("TASKCLUSTER_INSTANCE_TYPE", "$instanceType", "Machine")
+
+  # workaround for windows update failures on g3 instances
+  # https://support.microsoft.com/en-us/help/10164/fix-windows-update-errors
+  if ($instanceType.StartsWith('g3.')) {
+    try {
+      & dism.exe @('/Online', '/Cleanup-image', '/Restorehealth') | Out-File -filePath $logFile -append
+      Write-Log -message 'executed: dism cleanup.' -severity 'DEBUG'
+    }
+    catch {
+      Write-Log -message ('failed to run dism cleanup. {0}' -f $_.Exception.Message) -severity 'ERROR'
+    }
+    try {
+      & sfc @('/scannow') | Out-File -filePath $logFile -append
+      Write-Log -message 'executed: sfc scan.' -severity 'DEBUG'
+    }
+    catch {
+      Write-Log -message ('failed to run sfc scan. {0}' -f $_.Exception.Message) -severity 'ERROR'
+    }
+  }
+
   Mount-DiskOne -lock $lock
   if ($isWorker) {
     Resize-DiskZero
