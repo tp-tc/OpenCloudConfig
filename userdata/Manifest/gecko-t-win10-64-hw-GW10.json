@@ -72,9 +72,9 @@
       "ComponentName": "ProcessExplorer",
       "ComponentType": "ZipInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Url": "https://download.sysinternals.com/files/ProcessExplorer.zip",
+      "Url": "https://s3.amazonaws.com/windows-opencloudconfig-packages/ProcessExplorer/ProcessExplorer.zip",
       "Destination": "C:\\ProcessExplorer",
-      "sha512": "ef89598b2d7f4659a98b0ace28f5b5274a93203d2a2296e37eadedf8cb0337ee5ccc161377644dae1c3e8526fc2545190077635e07458f7e4e74c5b3241f5e30"
+      "sha512": "85ffa57d9736ba94bc528ed6e3fccff564b45dfcc5234f8de318f41905ac982fcb39eee3bdb09c3e37f1eb9de72f78312024caa75cc08610421dfeab2a0fb26f"
     },
     {
       "ComponentName": "ProcessMonitor",
