@@ -354,8 +354,12 @@ Configuration xDynamicConfig {
           DependsOn = ('[Script]ExeDownload_{0}' -f $item.ComponentName)
           GetScript = "@{ ExeInstall = $item.ComponentName }"
           SetScript = {
-            $exe = ('{0}\Temp\{1}' -f $env:SystemRoot, $using:item.ComponentName)
-            $process = Start-Process $exe -ArgumentList $using:item.Arguments -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), [IO.Path]::GetFileNameWithoutExtension($exe)) -RedirectStandardError ('{0}\log\{1}-{2}-stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), [IO.Path]::GetFileNameWithoutExtension($exe))
+            if ($using:item.sha512) {
+              $exe = ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.sha512)
+            } else {
+              $exe = ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName)
+            }
+            $process = Start-Process $exe -ArgumentList $using:item.Arguments -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), ('{0}.exe' -f $using:item.ComponentName)) -RedirectStandardError ('{0}\log\{1}-{2}-stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), ('{0}.exe' -f $using:item.ComponentName))
             if (-not (($process.ExitCode -eq 0) -or ($using:item.AllowedExitCodes -contains $process.ExitCode))) {
               throw
             }
@@ -467,7 +471,7 @@ Configuration xDynamicConfig {
             if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
               $webClient = New-Object System.Net.WebClient
               $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
-              $webClient.DownloadFile(('https://tooltool.mozilla-releng.net/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName))
+              $webClient.DownloadFile(('https://tooltool.mozilla-releng.net/sha512/{0}' -f $using:item.sha512), $tempFile)
             } else {
               try {
                 (New-Object Net.WebClient).DownloadFile($using:item.Url, $tempFile)
@@ -493,7 +497,7 @@ Configuration xDynamicConfig {
         }
         xArchive ('ZipInstall_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
-          Path = ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $item.ComponentName)
+          Path = ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($item.sha512) { $item.sha512 } else { $item.ComponentName }))
           Destination = $item.Destination
           Ensure = 'Present'
         }
