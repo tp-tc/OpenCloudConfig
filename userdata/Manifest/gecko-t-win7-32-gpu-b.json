@@ -1418,7 +1418,7 @@
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1494048",
       "Command": "icacls.exe",
       "Arguments": [
-        "c:\\ProgramData\\Mozilla",
+        "C:\\ProgramData\\Mozilla",
         "/grant",
         "Everyone:(OI)(CI)F"
       ],
@@ -1427,7 +1427,19 @@
           "ComponentType": "CommandRun",
           "ComponentName": "maintenanceservice_install"
         }
-      ]
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "icacls.exe",
+            "Arguments": [
+              "C:\\ProgramData\\Mozilla",
+              "/T"
+            ],
+            "Match": "Everyone:(OI)(CI)(F)"
+          }
+        ]
+      }
     }
   ],
   "ProvisionerConfiguration": {
