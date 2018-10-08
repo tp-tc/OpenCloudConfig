@@ -73,8 +73,7 @@
       "ComponentType": "ZipInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Url": "https://s3.amazonaws.com/windows-opencloudconfig-packages/ProcessMonitor/ProcessMonitor.zip",
-      "Destination": "C:\\ProcessMonitor",
-      "sha512": "3db4ad44652c2dbf7bdd03c88339cbd19d672f6363e3a3b6a5a45adbd62c6b4131e491d2fa8f31fb2a60c7555e202c25bc8088d9bdf0896dcb7e3366782e204f"
+      "Destination": "C:\\ProcessMonitor"
     },
     {
       "ComponentName": "GpgForWin",
