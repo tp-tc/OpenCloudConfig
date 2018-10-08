@@ -189,7 +189,8 @@
           "ComponentType": "DirectoryCreate",
           "ComponentName": "MozillaMaintenanceDir"
         }
-      ]
+      ],
+      "sha512": "4c200d59db17afcaa4deec9f083a75362b8baf0974483cb573b37587d605315513590c076f263f0a5e9165695751a076a839579e169a24507daf4cbc2b30d85e"
     },
     {
       "ComponentName": "maintenanceservice",
