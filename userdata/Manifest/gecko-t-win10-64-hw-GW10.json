@@ -1607,6 +1607,33 @@
           "ComponentName": "maintenanceservice_install"
         }
       ]
-    }
+    },
+    {
+      "ComponentName": "reg_ActivationFailureLoggingLeve",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Ole",
+      "ValueName": "ActivationFailureLoggingLeve",
+      "ValueType": "Dword",
+      "ValueData": "0x00000001",
+      "Hex": true
+   },
+   {
+      "ComponentName": "reg_CallFailureLoggingLevel",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Ole",
+      "ValueName": "CallFailureLoggingLevel",
+      "ValueType": "Dword",
+      "ValueData": "0x00000001",
+      "Hex": true
+   },
+   {
+      "ComponentName": "EndOfManifest.semaphore",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/EndOfManifest.semaphore",
+      "Target": "C:\\DSC\\EndOfManifest.semaphore"
+   }
   ]
 }
