@@ -1601,16 +1601,6 @@
         }
       ]
     },
-    {
-      "ComponentName": "reg_ActivationFailureLoggingLeve",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Ole",
-      "ValueName": "ActivationFailureLoggingLeve",
-      "ValueType": "Dword",
-      "ValueData": "0x00000001",
-      "Hex": true
-   },
    {
       "ComponentName": "EndOfManifest.semaphore",
       "ComponentType": "ChecksumFileDownload",
