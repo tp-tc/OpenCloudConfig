@@ -1612,16 +1612,6 @@
       "Hex": true
    },
    {
-      "ComponentName": "reg_CallFailureLoggingLevel",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Ole",
-      "ValueName": "CallFailureLoggingLevel",
-      "ValueType": "Dword",
-      "ValueData": "0x00000001",
-      "Hex": true
-   },
-   {
       "ComponentName": "EndOfManifest.semaphore",
       "ComponentType": "ChecksumFileDownload",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
