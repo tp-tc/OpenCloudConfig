@@ -3,7 +3,7 @@
   ('{0}\\dsc\\EndOfManifest.semaphore' -f $env:SystemRoot),
   ('{0}\\dsc\\task-claim-state.valid' -f $env:SystemDrive)
 )
-$rundsc = '{0}:\dsc\\rundsc.ps1'-f $env:SystemDrive
+$rundsc = '{0}:\\dsc\\rundsc.ps1'-f $env:SystemDrive
 $GWProcess = Get-Process generic-worker -ErrorAction SilentlyContinue
 
 write-host $flags
