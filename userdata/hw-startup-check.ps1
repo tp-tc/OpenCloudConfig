@@ -11,7 +11,7 @@ write-host $rundsc
 
 if (!(Test-Path $rundsc ) -Or ((Get-Content $rundsc) -eq $Null) ) {
   (New-Object Net.WebClient).DownloadFile(("https://raw.githubusercontent.com/markcor/OpenCloudConfig/master/userdata/rundsc.ps1?{0}" -f [Guid]::NewGuid()), '$rundsc')
-  while (!(Test-Path '{0}:\dsc\rundsc.ps1'-f $env:SystemDrive)) { Start-Sleep 10 }
+  while (!(Test-Path '{0}:\dsc\rundsc.ps1'-f $env:SystemDrive))
   foreach ($flag in $flagss) {
     if (Test-Path -Path $flag -ErrorAction SilentlyContinue) {
     Remove-Item $flag -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
