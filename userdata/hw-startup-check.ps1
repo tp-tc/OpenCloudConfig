@@ -22,7 +22,7 @@ if (!(Test-Path $rundsc ) -Or ((Get-Content $rundsc) -eq $Null) ) {
 
 Start-Sleep -s 1800
 
-if(GWProcess -eq $null) {
+if($GWProcess -eq $null) {
   foreach ($flag in $flagss) {
     if (Test-Path -Path $flag -ErrorAction SilentlyContinue) {
     Remove-Item $flag -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
