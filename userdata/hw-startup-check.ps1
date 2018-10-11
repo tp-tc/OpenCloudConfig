@@ -1,13 +1,11 @@
+# This script is called by a schedule task that is implemented during the initial deployment
+
 [string[]] $flags = @(
   ('{0}\\dsc\\in-progress.lock' -f $env:SystemDrive),
   ('{0}\\dsc\\EndOfManifest.semaphore' -f $env:SystemRoot),
   ('{0}\\dsc\\task-claim-state.valid' -f $env:SystemDrive)
 )
 $rundsc = '{0}\\dsc\\rundsc.ps1'-f $env:SystemDrive
-
-
-write-host $flags
-write-host $rundsc
 
 if (!(Test-Path $rundsc ) -Or ((Get-Content $rundsc) -eq $Null) ) {
   (New-Object Net.WebClient).DownloadFile("https://raw.githubusercontent.com/markcor/OpenCloudConfig/master/userdata/rundsc.ps1", "$rundsc")
