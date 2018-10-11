@@ -1587,7 +1587,7 @@
     },
     {
       "ComponentName": "hw-startup-check_ps1",
-      "ComponentType": "FileDownload",
+      "ComponentType": "ChecksumFileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/hw-startup-check.ps1",
       "Target": "C:\\DSC\\hw-startup-check.ps1"
