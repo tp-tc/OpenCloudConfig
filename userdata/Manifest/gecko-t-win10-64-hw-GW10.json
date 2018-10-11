@@ -1611,7 +1611,7 @@
     {
       "ComponentName": "EndOfManifest.semaphore",
       "ComponentType": "ChecksumFileDownload",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1494704",
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/EndOfManifest.semaphore",
       "Target": "C:\\DSC\\EndOfManifest.semaphore"
     }
