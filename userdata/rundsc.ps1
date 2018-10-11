@@ -723,16 +723,25 @@ function Activate-Windows {
     try {
       $sls = (Get-WMIObject SoftwareLicensingService)
       $sls.SetKeyManagementServiceMachine($keyManagementServiceMachine)
+      Write-Log -message ('{0} :: SoftwareLicensingService.SetKeyManagementServiceMachine: {1}.' -f $($MyInvocation.MyCommand.Name), $keyManagementServiceMachine) -severity 'DEBUG'
       $sls.SetKeyManagementServicePort($keyManagementServicePort)
+      Write-Log -message ('{0} :: SoftwareLicensingService.SetKeyManagementServicePort: {1}.' -f $($MyInvocation.MyCommand.Name), $keyManagementServicePort) -severity 'DEBUG'
       $sls.InstallProductKey($productKey)
+      Write-Log -message ('{0} :: SoftwareLicensingService.InstallProductKey: {1}.' -f $($MyInvocation.MyCommand.Name), $productKey) -severity 'DEBUG'
       $sls.RefreshLicenseStatus()
+      Write-Log -message ('{0} :: SoftwareLicensingService.RefreshLicenseStatus.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
 
       $slp = (Get-WmiObject SoftwareLicensingProduct | ? { (($_.ApplicationId -eq '55c92734-d682-4d71-983e-d6ec3f16059f') -and ($_.PartialProductKey) -and (-not $_.LicenseIsAddon)) })
       $slp.SetKeyManagementServiceMachine($keyManagementServiceMachine)
+      Write-Log -message ('{0} :: SoftwareLicensingProduct.SetKeyManagementServiceMachine: {1}.' -f $($MyInvocation.MyCommand.Name), $keyManagementServiceMachine) -severity 'DEBUG'
       $slp.SetKeyManagementServicePort($keyManagementServicePort)
+      Write-Log -message ('{0} :: SoftwareLicensingProduct.SetKeyManagementServicePort: {1}.' -f $($MyInvocation.MyCommand.Name), $keyManagementServicePort) -severity 'DEBUG'
       $slp.Activate()
+      Write-Log -message ('{0} :: SoftwareLicensingProduct.Activate.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
 
       $sls.RefreshLicenseStatus()
+      Write-Log -message ('{0} :: SoftwareLicensingService.RefreshLicenseStatus.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+      
       Write-Log -message ('{0} :: Windows activated with product key: {1} ({2}) against {3}:{4}.' -f $($MyInvocation.MyCommand.Name), $productKey, $osCaption, $keyManagementServiceMachine, $keyManagementServicePort) -severity 'INFO'
       $licenseStatus = @('Unlicensed', 'Licensed', 'OOB Grace', 'OOT Grace', 'Non-Genuine Grace', 'Notification', 'Extended Grace')
       Write-Log -message ('{0} :: Windows licensing status. Product: {1}, Status: {2}.' -f $($MyInvocation.MyCommand.Name), $slp.Name, $licenseStatus[$slp.LicenseStatus]) -severity 'INFO'
