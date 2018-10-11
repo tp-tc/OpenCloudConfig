@@ -89,10 +89,6 @@ function Is-RdpSessionActive {
   return (Is-ConditionTrue -proc 'remote desktop session' -predicate (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -gt 0) -activity 'active' -falseSeverity 'DEBUG')
 }
 
-function Is-DriveFormatInProgress {
-  return (Is-ConditionTrue -proc 'drive format' -predicate (@(Get-Process | ? { $_.ProcessName -eq 'format.com' }).length -gt 0) -activity 'in progress' -falseSeverity 'DEBUG')
-}
-
 function Is-Loaner {
   return ((Test-Path -Path 'Z:\loan-request.json' -ErrorAction SilentlyContinue) -or (Test-Path -Path 'HKLM:\SOFTWARE\OpenCloudConfig\Loan' -ErrorAction SilentlyContinue))
 }
@@ -131,11 +127,11 @@ if (-not (Is-Loaner)) {
     if (-not (Is-OpenCloudConfigRunning)) {
       $uptime = (Get-Uptime)
       if (($uptime) -and ($uptime -gt (New-TimeSpan -minutes 8))) {
-        if ((-not (Is-RdpSessionActive)) -and (-not (Is-DriveFormatInProgress))) {
+        if (-not (Is-RdpSessionActive)) {
           Write-Log -message ('instance failed productivity check and will be halted. uptime: {0}' -f $uptime) -severity 'ERROR'
           & shutdown @('-s', '-t', '0', '-c', 'HaltOnIdle :: instance failed productivity checks', '-f', '-d', 'p:4:1')
         } else {
-          Write-Log -message 'instance failed productivity checks and would be halted, but has rdp session in progress or is formatting a drive.' -severity 'DEBUG'
+          Write-Log -message 'instance failed productivity checks and would be halted, but has rdp session in progress.' -severity 'DEBUG'
         }
       } else {
         Write-Log -message 'instance failed productivity checks and will be retested shortly.' -severity 'WARN'
