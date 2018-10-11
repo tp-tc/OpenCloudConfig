@@ -20,6 +20,11 @@ if (!(Test-Path $rundsc ) -Or ((Get-Content $rundsc) -eq $Null) ) {
 
 Start-Sleep -s 1800
 if((Get-Process -Name generic-worker -ErrorAction SilentlyContinue) -eq $null){
+  foreach ($flag in $flagss) {
+    if (Test-Path -Path $flag -ErrorAction SilentlyContinue) {
+    }
+  }
+    Remove-Item $flag -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
     shutdown @('-r', '-t', '0', '-c', 'Generic-worker.exe has not started within the expected time; Restarting', '-f')
 }
 
