@@ -668,7 +668,7 @@
           "ComponentName": "DisableDesktopInterrupt"
         }
       ],
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker-format-and-reboot.bat",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker-and-reboot.bat",
       "Target": "C:\\generic-worker\\run-generic-worker.bat"
     },
     {
@@ -1427,6 +1427,27 @@
         {
           "ComponentType": "CommandRun",
           "ComponentName": "maintenanceservice_install"
+        }
+      ]
+    },
+    {
+      "ComponentName": "HostsFile",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1497308",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/etc/hosts",
+      "Target": "C:\\Windows\\System32\\drivers\\etc\\hosts"
+    },
+    {
+      "ComponentName": "SetHostsFileContent",
+      "ComponentType": "ReplaceInFile",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1497308",
+      "Path": "C:\\Windows\\System32\\drivers\\etc\\hosts",
+      "Match": "127\\.0\\.0\\.1 (hostname|i-[a-f0-9]{17})\\.(workertype|gecko-([1-3]-b-win2012(-beta)?|t-win(7-32|10-64)(-gpu(-b)?|-beta|-cu)?))\\.(ec2region|(us|eu)[ewc][12])\\.mozilla\\.com",
+      "Replace": "('127.0.0.1 {0}.{1}' -f ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-id')), ((Get-ItemProperty 'HKLM:SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters').'NV Domain').Replace('wintest.releng.', ''))",
+      "DependsOn": [
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "HostsFile"
         }
       ]
     }
