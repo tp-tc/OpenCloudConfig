@@ -17,4 +17,10 @@ if (!(Test-Path $rundsc ) -Or ((Get-Content $rundsc) -eq $Null) ) {
   }
   shutdown @('-r', '-t', '0', '-c', 'Rundsc.ps1 did not exists or is empty; Restarting', '-f')
 }
+
+Start-Sleep -s 1800
+if((Get-Process -Name generic-worker -ErrorAction SilentlyContinue) -eq $null){
+    shutdown @('-r', '-t', '0', '-c', 'Generic-worker.exe has not started within the expected time; Restarting', '-f')
+}
+
 exit
