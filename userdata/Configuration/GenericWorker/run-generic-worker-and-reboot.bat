@@ -32,6 +32,7 @@ shutdown /s /t 10 /c "shutting down; max idle time reached" /d p:4:1
 goto End
 
 :Reboot
+if %gw_exit_code% equ 67 if exist C:\dsc\in-progress.lock del /Q /F C:\dsc\in-progress.lock && echo Deleted C:\dsc\in-progress.lock file >> C:\generic-worker\generic-worker.log
 shutdown /r /t 0 /f /c "rebooting; generic worker task run completed" /d p:4:1
 
 :End
