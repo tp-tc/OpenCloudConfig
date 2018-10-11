@@ -1500,13 +1500,6 @@
       "sha512": "729b1e37aefdf708df6a787b2eecd0e4e186c4e8a6d6f3028b0134f81c4216f889e67645d9279cb0ae60079a8f6f68ac88ec5d1fe27ee54f8de563b5209698f3"
     },
     {
-      "ComponentName": "EndOfManifest.semaphore",
-      "ComponentType": "ChecksumFileDownload",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/EndOfManifest.semaphore",
-      "Target": "C:\\DSC\\EndOfManifest.semaphore"
-    },
-    {
       "ComponentName": "WindowsPerformanceToolkit",
       "ComponentType": "MsiInstall",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485757",
@@ -1559,6 +1552,13 @@
           "ComponentName": "maintenanceservice_install"
         }
       ]
+    },
+    {
+      "ComponentName": "EndOfManifest.semaphore",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1494704",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/EndOfManifest.semaphore",
+      "Target": "C:\\DSC\\EndOfManifest.semaphore"
     }
   ]
 }
