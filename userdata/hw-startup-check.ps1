@@ -4,7 +4,7 @@
   ('{0}\\dsc\\task-claim-state.valid' -f $env:SystemDrive)
 )
 $rundsc = '{0}\\dsc\\rundsc.ps1'-f $env:SystemDrive
-$GWProcess = Get-Process generic-worker -ErrorAction SilentlyContinue
+
 
 write-host $flags
 write-host $rundsc
@@ -19,16 +19,4 @@ if (!(Test-Path $rundsc ) -Or ((Get-Content $rundsc) -eq $Null) ) {
   }
   shutdown @('-r', '-t', '0', '-c', 'Rundsc.ps1 did not exists or is empty; Restarting', '-f')
 }
-
-Start-Sleep -s 1800
-
-if($GWProcess -eq $null) {
-  foreach ($flag in $flagss) {
-    if (Test-Path -Path $flag -ErrorAction SilentlyContinue) {
-    Remove-Item $flag -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
-    }
-  }
-  shutdown @('-r', '-t', '0', '-c', 'Generic-worker.exe has not started within the expected time; Restarting', '-f')
-}
-
 exit
