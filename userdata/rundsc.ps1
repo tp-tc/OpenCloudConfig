@@ -706,7 +706,7 @@ function Wipe-Drive {
 }
 function Activate-Windows {
   param (
-    [string] $keyManagementServiceMachine = '10.22.69.24',
+    [string] $keyManagementServiceMachine = '10.48.69.100',
     [int] $keyManagementServicePort = 1688
   )
   begin {
