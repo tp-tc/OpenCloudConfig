@@ -1022,6 +1022,32 @@ function hw-DiskManage {
 # See https://bugzilla.mozilla.org/show_bug.cgi?id=1443595 for context.
 Set-DefaultStrongCryptography
 
+switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+  'Microsoft Windows Server 2016*' {
+    # handle miscofingured routing for meta/user data (see: https://serverfault.com/questions/844494/aws-instance-not-access-metadata-server-with-ip#comment1172021_844494)
+    $destinationPrefix = '169.254.169.254/32'
+    $defaultNetIPConfig = @(Get-NetIPConfiguration | Sort-Object -Property 'InterfaceIndex')[0]
+    try {
+      if (@(Get-NetRoute -DestinationPrefix $destinationPrefix -PolicyStore 'ActiveStore').Length) {
+        Remove-NetRoute -DestinationPrefix $destinationPrefix -PolicyStore 'ActiveStore' -Confirm:$false -ErrorAction SilentlyContinue
+        Write-Log -message 'network route for instance metadata removed from ActiveStore' -severity 'DEBUG'
+      }
+      if (@(Get-NetRoute -DestinationPrefix $destinationPrefix -PolicyStore 'PersistentStore').Length) {
+        Remove-NetRoute -DestinationPrefix $destinationPrefix -PolicyStore 'PersistentStore' -Confirm:$false -ErrorAction SilentlyContinue
+        Write-Log -message 'network route for instance metadata removed from PersistentStore' -severity 'DEBUG'
+      }
+      New-NetRoute -DestinationPrefix $destinationPrefix -InterfaceIndex $defaultNetIPConfig.InterfaceIndex -NextHop $defaultNetIPConfig.IPv4DefaultGateway.NextHop -RouteMetric 1 -ErrorAction Stop
+      Write-Log -message 'network route for instance metadata added.' -severity 'INFO'
+    }
+    catch {
+      Write-Log -message ('failed to add network route for instance metadata. {0}' -f $_.Exception.Message) -severity 'ERROR'
+    }
+  }
+  default {
+    Write-Log -message 'skipped network route checks' -severity 'DEBUG'
+  }
+}
+
 # SourceRepo is in place to toggle between production and testing environments
 $SourceRepo = 'mozilla-releng'
 
