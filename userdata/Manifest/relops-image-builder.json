@@ -31,7 +31,7 @@
       "ComponentName": "NxLogPaperTrailConfiguration",
       "ComponentType": "ChecksumFileDownload",
       "Comment": "Maintenance Toolchain",
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win2012.conf",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win2016.conf",
       "Target": "C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf",
       "DependsOn": [
         {
@@ -689,7 +689,7 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\Program Files (x86)\\Git\\bin\\git.exe"
+          "C:\\Program Files\\Git\\bin\\git.exe"
         ]
       }
     }
