@@ -12,8 +12,7 @@
       "Comment": "Maintenance Toolchain",
       "Url": "https://nxlog.co/system/files/products/files/348/nxlog-ce-2.9.1716.msi",
       "Name": "NxLog-CE",
-      "ProductId": "FC526514-AFD9-4A5C-8677-56241539609D",
-      "sha512": "70f5516bca0ff7814833ef397c01dbcd1c7011c0ef4b0f2aeda2e1aa7c02fe680eddfd1c0656f8d438559e34e5a841360dc6dafa7843c610528df2e1defb02be"
+      "ProductId": "FC526514-AFD9-4A5C-8677-56241539609D"
     },
     {
       "ComponentName": "PaperTrailEncryptionCertificate",
@@ -65,16 +64,14 @@
       "ComponentType": "ZipInstall",
       "Comment": "Maintenance Toolchain",
       "Url": "https://s3.amazonaws.com/windows-opencloudconfig-packages/ProcessExplorer/ProcessExplorer.zip",
-      "Destination": "C:\\ProcessExplorer",
-      "sha512": "85ffa57d9736ba94bc528ed6e3fccff564b45dfcc5234f8de318f41905ac982fcb39eee3bdb09c3e37f1eb9de72f78312024caa75cc08610421dfeab2a0fb26f"
+      "Destination": "C:\\ProcessExplorer"
     },
     {
       "ComponentName": "ProcessMonitor",
       "ComponentType": "ZipInstall",
       "Comment": "Maintenance Toolchain",
       "Url": "https://s3.amazonaws.com/windows-opencloudconfig-packages/ProcessMonitor/ProcessMonitor.zip",
-      "Destination": "C:\\ProcessMonitor",
-      "sha512": "3db4ad44652c2dbf7bdd03c88339cbd19d672f6363e3a3b6a5a45adbd62c6b4131e491d2fa8f31fb2a60c7555e202c25bc8088d9bdf0896dcb7e3366782e204f"
+      "Destination": "C:\\ProcessMonitor"
     },
     {
       "ComponentName": "GpgForWin",
@@ -89,8 +86,7 @@
           "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg.exe",
           "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg2.exe"
         ]
-      },
-      "sha512": "b1c48d84d041055db3d3e3cbd22ef2f3300728b06c76660b9b78ececf56b7ccbc80addb39a64c0a4eb68bf3463ceb6d254dedda047049ce680e9d543dd8a9af9"
+      }
     },
     {
       "ComponentName": "SevenZip",
@@ -105,8 +101,7 @@
           "C:\\Program Files\\7-Zip\\7z.exe",
           "C:\\Program Files\\7-Zip\\7z.dll"
         ]
-      },
-      "sha512": "4df02ab139b087c8d6e689a99afb58e1ab3d4c0722daa11f6a070cddb2506d079a7d9ff55341baa5b7fd1dc7593225eb9d7fdbfb9ac91e0d8db61f9fda85cbb3"
+      }
     },
     {
       "ComponentName": "SublimeText3",
@@ -123,8 +118,7 @@
           "C:\\Program Files\\Sublime Text 3\\subl.exe",
           "C:\\Program Files\\Sublime Text 3\\sublime_text.exe"
         ]
-      },
-      "sha512": "d3e71b28567ddd1b486aa3dcc9814818d91c322bc20ec203018d74bc465835f9ddd34d78f674172d00e66b39443070eb45e9799e3801b0ac410c958b2cf21098"
+      }
     },
     {
       "ComponentName": "SublimeText3_PackagesFolder",
@@ -236,8 +230,7 @@
         }
       ],
       "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.11.2/generic-worker-windows-amd64.exe",
-      "Target": "C:\\generic-worker\\generic-worker.exe",
-      "sha512": "c2c3b75ab638675998e108f4b9ba205f25c50d197faca32ed8a85bd060de06bd3735d9bc31092dcb7506b6e8132de58bf2b983c683442d9a3eb4221eb286e376"
+      "Target": "C:\\generic-worker\\generic-worker.exe"
     },
     {
       "ComponentName": "LiveLogDownload",
@@ -249,8 +242,7 @@
         }
       ],
       "Source": "https://github.com/taskcluster/livelog/releases/download/v1.1.0/livelog-windows-amd64.exe",
-      "Target": "C:\\generic-worker\\livelog.exe",
-      "sha512": "80cc08012a766c1f4c9da82b3d82af1612d6994714e775182d6ffa1e2b61d5fac4eefc2b5031f5d5ff28caa35dd9a5c6ada9147dc80289226b6f8722f0234a95"
+      "Target": "C:\\generic-worker\\livelog.exe"
     },
     {
       "ComponentName": "TaskClusterProxyDownload",
@@ -262,8 +254,7 @@
         }
       ],
       "Source": "https://github.com/taskcluster/taskcluster-proxy/releases/download/v4.1.0/taskcluster-proxy-windows-amd64.exe",
-      "Target": "C:\\generic-worker\\taskcluster-proxy.exe",
-      "sha512": "83dd123441f6bc0336103b65716ad016715864840055e07ec1959f74cd68b7e9cf5fc6e7e1034d7d4802486f1cbddc342475a61e49da06a878c3f74b8652d193"
+      "Target": "C:\\generic-worker\\taskcluster-proxy.exe"
     },
     {
       "ComponentName": "LiveLog_Get",
@@ -285,7 +276,6 @@
       "ComponentName": "NSSMDownload",
       "ComponentType": "FileDownload",
       "Source": "https://nssm.cc/ci/nssm-2.24-103-gdee49fc.zip",
-      "sha512": "05835a8b28fc3d8573c8fc6b627c885990468e29144d5523ce2c065835ff3f9341ced5e15fa246ab7af36cadfa0e96be854b9fafa24ab47cd11319d8a873681b",
       "Target": "C:\\Windows\\Temp\\NSSMInstall.zip"
     },
     {
@@ -395,8 +385,7 @@
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1490703",
       "Url": "https://www.mercurial-scm.org/release/windows/mercurial-4.7.1-x64.msi",
       "Name": "Mercurial 4.7.1 (x64)",
-      "ProductId": "68FA175A-0F28-49AF-9E65-30CE6B60AE1C",
-      "sha512": "b3c957860855840c54d7407e13eb129c408c6ee9d5bf6547b5fb598321bc016c53d991cccbc5a63a78963057738aef43efd1da358b2ec41f66389d6be2fdc1cf"
+      "ProductId": "68FA175A-0F28-49AF-9E65-30CE6B60AE1C"
     },
     {
       "ComponentName": "CarbonClone",
@@ -516,8 +505,7 @@
       "ComponentType": "FileDownload",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
       "Source": "https://github.com/PowerShell/Win32-OpenSSH/releases/download/v7.6.1.0p1-Beta/OpenSSH-Win64.zip",
-      "Target": "C:\\Windows\\Temp\\OpenSSH-Win64.zip",
-      "sha512": "340f2be8bbddf2552a1d2d55b17f06f09bc1bc6ff2bbba6c8653f8fc3b91f5d9e2bd47e57d537f81df69fca776bf6ecbd533a7ac8bcbb6012f03676530e6d9df"
+      "Target": "C:\\Windows\\Temp\\OpenSSH-Win64.zip"
     },
     {
       "ComponentName": "OpenSshUnzip",
