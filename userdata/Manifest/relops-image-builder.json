@@ -659,6 +659,39 @@
           "ComponentName": "HostsFile"
         }
       ]
+    },
+    {
+      "ComponentName": "GitAndUnixToolsOnPath",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "https://superuser.com/a/966787/5483",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Git_is1",
+      "ValueName": "Inno Setup CodeFile: Path Option",
+      "ValueType": "String",
+      "ValueData": "CmdTools"
+    },
+    {
+      "ComponentName": "Git",
+      "ComponentType": "ExeInstall",
+      "Url": "https://github.com/git-for-windows/git/releases/download/v2.19.1.windows.1/Git-2.19.1-64-bit.exe",
+      "Arguments": [
+        "/VERYSILENT",
+        "/SUPPRESSMSGBOXES",
+        "/NORESTART",
+        "/NOCANCEL",
+        "/SP-",
+        "/COMPONENTS=\"icons,ext\\reg\\shellhere,assoc,assoc_sh\""
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "RegistryValueSet",
+          "ComponentName": "GitAndUnixToolsOnPath"
+        }
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files (x86)\\Git\\bin\\git.exe"
+        ]
+      }
     }
   ],
   "ProvisionerConfiguration": {
