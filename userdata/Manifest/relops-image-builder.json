@@ -10,9 +10,9 @@
       "ComponentName": "NxLog",
       "ComponentType": "MsiInstall",
       "Comment": "Maintenance Toolchain",
-      "Url": "https://nxlog.co/system/files/products/files/348/nxlog-ce-2.9.1716.msi",
-      "Name": "NxLog-CE",
-      "ProductId": "FC526514-AFD9-4A5C-8677-56241539609D"
+      "Url": "https://nxlog.co/system/files/products/files/348/nxlog-ce-2.10.2102.msi",
+      "Name": "NXLog-CE",
+      "ProductId": "4594566F-2BCE-49AC-AC27-8847F164CB94"
     },
     {
       "ComponentName": "PaperTrailEncryptionCertificate",
