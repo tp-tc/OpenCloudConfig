@@ -85,20 +85,11 @@ tasks:
       retries: 0
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
-          - aws-provisioner:manage-worker-type:gecko-1-b-win2012
-          - aws-provisioner:manage-worker-type:gecko-1-b-win2012-beta
-          - aws-provisioner:manage-worker-type:gecko-2-b-win2012
-          - aws-provisioner:manage-worker-type:gecko-3-b-win2012
-          - aws-provisioner:manage-worker-type:gecko-t-win7-32
-          - aws-provisioner:manage-worker-type:gecko-t-win7-32-beta
-          - aws-provisioner:manage-worker-type:gecko-t-win7-32-cu
-          - aws-provisioner:manage-worker-type:gecko-t-win7-32-gpu
-          - aws-provisioner:manage-worker-type:gecko-t-win7-32-gpu-b
-          - aws-provisioner:manage-worker-type:gecko-t-win10-64
-          - aws-provisioner:manage-worker-type:gecko-t-win10-64-beta
-          - aws-provisioner:manage-worker-type:gecko-t-win10-64-cu
-          - aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu
-          - aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu-b
+          - aws-provisioner:manage-worker-type:gecko-1-b-win*
+          - aws-provisioner:manage-worker-type:gecko-2-b-win*
+          - aws-provisioner:manage-worker-type:gecko-3-b-win*
+          - aws-provisioner:manage-worker-type:gecko-t-win*
+          - aws-provisioner:manage-worker-type:relops*
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.rollback'
       workerType: '{{taskcluster.docker.workerType}}'
@@ -915,5 +906,61 @@ tasks:
       metadata:
           name: 'Update gecko-t-win10-64-gpu AMIs'
           description: 'recreate Firefox Windows 10 (64 bit) GPU test AMIs using OpenCloudConfig for configuration and dependency installation'
+          owner: '{{event.head.user.email}}'
+          source: '{{event.head.repo.url}}'
+
+    - provisionerId: '{{taskcluster.docker.provisionerId}}'
+      retries: 0
+      scopes:
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:relops-image-builder
+          - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:relops-image-builder
+          - aws-provisioner:manage-worker-type:relops-image-builder
+      routes:
+          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.relops-image-builder'
+      workerType: '{{taskcluster.docker.workerType}}'
+      extra:
+          github:
+              env: true
+              events:
+                  - push
+              branches:
+                - master
+          data:
+              head:
+                  sha: '{{event.head.sha}}'
+                  user:
+                      email: '{{event.head.user.email}}'
+      payload:
+          maxRunTime: 10800
+          image: 'grenade/opencloudconfig'
+          features:
+              taskclusterProxy: true
+          command:
+              - '/bin/bash'
+              - '--login'
+              - '-c'
+              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh relops-image-builder'
+          artifacts:
+              'project/releng/opencloudconfig/update-request.json':
+                  type: file
+                  path: './relops-image-builder.json'
+                  expires: "{{ '4 weeks' | $fromNow }}"
+              'project/releng/opencloudconfig/update-response.json':
+                  type: file
+                  path: './update-response.json'
+                  expires: "{{ '4 weeks' | $fromNow }}"
+              'project/releng/opencloudconfig/secret-update-response.json':
+                  type: file
+                  path: './secret-update-response.json'
+                  expires: "{{ '4 weeks' | $fromNow }}"
+              'project/releng/opencloudconfig/relops-image-builder.diff':
+                  type: file
+                  path: './relops-image-builder.diff'
+                  expires: "{{ '1 year' | $fromNow }}"
+      metadata:
+          name: 'Update relops-image-builder AMIs'
+          description: 'recreate relops image builder AMIs using OpenCloudConfig for configuration and dependency installation'
           owner: '{{event.head.user.email}}'
           source: '{{event.head.repo.url}}'
