@@ -41,7 +41,7 @@ function Run-RemoteDesiredStateConfig {
     [string] $url
   )
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     Stop-DesiredStateConfig
@@ -59,12 +59,12 @@ function Run-RemoteDesiredStateConfig {
     Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Stop-DesiredStateConfig {
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     # terminate any running dsc process
@@ -75,12 +75,12 @@ function Stop-DesiredStateConfig {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Remove-DesiredStateConfigTriggers {
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     try {
@@ -103,7 +103,7 @@ function Remove-DesiredStateConfigTriggers {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Remove-LegacyStuff {
@@ -200,7 +200,7 @@ function Remove-LegacyStuff {
     }
   )
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     # clear the event log (if it hasn't just been done)
@@ -306,7 +306,7 @@ function Remove-LegacyStuff {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Mount-DiskOne {
@@ -314,7 +314,7 @@ function Mount-DiskOne {
     [string] $lock = 'C:\dsc\in-progress.lock'
   )
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     if ((Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) {
@@ -380,7 +380,7 @@ function Mount-DiskOne {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Resize-DiskZero {
@@ -388,7 +388,7 @@ function Resize-DiskZero {
     [char] $drive = 'C'
   )
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     if ((Get-Command 'Resize-Partition' -errorAction SilentlyContinue) -and (Get-Command 'Get-PartitionSupportedSize' -errorAction SilentlyContinue)) {
@@ -411,7 +411,7 @@ function Resize-DiskZero {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Resize-DiskOne {
@@ -421,7 +421,7 @@ function Resize-DiskOne {
     [char] $newDrive = 'Y'
   )
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     if ((Get-Command 'Resize-Partition' -errorAction SilentlyContinue) -and (Get-Command 'New-Partition' -errorAction SilentlyContinue) -and (Get-Command 'Format-Volume' -errorAction SilentlyContinue)) {
@@ -451,7 +451,7 @@ function Resize-DiskOne {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Set-Pagefile {
@@ -463,7 +463,7 @@ function Set-Pagefile {
     [int] $maximumSize = 8192
   )
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
@@ -513,7 +513,7 @@ function Set-Pagefile {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Map-DriveLetters {
@@ -524,7 +524,7 @@ function Map-DriveLetters {
     }
   )
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     $driveLetterMap.Keys | % {
@@ -559,7 +559,7 @@ function Map-DriveLetters {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Set-Credentials {
@@ -569,7 +569,7 @@ function Set-Credentials {
     [switch] $setautologon
   )
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     if (($username) -and ($password)) {
@@ -589,7 +589,7 @@ function Set-Credentials {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function New-LocalCache {
@@ -602,7 +602,7 @@ function New-LocalCache {
     )
   )
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     foreach ($path in $paths) {
@@ -611,7 +611,7 @@ function New-LocalCache {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Create-ScheduledPowershellTask {
@@ -623,7 +623,7 @@ function Create-ScheduledPowershellTask {
     [string] $mo = $null
   )
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     # delete scheduled task if it pre-exists
@@ -667,7 +667,7 @@ function Create-ScheduledPowershellTask {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Wipe-Drive {
@@ -677,7 +677,7 @@ function Wipe-Drive {
     $percentFree = 0.05
   )
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     $filename = "thinsan.tmp"
@@ -710,7 +710,7 @@ function Wipe-Drive {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Activate-Windows {
@@ -719,7 +719,7 @@ function Activate-Windows {
     [int] $keyManagementServicePort = 1688
   )
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     $productKeyMap = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/product-key-map.json?{0}' -f [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
@@ -760,7 +760,7 @@ function Activate-Windows {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Import-RegistryHive {
@@ -770,7 +770,7 @@ function Import-RegistryHive {
     [string] $name
   )
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     # check whether the drive name is available
@@ -805,7 +805,7 @@ function Import-RegistryHive {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Remove-RegistryHive {
@@ -813,7 +813,7 @@ function Remove-RegistryHive {
     [string] $name
   )
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     # get the drive that was used to map the registry hive
@@ -852,7 +852,7 @@ function Remove-RegistryHive {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Set-DefaultProfileProperties {
@@ -868,7 +868,7 @@ function Set-DefaultProfileProperties {
     )
   )
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     try {
@@ -904,12 +904,12 @@ function Set-DefaultProfileProperties {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Set-DefaultStrongCryptography {
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
     Write-Log -message ('{0} :: CLRVersion: {1}, PSVersion: {2}' -f $($MyInvocation.MyCommand.Name), $PSVersionTable['CLRVersion'], $PSVersionTable['PSVersion']) -severity 'DEBUG'
     Write-Log -message ('{0} :: SecurityProtocol: {1}' -f $($MyInvocation.MyCommand.Name), [Net.ServicePointManager]::SecurityProtocol) -severity 'DEBUG'
   }
@@ -942,7 +942,7 @@ function Set-DefaultStrongCryptography {
   }
   end {
     Write-Log -message ('{0} :: SecurityProtocol: {1}' -f $($MyInvocation.MyCommand.Name), [Net.ServicePointManager]::SecurityProtocol) -severity 'DEBUG'
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Conserve-DiskSpace {
@@ -952,7 +952,7 @@ function Conserve-DiskSpace {
     )
   )
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     # delete paths
@@ -964,7 +964,7 @@ function Conserve-DiskSpace {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function Set-SystemClock {
@@ -973,7 +973,7 @@ function Set-SystemClock {
     [string] $ntpserverlist = $(if ($locationType -eq 'DataCenter') { 'infoblox1.private.mdc1.mozilla.com infoblox1.private.mdc2.mozilla.com' } else { '0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org' })
   )
   begin {
-    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     $timeService = Get-Service -Name 'w32time'
@@ -1031,7 +1031,7 @@ function Set-SystemClock {
     }
   }
   end {
-    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 function hw-DiskManage {
@@ -1041,13 +1041,16 @@ function hw-DiskManage {
       ('{0}\SoftwareDistribution\Download\*' -f $env:SystemRoot),
       ('{0}\ProgramData\Package Cache' -f $env:SystemDrive)
     ),
-	[string] $olddscfiles = '{0}\log' -f $env:SystemDrive,
-	[string] $oldwindowslog = '{0}\Windows\logs' -f $env:SystemDrive,
-	[string] $driveletter = (get-location).Drive.Name,
-	[string] $lock = 'c:\dsc\in-progress.lock',
-	[string] $WarnPercent = .55,
-	[string] $StopPercent = .20
-	)
+    [string] $olddscfiles = '{0}\log' -f $env:SystemDrive,
+    [string] $oldwindowslog = '{0}\Windows\logs' -f $env:SystemDrive,
+    [string] $driveletter = (get-location).Drive.Name,
+    [string] $lock = 'c:\dsc\in-progress.lock',
+    [string] $WarnPercent = .55,
+    [string] $StopPercent = .20
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
   process {
     foreach ($path in $paths) {
       if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
@@ -1065,32 +1068,34 @@ function hw-DiskManage {
     $perfree = [math]::Round($percentfree,2)*100
     Write-Log -message "Current free space of drive $driveletter $freeMB MB"  -severity 'INFO' 
     Write-Log -message "Current free space percentage of drive $driveletter $perfree%" -severity 'INFO'
-      if ($percentfree -lt $WarnPercent){
-	Write-Log -message "Current available disk space WARNING $perfree%" -severity 'WARN'
-	Write-Log -message "Attempting to clean and optimize disk" -severity 'WARN'
-	Start-Process -Wait Dism.exe /online /Cleanup-Image /StartComponentCleanup
-	Start-Process -Wait cleanmgr.exe /autoclean
-	optimize-Volume $driveletter
-	$freespace = Get-WmiObject -Class Win32_logicalDisk | ? {$_.DriveType -eq '3'}
-        $percentfree = $freespace.FreeSpace / $freespace.Size
-	$freeMB =  [math]::Round($freeB / 1000000)
-	$perfree = [math]::Round($percentfree,2)*100
-  	Write-Log -message "Current free space of drive post clean and optimize disk $driveletter $freeMB MB"  -severity 'INFO' 
-	Write-Log -message "Current free space percentage of drive post clean and optimize disk $driveletter $perfree %" -severity 'INFO'
+    if ($percentfree -lt $WarnPercent) {
+      Write-Log -message "Current available disk space WARNING $perfree%" -severity 'WARN'
+      Write-Log -message "Attempting to clean and optimize disk" -severity 'WARN'
+      Start-Process -Wait Dism.exe /online /Cleanup-Image /StartComponentCleanup
+      Start-Process -Wait cleanmgr.exe /autoclean
+      optimize-Volume $driveletter
+      $freespace = Get-WmiObject -Class Win32_logicalDisk | ? {$_.DriveType -eq '3'}
+      $percentfree = $freespace.FreeSpace / $freespace.Size
+      $freeMB =  [math]::Round($freeB / 1000000)
+      $perfree = [math]::Round($percentfree,2)*100
+      Write-Log -message "Current free space of drive post clean and optimize disk $driveletter $freeMB MB"  -severity 'INFO' 
+      Write-Log -message "Current free space percentage of drive post clean and optimize disk $driveletter $perfree %" -severity 'INFO'
     }
-      if ($percentfree -lt $StopPercent){
+    if ($percentfree -lt $StopPercent) {
       $TimeStart = Get-Date
       $TimeEnd = $timeStart.addminutes(1)
-        Do {
-	  $TimeNow = Get-Date
-	  Write-Log -message "Current available disk space CRITCAL $perfree% free. Will not start Generic-Worker!" -severity 'Error' 
+      do {
+        $TimeNow = Get-Date
+        Write-Log -message "Current available disk space CRITCAL $perfree% free. Will not start Generic-Worker!" -severity 'Error' 
         Sleep 15
-        }
-        Until ($TimeNow -ge $TimeEnd)
-	  Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
-	  shutdown @('-s', '-t', '0', '-c', 'Restarting disk space Critical', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
-	  exit
-     }
+      } until ($TimeNow -ge $TimeEnd)
+      Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+      & shutdown @('-s', '-t', '0', '-c', 'Restarting disk space Critical', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
+      exit
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
 
@@ -1138,7 +1143,7 @@ if ($UpdateService.Status -ne 'Running') {
 if ($locationType -eq 'DataCenter') {
   if (!(Test-Connection github.com -quiet)) {
     Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
-    shutdown @('-r', '-t', '0', '-c', 'reboot; external resources are not available', '-f', '-d', '4:5') | Out-File -filePath $logFile -append
+    & shutdown @('-r', '-t', '0', '-c', 'reboot; external resources are not available', '-f', '-d', '4:5') | Out-File -filePath $logFile -append
   }
 }
 if ((Get-Service 'Ec2Config' -ErrorAction SilentlyContinue) -or (Get-Service 'AmazonSSMAgent' -ErrorAction SilentlyContinue)) {
