@@ -642,19 +642,28 @@ function Create-ScheduledPowershellTask {
       Write-Log -message ('{0} :: {1} deleted.' -f $($MyInvocation.MyCommand.Name), $scriptPath) -severity 'INFO'
     }
     # download script
-    (New-Object Net.WebClient).DownloadFile($scriptUrl, $scriptPath)
-    Write-Log -message ('{0} :: {1} downloaded from {2}.' -f $($MyInvocation.MyCommand.Name), $scriptPath, $scriptUrl) -severity 'INFO'
-    # create scheduled task
     try {
-      if ($mo) {
-        Start-Process 'schtasks.exe' -ArgumentList @('/create', '/tn', $taskName, '/sc', $sc, '/mo', $mo, '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', ('"{0}\powershell.exe -NoLogo -NoProfile -WindowStyle Hidden -File \"{1}\" -ExecutionPolicy RemoteSigned -ConsoleOutputFile \"{2}\" "' -f $pshome, $scriptPath, $scriptPath.Replace('.ps1', '-run.log')), '/f') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-create.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskName) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-create.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskName)
-      } else {
-        Start-Process 'schtasks.exe' -ArgumentList @('/create', '/tn', $taskName, '/sc', $sc, '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', ('"{0}\powershell.exe -NoLogo -NoProfile -WindowStyle Hidden -File \"{1}\" -ExecutionPolicy RemoteSigned -ConsoleOutputFile \"{2}\" "' -f $pshome, $scriptPath, $scriptPath.Replace('.ps1', '-run.log')), '/f') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-create.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskName) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-create.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskName)
-      }
-      Write-Log -message ('{0} :: scheduled task: {1} created.' -f $($MyInvocation.MyCommand.Name), $taskName) -severity 'INFO'
+      (New-Object Net.WebClient).DownloadFile($scriptUrl, $scriptPath)
+      Write-Log -message ('{0} :: {1} downloaded from {2}.' -f $($MyInvocation.MyCommand.Name), $scriptPath, $scriptUrl) -severity 'INFO'
     }
     catch {
-      Write-Log -message ('{0} :: failed to create scheduled task: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $taskName, $_.Exception.Message) -severity 'ERROR'
+      Write-Log -message ('{0} :: failed to download scheduled task script {1} from {2}. {3}' -f $($MyInvocation.MyCommand.Name), $scriptPath, $scriptUrl, $_.Exception.Message) -severity 'ERROR'
+    }
+    if (Test-Path -Path $scriptPath -ErrorAction SilentlyContinue) {
+      # create scheduled task
+      try {
+        if ($mo) {
+          Start-Process 'schtasks.exe' -ArgumentList @('/create', '/tn', $taskName, '/sc', $sc, '/mo', $mo, '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', ('"{0}\powershell.exe -NoLogo -NoProfile -WindowStyle Hidden -File \"{1}\" -ExecutionPolicy RemoteSigned -ConsoleOutputFile \"{2}\" "' -f $pshome, $scriptPath, $scriptPath.Replace('.ps1', '-run.log')), '/f') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-create.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskName) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-create.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskName)
+        } else {
+          Start-Process 'schtasks.exe' -ArgumentList @('/create', '/tn', $taskName, '/sc', $sc, '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', ('"{0}\powershell.exe -NoLogo -NoProfile -WindowStyle Hidden -File \"{1}\" -ExecutionPolicy RemoteSigned -ConsoleOutputFile \"{2}\" "' -f $pshome, $scriptPath, $scriptPath.Replace('.ps1', '-run.log')), '/f') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-create.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskName) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-create.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskName)
+        }
+        Write-Log -message ('{0} :: scheduled task: {1} created.' -f $($MyInvocation.MyCommand.Name), $taskName) -severity 'INFO'
+      }
+      catch {
+        Write-Log -message ('{0} :: failed to create scheduled task: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $taskName, $_.Exception.Message) -severity 'ERROR'
+      }
+    } else {
+      Write-Log -message ('{0} :: skipped creation of scheduled task: {1}. missing script: {2}' -f $($MyInvocation.MyCommand.Name), $taskName, $scriptPath) -severity 'ERROR'
     }
   }
   end {
@@ -1193,6 +1202,7 @@ if ($locationType -ne 'DataCenter') {
       }
     }
   }
+  Write-Log -message ('runDscOnWorker: {0}, renameInstance: {1}, setFqdn: {2}.' -f $runDscOnWorker, $renameInstance, $setFqdn) -severity 'DEBUG'
   $instanceType = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-type'))
   Write-Log -message ('instanceType: {0}.' -f $instanceType) -severity 'INFO'
   [Environment]::SetEnvironmentVariable("TASKCLUSTER_INSTANCE_TYPE", "$instanceType", "Machine")
@@ -1254,6 +1264,7 @@ if ($locationType -ne 'DataCenter') {
   # rename the instance
   $instanceId = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-id'))
   $dnsHostname = [System.Net.Dns]::GetHostName()
+  Write-Log -message ('instanceId: {0}, dnsHostname: {1}.' -f $instanceId, $dnsHostname) -severity 'INFO'
   if ($renameInstance -and ([bool]($instanceId)) -and (-not ($dnsHostname -ieq $instanceId))) {
     [Environment]::SetEnvironmentVariable("COMPUTERNAME", "$instanceId", "Machine")
     $env:COMPUTERNAME = $instanceId
@@ -1281,10 +1292,13 @@ if ($locationType -ne 'DataCenter') {
     # Turn off DNS address registration (EC2 DNS is configured to not allow it)
     foreach($nic in (Get-WmiObject "Win32_NetworkAdapterConfiguration where IPEnabled='TRUE'")) {
       $nic.SetDynamicDNSRegistration($false)
+      Write-Log -message ('dynamic dns registration disabled on network interface {0} ({1})' -f $nic.Index, $nic.Description) -severity 'DEBUG'
     }
   }
+  Write-Log -message ('instanceId: {0}, dnsHostname: {1}.' -f $instanceId, $dnsHostname) -severity 'INFO'
 }
 if ($rebootReasons.length) {
+  Write-Log -message ('reboot required: {0}' -f [string]::Join(', ', $rebootReasons)) -severity 'DEBUG'
   Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
   & shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
 } else {
@@ -1294,7 +1308,7 @@ if ($rebootReasons.length) {
   }
   # create a scheduled task to run PrepLoaner every minute (only preps loaner if appropriate flags exist. flags are created by user tasks)
   Create-ScheduledPowershellTask -taskName 'PrepLoaner' -scriptUrl ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/PrepLoaner.ps1?{1}' -f $SourceRepo, [Guid]::NewGuid()) -scriptPath 'C:\dsc\PrepLoaner.ps1' -sc 'minute' -mo '1'
-  # create a scheduled task to run system maintenance every minute
+  # create a scheduled task to run system maintenance on startup
   Create-ScheduledPowershellTask -taskName 'MaintainSystem' -scriptUrl ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/MaintainSystem.ps1?{1}' -f $SourceRepo, [Guid]::NewGuid()) -scriptPath 'C:\dsc\MaintainSystem.ps1' -sc 'onstart'
   if ($locationType -eq 'DataCenter') {
     $isWorker = $true
@@ -1377,14 +1391,7 @@ if ($rebootReasons.length) {
     # end post dsc teardown #######################################################################################################################################
 
     # create a scheduled task to run dsc at startup
-    if (Test-Path -Path 'C:\dsc\rundsc.ps1' -ErrorAction SilentlyContinue) {
-      Remove-Item -Path 'C:\dsc\rundsc.ps1' -confirm:$false -force
-      Write-Log -message 'C:\dsc\rundsc.ps1 deleted.' -severity 'INFO'
-    }
-    (New-Object Net.WebClient).DownloadFile(("https://raw.githubusercontent.com/$SourceRepo/OpenCloudConfig/master/userdata/rundsc.ps1?{0}" -f [Guid]::NewGuid()), 'C:\dsc\rundsc.ps1')
-    Write-Log -message 'C:\dsc\rundsc.ps1 downloaded.' -severity 'INFO'
-    & schtasks @('/create', '/tn', 'RunDesiredStateConfigurationAtStartup', '/sc', 'onstart', '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', 'powershell.exe -File C:\dsc\rundsc.ps1', '/f')
-    Write-Log -message 'scheduled task: RunDesiredStateConfigurationAtStartup, created.' -severity 'INFO'
+    Create-ScheduledPowershellTask -taskName 'RunDesiredStateConfigurationAtStartup' -scriptUrl ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/rundsc.ps1?{1}' -f $SourceRepo, [Guid]::NewGuid()) -scriptPath 'C:\dsc\rundsc.ps1' -sc 'onstart'
   }
   if (($isWorker) -and (-not ($runDscOnWorker))) {
     Stop-DesiredStateConfig
