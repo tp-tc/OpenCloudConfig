@@ -967,6 +967,73 @@ function Conserve-DiskSpace {
     Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
   }
 }
+function Set-SystemClock {
+  param (
+    [string] $locationType,
+    [string] $ntpserverlist = $(if ($locationType -eq 'DataCenter') { 'infoblox1.private.mdc1.mozilla.com infoblox1.private.mdc2.mozilla.com' } else { '0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org' })
+  )
+  begin {
+    Write-Log -message ('{0} :: begin' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+  process {
+    $timeService = Get-Service -Name 'w32time'
+    if (($timeService) -and ($timeService.Status -ne 'Stopped')) {
+      Write-Log -message ('{0} :: w32time service status: {1}. stopping...' -f $($MyInvocation.MyCommand.Name), $timeService.Status) -severity 'INFO'
+      Stop-Service -InputObject $timeService
+    }
+    if ($timeService) {
+      Write-Log -message ('{0} :: w32time service status: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Service -Name 'w32time').Status) -severity 'INFO'
+    } else {
+      Write-Log -message ('{0} :: w32time service is unregistered' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+    }
+    try {
+      Start-Process 'tzutil' -ArgumentList @('/s', 'UTC') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.tzutil-utc.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.tzutil-utc.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Write-Log -message ('{0} :: system timezone set to UTC.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+    }
+    catch {
+      Write-Log -message ('{0} :: failed to set system timezone to UTC. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+    }
+    if ($timeService) {
+      try {
+        Start-Process 'w32tm' -ArgumentList @('/unregister') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.w32tm-unregister.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.w32tm-unregister.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+        Write-Log -message ('{0} :: time service unregistered.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+      }
+      catch {
+        Write-Log -message ('{0} :: failed to unregister time service. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+      }
+    }
+    try {
+      Start-Process 'w32tm' -ArgumentList @('/register') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.w32tm-register.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.w32tm-register.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Write-Log -message ('{0} :: time service registered.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+    }
+    catch {
+      Write-Log -message ('{0} :: failed to register time service. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+    }
+    try {
+      Start-Process 'w32tm' -ArgumentList @('/config', '/syncfromflags:manual', '/update', ('/manualpeerlist:"{0}",0x8' -f $ntpserverlist)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.w32tm-config.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.w32tm-config.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Write-Log -message ('{0} :: time service configured with peerlist: {1}' -f $($MyInvocation.MyCommand.Name), $ntpserverlist) -severity 'INFO'
+    }
+    catch {
+      Write-Log -message ('{0} :: failed to configure time service with peerlist: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $ntpserverlist, $_.Exception.Message) -severity 'ERROR'
+    }
+    $timeService = Get-Service -Name 'w32time'
+    if ($timeService.Status -ne 'Running') {
+      Write-Log -message ('{0} :: w32time service status: {1}. starting...' -f $($MyInvocation.MyCommand.Name), $timeService.Status) -severity 'INFO'
+      Start-Service -InputObject $timeService
+    }
+    Write-Log -message ('{0} :: w32time service status: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Service -Name 'w32time').Status) -severity 'INFO'
+    try {
+      Start-Process 'w32tm' -ArgumentList @('/resync', '/force') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.w32tm-resync.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.w32tm-resync.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      Write-Log -message ('{0} :: time service resynchronised.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+    }
+    catch {
+      Write-Log -message ('{0} :: failed to resynchronise time service. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+  }
+}
 function hw-DiskManage {
   param (
     [string[]] $paths = @(
@@ -1108,20 +1175,7 @@ if ($locationType -eq 'DataCenter') {
   hw-DiskManage
 }
 Write-Log -message 'userdata run starting.' -severity 'INFO'
-if ($locationType -eq 'DataCenter') {
-  $ntpserverlist = 'infoblox1.private.mdc1.mozilla.com infoblox1.private.mdc2.mozilla.com'
-} else {
-  $ntpserverlist = '0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org'
-}
-
-Get-Service -Name 'w32time' | Stop-Service -PassThru
-tzutil /s UTC
-Write-Log -message 'system timezone set to UTC.' -severity 'INFO'
-w32tm /register
-w32tm /config /syncfromflags:manual /update /manualpeerlist:"$ntpserverlist",0x8
-Get-Service -Name 'w32time' | Start-Service -PassThru
-w32tm /resync /force
-Write-Log -message 'system clock synchronised.' -severity 'INFO'
+Set-SystemClock -locationType $locationType
 
 # set up a log folder, an execution policy that enables the dsc run and a winrm envelope size large enough for the dynamic dsc.
 $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
