@@ -460,14 +460,15 @@ function Set-Pagefile {
     [string] $lock = 'c:\dsc\in-progress.lock',
     [string] $name = 'y:\pagefile.sys',
     [int] $initialSize = 8192,
-    [int] $maximumSize = 8192
+    [int] $maximumSize = 8192,
+    [string] $workerType
   )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
-    switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
-      'Microsoft Windows 7*' {
+    switch -regex ($workerType) {
+      '^(relops-image-builder|gecko-t-win7-32([-a-z]*)?)$' {
         if (($isWorker) -and (Test-Path -Path ('{0}:\' -f $name[0]) -ErrorAction SilentlyContinue) -and (@(Get-WmiObject Win32_PagefileSetting | ? { $_.Name -ieq $name }).length -lt 1)) {
           try {
             $computerSystem = (Get-WmiObject Win32_ComputerSystem -EnableAllPrivileges)
@@ -508,7 +509,7 @@ function Set-Pagefile {
         }
       }
       default {
-        Write-Log -message ('{0} :: skipping pagefile creation (not configured for OS: {1}).' -f $($MyInvocation.MyCommand.Name), (Get-WmiObject -class Win32_OperatingSystem).Caption) -severity 'INFO'
+        Write-Log -message ('{0} :: skipping pagefile creation (not configured for worker type: {1}).' -f $($MyInvocation.MyCommand.Name), $workerType) -severity 'INFO'
       }
     }
   }
@@ -1308,7 +1309,7 @@ if ($locationType -ne 'DataCenter') {
   if ($isWorker) {
     Resize-DiskZero
   }
-  Set-Pagefile -isWorker:$isWorker -lock $lock
+  Set-Pagefile -isWorker:$isWorker -lock $lock -workerType $workerType
   # reattempt drive mapping for up to 10 minutes
   $driveMapTimeout = (Get-Date).AddMinutes(10)
   do {
