@@ -21,6 +21,8 @@ Which manifest to run is currently determined by the ssh key associated with the
     - [gecko-1-b-win2012](https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Manifest/gecko-1-b-win2012.json) Windows Server 2012 r2 - 64 bit - SCM Level 1
     - [gecko-2-b-win2012](https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Manifest/gecko-2-b-win2012.json) Windows Server 2012 r2 - 64 bit - SCM Level 2
     - [gecko-3-b-win2012](https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Manifest/gecko-3-b-win2012.json) Windows Server 2012 r2 - 64 bit - SCM Level 3
+    - [gecko-3-b-win2012-c4](https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Manifest/gecko-3-b-win2012-c4.json) Windows Server 2012 r2 - 64 bit - SCM Level 3
+    - [gecko-3-b-win2012-c5](https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Manifest/gecko-3-b-win2012-c5.json) Windows Server 2012 r2 - 64 bit - SCM Level 3
   - Experimental:
     - [gecko-1-b-win2012-beta](https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Manifest/gecko-1-b-win2012-beta.json) Windows Server 2012 r2 - 64 bit - SCM Level 1
 - **Gecko Test Worker Types:**

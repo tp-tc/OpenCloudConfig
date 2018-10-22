@@ -1495,7 +1495,7 @@ if ($rebootReasons.length) {
     if ($locationType -ne 'DataCenter') {
       switch -regex ($workerType) {
         # level 3 builder needs key added by user intervention and must already exist in cot repo
-        '^gecko-3-b-win2012$' {
+        '^gecko-3-b-win2012(-c[45])?$' {
           while ((-not (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue)) -or (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -gt 0)) {
             Write-Log -message 'cot key missing. awaiting user intervention.' -severity 'WARN'
             Sleep 60

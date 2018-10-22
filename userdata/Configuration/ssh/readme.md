@@ -1,4 +1,4 @@
-the authorized_keys file in this directory is added to each instance instantiated by occ at C:\Users\Administrator\.ssh\authorized_keys with the exception of worker type gecko-3-b-win2012 where no ssh server is installed.
+the authorized_keys file in this directory is added to each instance instantiated by occ at C:\Users\Administrator\.ssh\authorized_keys with the exception of worker types gecko-3-b-win2012* where no ssh server is installed.
 
 users whose keys are contained in this file may connect to taskcluster workers via ssh. users will also require access to the ec2 console in order to apply security group settings that will allow ssh access to the instance in question.
 
