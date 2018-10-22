@@ -448,4 +448,3 @@ Here are some of the more important files in this repository.
 | `/userdata/xDynamicConfig.ps1` | Defines the allowed `ComponentType`s accepted by OpenCloudConfig, as documented above. |
 | `/userdata/rundsc.ps1` | Script to run on vanilla environment, to apply configuration. |
 | `/userdata/HaltOnIdle.ps1` | Checks machine activity and decides whether to terminate it due to inactivity / bad state / etc. |
-| `/userdata/PrepLoaner.ps1` | Prepares machine for a self-serve loan as per [these instructions](https://wiki.mozilla.org/ReleaseEngineering/How_To/Self_Provision_a_TaskCluster_Windows_Instance). |

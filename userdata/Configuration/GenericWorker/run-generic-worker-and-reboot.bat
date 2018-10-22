@@ -24,7 +24,7 @@ if %gw_exit_code% equ 67 goto Reboot
 rem exit code 68 means generic worker has reached it's idle timeout and the instance should be retired
 if %gw_exit_code% equ 68 goto RetireIdleInstance
 
-rem for all other exit codes, simply end script execution and allow halt-on-idle or prep-loaner to do its thing 
+rem for all other exit codes, simply end script execution and allow halt-on-idle to do its thing 
 goto End
 
 :RetireIdleInstance

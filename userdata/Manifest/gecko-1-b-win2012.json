@@ -1276,7 +1276,7 @@
     {
       "ComponentName": "ZDriveAccessRights",
       "ComponentType": "CommandRun",
-      "Comment": "facilitates loaner self provisioning",
+      "Comment": "allows task users full access to the task drive",
       "Command": "icacls.exe",
       "Arguments": [
         "z:\\",
