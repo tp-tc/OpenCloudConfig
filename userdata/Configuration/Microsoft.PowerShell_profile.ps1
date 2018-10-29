@@ -17,21 +17,21 @@ if (Get-ItemProperty $explorerRegKey -ErrorAction SilentlyContinue) {
 }
 
 # a large console, with a large screen buffer (for reading build logs)
-if (Get-ItemProperty 'HKCU:\Console\' -ErrorAction SilentlyContinue) {
-  Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'QuickEdit' -Value '0x00000001' # on
-  Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'InsertMode' -Value '0x00000001' # on
-  Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'ScreenBufferSize' -Value '0x0bb800a0' # 160x3000
-  Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'WindowSize' -Value '0x003c00a0' # 160x60
-  Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'HistoryBufferSize' -Value '0x000003e7' # 999 (max)
-  Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'ScreenColors' -Value '0x0000000a' # green on black
-  Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'FontSize' -Value '0x000c0000' # 12
-  Set-ItemProperty 'HKCU:\Console\' -Type 'DWord' -Name 'FontFamily' -Value '0x00000036' # default console fonts
-  Set-ItemProperty 'HKCU:\Console\' -Type 'String' -Name 'FaceName' -Value 'Lucida Console'
+if (Get-ItemProperty 'HKCU:\Console' -ErrorAction SilentlyContinue) {
+  Set-ItemProperty 'HKCU:\Console' -Type 'DWord' -Name 'QuickEdit' -Value '0x00000001' # on
+  Set-ItemProperty 'HKCU:\Console' -Type 'DWord' -Name 'InsertMode' -Value '0x00000001' # on
+  Set-ItemProperty 'HKCU:\Console' -Type 'DWord' -Name 'ScreenBufferSize' -Value '0x0bb800a0' # 160x3000
+  Set-ItemProperty 'HKCU:\Console' -Type 'DWord' -Name 'WindowSize' -Value '0x003c00a0' # 160x60
+  Set-ItemProperty 'HKCU:\Console' -Type 'DWord' -Name 'HistoryBufferSize' -Value '0x000003e7' # 999 (max)
+  Set-ItemProperty 'HKCU:\Console' -Type 'DWord' -Name 'ScreenColors' -Value '0x0000000a' # green on black
+  Set-ItemProperty 'HKCU:\Console' -Type 'DWord' -Name 'FontSize' -Value '0x000c0000' # 12
+  Set-ItemProperty 'HKCU:\Console' -Type 'DWord' -Name 'FontFamily' -Value '0x00000036' # default console fonts
+  Set-ItemProperty 'HKCU:\Console' -Type 'String' -Name 'FaceName' -Value 'Lucida Console'
 }
 
 # a visible cursor on dark backgrounds (as well as light)
-if (Get-ItemProperty 'HKCU:\Control Panel\Cursors\' -ErrorAction SilentlyContinue) {
-  Set-ItemProperty 'HKCU:\Control Panel\Cursors\' -Type 'String' -Name 'IBeam' -Value '%SYSTEMROOT%\Cursors\beam_r.cur'
+if (Get-ItemProperty 'HKCU:\Control Panel\Cursors' -ErrorAction SilentlyContinue) {
+  Set-ItemProperty 'HKCU:\Control Panel\Cursors' -Type 'String' -Name 'IBeam' -Value '%SYSTEMROOT%\Cursors\beam_r.cur'
 }
 
 # powershell, cmd, event viewer and subl pinned to taskbar
