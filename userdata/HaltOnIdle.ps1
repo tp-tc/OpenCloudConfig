@@ -89,18 +89,6 @@ function Is-RdpSessionActive {
   return (Is-ConditionTrue -proc 'remote desktop session' -predicate (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -gt 0) -activity 'active' -falseSeverity 'DEBUG')
 }
 
-function Is-InstanceOld {
-  param (
-    # https://bugzilla.mozilla.org/show_bug.cgi?id=1463508
-    [int] $allowedAgeInHours = 29
-  )
-  return (Is-ConditionTrue -proc 'launch time' -activity ('more than {0} hours ago' -f $allowedAgeInHours) -predicate (([DateTime]::Now - @(Get-EventLog -logName 'Application' -source 'OpenCloudConfig' -message 'host renamed *' -newest 1)[0].TimeGenerated) -ge (New-TimeSpan -Hours $allowedAgeInHours)))
-}
-
-function Is-GenericWorkerIdle {
-  return (Is-ConditionTrue -proc 'generic-worker' -activity 'idle more than 5 hours' -predicate (([DateTime]::Now - (Get-Item 'C:\generic-worker\generic-worker.log').LastWriteTime) -gt (New-TimeSpan -Hours 5)))
-}
-
 if (Is-Terminating) {
   exit
 }
@@ -146,23 +134,9 @@ if (-not (Is-GenericWorkerRunning)) {
     catch {
       Write-Log -message ('failed to determine occ or gw state: {0}' -f $_.Exception.Message) -severity 'ERROR'
     }
-    #if (Is-InstanceOld) {
-    #  Write-Log -message ('instance failed age check and will be halted. uptime: {0}' -f $uptime) -severity 'ERROR'
-    #  & shutdown @('-s', '-t', '30', '-c', 'HaltOnIdle :: instance failed age check', '-d', 'p:4:1')
-    #  exit
-    #}
     Write-Log -message 'instance appears to be initialising.' -severity 'INFO'
   }
 } else {
-  $isGenericWorkerIdle = Is-GenericWorkerIdle
-  if ($isGenericWorkerIdle) {
-    Write-Log -message ('last write to generic-worker.log was: {0:u}' -f (Get-Item 'C:\generic-worker\generic-worker.log').LastWriteTime) -severity 'ERROR'
-  }
-  if ($isGenericWorkerIdle) {
-    Write-Log -message ('instance failed reliability check and will be halted. uptime: {0}' -f $uptime) -severity 'ERROR'
-    & shutdown @('-s', '-t', '30', '-c', 'HaltOnIdle :: instance failed reliability check', '-d', 'p:4:1')
-    exit
-  }
   Write-Log -message 'instance appears to be productive.' -severity 'DEBUG'
   $gwProcess = (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })
   if (($gwProcess) -and ($gwProcess.PriorityClass) -and ($gwProcess.PriorityClass -ne [Diagnostics.ProcessPriorityClass]::AboveNormal)) {
