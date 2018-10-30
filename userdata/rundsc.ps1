@@ -1147,7 +1147,7 @@ function Set-WinrmConfig {
     }
     foreach ($key in $settings.Keys) {
       $value = $settings.Item($key)
-      Start-LoggedProcess -filePath 'cmd' -ArgumentList @('/c', 'winrm', 'set', 'winrm/config', ('@{{0}="{1}"}' -f $key, $value)) -name ('winrm-config-{0}' -f $key.ToLower())
+      Start-LoggedProcess -filePath 'cmd' -ArgumentList @('/c', 'winrm', 'set', 'winrm/config', ('@{{{0}="{1}"}}' -f $key, $value)) -name ('winrm-config-{0}' -f $key.ToLower())
     }
   }
   end {
