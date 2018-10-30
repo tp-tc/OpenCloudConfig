@@ -52,10 +52,10 @@ function Start-LoggedProcess {
     $process.WaitForExit()
     Write-Log -message ('{0} :: {1} - command ({2} {3}) exited with code: {4} after a processing time of: {5}.' -f $($MyInvocation.MyCommand.Name), $name, $filePath, ($argumentList -join ' '), $process.ExitCode, $process.TotalProcessorTime) -severity 'INFO'
     if ((Get-Item -Path $redirectStandardError).Length) {
-      Write-Log -message ('{0} :: {1} - {2}' -f $($MyInvocation.MyCommand.Name), $name, ((Get-Content -Path $redirectStandardError -Raw))) -severity 'ERROR'
+      Write-Log -message ('{0} :: {1} - {2}' -f $($MyInvocation.MyCommand.Name), $name, (Get-Content -Path $redirectStandardError -Raw)) -severity 'ERROR'
     }
     if ((Get-Item -Path $redirectStandardOutput).Length) {
-      Write-Log -message ('{0} :: {1} - {2}' -f $($MyInvocation.MyCommand.Name), $name, ((Get-Content -Path $redirectStandardOutput -Raw))) -severity 'INFO'
+      Write-Log -message ('{0} :: {1} - log: {2}' -f $($MyInvocation.MyCommand.Name), $name, $redirectStandardOutput) -severity 'INFO'
     }
   }
   end {
