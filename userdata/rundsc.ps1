@@ -36,6 +36,30 @@ function Write-Log {
     Write-Host -object $message -ForegroundColor $fc
   }
 }
+function Start-LoggedProcess {
+  param (
+    [string] $filePath,
+    [string[]] $argumentList,
+    [string] $name = [IO.Path]::GetFileNameWithoutExtension($filePath),
+    [string] $redirectStandardOutput = ('{0}\log\{1}.{2}.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $name),
+    [string] $redirectStandardError = ('{0}\log\{1}.{2}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $name)
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    Start-Process -FilePath $filePath -ArgumentList $argumentList -Wait -NoNewWindow -PassThru -RedirectStandardOutput $redirectStandardOutput -RedirectStandardError $redirectStandardError
+    if ((Get-Item -Path $redirectStandardError).Length) {
+      Write-Log -message ('{0} :: {1} - {2}' -f $($MyInvocation.MyCommand.Name), $name, ((Get-Content -Path $redirectStandardError -Raw))) -severity 'ERROR'
+    }
+    if ((Get-Item -Path $redirectStandardOutput).Length) {
+      Write-Log -message ('{0} :: {1} - {2}' -f $($MyInvocation.MyCommand.Name), $name, ((Get-Content -Path $redirectStandardOutput -Raw))) -severity 'INFO'
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
 function Run-RemoteDesiredStateConfig {
   param (
     [string] $url
@@ -1079,6 +1103,56 @@ function Set-NetworkRoutes {
     Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
+function Set-NetworkCategory {
+  param (
+    [ValidateSet('public', 'private')]
+    [string] $category
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    $categoryMap = @{ 'public' = 0; 'private'  = 1 }
+    ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % {
+      try {
+        $network = $_.GetNetwork()
+        $network.SetCategory($categoryMap[$category])
+        Write-Log -message ('{0} :: network category to: {1} (IsConnected: {2}, IsConnectedToInternet: {3}).' -f $($MyInvocation.MyCommand.Name), $category, $network.IsConnected, $network.IsConnectedToInternet) -severity 'INFO'
+      }
+      catch {
+        Write-Log -message ('{0} :: failed to set network category to: {1} (IsConnected: {2}, IsConnectedToInternet: {3}). {4}' -f $($MyInvocation.MyCommand.Name), $category, $network.IsConnected, $network.IsConnectedToInternet, $_.Exception.Message) -severity 'ERROR'
+      }
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
+function Set-WinrmConfig {
+  param (
+    [string] $executionPolicy = 'RemoteSigned',
+    [hashtable] $settings = @{'MaxEnvelopeSizekb'=32696;'MaxTimeoutms'=180000}
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    try {
+      Set-ExecutionPolicy -executionPolicy $executionPolicy -force
+      Write-Log -message ('{0} :: execution policy set to: {1}.' -f $($MyInvocation.MyCommand.Name), $executionPolicy) -severity 'INFO'
+    }
+    catch {
+      Write-Log -message ('{0} :: failed to set execution policy to: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $executionPolicy, $_.Exception.Message) -severity 'ERROR'
+    }
+    foreach ($key in $settings.Keys) {
+      $value = $settings.Item($key)
+      Start-LoggedProcess -filePath 'cmd' -ArgumentList @('/c', 'winrm', 'set', 'winrm/config', ('@{{0}="{1}"}' -f $key, $value)) -name ('winrm-config-{0}' -f $key.ToLower())
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
 function hw-DiskManage {
   param (
     [string[]] $paths = @(
@@ -1205,8 +1279,23 @@ Set-SystemClock -locationType $locationType
 # set up a log folder, an execution policy that enables the dsc run and a winrm envelope size large enough for the dynamic dsc.
 $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
 New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
-
-if ($locationType -ne 'DataCenter') {
+if ($locationType -eq 'DataCenter') {
+  switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+    'Microsoft Windows 7*' {
+      $isWorker = $true
+      $runDscOnWorker = $true
+      $workerType = 'gecko-t-win7-32-hw'
+    }
+    'Microsoft Windows 10*' {
+      $isWorker = $true
+      $runDscOnWorker = $true
+      $workerType = $(if (Test-Path -Path 'C:\dsc\GW10UX.semaphore' -ErrorAction SilentlyContinue) { 'gecko-t-win10-64-ux' } else { 'gecko-t-win10-64-hw' })
+    }
+  }
+  Write-Log -message ('isWorker: {0}.' -f $isWorker) -severity 'INFO'
+  Write-Log -message ('workerType: {0}.' -f $workerType) -severity 'INFO'
+  Write-Log -message ('runDscOnWorker: {0}.' -f $runDscOnWorker) -severity 'DEBUG'
+} else {
   try {
     $userdata = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')
   } catch {
@@ -1387,17 +1476,13 @@ if ($rebootReasons.length) {
   }
   # create a scheduled task to run system maintenance on startup
   Create-ScheduledPowershellTask -taskName 'MaintainSystem' -scriptUrl ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/MaintainSystem.ps1?{1}' -f $SourceRepo, [Guid]::NewGuid()) -scriptPath 'C:\dsc\MaintainSystem.ps1' -sc 'onstart'
-  if ($locationType -eq 'DataCenter') {
-    $isWorker = $true
-    $runDscOnWorker = $true
-  }
   if (($runDscOnWorker) -or (-not ($isWorker)) -or ("$env:RunDsc" -ne "")) {
 
     # pre dsc setup ###############################################################################################################################################
     switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
       'Microsoft Windows 7*' {
         # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
-        ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) }
+        Set-NetworkCategory -category 'private'
         # this setting persists only for the current session
         Enable-PSRemoting -Force
         #if (-not ($isWorker)) {
@@ -1406,7 +1491,7 @@ if ($rebootReasons.length) {
       }
       'Microsoft Windows 10*' {
         # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
-        ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(1) }
+        Set-NetworkCategory -category 'private'
         # this setting persists only for the current session
         Enable-PSRemoting -SkipNetworkProfileCheck -Force
         #if (-not ($isWorker)) {
@@ -1418,9 +1503,7 @@ if ($rebootReasons.length) {
         Enable-PSRemoting -SkipNetworkProfileCheck -Force
       }
     }
-    Set-ExecutionPolicy RemoteSigned -force | Out-File -filePath $logFile -append
-    & cmd @('/c', 'winrm', 'set', 'winrm/config', '@{MaxEnvelopeSizekb="32696"}')
-    & cmd @('/c', 'winrm', 'set', 'winrm/config', '@{MaxTimeoutms="180000"}')
+    Set-WinrmConfig -settings @{'MaxEnvelopeSizekb'=32696;'MaxTimeoutms'=180000}
     $transcript = ('{0}\log\{1}.dsc-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     # end pre dsc setup ###########################################################################################################################################
 
@@ -1458,12 +1541,10 @@ if ($rebootReasons.length) {
     }
     switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
       'Microsoft Windows 7*' {
-        # set network interface to public
-        ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(0) }
+        Set-NetworkCategory -category 'public'
       }
       'Microsoft Windows 10*' {
-        # set network interface to public
-        ([Activator]::CreateInstance([Type]::GetTypeFromCLSID([Guid]"{DCB00C01-570F-4A9B-8D69-199FDBA5723B}"))).GetNetworkConnections() | % { $_.GetNetwork().SetCategory(0) }
+        Set-NetworkCategory -category 'public'
       }
     }
     # end post dsc teardown #######################################################################################################################################
