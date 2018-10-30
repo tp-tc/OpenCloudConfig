@@ -111,7 +111,7 @@ Configuration xDynamicConfig {
         $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/Manifest/gecko-t-win7-32-hw.json?{1}' -f $sourceRepo, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
       }
       'Microsoft Windows 10*' {
-        if (Test-Path  C:\dsc\GW10UX.semaphore) {
+        if (Test-Path -Path 'C:\dsc\GW10UX.semaphore' -ErrorAction SilentlyContinue) {
           $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/Manifest/gecko-t-win10-64-ux.json?{1}' -f $sourceRepo, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
         } else {
           $manifest = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/Manifest/gecko-t-win10-64-hw.json?{1}' -f $sourceRepo, [Guid]::NewGuid()) -UseBasicParsing | ConvertFrom-Json)
