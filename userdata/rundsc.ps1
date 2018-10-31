@@ -49,6 +49,7 @@ function Start-LoggedProcess {
   }
   process {
     $process = (Start-Process -FilePath $filePath -ArgumentList $argumentList -Wait -NoNewWindow -PassThru -RedirectStandardOutput $redirectStandardOutput -RedirectStandardError $redirectStandardError)
+    $handle = $process.Handle # cache process handle, see: https://stackoverflow.com/a/23797762/68115
     $process.WaitForExit()
     Write-Log -message ('{0} :: {1} - command ({2} {3}) exited with code: {4} after a processing time of: {5}.' -f $($MyInvocation.MyCommand.Name), $name, $filePath, ($argumentList -join ' '), $process.ExitCode, $process.TotalProcessorTime) -severity 'INFO'
     if ((Get-Item -Path $redirectStandardError).Length) {
@@ -1148,7 +1149,7 @@ function Set-WinrmConfig {
     }
     foreach ($key in $settings.Keys) {
       $value = $settings.Item($key)
-      Start-LoggedProcess -filePath 'cmd' -ArgumentList @('/c', 'winrm', 'set', 'winrm/config', ('@{{{0}="{1}"}}' -f $key, $value)) -name ('winrm-config-{0}' -f $key.ToLower())
+      Start-LoggedProcess -filePath 'winrm' -ArgumentList @('set', 'winrm/config', ('@{{{0}="{1}"}}' -f $key, $value)) -name ('winrm-config-{0}' -f $key.ToLower())
     }
   }
   end {
