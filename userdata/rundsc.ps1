@@ -48,9 +48,8 @@ function Start-LoggedProcess {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
-    $process = (Start-Process -FilePath $filePath -ArgumentList $argumentList -Wait -NoNewWindow -PassThru -RedirectStandardOutput $redirectStandardOutput -RedirectStandardError $redirectStandardError)
-    $handle = $process.Handle # cache process handle, see: https://stackoverflow.com/a/23797762/68115
-    $process.WaitForExit()
+    $process = (Start-Process -FilePath $filePath -ArgumentList $argumentList -NoNewWindow -RedirectStandardOutput $redirectStandardOutput -RedirectStandardError $redirectStandardError -PassThru)
+    Wait-Process -InputObject $process # see: https://stackoverflow.com/a/43728914/68115
     Write-Log -message ('{0} :: {1} - command ({2} {3}) exited with code: {4} after a processing time of: {5}.' -f $($MyInvocation.MyCommand.Name), $name, $filePath, ($argumentList -join ' '), $process.ExitCode, $process.TotalProcessorTime) -severity 'INFO'
     if ((Get-Item -Path $redirectStandardError).Length) {
       Write-Log -message ('{0} :: {1} - {2}' -f $($MyInvocation.MyCommand.Name), $name, (Get-Content -Path $redirectStandardError -Raw)) -severity 'ERROR'
