@@ -1141,7 +1141,8 @@ function Set-NetworkCategory {
 function Set-WinrmConfig {
   param (
     [string] $executionPolicy = 'RemoteSigned',
-    [hashtable] $settings = @{'MaxEnvelopeSizekb'=32696;'MaxTimeoutms'=180000}
+    [hashtable] $settings = @{'MaxEnvelopeSizeKb'=32696;'MaxTimeoutMs'=180000},
+    [string] $osCaption = ((Get-WmiObject -Class 'Win32_OperatingSystem').Caption)
   )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
@@ -1154,9 +1155,27 @@ function Set-WinrmConfig {
     catch {
       Write-Log -message ('{0} :: failed to set execution policy to: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $executionPolicy, $_.Exception.Message) -severity 'ERROR'
     }
+    $winrmService = (Get-Service -Name 'winrm')
+    if ($winrmService.Status -ne 'Running') {
+      Start-Service -InputObject $winrmService
+      $winrmService.WaitForStatus('Running')
+      Write-Log -message ('{0} :: winrm service started.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    }
     foreach ($key in $settings.Keys) {
       $value = $settings.Item($key)
-      Start-LoggedProcess -filePath 'cmd' -ArgumentList @('/c', 'winrm', 'set', 'winrm/config', ('@{{{0}="{1}"}}' -f $key, $value)) -name ('winrm-config-{0}' -f $key.ToLower())
+      switch -wildcard ($osCaption) {
+        'Microsoft Windows 7*' {
+          Start-LoggedProcess -filePath 'cmd' -ArgumentList @('/c', 'winrm', 'set', 'winrm/config', ('@{{{0}="{1}"}}' -f $key, $value)) -name ('winrm-config-{0}' -f $key.ToLower())
+        }
+        default {
+          try {
+            Set-Item -Path ('WSMan:\localhost\{0}' -f $key) -Value $value
+            Write-Log -message ('{0} :: WSMan:\localhost\{1} set to {2}.' -f $($MyInvocation.MyCommand.Name), $key, $value) -severity 'INFO'
+          } catch {
+            Write-Log -message ('{0} :: failed to set WSMan:\localhost\{1} to {2}. {3}' -f $($MyInvocation.MyCommand.Name), $key, $value, $_.Exception.Message) -severity 'ERROR'
+          }
+        }
+      }
     }
   }
   end {
