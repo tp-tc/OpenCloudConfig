@@ -69,6 +69,8 @@ if [[ $commit_message == *"nodeploy:"* ]]; then
   fi
 elif [[ $commit_message == *"deploy: all"* ]]; then
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deploying ${tc_worker_type} as part of 'deploy: all'"
+elif [[ $commit_message == *"deploy: beta"* ]] && ([[ "${tc_worker_type}" == *"-beta" ]] || [[ "${tc_worker_type}" == *"-gpu-b" ]]); then
+  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deploying ${tc_worker_type} as part of 'deploy: beta'"
 elif [[ $commit_message == *"deploy:"* ]]; then
   deploy_list=$([[ ${commit_message} =~ deploy:\s+?([^;]*) ]] && echo "${BASH_REMATCH[1]}")
   if [[ " ${deploy_list[*]} " != *" ${tc_worker_type} "* ]]; then
@@ -152,7 +154,7 @@ if [ -z "${aws_base_ami_id}" ]; then
   exit 69
 fi
 
-occ_manifest="https://github.com/${GITHUB_HEAD_USER}/${GITHUB_HEAD_REPO_NAME}/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/${tc_worker_type}.json"
+occ_manifest="https://github.com/${GITHUB_BASE_USER}/${GITHUB_BASE_REPO_NAME}/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/${tc_worker_type}.json"
 
 root_password="$(pwgen -1sBync 16)"
 root_password="${root_password//[<>\"\'\`\\\/]/_}"
@@ -161,8 +163,8 @@ worker_password="${worker_password//[<>\"\'\`\\\/]/_}"
 userdata=${userdata/ROOT_PASSWORD_TOKEN/$root_password}
 userdata=${userdata/WORKER_PASSWORD_TOKEN/$worker_password}
 
-userdata=${userdata/SOURCE_ORG_TOKEN/$GITHUB_HEAD_USER}
-userdata=${userdata/SOURCE_REPO_TOKEN/$GITHUB_HEAD_REPO_NAME}
+userdata=${userdata/SOURCE_ORG_TOKEN/$GITHUB_BASE_USER}
+userdata=${userdata/SOURCE_REPO_TOKEN/$GITHUB_BASE_REPO_NAME}
 #userdata=${userdata/SOURCE_REV_TOKEN/$GITHUB_HEAD_SHA}
 if [[ "$tc_worker_type" == *"-gpu-b" ]] || [[ "$tc_worker_type" == *"-beta" ]]; then
   userdata=${userdata/SOURCE_REV_TOKEN/function-refactor}
