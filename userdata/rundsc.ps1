@@ -72,12 +72,40 @@ function Start-LoggedProcess {
 }
 function Run-RemoteDesiredStateConfig {
   param (
-    [string] $url
+    [string] $url,
+    [hashtable] $packageProviders = @{ 'NuGet' = 2.8.5.208 },
+    [string[]] $modules = @('xPSDesiredStateConfiguration', 'xWindowsUpdate')
   )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
+    foreach ($packageProviderName in $packageProviders.Keys) {
+      $version = $packageProviders.Item($packageProviderName)
+      $packageProvider = (Get-PackageProvider -Name $packageProviderName)
+      if ((-not ($packageProvider)) -or ($packageProvider.Version -lt $version)) {
+        try {
+          Install-PackageProvider -Name $packageProviderName -MinimumVersion $version -Force
+          Write-Log -message ('{0} :: powershell package provider: {1}, version: {2}, installed.' -f $($MyInvocation.MyCommand.Name), $packageProviderName, $version) -severity 'INFO'
+        } catch {
+          Write-Log -message ('{0} :: failed to install powershell package provider: {1}, version: {2}. {3}' -f $($MyInvocation.MyCommand.Name), $packageProviderName, $version, $_.Exception.Message) -severity 'ERROR'
+        }
+      } else {
+        Write-Log -message ('{0} :: powershell package provider: {1}, version: {2}, detected.' -f $($MyInvocation.MyCommand.Name), $packageProviderName, $packageProvider.Version) -severity 'DEBUG'
+      }
+    }
+    foreach ($module in @('xPSDesiredStateConfiguration', 'xWindowsUpdate')) {
+      if (Get-Module -ListAvailable -Name $module) {
+        Write-Log -message ('{0} :: powershell module: {1}, detected.' -f $($MyInvocation.MyCommand.Name), $module) -severity 'DEBUG'
+      } else {
+        try {
+          Install-Module -Name $module -Force
+          Write-Log -message ('{0} :: powershell module: {1}, installed.' -f $($MyInvocation.MyCommand.Name), $module) -severity 'INFO'
+        } catch {
+          Write-Log -message ('{0} :: failed to install powershell module: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $module, $_.Exception.Message) -severity 'ERROR'
+        }
+      }
+    }
     Stop-DesiredStateConfig
     $config = [IO.Path]::GetFileNameWithoutExtension($url)
     $target = ('{0}\{1}.ps1' -f $env:Temp, $config)
@@ -123,7 +151,7 @@ function Remove-DesiredStateConfigTriggers {
       Write-Log -message 'scheduled task: RunDesiredStateConfigurationAtStartup, deleted.' -severity 'INFO'
     }
     catch {
-      Write-Log -message ('failed to delete scheduled task: {0}. {1}' -f $scheduledTask, $_.Exception.Message) -severity 'ERROR'
+      Write-Log -message ('{0} :: failed to delete scheduled task: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $scheduledTask, $_.Exception.Message) -severity 'ERROR'
     }
     foreach ($mof in @('Previous', 'backup', 'Current')) {
       if (Test-Path -Path ('{0}\System32\Configuration\{1}.mof' -f $env:SystemRoot, $mof) -ErrorAction SilentlyContinue) {
@@ -1575,15 +1603,7 @@ if ($rebootReasons.length) {
 
     # run dsc #####################################################################################################################################################
     Start-Transcript -Path $transcript -Append
-    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.208 -Force
-    if (-not (Get-Module -ListAvailable -Name xPSDesiredStateConfiguration)) {
-      Install-Module -Name xPSDesiredStateConfiguration -Force
-    }
-    if (-not (Get-Module -ListAvailable -Name xWindowsUpdate)) {
-      Install-Module -Name xWindowsUpdate -Force
-    }
-    Run-RemoteDesiredStateConfig -url "https://raw.githubusercontent.com/$SourceRepo/OpenCloudConfig/master/userdata/xDynamicConfig.ps1" -workerType $workerType
-    
+    Run-RemoteDesiredStateConfig -url ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/xDynamicConfig.ps1' -f $SourceRepo) -workerType $workerType
     Stop-Transcript
     # end run dsc #################################################################################################################################################
     
