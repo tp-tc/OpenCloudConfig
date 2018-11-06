@@ -1632,9 +1632,9 @@ function Run-OpenCloudConfig {
         # end run dsc #################################################################################################################################################
         
         # post dsc teardown ###########################################################################################################################################
-        if (((Get-Content $transcript) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
+        if (((Get-Content $transcript) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required') -or ($_ -match 'WSManNetworkFailureDetected')) }) -contains $true) {
           Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
-          & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:2') | Out-File -filePath $logFile -append
+          & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart or the dsc process did not complete', '-f', '-d', 'p:4:2') | Out-File -filePath $logFile -append
         }
         if (($locationType -ne 'DataCenter') -and (((Get-Content $transcript) | % { ($_ -match 'failed to execute Set-TargetResource') }) -contains $true)) {
           Write-Log -message ('{0} :: dsc run failed.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
