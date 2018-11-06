@@ -88,7 +88,7 @@ case "${tc_worker_type}" in
   gecko-t-win7-32-gpu*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win7-32-base-20171018'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-    ami_description="Gecko test worker for Windows 7 32 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
+    ami_description="Gecko test worker for Windows 7 32 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
     gw_tasks_dir='Z:\'
     root_username=root
     worker_username=GenericWorker
@@ -96,7 +96,7 @@ case "${tc_worker_type}" in
   gecko-t-win7-32*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win7-32-base-20171018'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-    ami_description="Gecko test worker for Windows 7 32 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
+    ami_description="Gecko test worker for Windows 7 32 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
     gw_tasks_dir='Z:\'
     root_username=root
     worker_username=GenericWorker
@@ -104,7 +104,7 @@ case "${tc_worker_type}" in
   gecko-t-win10-64-beta|gecko-t-win10-64-gpu-b)
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_10_Enterprise_1703_15063_296_en-US_x64_MBR-VAC-*'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-    ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
+    ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
@@ -112,7 +112,7 @@ case "${tc_worker_type}" in
   gecko-t-win10-64-gpu*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win10-64-gpu-base-20180320'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-    ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
+    ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
@@ -120,7 +120,7 @@ case "${tc_worker_type}" in
   gecko-t-win10-64*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win10-64-base-20180320'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-    ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
+    ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
@@ -128,7 +128,7 @@ case "${tc_worker_type}" in
   gecko-[123]-b-win2012*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-ena-base-*'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-    ami_description="Gecko builder for Windows; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
+    ami_description="Gecko builder for Windows; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
@@ -136,7 +136,7 @@ case "${tc_worker_type}" in
   relops-image-builder)
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_Server-2016-English-Full-Base-*'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners amazon --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-    ami_description="RelOps image builder for Windows; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, https://github.com/mozilla-releng/OpenCloudConfig/tree/${GITHUB_HEAD_SHA}"}
+    ami_description="RelOps image builder for Windows; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
     gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
@@ -154,7 +154,10 @@ if [ -z "${aws_base_ami_id}" ]; then
   exit 69
 fi
 
-occ_manifest="https://github.com/${GITHUB_BASE_USER}/${GITHUB_BASE_REPO_NAME}/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/${tc_worker_type}.json"
+occ_manifest="${GITHUB_HEAD_REPO_URL}/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/${tc_worker_type}.json"
+
+SOURCE_ORG_REPO=${GITHUB_HEAD_REPO_URL:19}
+SOURCE_ORG=${SOURCE_ORG_REPO/\/$GITHUB_HEAD_REPO_NAME/}
 
 root_password="$(pwgen -1sBync 16)"
 root_password="${root_password//[<>\"\'\`\\\/]/_}"
@@ -163,8 +166,8 @@ worker_password="${worker_password//[<>\"\'\`\\\/]/_}"
 userdata=${userdata/ROOT_PASSWORD_TOKEN/$root_password}
 userdata=${userdata/WORKER_PASSWORD_TOKEN/$worker_password}
 
-userdata=${userdata/SOURCE_ORG_TOKEN/$GITHUB_BASE_USER}
-userdata=${userdata/SOURCE_REPO_TOKEN/$GITHUB_BASE_REPO_NAME}
+userdata=${userdata/SOURCE_ORG_TOKEN/$SOURCE_ORG}
+userdata=${userdata/SOURCE_REPO_TOKEN/$GITHUB_HEAD_REPO_NAME}
 #userdata=${userdata/SOURCE_REV_TOKEN/$GITHUB_HEAD_SHA}
 if [[ "$tc_worker_type" == *"-gpu-b" ]] || [[ "$tc_worker_type" == *"-beta" ]]; then
   userdata=${userdata/SOURCE_REV_TOKEN/function-refactor}
