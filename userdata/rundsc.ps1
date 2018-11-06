@@ -282,7 +282,7 @@ function Remove-LegacyStuff {
     # delete services
     foreach ($service in $services) {
       if (Get-Service -Name $service -ErrorAction SilentlyContinue) {
-        Get-Service -Name $service | Stop-Service -PassThru
+        Set-ServiceState -name $service -state 'Stopped'
         (Get-WmiObject -Class Win32_Service -Filter "Name='$service'").delete()
         Write-Log -message ('{0} :: service: {1}, deleted.' -f $($MyInvocation.MyCommand.Name), $service) -severity 'INFO'
       }
@@ -1013,8 +1013,7 @@ function Set-SystemClock {
   process {
     $timeService = Get-Service -Name 'w32time'
     if (($timeService) -and ($timeService.Status -ne 'Stopped')) {
-      Write-Log -message ('{0} :: w32time service status: {1}. stopping...' -f $($MyInvocation.MyCommand.Name), $timeService.Status) -severity 'INFO'
-      Stop-Service -InputObject $timeService
+      Set-ServiceState -name 'w32time' -state 'Stopped'
     }
     if ($timeService) {
       Write-Log -message ('{0} :: w32time service status: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Service -Name 'w32time').Status) -severity 'INFO'
@@ -1053,8 +1052,7 @@ function Set-SystemClock {
     }
     $timeService = Get-Service -Name 'w32time'
     if ($timeService.Status -ne 'Running') {
-      Write-Log -message ('{0} :: w32time service status: {1}. starting...' -f $($MyInvocation.MyCommand.Name), $timeService.Status) -severity 'INFO'
-      Start-Service -InputObject $timeService
+      Set-ServiceState -name 'w32time' -state 'Running'
     }
     Write-Log -message ('{0} :: w32time service status: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Service -Name 'w32time').Status) -severity 'INFO'
     try {
@@ -1155,12 +1153,7 @@ function Set-WinrmConfig {
     catch {
       Write-Log -message ('{0} :: failed to set execution policy to: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $executionPolicy, $_.Exception.Message) -severity 'ERROR'
     }
-    $winrmService = (Get-Service -Name 'winrm')
-    if ($winrmService.Status -ne 'Running') {
-      Start-Service -InputObject $winrmService
-      $winrmService.WaitForStatus('Running')
-      Write-Log -message ('{0} :: winrm service started.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
-    }
+    Set-ServiceState -name 'winrm' -state 'Running'
     foreach ($key in $settings.Keys) {
       $value = $settings.Item($key)
       switch -wildcard ($osCaption) {
@@ -1176,6 +1169,38 @@ function Set-WinrmConfig {
           }
         }
       }
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
+function Set-ServiceState {
+  param (
+    [string] $name,
+    [ValidateSet('Running', 'Stopped')]
+    [string] $state
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    $service = (Get-Service -Name $name)
+    if ($service) {
+      Write-Log -message ('{0} :: {1} service state: .' -f $($MyInvocation.MyCommand.Name), $name, $service.Status) -severity 'DEBUG'
+      if ($service.Status -ne $state) {
+        switch ($state) {
+          'Running' {
+            Start-Service -InputObject $service
+          }
+          'Stopped' {
+            Stop-Service -InputObject $service
+          }
+        }
+        $service.WaitForStatus($state)
+      }
+    } else {
+      Write-Log -message ('{0} :: {1} service not found.' -f $($MyInvocation.MyCommand.Name), $name) -severity 'ERROR'
     }
   }
   end {
@@ -1255,14 +1280,8 @@ Set-NetworkRoutes
 # SourceRepo is in place to toggle between production and testing environments
 $SourceRepo = 'mozilla-releng'
 
-# The Windows update service needs to be enabled for OCC to process but needs to be disabled during testing. 
-$UpdateService = Get-Service -Name wuauserv
-if ($UpdateService.Status -ne 'Running') {
-  Start-Service $UpdateService
-  Write-Log -message 'Enabling Windows update service'
-} else {
-  Write-Log -message 'Windows update service is running'
-}
+# The Windows update service needs to be enabled for OCC to process but needs to be disabled during testing.
+Set-ServiceState -name 'wuauserv' -state 'Running'
 
 if ((Get-Service 'Ec2Config' -ErrorAction SilentlyContinue) -or (Get-Service 'AmazonSSMAgent' -ErrorAction SilentlyContinue)) {
   $locationType = 'AWS'
@@ -1668,7 +1687,7 @@ if ($rebootReasons.length) {
           $priorityClass = $gwProcess.PriorityClass
           $gwProcess.PriorityClass = [Diagnostics.ProcessPriorityClass]::AboveNormal
           Write-Log -message ('process priority for generic worker altered from {0} to {1}.' -f $priorityClass, $gwProcess.PriorityClass) -severity 'INFO'
-          Stop-Service $UpdateService
+          Set-ServiceState -name 'wuauserv' -state 'Stopped'
         }
       }
     }
