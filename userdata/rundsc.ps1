@@ -1369,394 +1369,410 @@ function hw-DiskManage {
     Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
+function Run-OpenCloudConfig {
+  param (
+    [string] $sourceOrg = 'mozilla-releng',
+    [string] $sourceRepo = 'OpenCloudConfig',
+    [string] $sourceRev = 'master'
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    # Before doing anything else, make sure we are using TLS 1.2
+    # See https://bugzilla.mozilla.org/show_bug.cgi?id=1443595 for context.
+    Set-DefaultStrongCryptography
+    Set-NetworkRoutes
 
-# Before doing anything else, make sure we are using TLS 1.2
-# See https://bugzilla.mozilla.org/show_bug.cgi?id=1443595 for context.
-Set-DefaultStrongCryptography
-Set-NetworkRoutes
+    # The Windows update service needs to be enabled for OCC to process but needs to be disabled during testing.
+    Set-ServiceState -name 'wuauserv' -state 'Running'
 
-# SourceRepo is in place to toggle between production and testing environments
-$SourceRepo = 'mozilla-releng'
-
-# The Windows update service needs to be enabled for OCC to process but needs to be disabled during testing.
-Set-ServiceState -name 'wuauserv' -state 'Running'
-
-if ((Get-Service 'Ec2Config' -ErrorAction SilentlyContinue) -or (Get-Service 'AmazonSSMAgent' -ErrorAction SilentlyContinue)) {
-  $locationType = 'AWS'
-} else {
-  $locationType = 'DataCenter'
- Set-Variable -Name "MozSpace" -Value (((Get-ItemProperty 'HKLM:SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters').'NV Domain') -replace ".mozilla.com$") -Scope global
- [Environment]::SetEnvironmentVariable("MozSpace", "$MozSpace", "Machine")
-}
-$lock = 'C:\dsc\in-progress.lock'
-if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
-  if ((Get-CimInstance Win32_Process -Filter "name = 'powershell.exe'" | ? { $_.CommandLine -eq 'powershell.exe -File C:\dsc\rundsc.ps1' }).Length -gt 1) {
-    Write-Log -message 'userdata run aborted. lock file exists and alternate powershell rundsc process detected.' -severity 'INFO'
-    exit
-  }
-  Write-Log -message 'lock file exists but alternate powershell rundsc process not detected.' -severity 'WARN'
-} elseif ((@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -gt 0)) {
-  Write-Log -message 'userdata run aborted. generic-worker is running.' -severity 'INFO'
-  exit
-} else {
-  $lockDir = [IO.Path]::GetDirectoryName($lock)
-  if (-not (Test-Path -Path $lockDir -ErrorAction SilentlyContinue)) {
-    New-Item -Path $lockDir -ItemType directory -force
-  }
-  New-Item $lock -type file -force
-}
-if ($locationType -eq 'DataCenter') {
-  hw-DiskManage
-}
-Write-Log -message 'userdata run starting.' -severity 'INFO'
-Set-SystemClock -locationType $locationType
-
-# set up a log folder, an execution policy that enables the dsc run and a winrm envelope size large enough for the dynamic dsc.
-$logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
-if ($locationType -eq 'DataCenter') {
-  switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
-    'Microsoft Windows 7*' {
-      $isWorker = $true
-      $runDscOnWorker = $true
-      $workerType = 'gecko-t-win7-32-hw'
+    if ((Get-Service 'Ec2Config' -ErrorAction SilentlyContinue) -or (Get-Service 'AmazonSSMAgent' -ErrorAction SilentlyContinue)) {
+      $locationType = 'AWS'
+    } else {
+      $locationType = 'DataCenter'
+     Set-Variable -Name "MozSpace" -Value (((Get-ItemProperty 'HKLM:SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters').'NV Domain') -replace ".mozilla.com$") -Scope global
+     [Environment]::SetEnvironmentVariable("MozSpace", "$MozSpace", "Machine")
     }
-    'Microsoft Windows 10*' {
-      $isWorker = $true
-      $runDscOnWorker = $true
-      $workerType = $(if (Test-Path -Path 'C:\dsc\GW10UX.semaphore' -ErrorAction SilentlyContinue) { 'gecko-t-win10-64-ux' } else { 'gecko-t-win10-64-hw' })
-    }
-  }
-  Write-Log -message ('isWorker: {0}.' -f $isWorker) -severity 'INFO'
-  Write-Log -message ('workerType: {0}.' -f $workerType) -severity 'INFO'
-  Write-Log -message ('runDscOnWorker: {0}.' -f $runDscOnWorker) -severity 'DEBUG'
-} else {
-  try {
-    $userdata = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')
-  } catch {
-    $userdata = $null
-  }
-  $publicKeys = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys')
-
-  if ($publicKeys.StartsWith('0=mozilla-taskcluster-worker-')) {
-    # ami creation instance
-    $isWorker = $false
-    $workerType = $publicKeys.Replace('0=mozilla-taskcluster-worker-', '')
-    Activate-Windows
-  } else {
-    # provisioned worker
-    $isWorker = $true
-    $workerType = (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/user-data' -UseBasicParsing | ConvertFrom-Json).workerType
-  }
-  Write-Log -message ('isWorker: {0}.' -f $isWorker) -severity 'INFO'
-  $az = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone')
-  Write-Log -message ('workerType: {0}.' -f $workerType) -severity 'INFO'
-  switch -wildcard ($az) {
-    'eu-central-1*'{
-      $dnsRegion = 'euc1'
-    }
-    'us-east-1*'{
-      $dnsRegion = 'use1'
-    }
-    'us-east-2*'{
-      $dnsRegion = 'use2'
-    }
-    'us-west-1*'{
-      $dnsRegion = 'usw1'
-    }
-    'us-west-2*'{
-      $dnsRegion = 'usw2'
-    }
-  }
-  Write-Log -message ('availabilityZone: {0}, dnsRegion: {1}.' -f $az, $dnsRegion) -severity 'INFO'
-
-  # if importing releng amis, do a little housekeeping
-  try {
-    $rootPassword = [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value
-  }
-  catch {
-    $rootPassword = $null
-  }
-  switch -wildcard ($workerType) {
-    'gecko-t-win7-*' {
-      $runDscOnWorker = $true
-      $renameInstance = $true
-      $setFqdn = $true
-      if (-not ($isWorker)) {
-        Remove-LegacyStuff -logFile $logFile
-        Set-Credentials -username 'root' -password ('{0}' -f $rootPassword)
+    $lock = 'C:\dsc\in-progress.lock'
+    if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
+      if ((Get-CimInstance Win32_Process -Filter "name = 'powershell.exe'" | ? { $_.CommandLine -eq 'powershell.exe -File C:\dsc\rundsc.ps1' }).Length -gt 1) {
+        Write-Log -message ('{0} :: userdata run aborted. lock file exists and alternate powershell rundsc process detected.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+        exit
       }
-    }
-    'gecko-t-win10-*' {
-      $runDscOnWorker = $true
-      $renameInstance = $true
-      $setFqdn = $true
-      if (-not ($isWorker)) {
-        Remove-LegacyStuff -logFile $logFile
-        Set-Credentials -username 'Administrator' -password ('{0}' -f $rootPassword)
+      Write-Log -message ('{0} :: lock file exists but alternate powershell rundsc process not detected.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+    } elseif ((@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -gt 0)) {
+      Write-Log -message ('{0} :: userdata run aborted. generic-worker is running.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+      exit
+    } else {
+      $lockDir = [IO.Path]::GetDirectoryName($lock)
+      if (-not (Test-Path -Path $lockDir -ErrorAction SilentlyContinue)) {
+        New-Item -Path $lockDir -ItemType directory -force
       }
+      New-Item $lock -type file -force
     }
-    default {
-      $runDscOnWorker = $true
-      $renameInstance = $true
-      $setFqdn = $true
-      if (-not ($isWorker)) {
-        Set-Credentials -username 'Administrator' -password ('{0}' -f $rootPassword)
-      }
+    if ($locationType -eq 'DataCenter') {
+      hw-DiskManage
     }
-  }
-  Write-Log -message ('runDscOnWorker: {0}, renameInstance: {1}, setFqdn: {2}.' -f $runDscOnWorker, $renameInstance, $setFqdn) -severity 'DEBUG'
-  $instanceType = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-type'))
-  Write-Log -message ('instanceType: {0}.' -f $instanceType) -severity 'INFO'
-  [Environment]::SetEnvironmentVariable("TASKCLUSTER_INSTANCE_TYPE", "$instanceType", "Machine")
+    Write-Log -message ('{0} :: userdata run starting.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+    Set-SystemClock -locationType $locationType
 
-  # workaround for windows update failures on g3 instances
-  # https://support.microsoft.com/en-us/help/10164/fix-windows-update-errors
-  #if ($instanceType.StartsWith('g3.')) {
-  #  try {
-  #    & dism.exe @('/Online', '/Cleanup-image', '/Restorehealth') | Out-File -filePath $logFile -append
-  #    Write-Log -message 'executed: dism cleanup.' -severity 'DEBUG'
-  #  }
-  #  catch {
-  #    Write-Log -message ('failed to run dism cleanup. {0}' -f $_.Exception.Message) -severity 'ERROR'
-  #  }
-  #  try {
-  #    & sfc @('/scannow') | Out-File -filePath $logFile -append
-  #    Write-Log -message 'executed: sfc scan.' -severity 'DEBUG'
-  #  }
-  #  catch {
-  #    Write-Log -message ('failed to run sfc scan. {0}' -f $_.Exception.Message) -severity 'ERROR'
-  #  }
-  #}
-
-  Mount-DiskOne -lock $lock
-  if ($isWorker) {
-    Resize-DiskZero
-  }
-  Set-Pagefile -isWorker:$isWorker -lock $lock -workerType $workerType
-  # reattempt drive mapping for up to 10 minutes
-  $driveMapTimeout = (Get-Date).AddMinutes(10)
-  do {
-    if (((Get-WmiObject -class Win32_OperatingSystem).Caption.Contains('Windows 10')) -and (($instanceType.StartsWith('c5.')) -or ($instanceType.StartsWith('g3.'))) -and (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue) -and (-not (Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue)) -and ((Get-WmiObject Win32_LogicalDisk | ? { $_.DeviceID -eq 'Z:' }).Size -ge 119GB)) {
-      Resize-DiskOne
-    }
-    Map-DriveLetters
-    Sleep 60
-  } while (((-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) -or (-not (Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue))) -and (Get-Date) -lt $driveMapTimeout)
-  if ($isWorker) {
-    if (($isWorker) -and (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue))) {
-      Write-Log -message 'missing task drive. terminating instance...' -severity 'ERROR'
-      & shutdown @('-s', '-t', '0', '-c', 'missing task drive', '-f', '-d', '1:1') | Out-File -filePath $logFile -append
-    }
-    if (($isWorker) -and (-not (Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue))) {
-      Write-Log -message 'missing cache drive. terminating instance...' -severity 'ERROR'
-      & shutdown @('-s', '-t', '0', '-c', 'missing cache drive', '-f', '-d', '1:1') | Out-File -filePath $logFile -append
-    }
-  }
-
-  Get-ChildItem -Path $env:SystemRoot\Microsoft.Net -Filter ngen.exe -Recurse | % {
-    try {
-      & $_.FullName executeQueuedItems
-      Write-Log -message ('executed: "{0} executeQueuedItems".' -f $_.FullName) -severity 'INFO'
-    }
-    catch {
-      Write-Log -message ('failed to execute: "{0} executeQueuedItems"' -f $_.FullName) -severity 'ERROR'
-    }
-  }
-
-  # rename the instance
-  $rebootReasons = $(if ($renameInstance) { Set-ComputerName } else { @() })
-  # set fqdn
-  if ($setFqdn) {
-    Set-DomainName -workerType $workerType -dnsRegion $dnsRegion
-    # Turn off DNS address registration (EC2 DNS is configured to not allow it)
-    Set-DynamicDnsRegistration -enabled:$false
-  }
-}
-if ($rebootReasons.length) {
-  Write-Log -message ('reboot required: {0}' -f [string]::Join(', ', $rebootReasons)) -severity 'DEBUG'
-  Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
-  & shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
-} else {
-  if ($locationType -ne 'DataCenter') {
-    # create a scheduled task to run HaltOnIdle every 2 minutes
-    Create-ScheduledPowershellTask -taskName 'HaltOnIdle' -scriptUrl ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/HaltOnIdle.ps1?{1}' -f $SourceRepo, [Guid]::NewGuid()) -scriptPath 'C:\dsc\HaltOnIdle.ps1' -sc 'minute' -mo '2'
-  }
-  # create a scheduled task to run system maintenance on startup
-  Create-ScheduledPowershellTask -taskName 'MaintainSystem' -scriptUrl ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/MaintainSystem.ps1?{1}' -f $SourceRepo, [Guid]::NewGuid()) -scriptPath 'C:\dsc\MaintainSystem.ps1' -sc 'onstart'
-  if (($runDscOnWorker) -or (-not ($isWorker)) -or ("$env:RunDsc" -ne "")) {
-
-    # pre dsc setup ###############################################################################################################################################
-    switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
-      'Microsoft Windows 7*' {
-        # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
-        Set-NetworkCategory -category 'private'
-        # this setting persists only for the current session
-        Enable-PSRemoting -Force
-        #if (-not ($isWorker)) {
-        #  Set-DefaultProfileProperties
-        #}
-      }
-      'Microsoft Windows 10*' {
-        # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
-        Set-NetworkCategory -category 'private'
-        # this setting persists only for the current session
-        Enable-PSRemoting -SkipNetworkProfileCheck -Force
-        #if (-not ($isWorker)) {
-        #  Set-DefaultProfileProperties
-        #}
-      }
-      default {
-        # this setting persists only for the current session
-        Enable-PSRemoting -SkipNetworkProfileCheck -Force
-      }
-    }
-    Set-WinrmConfig -settings @{'MaxEnvelopeSizekb'=32696;'MaxTimeoutms'=180000}
-    $transcript = ('{0}\log\{1}.dsc-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-    # end pre dsc setup ###########################################################################################################################################
-
-    # run dsc #####################################################################################################################################################
-    Start-Transcript -Path $transcript -Append
-    Run-RemoteDesiredStateConfig -url ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/xDynamicConfig.ps1' -f $SourceRepo) -workerType $workerType
-    Stop-Transcript
-    # end run dsc #################################################################################################################################################
-    
-    # post dsc teardown ###########################################################################################################################################
-    if (((Get-Content $transcript) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
-      Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
-      & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:2') | Out-File -filePath $logFile -append
-    }
-    if (($locationType -ne 'DataCenter') -and (((Get-Content $transcript) | % { ($_ -match 'failed to execute Set-TargetResource') }) -contains $true)) {
-      Write-Log -message 'dsc run failed.' -severity 'ERROR'
-      if (-not ($isWorker)) {
-        # if this is the ami creation instance, we don't have a way to communicate with the taskcluster-github job to tell it that the dsc run has failed.
-        # the best we can do is sleep until the taskcluster-github job fails, because of a task timeout.
-        $timer = [Diagnostics.Stopwatch]::StartNew()
-        while ($timer.Elapsed.TotalHours -lt 5) {
-          Write-Log -message ('waiting for occ ci task to fail due to timeout. shutdown in {0} minutes.' -f [Math]::Round(((5 * 60) - $timer.Elapsed.TotalMinutes))) -severity 'WARN'
-          Start-Sleep -Seconds 600
+    # set up a log folder, an execution policy that enables the dsc run and a winrm envelope size large enough for the dynamic dsc.
+    $logFile = ('{0}\log\{1}.userdata-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+    New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
+    if ($locationType -eq 'DataCenter') {
+      switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+        'Microsoft Windows 7*' {
+          $isWorker = $true
+          $runDscOnWorker = $true
+          $workerType = 'gecko-t-win7-32-hw'
         }
-        & shutdown @('-s', '-t', '0', '-c', 'dsc run failed', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
+        'Microsoft Windows 10*' {
+          $isWorker = $true
+          $runDscOnWorker = $true
+          $workerType = $(if (Test-Path -Path 'C:\dsc\GW10UX.semaphore' -ErrorAction SilentlyContinue) { 'gecko-t-win10-64-ux' } else { 'gecko-t-win10-64-hw' })
+        }
       }
-    }
-    switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
-      'Microsoft Windows 7*' {
-        Set-NetworkCategory -category 'public'
+      Write-Log -message ('{0} :: isWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $isWorker) -severity 'INFO'
+      Write-Log -message ('{0} :: workerType: {1}.' -f $($MyInvocation.MyCommand.Name), $workerType) -severity 'INFO'
+      Write-Log -message ('{0} :: runDscOnWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $runDscOnWorker) -severity 'DEBUG'
+    } else {
+      try {
+        $userdata = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')
+      } catch {
+        $userdata = $null
       }
-      'Microsoft Windows 10*' {
-        Set-NetworkCategory -category 'public'
+      $publicKeys = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys')
+
+      if ($publicKeys.StartsWith('0=mozilla-taskcluster-worker-')) {
+        # ami creation instance
+        $isWorker = $false
+        $workerType = $publicKeys.Replace('0=mozilla-taskcluster-worker-', '')
+        Activate-Windows
+      } else {
+        # provisioned worker
+        $isWorker = $true
+        $workerType = (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/user-data' -UseBasicParsing | ConvertFrom-Json).workerType
       }
-    }
-    # end post dsc teardown #######################################################################################################################################
+      Write-Log -message ('{0} :: isWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $isWorker) -severity 'INFO'
+      $az = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone')
+      Write-Log -message ('{0} :: workerType: {1}.' -f $($MyInvocation.MyCommand.Name), $workerType) -severity 'INFO'
+      switch -wildcard ($az) {
+        'eu-central-1*'{
+          $dnsRegion = 'euc1'
+        }
+        'us-east-1*'{
+          $dnsRegion = 'use1'
+        }
+        'us-east-2*'{
+          $dnsRegion = 'use2'
+        }
+        'us-west-1*'{
+          $dnsRegion = 'usw1'
+        }
+        'us-west-2*'{
+          $dnsRegion = 'usw2'
+        }
+      }
+      Write-Log -message ('{0} :: availabilityZone: {1}, dnsRegion: {2}.' -f $($MyInvocation.MyCommand.Name), $az, $dnsRegion) -severity 'INFO'
 
-    # create a scheduled task to run dsc at startup
-    Create-ScheduledPowershellTask -taskName 'RunDesiredStateConfigurationAtStartup' -scriptUrl ('https://raw.githubusercontent.com/{0}/OpenCloudConfig/master/userdata/rundsc.ps1?{1}' -f $SourceRepo, [Guid]::NewGuid()) -scriptPath 'C:\dsc\rundsc.ps1' -sc 'onstart'
-  }
-  if (($isWorker) -and (-not ($runDscOnWorker))) {
-    Stop-DesiredStateConfig
-    Remove-DesiredStateConfigTriggers
-    New-LocalCache
-  }
-  #if ($isWorker) {
-    # test disk conservation on beta workers only
-    #if ($workerType.EndsWith('-beta') -or $workerType.EndsWith('-gpu-b')) {
-    #  Conserve-DiskSpace
-    #}
-  #}
-
-
-  # archive dsc logs
-  Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
-  New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { $_.FullName })
-  Write-Log -message ('log archive {0} created.' -f $logFile.Replace('.log', '.zip')) -severity 'INFO'
-  Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and (-not $_.Name.EndsWith('.dsc-run.log')) -and $_.FullName -ne $logFile } | % { Remove-Item -Path $_.FullName -Force }
-
-  if ((-not ($isWorker)) -and (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
-    Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
-    if ($locationType -ne 'DataCenter') {
-      switch -regex ($workerType) {
-        # level 3 builder needs key added by user intervention and must already exist in cot repo
-        '^gecko-3-b-win2012(-c[45])?$' {
-          while ((-not (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue)) -or (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -gt 0)) {
-            Write-Log -message 'cot key missing. awaiting user intervention.' -severity 'WARN'
-            Sleep 60
-          }
-          if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
-            & icacls @('C:\generic-worker\cot.key', '/grant', 'Administrators:(GA)')
-            & icacls @('C:\generic-worker\cot.key', '/inheritance:r')
-            Write-Log -message 'cot key detected. shutting down.' -severity 'INFO'
-            & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
-          } else {
-            Write-Log -message 'cot key intervention failed. awaiting timeout or cancellation.' -severity 'ERROR'
+      # if importing releng amis, do a little housekeeping
+      try {
+        $rootPassword = [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value
+      }
+      catch {
+        $rootPassword = $null
+      }
+      switch -wildcard ($workerType) {
+        'gecko-t-win7-*' {
+          $runDscOnWorker = $true
+          $renameInstance = $true
+          $setFqdn = $true
+          if (-not ($isWorker)) {
+            Remove-LegacyStuff -logFile $logFile
+            Set-Credentials -username 'root' -password ('{0}' -f $rootPassword)
           }
         }
-        # all other workers can generate new keys. these don't require trust from cot repo
+        'gecko-t-win10-*' {
+          $runDscOnWorker = $true
+          $renameInstance = $true
+          $setFqdn = $true
+          if (-not ($isWorker)) {
+            Remove-LegacyStuff -logFile $logFile
+            Set-Credentials -username 'Administrator' -password ('{0}' -f $rootPassword)
+          }
+        }
         default {
-          if (-not (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue)) {
-            Write-Log -message 'cot key missing. generating key.' -severity 'WARN'
-            & 'C:\generic-worker\generic-worker.exe' @('new-openpgp-keypair', '--file', 'C:\generic-worker\cot.key') | Out-File -filePath $logFile -append
-            if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
-              Write-Log -message 'cot key generated.' -severity 'INFO'
-            } else {
-              Write-Log -message 'cot key generation failed.' -severity 'ERROR'
+          $runDscOnWorker = $true
+          $renameInstance = $true
+          $setFqdn = $true
+          if (-not ($isWorker)) {
+            Set-Credentials -username 'Administrator' -password ('{0}' -f $rootPassword)
+          }
+        }
+      }
+      Write-Log -message ('{0} :: runDscOnWorker: {1}, renameInstance: {2}, setFqdn: {3}.' -f $($MyInvocation.MyCommand.Name), $runDscOnWorker, $renameInstance, $setFqdn) -severity 'DEBUG'
+      $instanceType = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-type'))
+      Write-Log -message ('{0} :: instanceType: {1}.' -f $($MyInvocation.MyCommand.Name), $instanceType) -severity 'INFO'
+      [Environment]::SetEnvironmentVariable("TASKCLUSTER_INSTANCE_TYPE", "$instanceType", "Machine")
+
+      # workaround for windows update failures on g3 instances
+      # https://support.microsoft.com/en-us/help/10164/fix-windows-update-errors
+      #if ($instanceType.StartsWith('g3.')) {
+      #  try {
+      #    & dism.exe @('/Online', '/Cleanup-image', '/Restorehealth') | Out-File -filePath $logFile -append
+      #    Write-Log -message ('{0} :: executed: dism cleanup.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+      #  }
+      #  catch {
+      #    Write-Log -message ('{0} :: failed to run dism cleanup. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+      #  }
+      #  try {
+      #    & sfc @('/scannow') | Out-File -filePath $logFile -append
+      #    Write-Log -message ('{0} :: executed: sfc scan.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+      #  }
+      #  catch {
+      #    Write-Log -message ('{0} :: failed to run sfc scan. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+      #  }
+      #}
+
+      Mount-DiskOne -lock $lock
+      if ($isWorker) {
+        Resize-DiskZero
+      }
+      Set-Pagefile -isWorker:$isWorker -lock $lock -workerType $workerType
+      # reattempt drive mapping for up to 10 minutes
+      $driveMapTimeout = (Get-Date).AddMinutes(10)
+      do {
+        if (((Get-WmiObject -class Win32_OperatingSystem).Caption.Contains('Windows 10')) -and (($instanceType.StartsWith('c5.')) -or ($instanceType.StartsWith('g3.'))) -and (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue) -and (-not (Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue)) -and ((Get-WmiObject Win32_LogicalDisk | ? { $_.DeviceID -eq 'Z:' }).Size -ge 119GB)) {
+          Resize-DiskOne
+        }
+        Map-DriveLetters
+        Sleep 60
+      } while (((-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) -or (-not (Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue))) -and (Get-Date) -lt $driveMapTimeout)
+      if ($isWorker) {
+        if (($isWorker) -and (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue))) {
+          Write-Log -message ('{0} :: missing task drive. terminating instance...' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+          & shutdown @('-s', '-t', '0', '-c', 'missing task drive', '-f', '-d', '1:1') | Out-File -filePath $logFile -append
+        }
+        if (($isWorker) -and (-not (Test-Path -Path 'Y:\' -ErrorAction SilentlyContinue))) {
+          Write-Log -message ('{0} :: missing cache drive. terminating instance...' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+          & shutdown @('-s', '-t', '0', '-c', 'missing cache drive', '-f', '-d', '1:1') | Out-File -filePath $logFile -append
+        }
+      }
+
+      Get-ChildItem -Path $env:SystemRoot\Microsoft.Net -Filter ngen.exe -Recurse | % {
+        try {
+          & $_.FullName executeQueuedItems
+          Write-Log -message ('{0} :: executed: "{1} executeQueuedItems".' -f $($MyInvocation.MyCommand.Name), $_.FullName) -severity 'INFO'
+        }
+        catch {
+          Write-Log -message ('{0} :: failed to execute: "{1} executeQueuedItems"' -f $($MyInvocation.MyCommand.Name), $_.FullName) -severity 'ERROR'
+        }
+      }
+
+      # rename the instance
+      $rebootReasons = $(if ($renameInstance) { Set-ComputerName } else { @() })
+      # set fqdn
+      if ($setFqdn) {
+        Set-DomainName -workerType $workerType -dnsRegion $dnsRegion
+        # Turn off DNS address registration (EC2 DNS is configured to not allow it)
+        Set-DynamicDnsRegistration -enabled:$false
+      }
+    }
+    if ($rebootReasons.length) {
+      Write-Log -message ('{0} :: reboot required: {1}' -f $($MyInvocation.MyCommand.Name), [string]::Join(', ', $rebootReasons)) -severity 'DEBUG'
+      Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+      & shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1') | Out-File -filePath $logFile -append
+    } else {
+      if ($locationType -ne 'DataCenter') {
+        # create a scheduled task to run HaltOnIdle every 2 minutes
+        Create-ScheduledPowershellTask -taskName 'HaltOnIdle' -scriptUrl ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/HaltOnIdle.ps1?{3}' -f $sourceOrg, $sourceRepo, $sourceRev, [Guid]::NewGuid()) -scriptPath 'C:\dsc\HaltOnIdle.ps1' -sc 'minute' -mo '2'
+      }
+      # create a scheduled task to run system maintenance on startup
+      Create-ScheduledPowershellTask -taskName 'MaintainSystem' -scriptUrl ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/MaintainSystem.ps1?{3}' -f $sourceOrg, $sourceRepo, $sourceRev, [Guid]::NewGuid()) -scriptPath 'C:\dsc\MaintainSystem.ps1' -sc 'onstart'
+      if (($runDscOnWorker) -or (-not ($isWorker)) -or ("$env:RunDsc" -ne "")) {
+
+        # pre dsc setup ###############################################################################################################################################
+        switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+          'Microsoft Windows 7*' {
+            # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
+            Set-NetworkCategory -category 'private'
+            # this setting persists only for the current session
+            Enable-PSRemoting -Force
+            #if (-not ($isWorker)) {
+            #  Set-DefaultProfileProperties
+            #}
+          }
+          'Microsoft Windows 10*' {
+            # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
+            Set-NetworkCategory -category 'private'
+            # this setting persists only for the current session
+            Enable-PSRemoting -SkipNetworkProfileCheck -Force
+            #if (-not ($isWorker)) {
+            #  Set-DefaultProfileProperties
+            #}
+          }
+          default {
+            # this setting persists only for the current session
+            Enable-PSRemoting -SkipNetworkProfileCheck -Force
+          }
+        }
+        Set-WinrmConfig -settings @{'MaxEnvelopeSizekb'=32696;'MaxTimeoutms'=180000}
+        $transcript = ('{0}\log\{1}.dsc-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+        # end pre dsc setup ###########################################################################################################################################
+
+        # run dsc #####################################################################################################################################################
+        Start-Transcript -Path $transcript -Append
+        Run-RemoteDesiredStateConfig -url ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/xDynamicConfig.ps1' -f $sourceOrg, $sourceRepo, $sourceRev) -workerType $workerType
+        Stop-Transcript
+        # end run dsc #################################################################################################################################################
+        
+        # post dsc teardown ###########################################################################################################################################
+        if (((Get-Content $transcript) | % { (($_ -match 'requires a reboot') -or ($_ -match 'reboot is required')) }) -contains $true) {
+          Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+          & shutdown @('-r', '-t', '0', '-c', 'a package installed by dsc requested a restart', '-f', '-d', 'p:4:2') | Out-File -filePath $logFile -append
+        }
+        if (($locationType -ne 'DataCenter') -and (((Get-Content $transcript) | % { ($_ -match 'failed to execute Set-TargetResource') }) -contains $true)) {
+          Write-Log -message ('{0} :: dsc run failed.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+          if (-not ($isWorker)) {
+            # if this is the ami creation instance, we don't have a way to communicate with the taskcluster-github job to tell it that the dsc run has failed.
+            # the best we can do is sleep until the taskcluster-github job fails, because of a task timeout.
+            $timer = [Diagnostics.Stopwatch]::StartNew()
+            while ($timer.Elapsed.TotalHours -lt 5) {
+              Write-Log -message ('{0} :: waiting for occ ci task to fail due to timeout. shutdown in {1} minutes.' -f $($MyInvocation.MyCommand.Name), [Math]::Round(((5 * 60) - $timer.Elapsed.TotalMinutes))) -severity 'WARN'
+              Start-Sleep -Seconds 600
+            }
+            & shutdown @('-s', '-t', '0', '-c', 'dsc run failed', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
+          }
+        }
+        switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+          'Microsoft Windows 7*' {
+            Set-NetworkCategory -category 'public'
+          }
+          'Microsoft Windows 10*' {
+            Set-NetworkCategory -category 'public'
+          }
+        }
+        # end post dsc teardown #######################################################################################################################################
+
+        # create a scheduled task to run dsc at startup
+        Create-ScheduledPowershellTask -taskName 'RunDesiredStateConfigurationAtStartup' -scriptUrl ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/rundsc.ps1?{3}' -f $sourceOrg, $sourceRepo, $sourceRev, [Guid]::NewGuid()) -scriptPath 'C:\dsc\rundsc.ps1' -sc 'onstart'
+      }
+      if (($isWorker) -and (-not ($runDscOnWorker))) {
+        Stop-DesiredStateConfig
+        Remove-DesiredStateConfigTriggers
+        New-LocalCache
+      }
+      #if ($isWorker) {
+        # test disk conservation on beta workers only
+        #if ($workerType.EndsWith('-beta') -or $workerType.EndsWith('-gpu-b')) {
+        #  Conserve-DiskSpace
+        #}
+      #}
+
+
+      # archive dsc logs
+      Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
+      New-ZipFile -ZipFilePath $logFile.Replace('.log', '.zip') -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.FullName -ne $logFile } | % { $_.FullName })
+      Write-Log -message ('{0} :: log archive {1} created.' -f $($MyInvocation.MyCommand.Name), $logFile.Replace('.log', '.zip')) -severity 'INFO'
+      Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and (-not $_.Name.EndsWith('.dsc-run.log')) -and $_.FullName -ne $logFile } | % { Remove-Item -Path $_.FullName -Force }
+
+      if ((-not ($isWorker)) -and (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
+        Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+        if ($locationType -ne 'DataCenter') {
+          switch -regex ($workerType) {
+            # level 3 builder needs key added by user intervention and must already exist in cot repo
+            '^gecko-3-b-win2012(-c[45])?$' {
+              while ((-not (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue)) -or (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -gt 0)) {
+                Write-Log -message ('{0} :: cot key missing. awaiting user intervention.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+                Sleep 60
+              }
+              if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
+                & icacls @('C:\generic-worker\cot.key', '/grant', 'Administrators:(GA)')
+                & icacls @('C:\generic-worker\cot.key', '/inheritance:r')
+                Write-Log -message ('{0} :: cot key detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+                & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
+              } else {
+                Write-Log -message ('{0} :: cot key intervention failed. awaiting timeout or cancellation.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+              }
+            }
+            # all other workers can generate new keys. these don't require trust from cot repo
+            default {
+              if (-not (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue)) {
+                Write-Log -message ('{0} :: cot key missing. generating key.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+                & 'C:\generic-worker\generic-worker.exe' @('new-openpgp-keypair', '--file', 'C:\generic-worker\cot.key') | Out-File -filePath $logFile -append
+                if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
+                  Write-Log -message ('{0} :: cot key generated.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+                } else {
+                  Write-Log -message ('{0} :: cot key generation failed.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+                }
+              }
+              if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
+                Write-Log -message ('{0} :: cot key detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+                & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
+              } else {
+                Write-Log -message ('{0} :: cot key missing. awaiting timeout or cancellation.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+              }
+              if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
+                & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
+              }
             }
           }
-          if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
-            Write-Log -message 'cot key detected. shutting down.' -severity 'INFO'
-            & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
+        }
+      } elseif ($isWorker) {
+        if ($locationType -ne 'DataCenter') {
+          if (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) { # if the Z: drive isn't mapped, map it.
+            Map-DriveLetters
+          }
+        }
+        if (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
+          Write-Log -message ('{0} :: generic-worker installation detected.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+          New-Item 'C:\dsc\task-claim-state.valid' -type file -force
+          # give g-w 2 minutes to fire up, if it doesn't, boot loop.
+          $timeout = New-Timespan -Minutes 2
+          $timer = [Diagnostics.Stopwatch]::StartNew()
+          $waitlogged = $false
+          while (($timer.Elapsed -lt $timeout) -and (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0)) {
+            if (!$waitlogged) {
+              Write-Log -message ('{0} :: waiting for generic-worker process to start.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+              $waitlogged = $true
+            }
+          }
+          if ((@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0)) {
+            Write-Log -message ('{0} :: no generic-worker process detected.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+            Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+            if ($locationType -eq 'DataCenter') {
+              Remove-Item -Path C:\dsc\task-claim-state.valid -force -ErrorAction SilentlyContinue
+            }
+            & shutdown @('-r', '-t', '0', '-c', 'reboot to rouse the generic worker', '-f', '-d', '4:5') | Out-File -filePath $logFile -append
           } else {
-            Write-Log -message 'cot key missing. awaiting timeout or cancellation.' -severity 'INFO'
+            $timer.Stop()
+            Write-Log -message ('{0} :: generic-worker running process detected {1} ms after task-claim-state.valid flag set.' -f $($MyInvocation.MyCommand.Name), $timer.ElapsedMilliseconds) -severity 'INFO'
+            if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
+              Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+            }
+            $gwProcess = (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })
+            if (($gwProcess) -and ($gwProcess.PriorityClass) -and ($gwProcess.PriorityClass -ne [Diagnostics.ProcessPriorityClass]::AboveNormal)) {
+              $priorityClass = $gwProcess.PriorityClass
+              $gwProcess.PriorityClass = [Diagnostics.ProcessPriorityClass]::AboveNormal
+              Write-Log -message ('{0} :: process priority for generic worker altered from {1} to {2}.' -f $($MyInvocation.MyCommand.Name), $priorityClass, $gwProcess.PriorityClass) -severity 'INFO'
+              Set-ServiceState -name 'wuauserv' -state 'Stopped'
+            }
           }
-          if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
-            & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4') | Out-File -filePath $logFile -append
-          }
         }
       }
     }
-  } elseif ($isWorker) {
-    if ($locationType -ne 'DataCenter') {
-      if (-not (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue)) { # if the Z: drive isn't mapped, map it.
-        Map-DriveLetters
-      }
+    if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
+      Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
     }
-    if (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
-      Write-Log -message 'generic-worker installation detected.' -severity 'INFO'
-      New-Item 'C:\dsc\task-claim-state.valid' -type file -force
-      # give g-w 2 minutes to fire up, if it doesn't, boot loop.
-      $timeout = New-Timespan -Minutes 2
-      $timer = [Diagnostics.Stopwatch]::StartNew()
-      $waitlogged = $false
-      while (($timer.Elapsed -lt $timeout) -and (@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0)) {
-        if (!$waitlogged) {
-          Write-Log -message 'waiting for generic-worker process to start.' -severity 'INFO'
-          $waitlogged = $true
-        }
-      }
-      if ((@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -eq 0)) {
-        Write-Log -message 'no generic-worker process detected.' -severity 'INFO'
-        Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
-        if ($locationType -eq 'DataCenter') {
-          Remove-Item -Path C:\dsc\task-claim-state.valid -force -ErrorAction SilentlyContinue
-        }
-        & shutdown @('-r', '-t', '0', '-c', 'reboot to rouse the generic worker', '-f', '-d', '4:5') | Out-File -filePath $logFile -append
-      } else {
-        $timer.Stop()
-        Write-Log -message ('generic-worker running process detected {0} ms after task-claim-state.valid flag set.' -f $timer.ElapsedMilliseconds) -severity 'INFO'
-        if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
-          Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
-        }
-        $gwProcess = (Get-Process | ? { $_.ProcessName -eq 'generic-worker' })
-        if (($gwProcess) -and ($gwProcess.PriorityClass) -and ($gwProcess.PriorityClass -ne [Diagnostics.ProcessPriorityClass]::AboveNormal)) {
-          $priorityClass = $gwProcess.PriorityClass
-          $gwProcess.PriorityClass = [Diagnostics.ProcessPriorityClass]::AboveNormal
-          Write-Log -message ('process priority for generic worker altered from {0} to {1}.' -f $priorityClass, $gwProcess.PriorityClass) -severity 'INFO'
-          Set-ServiceState -name 'wuauserv' -state 'Stopped'
-        }
-      }
-    }
+    Write-Log -message ('{0} :: userdata run completed' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
-if (Test-Path -Path $lock -ErrorAction SilentlyContinue) {
-  Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
-}
-Write-Log -message 'userdata run completed' -severity 'INFO'
+
+# modify sourceOrg and/or sourceRepo to toggle between testing environments
+# todo: obtain sourceRev from registry (bug 1406354)
+Run-OpenCloudConfig -sourceOrg 'mozilla-releng' -sourceRepo 'OpenCloudConfig' -sourceRev 'master'
