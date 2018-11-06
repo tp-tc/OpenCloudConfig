@@ -157,8 +157,8 @@ fi
 occ_manifest="${GITHUB_HEAD_REPO_URL}/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/${tc_worker_type}.json"
 
 SOURCE_ORG_REPO=${GITHUB_HEAD_REPO_URL:19}
+SOURCE_ORG_REPO=${SOURCE_ORG_REPO/.git/}
 SOURCE_ORG=${SOURCE_ORG_REPO/\/$GITHUB_HEAD_REPO_NAME/}
-SOURCE_ORG=${SOURCE_ORG/.git/}
 
 root_password="$(pwgen -1sBync 16)"
 root_password="${root_password//[<>\"\'\`\\\/]/_}"
