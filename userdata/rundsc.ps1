@@ -1236,6 +1236,23 @@ function Set-DomainName {
     Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
+function Set-DynamicDnsRegistration {
+  param (
+    [switch] $enabled = $false
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    foreach($nic in (Get-WmiObject "Win32_NetworkAdapterConfiguration where IPEnabled='TRUE'")) {
+      $nic.SetDynamicDNSRegistration($enabled)
+      Write-Log -message ('{0} :: dynamic dns registration {1} on network interface {2} ({3})' -f $($MyInvocation.MyCommand.Name), $(if ($enabled) {'enabled'} else {'disabled'}), $nic.Index, $nic.Description) -severity 'DEBUG'
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
 function hw-DiskManage {
   param (
     [string[]] $paths = @(
@@ -1510,10 +1527,7 @@ if ($locationType -eq 'DataCenter') {
   if ($setFqdn) {
     Set-DomainName -workerType $workerType -dnsRegion $dnsRegion
     # Turn off DNS address registration (EC2 DNS is configured to not allow it)
-    foreach($nic in (Get-WmiObject "Win32_NetworkAdapterConfiguration where IPEnabled='TRUE'")) {
-      $nic.SetDynamicDNSRegistration($false)
-      Write-Log -message ('dynamic dns registration disabled on network interface {0} ({1})' -f $nic.Index, $nic.Description) -severity 'DEBUG'
-    }
+    Set-DynamicDnsRegistration -enabled:$false
   }
   Write-Log -message ('instanceId: {0}, dnsHostname: {1}.' -f $instanceId, $dnsHostname) -severity 'INFO'
 }
