@@ -42,7 +42,7 @@ else
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] cot private key retrieval skipped."
 fi
 read TASKCLUSTER_AWS_ACCESS_KEY TASKCLUSTER_AWS_SECRET_KEY aws_tc_account_id userdata<<EOF
-$(curl -s -N ${secrets_url}:updateworkertype | jq ". | .secret.cotGpgKey=\"${cot_private_key}\"" | python -c 'import json, sys; a = json.load(sys.stdin)["secret"]; print a["TASKCLUSTER_AWS_ACCESS_KEY"], a["TASKCLUSTER_AWS_SECRET_KEY"], a["aws_tc_account_id"], ("<powershell>\nInvoke-Expression (New-Object Net.WebClient).DownloadString(('\''https://raw.githubusercontent.com/MozRelOps/OpenCloudConfig/master/userdata/rundsc.ps1?{0}'\'' -f [Guid]::NewGuid()))\n</powershell>\n<persist>true</persist>\n<secrets>\n  <rootPassword>ROOTPASSWORDTOKEN</rootPassword>\n  <rootGpgKey>\n%s\n</rootGpgKey>\n  <workerPassword>WORKERPASSWORDTOKEN</workerPassword>\n  <cotGpgKey>\n%s\n</cotGpgKey>\n</secrets>" % (a["rootGpgKey"], a["cotGpgKey"])).replace("\n", "\\\\n");' 2> /dev/null)
+$(curl -s -N ${secrets_url}:updateworkertype | jq ". | .secret.cotGpgKey=\"${cot_private_key}\"" | python -c 'import json, sys; a = json.load(sys.stdin)["secret"]; print a["TASKCLUSTER_AWS_ACCESS_KEY"], a["TASKCLUSTER_AWS_SECRET_KEY"], a["aws_tc_account_id"], ("<powershell>\nInvoke-Expression (New-Object Net.WebClient).DownloadString(('\''https://raw.githubusercontent.com/SOURCE_ORG_TOKEN/SOURCE_REPO_TOKEN/SOURCE_REV_TOKEN/userdata/rundsc.ps1?{0}'\'' -f [Guid]::NewGuid()))\n</powershell>\n<persist>true</persist>\n<secrets>\n  <rootPassword>ROOT_PASSWORD_TOKEN</rootPassword>\n  <rootGpgKey>\n%s\n</rootGpgKey>\n  <workerPassword>WORKER_PASSWORD_TOKEN</workerPassword>\n  <cotGpgKey>\n%s\n</cotGpgKey>\n</secrets>" % (a["rootGpgKey"], a["cotGpgKey"])).replace("\n", "\\\\n");' 2> /dev/null)
 EOF
 
 : ${TASKCLUSTER_AWS_ACCESS_KEY:?"TASKCLUSTER_AWS_ACCESS_KEY is not set"}
@@ -152,14 +152,18 @@ if [ -z "${aws_base_ami_id}" ]; then
   exit 69
 fi
 
-occ_manifest="https://github.com/mozilla-releng/OpenCloudConfig/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/${tc_worker_type}.json"
+occ_manifest="https://github.com/${GITHUB_HEAD_USER}/${GITHUB_HEAD_REPO_NAME}/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/${tc_worker_type}.json"
 
 root_password="$(pwgen -1sBync 16)"
 root_password="${root_password//[<>\"\'\`\\\/]/_}"
 worker_password="$(pwgen -1sBync 16)"
 worker_password="${worker_password//[<>\"\'\`\\\/]/_}"
-userdata=${userdata/ROOTPASSWORDTOKEN/$root_password}
-userdata=${userdata/WORKERPASSWORDTOKEN/$worker_password}
+userdata=${userdata/ROOT_PASSWORD_TOKEN/$root_password}
+userdata=${userdata/WORKER_PASSWORD_TOKEN/$worker_password}
+
+userdata=${userdata/SOURCE_ORG_TOKEN/$GITHUB_HEAD_USER}
+userdata=${userdata/SOURCE_REPO_TOKEN/$GITHUB_HEAD_REPO_NAME}
+userdata=${userdata/SOURCE_REV_TOKEN/$GITHUB_HEAD_SHA}
 
 curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq '.' > ./${tc_worker_type}-pre.json
 cat ./${tc_worker_type}-pre.json | jq --arg gwtasksdir $gw_tasks_dir --arg occmanifest $occ_manifest --arg deploydate "$(date --utc +"%F %T.%3NZ")" --arg deploymentId $aws_client_token --argjson instanceTypes $instance_types -c 'del(.workerType, .lastModified) | .secrets."generic-worker".config.tasksDir = $gwtasksdir | .secrets."generic-worker".config.workerTypeMetadata."machine-setup".manifest = $occmanifest | .secrets."generic-worker".config.workerTypeMetadata."machine-setup"."ami-created" = $deploydate | .instanceTypes = $instanceTypes | .secrets."generic-worker".config.deploymentId = $deploymentId' > ./${tc_worker_type}.json
