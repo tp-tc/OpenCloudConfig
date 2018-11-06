@@ -1215,7 +1215,7 @@ function Set-ServiceState {
   process {
     $service = (Get-Service -Name $name)
     if ($service) {
-      Write-Log -message ('{0} :: {1} service state: .' -f $($MyInvocation.MyCommand.Name), $name, $service.Status) -severity 'DEBUG'
+      Write-Log -message ('{0} :: {1} service state: {2}.' -f $($MyInvocation.MyCommand.Name), $name, $service.Status) -severity 'DEBUG'
       if ($service.Status -ne $state) {
         switch ($state) {
           'Running' {
@@ -1226,6 +1226,7 @@ function Set-ServiceState {
           }
         }
         $service.WaitForStatus($state)
+        Write-Log -message ('{0} :: {1} service state: {2}.' -f $($MyInvocation.MyCommand.Name), $name, (Get-Service -Name $name).Status) -severity 'DEBUG'
       }
     } else {
       Write-Log -message ('{0} :: {1} service not found.' -f $($MyInvocation.MyCommand.Name), $name) -severity 'ERROR'
