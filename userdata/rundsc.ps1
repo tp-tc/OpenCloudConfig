@@ -1622,6 +1622,9 @@ function Run-OpenCloudConfig {
         # end pre dsc setup ###########################################################################################################################################
 
         # run dsc #####################################################################################################################################################
+        if ($workerType.EndsWith('-gpu-b') -or $workerType.EndsWith('-gpu-b')) {
+          $sourceRev = 'function-refactor'
+        }
         Start-Transcript -Path $transcript -Append
         Run-RemoteDesiredStateConfig -url ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/xDynamicConfig.ps1' -f $sourceOrg, $sourceRepo, $sourceRev) -workerType $workerType
         Stop-Transcript
