@@ -1207,6 +1207,35 @@ function Set-ServiceState {
     Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
+function Set-DomainName {
+  param (
+    [string] $workerType,
+    [string] $dnsRegion
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    if (Test-Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\NV Domain") {
+      $currentDomain = (Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\" -Name "NV Domain")."NV Domain"
+    } elseif (Test-Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Domain") {
+      $currentDomain = (Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\" -Name "Domain")."Domain"
+    } else {
+      $currentDomain = $env:USERDOMAIN
+    }
+    $domain = ('{0}.{1}.mozilla.com' -f $workerType, $dnsRegion)
+    if (-not ($currentDomain -ieq $domain)) {
+      [Environment]::SetEnvironmentVariable('USERDOMAIN', "$domain", 'Machine')
+      $env:USERDOMAIN = $domain
+      Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters' -Name 'Domain' -Value "$domain"
+      Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters' -Name 'NV Domain' -Value "$domain"
+      Write-Log -message ('{0} :: domain set to: {1}' -f $($MyInvocation.MyCommand.Name), $domain) -severity 'INFO'
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
 function hw-DiskManage {
   param (
     [string[]] $paths = @(
@@ -1479,21 +1508,7 @@ if ($locationType -eq 'DataCenter') {
   }
   # set fqdn
   if ($setFqdn) {
-    if (Test-Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\NV Domain") {
-      $currentDomain = (Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\" -Name "NV Domain")."NV Domain"
-    } elseif (Test-Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Domain") {
-      $currentDomain = (Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\" -Name "Domain")."Domain"
-    } else {
-      $currentDomain = $env:USERDOMAIN
-    }
-    $domain = ('{0}.{1}.mozilla.com' -f $workerType, $dnsRegion)
-    if (-not ($currentDomain -ieq $domain)) {
-      [Environment]::SetEnvironmentVariable("USERDOMAIN", "$domain", "Machine")
-      $env:USERDOMAIN = $domain
-      Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\' -Name 'Domain' -Value "$domain"
-      Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\' -Name 'NV Domain' -Value "$domain"
-      Write-Log -message ('domain set to: {0}' -f $domain) -severity 'INFO'
-    }
+    Set-DomainName -workerType $workerType -dnsRegion $dnsRegion
     # Turn off DNS address registration (EC2 DNS is configured to not allow it)
     foreach($nic in (Get-WmiObject "Win32_NetworkAdapterConfiguration where IPEnabled='TRUE'")) {
       $nic.SetDynamicDNSRegistration($false)
