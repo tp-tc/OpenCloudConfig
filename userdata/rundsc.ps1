@@ -1235,6 +1235,30 @@ function Set-ServiceState {
     Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
+function Set-ComputerName {
+  param (
+    [string] $instanceId = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-id')),
+    [string] $dnsHostname = [System.Net.Dns]::GetHostName(),
+    [string[]] $rebootReasons = @()
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    Write-Log -message ('{0} :: instanceId: {1}, dnsHostname: {2}.' -f $($MyInvocation.MyCommand.Name), $instanceId, $dnsHostname) -severity 'INFO'
+    if (([bool]($instanceId)) -and (-not ($dnsHostname -ieq $instanceId))) {
+      [Environment]::SetEnvironmentVariable("COMPUTERNAME", "$instanceId", "Machine")
+      $env:COMPUTERNAME = $instanceId
+      (Get-WmiObject Win32_ComputerSystem).Rename($instanceId)
+      $rebootReasons += 'host renamed'
+      Write-Log -message ('{0} :: host renamed from: {1} to {2}.' -f $($MyInvocation.MyCommand.Name), $dnsHostname, $instanceId) -severity 'INFO'
+    }
+    return $rebootReasons
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
 function Set-DomainName {
   param (
     [string] $workerType,
@@ -1541,23 +1565,13 @@ if ($locationType -eq 'DataCenter') {
   }
 
   # rename the instance
-  $instanceId = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-id'))
-  $dnsHostname = [System.Net.Dns]::GetHostName()
-  Write-Log -message ('instanceId: {0}, dnsHostname: {1}.' -f $instanceId, $dnsHostname) -severity 'INFO'
-  if ($renameInstance -and ([bool]($instanceId)) -and (-not ($dnsHostname -ieq $instanceId))) {
-    [Environment]::SetEnvironmentVariable("COMPUTERNAME", "$instanceId", "Machine")
-    $env:COMPUTERNAME = $instanceId
-    (Get-WmiObject Win32_ComputerSystem).Rename($instanceId)
-    $rebootReasons += 'host renamed'
-    Write-Log -message ('host renamed from: {0} to {1}.' -f $dnsHostname, $instanceId) -severity 'INFO'
-  }
+  $rebootReasons = $(if ($renameInstance) { Set-ComputerName } else { @() })
   # set fqdn
   if ($setFqdn) {
     Set-DomainName -workerType $workerType -dnsRegion $dnsRegion
     # Turn off DNS address registration (EC2 DNS is configured to not allow it)
     Set-DynamicDnsRegistration -enabled:$false
   }
-  Write-Log -message ('instanceId: {0}, dnsHostname: {1}.' -f $instanceId, $dnsHostname) -severity 'INFO'
 }
 if ($rebootReasons.length) {
   Write-Log -message ('reboot required: {0}' -f [string]::Join(', ', $rebootReasons)) -severity 'DEBUG'
