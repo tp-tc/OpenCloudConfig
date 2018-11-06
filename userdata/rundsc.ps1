@@ -82,7 +82,7 @@ function Run-RemoteDesiredStateConfig {
   process {
     foreach ($packageProviderName in $packageProviders.Keys) {
       $version = $packageProviders.Item($packageProviderName)
-      $packageProvider = (Get-PackageProvider -Name $packageProviderName)
+      $packageProvider = (Get-PackageProvider -Name $packageProviderName -ForceBootstrap:$true)
       if ((-not ($packageProvider)) -or ($packageProvider.Version -lt $version)) {
         try {
           Install-PackageProvider -Name $packageProviderName -MinimumVersion $version -Force
