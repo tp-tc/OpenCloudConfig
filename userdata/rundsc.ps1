@@ -1216,17 +1216,24 @@ function Set-ServiceState {
     $service = (Get-Service -Name $name)
     if ($service) {
       Write-Log -message ('{0} :: {1} service state: {2}.' -f $($MyInvocation.MyCommand.Name), $name, $service.Status) -severity 'DEBUG'
-      if ($service.Status -ne $state) {
-        switch ($state) {
-          'Running' {
-            Start-Service -InputObject $service
+      $attempt = 0
+      while (($service.Status -ne $state) -and ($attempt -lt 2)) {
+        try {
+          switch ($state) {
+            'Running' {
+              Start-Service -InputObject $service
+            }
+            'Stopped' {
+              Stop-Service -InputObject $service
+            }
           }
-          'Stopped' {
-            Stop-Service -InputObject $service
-          }
+          $service.WaitForStatus($state, '00:00:10')
+        } catch {
+          Write-Log -message ('{0} :: attempt {1} failed to set {2} service state to {3}. {4}' -f $($MyInvocation.MyCommand.Name), ($attempt + 1), $name, $state, $_.Exception.Message) -severity 'ERROR'
+          Start-LoggedProcess -filePath 'sc' -argumentList @('config', 'w32time', 'type=', 'own') -name 'sc-config-w32time-type-own'
         }
-        $service.WaitForStatus($state)
         Write-Log -message ('{0} :: {1} service state: {2}.' -f $($MyInvocation.MyCommand.Name), $name, (Get-Service -Name $name).Status) -severity 'DEBUG'
+        $attempt++
       }
     } else {
       Write-Log -message ('{0} :: {1} service not found.' -f $($MyInvocation.MyCommand.Name), $name) -severity 'ERROR'
