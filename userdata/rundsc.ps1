@@ -1623,9 +1623,10 @@ function Run-OpenCloudConfig {
         # end pre dsc setup ###########################################################################################################################################
 
         # run dsc #####################################################################################################################################################
-        if ($workerType.EndsWith('-gpu-b') -or $workerType.EndsWith('-gpu-b')) {
-          $sourceRev = 'function-refactor'
-        }
+        # use a code block similar to below for testing rundsc changes on beta
+        #if ($workerType.EndsWith('-beta') -or $workerType.EndsWith('-gpu-b')) {
+        #  $sourceRev = 'function-refactor'
+        #}
         Start-Transcript -Path $transcript -Append
         Run-RemoteDesiredStateConfig -url ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/xDynamicConfig.ps1' -f $sourceOrg, $sourceRepo, $sourceRev) -workerType $workerType
         Stop-Transcript
@@ -1667,13 +1668,6 @@ function Run-OpenCloudConfig {
         Remove-DesiredStateConfigTriggers
         New-LocalCache
       }
-      #if ($isWorker) {
-        # test disk conservation on beta workers only
-        #if ($workerType.EndsWith('-beta') -or $workerType.EndsWith('-gpu-b')) {
-        #  Conserve-DiskSpace
-        #}
-      #}
-
 
       # archive dsc logs
       Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
