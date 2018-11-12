@@ -334,12 +334,15 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\mozilla-build\\python3\\python.exe"
+          "C:\\mozilla-build\\python3"
         ],
         "CommandsReturn": [
           {
             "Command": "C:\\mozilla-build\\python3\\python.exe",
             "Arguments": [
+              "--version",
+              "||",
+              "C:\\mozilla-build\\python3\\python3.exe",
               "--version"
             ],
             "Match": "Python 3.6.3"
@@ -353,6 +356,32 @@
         }
       ],
       "sha512": "0aecc2a136909051f4099015b9cc0ac52155160203e1cea2c82f397178818388c43d152b8678b98cd8a8d871626204909b21ba91b0d7aae566642f2f81570ebd"
+    },
+    {
+      "ComponentName": "MovePython3PythonExe",
+      "ComponentType": "CommandRun",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "Python3"
+        }
+      ],
+      "Command": "cmd.exe",
+      "Arguments": [
+        "/c",
+        "move",
+        "/y",
+        "C:\\mozilla-build\\python3\\python.exe",
+        "C:\\mozilla-build\\python3\\python3.exe"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\mozilla-build\\python3\\python3.exe"
+        ],
+        "PathsNotExist": [
+          "C:\\mozilla-build\\python3\\python.exe"
+        ]
+      }
     },
     {
       "ComponentName": "DeleteMozillaBuildMercurial",
@@ -448,6 +477,10 @@
         {
           "ComponentType": "MsiInstall",
           "ComponentName": "Mercurial"
+        },
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "MovePython3PythonExe"
         }
       ],
       "Name": "PATH",
@@ -464,6 +497,7 @@
         "C:\\mozilla-build\\nsis-2.46u",
         "C:\\mozilla-build\\python",
         "C:\\mozilla-build\\python\\Scripts",
+        "C:\\mozilla-build\\python3",
         "C:\\mozilla-build\\upx391w",
         "C:\\mozilla-build\\wget",
         "C:\\mozilla-build\\yasm",
