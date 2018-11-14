@@ -167,15 +167,15 @@ worker_password="${worker_password//[<>\"\'\`\\\/]/_}"
 userdata=${userdata/ROOT_PASSWORD_TOKEN/$root_password}
 userdata=${userdata/WORKER_PASSWORD_TOKEN/$worker_password}
 
-userdata=${userdata/SOURCE_ORG_TOKEN/$SOURCE_ORG}
-userdata=${userdata/SOURCE_REPO_TOKEN/$GITHUB_HEAD_REPO_NAME}
-#userdata=${userdata/SOURCE_REV_TOKEN/$GITHUB_HEAD_SHA}
+userdata=${userdata//SOURCE_ORG_TOKEN/$SOURCE_ORG}
+userdata=${userdata//SOURCE_REPO_TOKEN/$GITHUB_HEAD_REPO_NAME}
+#userdata=${userdata//SOURCE_REV_TOKEN/$GITHUB_HEAD_SHA}
 
 # use a code block similar to below for testing rundsc changes on beta
 if [[ "$tc_worker_type" == *"-gpu-b" ]] || [[ "$tc_worker_type" == *"-beta" ]]; then
-  userdata=${userdata/SOURCE_REV_TOKEN/refactor}
+  userdata=${userdata//SOURCE_REV_TOKEN/refactor}
 else
-  userdata=${userdata/SOURCE_REV_TOKEN/$GITHUB_HEAD_SHA}
+  userdata=${userdata//SOURCE_REV_TOKEN/$GITHUB_HEAD_SHA}
 fi
 
 curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq '.' > ./${tc_worker_type}-pre.json
