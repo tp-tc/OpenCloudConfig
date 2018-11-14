@@ -246,19 +246,6 @@ function Remove-LegacyStuff {
       'DefaultUserName' = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon';
       'DefaultPassword' = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon';
       'AutoAdminLogon' = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon'
-    },
-    [hashtable] $ec2ConfigSettings = @{
-      'Ec2HandleUserData' = 'Enabled';
-      'Ec2InitializeDrives' = 'Enabled';
-      'Ec2EventLog' = 'Enabled';
-      'Ec2OutputRDPCert' = 'Enabled';
-      'Ec2SetDriveLetter' = 'Enabled';
-      'Ec2WindowsActivate' = 'Enabled';
-      'Ec2SetPassword' = 'Disabled';
-      'Ec2SetComputerName' = 'Disabled';
-      'Ec2ConfigureRDP' = 'Disabled';
-      'Ec2DynamicBootVolumeSize' = 'Disabled';
-      'AWS.EC2.Windows.CloudWatch.PlugIn' = 'Disabled'
     }
   )
   begin {
@@ -347,9 +334,32 @@ function Remove-LegacyStuff {
         Write-Log -message ('{0} :: registry entry: {1}\{2}, deleted.' -f $($MyInvocation.MyCommand.Name), $path, $name) -severity 'INFO'
       }
     }
-
-    # reset ec2 config settings
-    $ec2ConfigSettingsFile = 'C:\Program Files\Amazon\Ec2ConfigService\Settings\Config.xml'
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
+function Set-Ec2ConfigSettings {
+  param (
+    [string] $ec2ConfigSettingsFile = ('{0}\Amazon\Ec2ConfigService\Settings\Config.xml' -f $env:ProgramFiles),
+    [hashtable] $ec2ConfigSettings = @{
+      'Ec2HandleUserData' = 'Enabled';
+      'Ec2InitializeDrives' = 'Enabled';
+      'Ec2EventLog' = 'Enabled';
+      'Ec2OutputRDPCert' = 'Enabled';
+      'Ec2SetDriveLetter' = 'Enabled';
+      'Ec2WindowsActivate' = 'Disabled';
+      'Ec2SetPassword' = 'Disabled';
+      'Ec2SetComputerName' = 'Disabled';
+      'Ec2ConfigureRDP' = 'Disabled';
+      'Ec2DynamicBootVolumeSize' = 'Disabled';
+      'AWS.EC2.Windows.CloudWatch.PlugIn' = 'Disabled'
+    }
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
     $ec2ConfigSettingsFileModified = $false;
     [xml]$xml = (Get-Content $ec2ConfigSettingsFile)
     foreach ($plugin in $xml.DocumentElement.Plugins.Plugin) {
@@ -362,9 +372,15 @@ function Remove-LegacyStuff {
       }
     }
     if ($ec2ConfigSettingsFileModified) {
-      & 'icacls' @($ec2ConfigSettingsFile, '/grant', 'Administrators:F') | Out-File -filePath $logFile -append
-      & 'icacls' @($ec2ConfigSettingsFile, '/grant', 'System:F') | Out-File -filePath $logFile -append
-      $xml.Save($ec2ConfigSettingsFile) | Out-File -filePath $logFile -append
+      try {
+        & 'icacls' @($ec2ConfigSettingsFile, '/grant', 'Administrators:F') | Out-File -filePath $logFile -append
+        & 'icacls' @($ec2ConfigSettingsFile, '/grant', 'System:F') | Out-File -filePath $logFile -append
+        $xml.Save($ec2ConfigSettingsFile) | Out-File -filePath $logFile -append
+        Write-Log -message ('{0} :: Ec2Config settings file saved at: {1}' -f $($MyInvocation.MyCommand.Name), $ec2ConfigSettingsFile) -severity 'INFO'
+      }
+      catch {
+        Write-Log -message ('{0} :: failed to save Ec2Config settings file: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $ec2ConfigSettingsFile, $_.Exception.Message) -severity 'ERROR'
+      }
     }
   }
   end {
@@ -1595,6 +1611,7 @@ function Run-OpenCloudConfig {
       if ($locationType -ne 'DataCenter') {
         # create a scheduled task to run HaltOnIdle every 2 minutes
         Create-ScheduledPowershellTask -taskName 'HaltOnIdle' -scriptUrl ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/HaltOnIdle.ps1?{3}' -f $sourceOrg, $sourceRepo, $sourceRev, [Guid]::NewGuid()) -scriptPath 'C:\dsc\HaltOnIdle.ps1' -sc 'minute' -mo '2'
+        Set-Ec2ConfigSettings
       }
       # create a scheduled task to run system maintenance on startup
       Create-ScheduledPowershellTask -taskName 'MaintainSystem' -scriptUrl ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/MaintainSystem.ps1?{3}' -f $sourceOrg, $sourceRepo, $sourceRev, [Guid]::NewGuid()) -scriptPath 'C:\dsc\MaintainSystem.ps1' -sc 'onstart'
