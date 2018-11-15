@@ -441,13 +441,9 @@ git commit -m 'Some change from my fork to be tested on beta worker types' \
            -m 'beta-source: my-gh-username my-gh-repo my-dev-branch'
 ```
 
-**Note - a task will still be created for each possible workertype, however
-it will immediately exit when it runs, if it is not included in the deploy
-syntax.**
+> Note - a task will still be created for each possible workertype, however it will immediately exit when it runs, if it is not included in the deploy syntax.
 
-**Also note, if you do not include deploy syntax in your commit, nothing will
-be deployed. This is to safeguard automatic deploys from pushes where a
-deployment is not intended.**
+> Also note, if you do not include deploy syntax in your commit, nothing will be deployed. This is to safeguard automatic deploys from pushes where a deployment is not intended.
 
 ## Redeploying without changes
 
