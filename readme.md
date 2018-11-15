@@ -395,29 +395,59 @@ In addition to rebuilding the AMIs, the CI will also update [live production
 AWS worker type definitions](https://tools.taskcluster.net/aws-provisioner) to
 use the new images.
 
-## Defining which worker types to update
+## Deployment commit message syntax
 
-Tasks can be filtered based on the syntax of the commit message of the master
-branch commit head. To update all OCC worker types, include `deploy: all` in
-your commit message. To rebuild a selection of worker types, provide a space
-delimited list in your deploy message, e.g. `deploy: <workertype1>
-<workertype2> ...` in your commit message.
+Deployment tasks can be run (or prevented from running) based on the syntax of the commit message on the master branch commit head.
 
-This is usually most easily accomplished using two messages in the commit
-command; the first the regular commit message, and the second for the
-deployment instruction, e.g.:
+### Specifying which worker type amis to deploy
+
+- to update all OCC worker types:
+
+  `deploy: all`
+
+- to update all OCC **beta** worker types:
+
+  `deploy: beta`
+
+- to update the gecko-1-b-win2012 & gecko-2-b-win2012 worker types (provide a space delimited list in your deploy message):
+
+  `deploy: gecko-1-b-win2012 gecko-2-b-win2012`
+
+### Specifying a different repository (or branch) to build amis from
+
+When testing potentially problematic changes, it is useful to deploy from a forked repository or a development branch to beta workers.
+
+- to deploy to beta workers from the bz1234567 branch of the main repository:
+
+  `beta-source: mozilla-releng OpenCloudConfig bz1234567`
+
+- to deploy to beta workers from grenade's dev-hack branch in his private fork:
+
+  `beta-source: grenade OpenCloudConfig dev-hack`
+
+### Examples
+
+This can be easily accomplished using two or three messages in the commit command; the first the regular commit message, and subsequent lines for the
+deployment instructions, e.g.:
 
 ```
 git commit -m 'Something important for GPU beta worker types' \
            -m 'deploy: gecko-t-win10-64-gpu-b gecko-t-win7-32-gpu-b'
 ```
 
+```
+git commit -m 'Some change from my fork to be tested on beta worker types' \
+           -m 'deploy: beta' \
+           -m 'beta-source: my-gh-username my-gh-repo my-dev-branch'
+```
+
 **Note - a task will still be created for each possible workertype, however
 it will immediately exit when it runs, if it is not included in the deploy
 syntax.**
 
-**Also note, if you do not include deploy syntax in your commit, nothing will get
-deployed. This is to safeguard automatic deploys from accidental pushes.**
+**Also note, if you do not include deploy syntax in your commit, nothing will
+be deployed. This is to safeguard automatic deploys from pushes where a
+deployment is not intended.**
 
 ## Redeploying without changes
 

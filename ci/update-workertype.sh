@@ -167,16 +167,22 @@ worker_password="${worker_password//[<>\"\'\`\\\/]/_}"
 userdata=${userdata/ROOT_PASSWORD_TOKEN/$root_password}
 userdata=${userdata/WORKER_PASSWORD_TOKEN/$worker_password}
 
-userdata=${userdata//SOURCE_ORG_TOKEN/$SOURCE_ORG}
-userdata=${userdata//SOURCE_REPO_TOKEN/$GITHUB_HEAD_REPO_NAME}
-#userdata=${userdata//SOURCE_REV_TOKEN/$GITHUB_HEAD_SHA}
-
-# use a code block similar to below for testing rundsc changes on beta
-if [[ "$tc_worker_type" == *"-gpu-b" ]] || [[ "$tc_worker_type" == *"-beta" ]]; then
-  userdata=${userdata//SOURCE_REV_TOKEN/refactor}
+# if commit message includes a line like: "beta-source: custom-gh-username-or-org custom-gh-repo custom-gh-ref-or-rev"
+# and worker type is a beta, inject userdata with custom org, repo and ref data so that beta amis are built with
+# OCC urls like: github.com/custom-gh-username-or-org/custom-gh-repo/custom-gh-ref-or-rev/...
+if [[ $commit_message == *"beta-source:"* ]] && ([[ "$tc_worker_type" == *"-gpu-b" ]] || [[ "$tc_worker_type" == *"-beta" ]]); then
+  beta_source=( $([[ ${commit_message} =~ beta-source:\s+?([^;]*) ]] && echo "${BASH_REMATCH[1]}") )
+  userdata=${userdata//SOURCE_ORG_TOKEN/${beta_source[0]}}
+  userdata=${userdata//SOURCE_REPO_TOKEN/${beta_source[1]}}
+  userdata=${userdata//SOURCE_REV_TOKEN/${beta_source[2]}}
+  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deployment source set to: ${beta_source[0]}/${beta_source[1]}/${beta_source[2]}"
 else
-  userdata=${userdata//SOURCE_REV_TOKEN/$GITHUB_HEAD_SHA}
+  userdata=${userdata//SOURCE_ORG_TOKEN/${SOURCE_ORG}}
+  userdata=${userdata//SOURCE_REPO_TOKEN/${GITHUB_HEAD_REPO_NAME}}
+  userdata=${userdata//SOURCE_REV_TOKEN/${GITHUB_HEAD_SHA}}
+  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deployment source set to: ${SOURCE_ORG}/${GITHUB_HEAD_REPO_NAME}/${GITHUB_HEAD_SHA}"
 fi
+
 
 curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq '.' > ./${tc_worker_type}-pre.json
 cat ./${tc_worker_type}-pre.json | jq --arg gwtasksdir $gw_tasks_dir --arg occmanifest $occ_manifest --arg deploydate "$(date --utc +"%F %T.%3NZ")" --arg deploymentId $aws_client_token --argjson instanceTypes $instance_types -c 'del(.workerType, .lastModified) | .secrets."generic-worker".config.tasksDir = $gwtasksdir | .secrets."generic-worker".config.workerTypeMetadata."machine-setup".manifest = $occmanifest | .secrets."generic-worker".config.workerTypeMetadata."machine-setup"."ami-created" = $deploydate | .instanceTypes = $instanceTypes | .secrets."generic-worker".config.deploymentId = $deploymentId' > ./${tc_worker_type}.json
