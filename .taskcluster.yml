@@ -51,6 +51,7 @@ tasks:
                   - push
               branches:
                 - master
+                - beta
           data:
               head:
                   sha: '{{event.head.sha}}'
@@ -65,7 +66,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-tooltool-repo.sh'
+              - 'git clone --quiet {{event.head.repo.url}} && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig fetch && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig checkout {{ event.head.repo.branch }} && ./OpenCloudConfig/ci/update-tooltool-repo.sh'
           artifacts:
               'public/tooltool/manifest':
                   type: directory
@@ -140,6 +141,7 @@ tasks:
                   - push
               branches:
                 - master
+                - beta
           data:
               head:
                   sha: '{{event.head.sha}}'
@@ -154,7 +156,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-1-b-win2012-beta'
+              - 'git clone --quiet {{event.head.repo.url}} && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig fetch && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig checkout {{ event.head.repo.branch }} && ./OpenCloudConfig/ci/update-workertype.sh gecko-1-b-win2012-beta'
           artifacts:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
@@ -535,6 +537,7 @@ tasks:
                   - push
               branches:
                 - master
+                - beta
           data:
               head:
                   sha: '{{event.head.sha}}'
@@ -549,7 +552,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win7-32-gpu-b'
+              - 'git clone --quiet {{event.head.repo.url}} && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig fetch && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig checkout {{ event.head.repo.branch }} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win7-32-gpu-b'
           artifacts:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
@@ -591,6 +594,7 @@ tasks:
                   - push
               branches:
                 - master
+                - beta
           data:
               head:
                   sha: '{{event.head.sha}}'
@@ -605,7 +609,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win7-32-beta'
+              - 'git clone --quiet {{event.head.repo.url}} && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig fetch && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig checkout {{ event.head.repo.branch }} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win7-32-beta'
           artifacts:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
@@ -815,6 +819,7 @@ tasks:
                   - push
               branches:
                 - master
+                - beta
           data:
               head:
                   sha: '{{event.head.sha}}'
@@ -829,7 +834,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win10-64-beta'
+              - 'git clone --quiet {{event.head.repo.url}} && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig fetch && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig checkout {{ event.head.repo.branch }} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win10-64-beta'
           artifacts:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
@@ -927,6 +932,7 @@ tasks:
                   - push
               branches:
                 - master
+                - beta
           data:
               head:
                   sha: '{{event.head.sha}}'
@@ -941,7 +947,7 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win10-64-gpu-b'
+              - 'git clone --quiet {{event.head.repo.url}} && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig fetch && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig checkout {{ event.head.repo.branch }} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win10-64-gpu-b'
           artifacts:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
