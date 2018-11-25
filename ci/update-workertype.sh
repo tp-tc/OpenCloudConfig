@@ -101,24 +101,8 @@ case "${tc_worker_type}" in
     root_username=root
     worker_username=GenericWorker
     ;;
-  gecko-t-win10-64-beta|gecko-t-win10-64-gpu-b)
-    aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_10_Enterprise_1703_15063_296_en-US_x64_MBR-VAC-*'}
-    aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-    ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
-    gw_tasks_dir='Z:\'
-    root_username=Administrator
-    worker_username=GenericWorker
-    ;;
-  gecko-t-win10-64-gpu*)
-    aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win10-64-gpu-base-20180320'}
-    aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-    ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
-    gw_tasks_dir='Z:\'
-    root_username=Administrator
-    worker_username=GenericWorker
-    ;;
   gecko-t-win10-64*)
-    aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win10-64-base-20180320'}
+    aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_10_Enterprise_1703_15063_296_en-US_x64_MBR-VAC-*'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
     gw_tasks_dir='Z:\'
