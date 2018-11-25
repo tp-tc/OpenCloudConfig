@@ -1472,32 +1472,32 @@
   "ProvisionerConfiguration": {
     "instanceTypes": [
       {
-        "instanceType": "c4.2xlarge",
         "capacity": 1,
-        "utility": 1,
-        "secrets": {},
-        "scopes": [],
-        "userData": {},
+        "instanceType": "c5.2xlarge",
         "launchSpec": {
           "BlockDeviceMappings": [
             {
-              "DeviceName": "/dev/sda1",
+              "DeviceName": "/dev/xvda",
               "Ebs": {
-                "VolumeType": "gp2",
+                "DeleteOnTermination": true,
                 "VolumeSize": 120,
-                "DeleteOnTermination": true
+                "VolumeType": "gp2"
               }
             },
             {
-              "DeviceName": "/dev/sdb",
+              "DeviceName": "xvdf",
               "Ebs": {
-                "VolumeType": "gp2",
+                "DeleteOnTermination": true,
                 "VolumeSize": 120,
-                "DeleteOnTermination": true
+                "VolumeType": "gp2"
               }
             }
           ]
-        }
+        },
+        "scopes": [],
+        "secrets": {},
+        "userData": {},
+        "utility": 1
       }
     ]
   }
