@@ -138,8 +138,6 @@ if [ -z "${aws_base_ami_id}" ]; then
   exit 69
 fi
 
-occ_manifest="${GITHUB_HEAD_REPO_URL}/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/${tc_worker_type}.json"
-
 SOURCE_ORG_REPO=${GITHUB_HEAD_REPO_URL:19}
 SOURCE_ORG_REPO=${SOURCE_ORG_REPO/.git/}
 SOURCE_ORG=${SOURCE_ORG_REPO/\/$GITHUB_HEAD_REPO_NAME/}
@@ -160,13 +158,15 @@ if [[ $commit_message == *"beta-source:"* ]] && ([[ "$tc_worker_type" == *"-gpu-
   userdata=${userdata//SOURCE_REPO_TOKEN/${beta_source[1]}}
   userdata=${userdata//SOURCE_REV_TOKEN/${beta_source[2]}}
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deployment source set to: ${beta_source[0]}/${beta_source[1]}/${beta_source[2]}"
+  occ_manifest="https://github.com/${beta_source[0]}/${beta_source[1]}/blob/${beta_source[2]}/userdata/Manifest/${tc_worker_type}.json"
 else
   userdata=${userdata//SOURCE_ORG_TOKEN/${SOURCE_ORG}}
   userdata=${userdata//SOURCE_REPO_TOKEN/${GITHUB_HEAD_REPO_NAME}}
   userdata=${userdata//SOURCE_REV_TOKEN/${GITHUB_HEAD_SHA}}
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deployment source set to: ${SOURCE_ORG}/${GITHUB_HEAD_REPO_NAME}/${GITHUB_HEAD_SHA}"
+  occ_manifest="https://github.com/${SOURCE_ORG}/${GITHUB_HEAD_REPO_NAME}/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/${tc_worker_type}.json"
 fi
-
+echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] occ manifest set to: ${occ_manifest}"
 
 curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq '.' > ./${tc_worker_type}-pre.json
 cat ./${tc_worker_type}-pre.json | jq --arg gwtasksdir $gw_tasks_dir --arg occmanifest $occ_manifest --arg deploydate "$(date --utc +"%F %T.%3NZ")" --arg deploymentId $aws_client_token --argjson instanceTypes $instance_types -c 'del(.workerType, .lastModified) | .secrets."generic-worker".config.tasksDir = $gwtasksdir | .secrets."generic-worker".config.workerTypeMetadata."machine-setup".manifest = $occmanifest | .secrets."generic-worker".config.workerTypeMetadata."machine-setup"."ami-created" = $deploydate | .instanceTypes = $instanceTypes | .secrets."generic-worker".config.deploymentId = $deploymentId' > ./${tc_worker_type}.json
