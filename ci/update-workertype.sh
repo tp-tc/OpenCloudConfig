@@ -69,6 +69,8 @@ if [[ $commit_message == *"nodeploy:"* ]]; then
   fi
 elif [[ $commit_message == *"deploy: all"* ]]; then
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deploying ${tc_worker_type} as part of 'deploy: all'"
+elif [[ $commit_message == *"deploy: alpha"* ]] && ([[ "${tc_worker_type}" == *"-alpha" ]] || [[ "${tc_worker_type}" == *"-gpu-a" ]]); then
+  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deploying ${tc_worker_type} as part of 'deploy: alpha'"
 elif [[ $commit_message == *"deploy: beta"* ]] && ([[ "${tc_worker_type}" == *"-beta" ]] || [[ "${tc_worker_type}" == *"-gpu-b" ]]); then
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deploying ${tc_worker_type} as part of 'deploy: beta'"
 elif [[ $commit_message == *"deploy:"* ]]; then
@@ -99,6 +101,14 @@ case "${tc_worker_type}" in
     ami_description="Gecko test worker for Windows 7 32 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
     gw_tasks_dir='Z:\'
     root_username=root
+    worker_username=GenericWorker
+    ;;
+  gecko-t-win10-64-alpha|gecko-t-win10-64-gpu-a)
+    aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_10_Enterprise_1803_17134_285_en-US_x64_MBR-*'}
+    aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
+    ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
+    gw_tasks_dir='Z:\'
+    root_username=Administrator
     worker_username=GenericWorker
     ;;
   gecko-t-win10-64*)
@@ -149,10 +159,17 @@ worker_password="${worker_password//[<>\"\'\`\\\/]/_}"
 userdata=${userdata/ROOT_PASSWORD_TOKEN/$root_password}
 userdata=${userdata/WORKER_PASSWORD_TOKEN/$worker_password}
 
-# if commit message includes a line like: "beta-source: custom-gh-username-or-org custom-gh-repo custom-gh-ref-or-rev"
-# and worker type is a beta, inject userdata with custom org, repo and ref data so that beta amis are built with
+# if commit message includes a line like: "(alpha-source|beta-source): custom-gh-username-or-org custom-gh-repo custom-gh-ref-or-rev"
+# and worker type is an alpha or beta, inject userdata with custom org, repo and ref data so that beta amis are built with
 # OCC urls like: github.com/custom-gh-username-or-org/custom-gh-repo/custom-gh-ref-or-rev/...
-if [[ $commit_message == *"beta-source:"* ]] && ([[ "$tc_worker_type" == *"-gpu-b" ]] || [[ "$tc_worker_type" == *"-beta" ]]); then
+if [[ $commit_message == *"alpha-source:"* ]] && ([[ "$tc_worker_type" == *"-gpu-a" ]] || [[ "$tc_worker_type" == *"-alpha" ]]); then
+  alpha_source=( $([[ ${commit_message} =~ alpha-source:\s+?([^;]*) ]] && echo "${BASH_REMATCH[1]}") )
+  userdata=${userdata//SOURCE_ORG_TOKEN/${alpha_source[0]}}
+  userdata=${userdata//SOURCE_REPO_TOKEN/${alpha_source[1]}}
+  userdata=${userdata//SOURCE_REV_TOKEN/${alpha_source[2]}}
+  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deployment source set to: ${alpha_source[0]}/${alpha_source[1]}/${alpha_source[2]}"
+  occ_manifest="https://github.com/${alpha_source[0]}/${alpha_source[1]}/blob/${alpha_source[2]}/userdata/Manifest/${tc_worker_type}.json"
+elif [[ $commit_message == *"beta-source:"* ]] && ([[ "$tc_worker_type" == *"-gpu-b" ]] || [[ "$tc_worker_type" == *"-beta" ]]); then
   beta_source=( $([[ ${commit_message} =~ beta-source:\s+?([^;]*) ]] && echo "${BASH_REMATCH[1]}") )
   userdata=${userdata//SOURCE_ORG_TOKEN/${beta_source[0]}}
   userdata=${userdata//SOURCE_REPO_TOKEN/${beta_source[1]}}
