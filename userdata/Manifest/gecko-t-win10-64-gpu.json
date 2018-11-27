@@ -1625,6 +1625,33 @@
           "ComponentName": "HostsFile"
         }
       ]
+    },
+    {
+      "ComponentName": "reg_WindowsUpdate_DeferUpgrade",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1510220",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate",
+      "ValueName": "DeferUpgrade",
+      "ValueType": "Dword",
+      "ValueData": 1
+    },
+    {
+      "ComponentName": "reg_WindowsUpdate_DeferUpgradePeriod",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1510220",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate",
+      "ValueName": "DeferUpgradePeriod",
+      "ValueType": "Dword",
+      "ValueData": 8
+    },
+    {
+      "ComponentName": "reg_WindowsUpdate_DeferUpdatePeriod",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1510220",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate",
+      "ValueName": "DeferUpdatePeriod",
+      "ValueType": "Dword",
+      "ValueData": 4
     }
   ],
   "ProvisionerConfiguration": {
