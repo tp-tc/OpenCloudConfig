@@ -1827,7 +1827,7 @@ function Invoke-OpenCloudConfig {
           # a wsman network outage prevented the dsc run from completing
           ($_ -match 'WSManNetworkFailureDetected') -or
           # a service disable attempt through registry settings failed, because another running service interfered with the registry write
-          ($_ -match 'Attempted to perform an unauthorized operation.'))}) -contains $true) {
+          ($_ -match 'Attempted to perform an unauthorized'))}) -contains $true) {
         if (-not ($isWorker)) {
           # ensure that Ec2HandleUserData is enabled before reboot (if the RunDesiredStateConfigurationAtStartup scheduled task doesn't yet exist)
           Set-Ec2ConfigSettings
