@@ -1589,6 +1589,33 @@ function Initialize-Instance {
         Set-Ec2ConfigSettings
         # ensure that an up to date nxlog configuration is used as early as possible
         Set-NxlogConfig -sourceOrg $sourceOrg -sourceRepo $sourceRepo -sourceRev $sourceRev
+      } elseif ($locationType -eq 'DataCenter') {
+        $workerTypeOverrideMap = (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/cfg/datacenter-workertype-override-map.json' -UseBasicParsing | ConvertFrom-Json)
+        try {
+          $workerType = ($workerTypeOverrideMap | ? { $_.hostname -eq $env:COMPUTERNAME }).workertype
+        } catch {
+          switch -wildcard ($env:COMPUTERNAME.ToLower()) {
+            't-w1064-ms-*' {
+              $workerType = 'gecko-t-win10-64-hw'
+            }
+            't-w1064-ux-*' {
+              $workerType = 'gecko-t-win10-64-ux'
+            }
+          }
+        }
+        if ($workerType) {
+          try {
+            if (-not (Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -ErrorAction SilentlyContinue)) {
+              New-Item -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Force
+              Write-Log -message ('{0} :: created registry path: HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+            }
+            Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Type 'String' -Name 'WorkerType' -Value $workerType
+            Write-Log -message ('{0} :: set WorkerType in registry to: {1}' -f $($MyInvocation.MyCommand.Name), $workerType) -severity 'INFO'
+          }
+          catch {
+            Write-Log -message ('{0} :: error setting WorkerType in registry to: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $workerType, $_.Exception.Message) -severity 'ERROR'
+          }
+        }
       }
       Write-Log -message ('{0} :: reboot required: {1}' -f $($MyInvocation.MyCommand.Name), [string]::Join(', ', $rebootReasons)) -severity 'DEBUG'
       & shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1')
@@ -1648,18 +1675,9 @@ function Invoke-OpenCloudConfig {
     # set up a log folder, an execution policy that enables the dsc run and a winrm envelope size large enough for the dynamic dsc.
     New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
     if ($locationType -eq 'DataCenter') {
-      switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
-        'Microsoft Windows 7*' {
-          $isWorker = $true
-          $runDscOnWorker = $true
-          $workerType = 'gecko-t-win7-32-hw'
-        }
-        'Microsoft Windows 10*' {
-          $isWorker = $true
-          $runDscOnWorker = $true
-          $workerType = $(if (Test-Path -Path 'C:\dsc\GW10UX.semaphore' -ErrorAction SilentlyContinue) { 'gecko-t-win10-64-ux' } else { 'gecko-t-win10-64-hw' })
-        }
-      }
+      $isWorker = $true
+      $runDscOnWorker = $true
+      $workerType = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Name 'WorkerType').WorkerType
       Write-Log -message ('{0} :: isWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $isWorker) -severity 'INFO'
       Write-Log -message ('{0} :: workerType: {1}.' -f $($MyInvocation.MyCommand.Name), $workerType) -severity 'INFO'
       Write-Log -message ('{0} :: runDscOnWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $runDscOnWorker) -severity 'DEBUG'
