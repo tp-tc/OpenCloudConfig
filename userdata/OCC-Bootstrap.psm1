@@ -1589,33 +1589,6 @@ function Initialize-Instance {
         Set-Ec2ConfigSettings
         # ensure that an up to date nxlog configuration is used as early as possible
         Set-NxlogConfig -sourceOrg $sourceOrg -sourceRepo $sourceRepo -sourceRev $sourceRev
-      } elseif ($locationType -eq 'DataCenter') {
-        $workerTypeOverrideMap = (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/cfg/datacenter-workertype-override-map.json' -UseBasicParsing | ConvertFrom-Json)
-        try {
-          $workerType = ($workerTypeOverrideMap | ? { $_.hostname -eq $env:COMPUTERNAME }).workertype
-        } catch {
-          switch -wildcard ($env:COMPUTERNAME.ToLower()) {
-            't-w1064-ms-*' {
-              $workerType = 'gecko-t-win10-64-hw'
-            }
-            't-w1064-ux-*' {
-              $workerType = 'gecko-t-win10-64-ux'
-            }
-          }
-        }
-        if ($workerType) {
-          try {
-            if (-not (Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -ErrorAction SilentlyContinue)) {
-              New-Item -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Force
-              Write-Log -message ('{0} :: created registry path: HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-            }
-            Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Type 'String' -Name 'WorkerType' -Value $workerType
-            Write-Log -message ('{0} :: set WorkerType in registry to: {1}' -f $($MyInvocation.MyCommand.Name), $workerType) -severity 'INFO'
-          }
-          catch {
-            Write-Log -message ('{0} :: error setting WorkerType in registry to: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $workerType, $_.Exception.Message) -severity 'ERROR'
-          }
-        }
       }
       Write-Log -message ('{0} :: reboot required: {1}' -f $($MyInvocation.MyCommand.Name), [string]::Join(', ', $rebootReasons)) -severity 'DEBUG'
       & shutdown @('-r', '-t', '0', '-c', [string]::Join(', ', $rebootReasons), '-f', '-d', 'p:4:1')
