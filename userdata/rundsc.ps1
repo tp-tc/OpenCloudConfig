@@ -104,13 +104,15 @@ function Set-OpenCloudConfigSource {
       'Repository' = $null;
       'Revision' = $null
     },
-    [switch] $overrideEnabled = $(if ((Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\DisableOverride' -ErrorAction SilentlyContinue) -and ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Name 'DisableOverride').DisableOverride)) { $false } else { $true })
+    [switch] $sourceOverrideEnabled = $(if ((Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\DisableSourceOverride' -ErrorAction SilentlyContinue) -and ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Name 'DisableSourceOverride').DisableSourceOverride)) { $false } else { $true }),
+    [switch] $workerTypeOverrideEnabled = $(if ((Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\DisableWorkerTypeOverride' -ErrorAction SilentlyContinue) -and ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Name 'DisableWorkerTypeOverride').DisableWorkerTypeOverride)) { $false } else { $true })
   )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
-    Write-Log -message ('{0} :: occ registry override is {1}' -f $($MyInvocation.MyCommand.Name), $(if ($overrideEnabled) { 'enabled' } else { 'disabled' })) -severity 'INFO'
+    Write-Log -message ('{0} :: registry override of occ source is {1}' -f $($MyInvocation.MyCommand.Name), $(if ($sourceOverrideEnabled) { 'enabled' } else { 'disabled' })) -severity 'INFO'
+    Write-Log -message ('{0} :: registry override of worker type is {1}' -f $($MyInvocation.MyCommand.Name), $(if ($workerTypeOverrideEnabled) { 'enabled' } else { 'disabled' })) -severity 'INFO'
     # create occ registry key
     if (Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -ErrorAction SilentlyContinue) {
       Write-Log -message ('{0} :: detected registry path: HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
@@ -142,7 +144,7 @@ function Set-OpenCloudConfigSource {
       if ($workerType) {
         if ((Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\WorkerType' -ErrorAction SilentlyContinue) -and ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Name 'WorkerType').WorkerType -eq $workerType)) {
           Write-Log -message ('{0} :: worker type detected in registry as: {1}' -f $($MyInvocation.MyCommand.Name), (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Name 'WorkerType').WorkerType) -severity 'DEBUG'
-        } elseif ($overrideEnabled) {
+        } elseif ($workerTypeOverrideEnabled) {
           try {
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Type 'String' -Name 'WorkerType' -Value $workerType
             Write-Log -message ('{0} :: worker type set in registry to: {1}' -f $($MyInvocation.MyCommand.Name), $workerType) -severity 'INFO'
@@ -186,7 +188,7 @@ function Set-OpenCloudConfigSource {
       if ($sourceMap.Item($sourceItemName)) {
         if ((Test-Path -Path ('HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source\{0}' -f $sourceItemName) -ErrorAction SilentlyContinue) -and ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name $sourceItemName)."$sourceItemName" -eq $sourceMap.Item($sourceItemName))) {
           Write-Log -message ('{0} :: Source/{1} detected in registry as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name $sourceItemName)."$sourceItemName") -severity 'DEBUG'
-        } elseif($overrideEnabled) {
+        } elseif($sourceOverrideEnabled) {
           try {
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Type 'String' -Name $sourceItemName -Value $sourceMap.Item($sourceItemName)
             Write-Log -message ('{0} :: Source/{1} set in registry to: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $sourceMap.Item($sourceItemName)) -severity 'INFO'
