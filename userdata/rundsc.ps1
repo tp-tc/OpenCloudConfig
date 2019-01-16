@@ -124,11 +124,13 @@ function Set-OpenCloudConfigSource {
       $workerTypeOverrideMap = (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/cfg/datacenter-workertype-override-map.json' -UseBasicParsing | ConvertFrom-Json)
       try {
         $workerType = ($workerTypeOverrideMap | ? { $_.hostname -ieq $env:COMPUTERNAME }).workertype
-        Write-Log -message ('{0} :: worker type override configuration ({1}) detected for {2}' -f $($MyInvocation.MyCommand.Name), $workerType, $env:COMPUTERNAME) -severity 'INFO'
         if ($workerType.EndsWith('-a')) {
           $sourceMap['Revision'] = 'alpha'
         } elseif ($workerType.EndsWith('-b')) {
           $sourceMap['Revision'] = 'beta'
+        }
+        if ($workerType) {
+          Write-Log -message ('{0} :: worker type override configuration ({1}) detected for {2}' -f $($MyInvocation.MyCommand.Name), $workerType, $env:COMPUTERNAME) -severity 'INFO'
         }
       } catch {
         switch -wildcard (${env:COMPUTERNAME}.ToLower()) {
