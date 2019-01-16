@@ -1357,27 +1357,27 @@ function Invoke-HardwareDiskCleanup {
     $freeB = $freespace.FreeSpace
     $freeMB =  [math]::Round($freeB / 1000000)
     $perfree = [math]::Round($percentfree,2)*100
-    Write-Log -message ('{0} :: Current free space of drive {1} {2}mb' -f $($MyInvocation.MyCommand.Name), $driveletter, $freeMB) -severity 'INFO'
-    Write-Log -message ('{0} :: Current free space percentage of drive {1} {2}%' -f $($MyInvocation.MyCommand.Name), $driveletter, $perfree) -severity 'INFO'
+    Write-Log -message "Current free space of drive $driveletter $freeMB MB"  -severity 'INFO' 
+    Write-Log -message "Current free space percentage of drive $driveletter $perfree%" -severity 'INFO'
     if ($percentfree -lt $WarnPercent) {
-      Write-Log -message ('{0} :: Current available disk space WARNING {1}%' -f $($MyInvocation.MyCommand.Name), $perfree) -severity 'WARN'
-      Write-Log -message ('{0} :: Attempting to clean and optimize disk' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
-      Start-LoggedProcess -filePath 'dism.exe' -argumentList @('/online', '/Cleanup-Image', '/StartComponentCleanup')
-      Start-LoggedProcess -filePath 'cleanmgr.exe' -argumentList @('/autoclean')
+      Write-Log -message "Current available disk space WARNING $perfree%" -severity 'WARN'
+      Write-Log -message "Attempting to clean and optimize disk" -severity 'WARN'
+      Start-Process -Wait Dism.exe /online /Cleanup-Image /StartComponentCleanup
+      Start-Process -Wait cleanmgr.exe /autoclean
       optimize-Volume $driveletter
       $freespace = Get-WmiObject -Class Win32_logicalDisk | ? {$_.DriveType -eq '3'}
       $percentfree = $freespace.FreeSpace / $freespace.Size
       $freeMB =  [math]::Round($freeB / 1000000)
       $perfree = [math]::Round($percentfree,2)*100
-      Write-Log -message ('{0} :: Current free space of drive post clean and optimize disk {1} {2}mb' -f $($MyInvocation.MyCommand.Name), $driveletter, $freeMB) -severity 'INFO'
-      Write-Log -message ('{0} :: Current free space percentage of drive post clean and optimize disk {1} {2}%' -f $($MyInvocation.MyCommand.Name), $driveletter, $perfree) -severity 'INFO'
+      Write-Log -message "Current free space of drive post clean and optimize disk $driveletter $freeMB MB"  -severity 'INFO' 
+      Write-Log -message "Current free space percentage of drive post clean and optimize disk $driveletter $perfree %" -severity 'INFO'
     }
     if ($percentfree -lt $StopPercent) {
       $TimeStart = Get-Date
       $TimeEnd = $timeStart.addminutes(1)
       do {
         $TimeNow = Get-Date
-        Write-Log -message ('{0} :: Current available disk space CRITCAL {1}% free. Will not start Generic-Worker!' -f $($MyInvocation.MyCommand.Name), $perfree) -severity 'ERROR'
+        Write-Log -message "Current available disk space CRITCAL $perfree% free. Will not start Generic-Worker!" -severity 'Error' 
         Sleep 15
       } until ($TimeNow -ge $TimeEnd)
       Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
@@ -1648,15 +1648,18 @@ function Invoke-OpenCloudConfig {
     # set up a log folder, an execution policy that enables the dsc run and a winrm envelope size large enough for the dynamic dsc.
     New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
     if ($locationType -eq 'DataCenter') {
-      $isWorker = $true
-      $runDscOnWorker = $true
-      try {
-        $workerType = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Name 'WorkerType').WorkerType
-      } catch {
-        Write-Log -message ('{0} :: failed to determine worker type from registry. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
-        throw
+      switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+        'Microsoft Windows 7*' {
+          $isWorker = $true
+          $runDscOnWorker = $true
+          $workerType = 'gecko-t-win7-32-hw'
+        }
+        'Microsoft Windows 10*' {
+          $isWorker = $true
+          $runDscOnWorker = $true
+          $workerType = $(if (Test-Path -Path 'C:\dsc\GW10UX.semaphore' -ErrorAction SilentlyContinue) { 'gecko-t-win10-64-ux' } else { 'gecko-t-win10-64-hw' })
+        }
       }
-      
       Write-Log -message ('{0} :: isWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $isWorker) -severity 'INFO'
       Write-Log -message ('{0} :: workerType: {1}.' -f $($MyInvocation.MyCommand.Name), $workerType) -severity 'INFO'
       Write-Log -message ('{0} :: runDscOnWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $runDscOnWorker) -severity 'DEBUG'

@@ -98,119 +98,40 @@ function Install-SupportingModules {
   }
 }
 function Set-OpenCloudConfigSource {
-  param (
-    [hashtable] $sourceMap = @{
-      'Organisation' = $null;
-      'Repository' = $null;
-      'Revision' = $null
-    },
-    [switch] $sourceOverrideEnabled = $(if ((Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\DisableSourceOverride' -ErrorAction SilentlyContinue) -and ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Name 'DisableSourceOverride').DisableSourceOverride)) { $false } else { $true }),
-    [switch] $workerTypeOverrideEnabled = $(if ((Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\DisableWorkerTypeOverride' -ErrorAction SilentlyContinue) -and ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Name 'DisableWorkerTypeOverride').DisableWorkerTypeOverride)) { $false } else { $true })
-  )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
-    Write-Log -message ('{0} :: registry override of occ source is {1}' -f $($MyInvocation.MyCommand.Name), $(if ($sourceOverrideEnabled) { 'enabled' } else { 'disabled' })) -severity 'INFO'
-    Write-Log -message ('{0} :: registry override of worker type is {1}' -f $($MyInvocation.MyCommand.Name), $(if ($workerTypeOverrideEnabled) { 'enabled' } else { 'disabled' })) -severity 'INFO'
-    # create occ registry key
-    if (Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -ErrorAction SilentlyContinue) {
-      Write-Log -message ('{0} :: detected registry path: HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
-    } else {
-      New-Item -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Force
-      Write-Log -message ('{0} :: created registry path: HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+    try {
+      $userdata = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')
+    } catch {
+      $userdata = $null
     }
-    if (${env:COMPUTERNAME}.ToLower().StartsWith('t-w')) {
-      $workerTypeOverrideMap = (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/cfg/datacenter-workertype-override-map.json' -UseBasicParsing | ConvertFrom-Json)
-      try {
-        $workerType = ($workerTypeOverrideMap | ? { $_.hostname -ieq $env:COMPUTERNAME }).workertype
-        if ($workerType.EndsWith('-a')) {
-          $sourceMap['Revision'] = 'alpha'
-        } elseif ($workerType.EndsWith('-b')) {
-          $sourceMap['Revision'] = 'beta'
-        }
-        if ($workerType) {
-          Write-Log -message ('{0} :: worker type override configuration ({1}) detected for {2}' -f $($MyInvocation.MyCommand.Name), $workerType, $env:COMPUTERNAME) -severity 'INFO'
-        }
-      } catch {
-        switch -wildcard (${env:COMPUTERNAME}.ToLower()) {
-          't-w1064-ms-*' {
-            $workerType = 'gecko-t-win10-64-hw'
-          }
-          't-w1064-ux-*' {
-            $workerType = 'gecko-t-win10-64-ux'
-          }
-        }
-        Write-Log -message ('{0} :: worker type default configuration ({1}) determined for {2}' -f $($MyInvocation.MyCommand.Name), $workerType, $env:COMPUTERNAME) -severity 'DEBUG'
-      }
-      if ($workerType) {
-        if ((Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\WorkerType' -ErrorAction SilentlyContinue) -and ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Name 'WorkerType').WorkerType -eq $workerType)) {
-          Write-Log -message ('{0} :: worker type detected in registry as: {1}' -f $($MyInvocation.MyCommand.Name), (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Name 'WorkerType').WorkerType) -severity 'DEBUG'
-        } elseif ($workerTypeOverrideEnabled) {
-          try {
-            Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Type 'String' -Name 'WorkerType' -Value $workerType
-            Write-Log -message ('{0} :: worker type set in registry to: {1}' -f $($MyInvocation.MyCommand.Name), $workerType) -severity 'INFO'
-          }
-          catch {
-            Write-Log -message ('{0} :: error setting worker type in registry to: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $workerType, $_.Exception.Message) -severity 'ERROR'
-          }
-        }
-      }
-    } elseif (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') {
-      $workerType = 'gecko-t-win10-a64-beta'
-      if ((Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\WorkerType' -ErrorAction SilentlyContinue) -and ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Name 'WorkerType').WorkerType -eq $workerType)) {
-        Write-Log -message ('{0} :: worker type detected in registry as: {1}' -f $($MyInvocation.MyCommand.Name), (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Name 'WorkerType').WorkerType) -severity 'DEBUG'
-      } else {
-        try {
-          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Type 'String' -Name 'WorkerType' -Value $workerType
-          Write-Log -message ('{0} :: worker type set in registry to: {1}' -f $($MyInvocation.MyCommand.Name), $workerType) -severity 'INFO'
-        }
-        catch {
-          Write-Log -message ('{0} :: error setting worker type in registry to: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $workerType, $_.Exception.Message) -severity 'ERROR'
-        }
-      }
-    } else {
-      try {
-        $userdata = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')
-        if (($userdata) -and ($userdata.Contains('</SourceOrganisation>') -or $userdata.Contains('</SourceRepository>') -or $userdata.Contains('</SourceRevision>'))) {
-          foreach ($sourceItemName in $sourceMap.Keys) {
-            try {
-              $sourceMap[$sourceItemName] = [regex]::matches($userdata, ('<Source{0}>(.*)<\/Source{0}>' -f $sourceItemName))[0].Groups[1].Value
-              if ($sourceMap[$sourceItemName]) {
-                Write-Log -message ('{0} :: detected Source/{1} in userdata as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $sourceMap[$sourceItemName]) -severity 'INFO'
-              }
-            }
-            catch {
-              Write-Log -message ('{0} :: error parsing Source/{1} from userdata. {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $_.Exception.Message) -severity 'ERROR'
-            }
-          }
-        }
-      } catch {
-        Write-Log -message ('{0} :: error downloading userdata. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
-      }
-    }
-    # create occ/source registry key
-    if (Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -ErrorAction SilentlyContinue) {
-      Write-Log -message ('{0} :: detected registry path: HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
-    } else {
-      New-Item -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Force
-      Write-Log -message ('{0} :: created registry path: HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-    }
-    foreach ($sourceItemName in $sourceMap.Keys) {
+    foreach ($sourceItemName in @('Organisation', 'Repository', 'Revision')) {
       if (Test-Path -Path ('HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source\{0}' -f $sourceItemName) -ErrorAction SilentlyContinue) {
         Write-Log -message ('{0} :: detected Source/{1} in registry as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name $sourceItemName)."$sourceItemName") -severity 'DEBUG'
-      }
-      if ($sourceMap.Item($sourceItemName)) {
-        if ((Test-Path -Path ('HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source\{0}' -f $sourceItemName) -ErrorAction SilentlyContinue) -and ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name $sourceItemName)."$sourceItemName" -eq $sourceMap.Item($sourceItemName))) {
-          Write-Log -message ('{0} :: Source/{1} detected in registry as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name $sourceItemName)."$sourceItemName") -severity 'DEBUG'
-        } elseif ($sourceOverrideEnabled) {
+      } elseif(($userdata) -and ($userdata.Contains('</SourceOrganisation>') -or $userdata.Contains('</SourceRepository>') -or $userdata.Contains('</SourceRevision>'))) {
+        try {
+          $sourceItemValue = [regex]::matches($userdata, ('<Source{0}>(.*)<\/Source{0}>' -f $sourceItemName))[0].Groups[1].Value
+        }
+        catch {
+          $sourceItemValue = $null
+        }
+        if ($sourceItemValue) {
+          Write-Log -message ('{0} :: detected Source/{1} in userdata as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $sourceItemValue) -severity 'INFO'
           try {
-            Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Type 'String' -Name $sourceItemName -Value $sourceMap.Item($sourceItemName)
-            Write-Log -message ('{0} :: Source/{1} set in registry to: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $sourceMap.Item($sourceItemName)) -severity 'INFO'
+            if (-not (Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -ErrorAction SilentlyContinue)) {
+              New-Item -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Force
+              Write-Log -message ('{0} :: created registry path: HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+            }
+            Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Type 'String' -Name $sourceItemName -Value $sourceItemValue
+            Write-Log -message ('{0} :: set Source/{1} in registry to: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $sourceItemValue) -severity 'INFO'
           }
           catch {
-            Write-Log -message ('{0} :: error setting Source/{1} in registry to: {2}. {3}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $sourceMap.Item($sourceItemName), $_.Exception.Message) -severity 'ERROR'
+            Write-Log -message ('{0} :: error setting Source/{1} in registry to: {2}. {3}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $sourceItemValue, $_.Exception.Message) -severity 'ERROR'
           }
+        } else {
+          Write-Log -message ('{0} :: detected Source/{1} in userdata as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $sourceItemValue) -severity 'INFO'
         }
       }
     }
