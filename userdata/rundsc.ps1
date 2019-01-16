@@ -156,6 +156,19 @@ function Set-OpenCloudConfigSource {
           }
         }
       }
+    } elseif (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') {
+      $workerType = 'gecko-t-win10-a64-beta'
+      if ((Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\WorkerType' -ErrorAction SilentlyContinue) -and ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Name 'WorkerType').WorkerType -eq $workerType)) {
+        Write-Log -message ('{0} :: worker type detected in registry as: {1}' -f $($MyInvocation.MyCommand.Name), (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Name 'WorkerType').WorkerType) -severity 'DEBUG'
+      } else {
+        try {
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Type 'String' -Name 'WorkerType' -Value $workerType
+          Write-Log -message ('{0} :: worker type set in registry to: {1}' -f $($MyInvocation.MyCommand.Name), $workerType) -severity 'INFO'
+        }
+        catch {
+          Write-Log -message ('{0} :: error setting worker type in registry to: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $workerType, $_.Exception.Message) -severity 'ERROR'
+        }
+      }
     } else {
       try {
         $userdata = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')
@@ -190,7 +203,7 @@ function Set-OpenCloudConfigSource {
       if ($sourceMap.Item($sourceItemName)) {
         if ((Test-Path -Path ('HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source\{0}' -f $sourceItemName) -ErrorAction SilentlyContinue) -and ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name $sourceItemName)."$sourceItemName" -eq $sourceMap.Item($sourceItemName))) {
           Write-Log -message ('{0} :: Source/{1} detected in registry as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name $sourceItemName)."$sourceItemName") -severity 'DEBUG'
-        } elseif($sourceOverrideEnabled) {
+        } elseif ($sourceOverrideEnabled) {
           try {
             Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Type 'String' -Name $sourceItemName -Value $sourceMap.Item($sourceItemName)
             Write-Log -message ('{0} :: Source/{1} set in registry to: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $sourceMap.Item($sourceItemName)) -severity 'INFO'
