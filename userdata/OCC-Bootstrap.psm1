@@ -1357,11 +1357,11 @@ function Invoke-HardwareDiskCleanup {
     $freeB = $freespace.FreeSpace
     $freeMB =  [math]::Round($freeB / 1000000)
     $perfree = [math]::Round($percentfree,2)*100
-    Write-Log -message "Current free space of drive $driveletter $freeMB MB"  -severity 'INFO' 
-    Write-Log -message "Current free space percentage of drive $driveletter $perfree%" -severity 'INFO'
+    Write-Log -message ('{0} :: Current free space of drive {1} {2}mb' -f $($MyInvocation.MyCommand.Name), $driveletter, $freeMB) -severity 'INFO'
+    Write-Log -message ('{0} :: Current free space percentage of drive {1} {2}%' -f $($MyInvocation.MyCommand.Name), $driveletter, $perfree) -severity 'INFO'
     if ($percentfree -lt $WarnPercent) {
-      Write-Log -message "Current available disk space WARNING $perfree%" -severity 'WARN'
-      Write-Log -message "Attempting to clean and optimize disk" -severity 'WARN'
+      Write-Log -message ('{0} :: Current available disk space WARNING {1}%' -f $($MyInvocation.MyCommand.Name), $perfree) -severity 'WARN'
+      Write-Log -message ('{0} :: Attempting to clean and optimize disk' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
       Start-LoggedProcess -filePath 'dism.exe' -argumentList @('/online', '/Cleanup-Image', '/StartComponentCleanup')
       Start-LoggedProcess -filePath 'cleanmgr.exe' -argumentList @('/autoclean')
       optimize-Volume $driveletter
@@ -1369,15 +1369,15 @@ function Invoke-HardwareDiskCleanup {
       $percentfree = $freespace.FreeSpace / $freespace.Size
       $freeMB =  [math]::Round($freeB / 1000000)
       $perfree = [math]::Round($percentfree,2)*100
-      Write-Log -message "Current free space of drive post clean and optimize disk $driveletter $freeMB MB"  -severity 'INFO' 
-      Write-Log -message "Current free space percentage of drive post clean and optimize disk $driveletter $perfree %" -severity 'INFO'
+      Write-Log -message ('{0} :: Current free space of drive post clean and optimize disk {1} {2}mb' -f $($MyInvocation.MyCommand.Name), $driveletter, $freeMB) -severity 'INFO'
+      Write-Log -message ('{0} :: Current free space percentage of drive post clean and optimize disk {1} {2}%' -f $($MyInvocation.MyCommand.Name), $driveletter, $perfree) -severity 'INFO'
     }
     if ($percentfree -lt $StopPercent) {
       $TimeStart = Get-Date
       $TimeEnd = $timeStart.addminutes(1)
       do {
         $TimeNow = Get-Date
-        Write-Log -message "Current available disk space CRITCAL $perfree% free. Will not start Generic-Worker!" -severity 'Error' 
+        Write-Log -message ('{0} :: Current available disk space CRITCAL {1}% free. Will not start Generic-Worker!' -f $($MyInvocation.MyCommand.Name), $perfree) -severity 'ERROR'
         Sleep 15
       } until ($TimeNow -ge $TimeEnd)
       Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
