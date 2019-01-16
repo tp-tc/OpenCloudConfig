@@ -1648,18 +1648,15 @@ function Invoke-OpenCloudConfig {
     # set up a log folder, an execution policy that enables the dsc run and a winrm envelope size large enough for the dynamic dsc.
     New-Item -ItemType Directory -Force -Path ('{0}\log' -f $env:SystemDrive)
     if ($locationType -eq 'DataCenter') {
-      switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
-        'Microsoft Windows 7*' {
-          $isWorker = $true
-          $runDscOnWorker = $true
-          $workerType = 'gecko-t-win7-32-hw'
-        }
-        'Microsoft Windows 10*' {
-          $isWorker = $true
-          $runDscOnWorker = $true
-          $workerType = $(if (Test-Path -Path 'C:\dsc\GW10UX.semaphore' -ErrorAction SilentlyContinue) { 'gecko-t-win10-64-ux' } else { 'gecko-t-win10-64-hw' })
-        }
+      $isWorker = $true
+      $runDscOnWorker = $true
+      try {
+        $workerType = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig' -Name 'WorkerType').WorkerType
+      } catch {
+        Write-Log -message ('{0} :: failed to determine worker type from registry. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+        throw
       }
+      
       Write-Log -message ('{0} :: isWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $isWorker) -severity 'INFO'
       Write-Log -message ('{0} :: workerType: {1}.' -f $($MyInvocation.MyCommand.Name), $workerType) -severity 'INFO'
       Write-Log -message ('{0} :: runDscOnWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $runDscOnWorker) -severity 'DEBUG'
