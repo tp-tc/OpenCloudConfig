@@ -1362,8 +1362,8 @@ function Invoke-HardwareDiskCleanup {
     if ($percentfree -lt $WarnPercent) {
       Write-Log -message "Current available disk space WARNING $perfree%" -severity 'WARN'
       Write-Log -message "Attempting to clean and optimize disk" -severity 'WARN'
-      Start-Process -Wait Dism.exe /online /Cleanup-Image /StartComponentCleanup
-      Start-Process -Wait cleanmgr.exe /autoclean
+      Start-LoggedProcess -filePath 'dism.exe' -argumentList @('/online', '/Cleanup-Image', '/StartComponentCleanup')
+      Start-LoggedProcess -filePath 'cleanmgr.exe' -argumentList @('/autoclean')
       optimize-Volume $driveletter
       $freespace = Get-WmiObject -Class Win32_logicalDisk | ? {$_.DriveType -eq '3'}
       $percentfree = $freespace.FreeSpace / $freespace.Size
