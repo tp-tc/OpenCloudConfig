@@ -433,7 +433,8 @@
         }
       ],
       "Source": "https://github.com/taskcluster/generic-worker/releases/download/v11.1.0/generic-worker-windows-amd64.exe",
-      "Target": "C:\\generic-worker\\generic-worker.exe"
+      "Target": "C:\\generic-worker\\generic-worker.exe",
+      "sha512": "9679a3af8b6daa57f1f4249c0ee8f1d1984ad67d238bcf06cb6d19fd0c2229101b3ec19ba71cc087930ead795286b4df21de29bd088098ecf698744c9b533df0"
     },
     {
       "ComponentName": "LiveLogDownload",
