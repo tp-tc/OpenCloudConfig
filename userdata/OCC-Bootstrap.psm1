@@ -1814,6 +1814,13 @@ function Invoke-OpenCloudConfig {
       #  $sourceRev = 'function-refactor'
       #}
       Start-Transcript -Path $transcript -Append
+
+      if (-not ([Diagnostics.EventLog]::SourceExists('occ-dsc'))) {
+        New-EventLog -LogName 'Application' -Source 'occ-dsc'
+        Write-Log -message ('{0} :: event log source "occ-dsc" created.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+      } else {
+        Write-Log -message ('{0} :: event log source "occ-dsc" detected.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+      }
       Invoke-RemoteDesiredStateConfig -url ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/xDynamicConfig.ps1' -f $sourceOrg, $sourceRepo, $sourceRev) -workerType $workerType
       Stop-Transcript
       # end run dsc #################################################################################################################################################
