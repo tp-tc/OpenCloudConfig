@@ -2007,6 +2007,7 @@ function Invoke-OpenCloudConfig {
       }
       Install-Dependencies
       if (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') {
+        Write-Log -message ('{0} :: arm 64 architecture detected' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
         Invoke-CustomDesiredStateProvider -sourceRev $sourceRev -workerType 'gecko-t-win10-a64-beta'
       } else {
         Invoke-RemoteDesiredStateConfig -url ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/xDynamicConfig.ps1' -f $sourceOrg, $sourceRepo, $sourceRev)
