@@ -105,7 +105,7 @@ function Install-Dependencies {
       @{
         'ModuleName' = 'OpenCloudConfig';
         'Repository' = 'PSGallery';
-        'ModuleVersion' = '0.0.10'
+        'ModuleVersion' = '0.0.11'
       }
     )
   )
@@ -237,7 +237,7 @@ function Invoke-CustomDesiredStateProvider {
             }
             'ZipInstall' {
               Invoke-FileDownload -localPath ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })) -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
-              Invoke-ZipInstall -path ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })) -destination $component.Destination
+              Invoke-ZipInstall -path ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })) -destination $component.Destination -overwrite
             }
             'ServiceControl' {
               # todo: implement ServiceControl in the DynamicConfig module

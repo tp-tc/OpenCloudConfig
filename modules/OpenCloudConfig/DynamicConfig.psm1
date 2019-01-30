@@ -529,6 +529,8 @@ function Invoke-ZipInstall {
 
     [Parameter(Mandatory = $true)]
     [string] $destination,
+
+    [switch] $overwrite = $false,
     
     [string] $eventLogName = 'Application',
     [string] $eventLogSource = 'OpenCloudConfig'
@@ -537,6 +539,9 @@ function Invoke-ZipInstall {
     Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
   }
   process {
+    if ($overwrite) {
+      Invoke-DirectoryDelete -path $destination -eventLogName $eventLogName -eventLogSource $eventLogSource
+    }
     try {
       [System.IO.Compression.ZipFile]::ExtractToDirectory($path, $destination)
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: zip: {1} extracted to: {2}' -f $($MyInvocation.MyCommand.Name), $path, $destination)
