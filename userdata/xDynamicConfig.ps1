@@ -109,7 +109,7 @@ Configuration xDynamicConfig {
     if ($workerType) {
       $manifestUri = ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/Manifest/{3}.json?{4}' -f $sourceOrg, $sourceRepo, $sourceRev, $workerType, [Guid]::NewGuid())
       $manifest = ((Invoke-WebRequest -Uri $manifestUri -UseBasicParsing).Content.Replace('mozilla-releng/OpenCloudConfig/master', ('{0}/{1}/{2}' -f $sourceOrg, $sourceRepo, $sourceRev)) | ConvertFrom-Json)
-      Write-Log -severity 'debug' -message ('xDynamicConfig :: manifest uri determined as: {1}' -f $manifestUri)
+      Write-Log -severity 'debug' -message ('xDynamicConfig :: manifest uri determined as: {0}' -f $manifestUri)
     } else {
       $manifest = ('{"Items":[{"ComponentType":"DirectoryCreate","Path":"$env:SystemDrive\\log"}]}' | ConvertFrom-Json)
       Write-Log -severity 'warn' -message 'xDynamicConfig :: failed to find a suitable manifest'
