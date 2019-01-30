@@ -55,7 +55,11 @@ function Write-Log {
     [string] $logName = 'Application'
   )
   if ((-not ([System.Diagnostics.EventLog]::Exists($logName))) -or (-not ([System.Diagnostics.EventLog]::SourceExists($source)))) {
-    New-EventLog -LogName $logName -Source $source
+    try {
+      New-EventLog -LogName $logName -Source $source
+    } catch {
+      Write-Error -Exception $_.Exception -message ('failed to create event log source: {0}/{1}' -f $logName, $source)
+    }
   }
   switch ($severity[0].ToString().ToLower()) {
     # debug

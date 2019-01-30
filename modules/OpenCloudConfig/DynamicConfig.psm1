@@ -44,10 +44,10 @@ function Invoke-DirectoryDelete {
       Remove-Item $path -Confirm:$false -recurse -force
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: deleted directory {1}.' -f  $($MyInvocation.MyCommand.Name), $path)
     } catch {
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: error deleting directory {1}. {2}' -f  $($MyInvocation.MyCommand.Name), $path, $_.Exception.Message)
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'warn' -message ('{0} :: error deleting directory {1}. {2}' -f  $($MyInvocation.MyCommand.Name), $path, $_.Exception.Message)
       try {
         Start-Process 'icacls' -ArgumentList @($path, '/grant', ('{0}:(OI)(CI)F' -f $env:Username), '/inheritance:r') -Wait -NoNewWindow -PassThru | Out-Null
-        Remove-Item $path -Confirm:$false -force
+        Remove-Item $path -Confirm:$false -recurse -force
       } catch {
         Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: error resetting permissions or deleting directory ({1}). {2}' -f  $($MyInvocation.MyCommand.Name), $path, $_.Exception.Message)
         throw
