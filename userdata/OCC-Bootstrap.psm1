@@ -105,7 +105,7 @@ function Install-Dependencies {
       @{
         'ModuleName' = 'OpenCloudConfig';
         'Repository' = 'PSGallery';
-        'ModuleVersion' = '0.0.9'
+        'ModuleVersion' = '0.0.10'
       }
     )
   )
