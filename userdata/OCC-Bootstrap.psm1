@@ -173,6 +173,19 @@ function Invoke-CustomDesiredStateProvider {
     $manifestUri = ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/Manifest/{3}.json?{4}' -f $sourceOrg, $sourceRepo, $sourceRev, $workerType, [Guid]::NewGuid())
     Write-Log -severity 'debug' -message ('{0} :: manifest uri determined as: {1}' -f $($MyInvocation.MyCommand.Name), $manifestUri)
     $manifest = ((Invoke-WebRequest -Uri $manifestUri -UseBasicParsing).Content.Replace('mozilla-releng/OpenCloudConfig/master', ('{0}/{1}/{2}' -f $sourceOrg, $sourceRepo, $sourceRev)) | ConvertFrom-Json)
+    $installedComponents = @()
+    $i = 0
+    while ($installedComponents.Length -lt $manifest.Components.Length) {
+      Write-Log -severity 'debug' -message ('{0} :: manifest sweep {1} commencing' -f $($MyInvocation.MyCommand.Name), ++$i)
+      foreach ($item in $manifest.Components) {
+        $installedComponents += {
+          ComponentName = $item.ComponentName;
+          ComponentType = $item.ComponentType
+        }
+        Write-Log -severity 'debug' -message ('{0} :: component {1} {2} applied' -f $($MyInvocation.MyCommand.Name), $item.ComponentType, $item.ComponentName)
+      }
+      Write-Log -severity 'debug' -message ('{0} :: manifest sweep {1} completed' -f $($MyInvocation.MyCommand.Name), $i)
+    }
   }
   end {
     Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
