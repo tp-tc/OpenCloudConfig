@@ -6,6 +6,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 Configuration xDynamicConfig {
   Import-DscResource -ModuleName PSDscResources
+  Import-DscResource -ModuleName PSDesiredStateConfiguration
   Import-DscResource -ModuleName xPSDesiredStateConfiguration
   Import-DscResource -ModuleName xWindowsUpdate
   Import-DscResource -ModuleName OpenCloudConfig
