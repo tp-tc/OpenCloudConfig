@@ -28,6 +28,32 @@ function Invoke-DirectoryCreate {
   }
 }
 
+function Confirm-DirectoryCreate {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [string] $path,
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+  process {
+    try {
+      $result = (Test-Path -Path $path -PathType 'Container' -ErrorAction SilentlyContinue)
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: directory {1} existence {2}' -f $($MyInvocation.MyCommand.Name), $path, $(if ($result) { 'confirmed' } else { 'refuted' }))
+    } catch {
+      $result = $false
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to confirm or refute directory {1} existence. {2}' -f $($MyInvocation.MyCommand.Name), $path, $_.Exception.Message)
+    }
+    return $result
+  }
+  end {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+}
+
 function Invoke-DirectoryDelete {
   [CmdletBinding()]
   param (
@@ -59,6 +85,32 @@ function Invoke-DirectoryDelete {
   }
 }
 
+function Confirm-DirectoryDelete {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [string] $path,
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+  process {
+    try {
+      $result = (-not (Test-Path -Path $path -PathType 'Container' -ErrorAction SilentlyContinue))
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: directory {1} absence {2}' -f $($MyInvocation.MyCommand.Name), $path, $(if ($result) { 'confirmed' } else { 'refuted' }))
+    } catch {
+      $result = $false
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to confirm or refute directory {1} absence. {2}' -f $($MyInvocation.MyCommand.Name), $path, $_.Exception.Message)
+    }
+    return $result
+  }
+  end {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+}
+
 function Invoke-DirectoryCopy {
   [CmdletBinding()]
   param (
@@ -81,6 +133,37 @@ function Invoke-DirectoryCopy {
     } catch {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: error copying directory {1} to {2}. {3}' -f  $($MyInvocation.MyCommand.Name), $source, $target, $_.Exception.Message)
     }
+  }
+  end {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+}
+
+function Confirm-DirectoryCopy {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [string] $source,
+
+    [Parameter(Mandatory = $true)]
+    [string] $target,
+
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+  process {
+    try {
+      # todo: compare folder contents
+      $result = (Test-Path -Path $target -PathType 'Container' -ErrorAction SilentlyContinue)
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: directory {1} existence {2}' -f $($MyInvocation.MyCommand.Name), $target, $(if ($result) { 'confirmed' } else { 'refuted' }))
+    } catch {
+      $result = $false
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to confirm or refute directory {1} existence. {2}' -f $($MyInvocation.MyCommand.Name), $target, $_.Exception.Message)
+    }
+    return $result
   }
   end {
     Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
@@ -134,6 +217,32 @@ function Invoke-CommandRun {
   }
 }
 
+function Confirm-CommandRun {
+  [CmdletBinding()]
+  param (
+    [string] $validations,
+
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+  process {
+    try {
+      $result = (Confirm-All -validations $validations -verbose)
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: {1} validations {2}' -f $($MyInvocation.MyCommand.Name), $(if (($validations) -and $validations.Length) { $validations.Length } else { 0 }), $(if ($result) { 'confirmed' } else { 'refuted' }))
+    } catch {
+      $result = $false
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to confirm or refute {1} validations. {2}' -f $($MyInvocation.MyCommand.Name), $(if (($validations) -and $validations.Length) { $validations.Length } else { 0 }), $_.Exception.Message)
+    }
+    return $result
+  }
+  end {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+}
+
 function Invoke-FileDownload {
   [CmdletBinding()]
   param (
@@ -177,6 +286,35 @@ function Invoke-FileDownload {
   }
 }
 
+function Confirm-FileDownload {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [string] $localPath,
+
+    [string] $sha512,
+
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+  process {
+    try {
+      $result = ((Test-Path -Path $localPath -PathType 'Leaf' -ErrorAction SilentlyContinue) -and ((-not ($sha512)) -or (((Get-FileHash -Path $localPath -Algorithm 'SHA512').Hash -eq $sha512))))
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: download {1} existence {2}' -f $($MyInvocation.MyCommand.Name), $localPath, $(if ($result) { 'confirmed' } else { 'refuted' }))
+    } catch {
+      $result = $false
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to confirm or refute download {1} existence. {2}' -f $($MyInvocation.MyCommand.Name), $localPath, $_.Exception.Message)
+    }
+    return $result
+  }
+  end {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+}
+
 function Invoke-SymbolicLink {
   [CmdletBinding()]
   param (
@@ -204,6 +342,37 @@ function Invoke-SymbolicLink {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to create symlink {1} to {2}. {3}' -f $($MyInvocation.MyCommand.Name), $link, $target, $_.Exception.Message)
       throw
     }
+  }
+  end {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+}
+
+function Confirm-SymbolicLink {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [string] $target,
+
+    [Parameter(Mandatory = $true)]
+    [string] $link,
+    
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+  process {
+    try {
+      # todo: check that link points to target (https://stackoverflow.com/a/16926224/68115)
+      $result = ((Test-Path -Path $link -ErrorAction SilentlyContinue) -and ((Get-Item $link).Attributes.ToString() -match 'ReparsePoint'))
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: symlink {1} existence {2}' -f $($MyInvocation.MyCommand.Name), $link, $(if ($result) { 'confirmed' } else { 'refuted' }))
+    } catch {
+      $result = $false
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to confirm or refute symlink {1} existence. {2}' -f $($MyInvocation.MyCommand.Name), $link, $target, $_.Exception.Message)
+    }
+    return $result
   }
   end {
     Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())

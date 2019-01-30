@@ -109,7 +109,7 @@ function Install-Dependencies {
       @{
         'ModuleName' = 'OpenCloudConfig';
         'Repository' = 'PSGallery';
-        'ModuleVersion' = '0.0.13'
+        'ModuleVersion' = '0.0.14'
       }
     )
   )
@@ -203,44 +203,71 @@ function Invoke-CustomDesiredStateProvider {
         if (Get-AllDependenciesAppliedState -dependencies $component.DependsOn -appliedComponents $appliedComponents) {
           switch ($component.ComponentType) {
             'DirectoryCreate' {
-              Invoke-DirectoryCreate -path $($component.Path)
+              if (-not (Confirm-DirectoryCreate -path $($component.Path))) {
+                Invoke-DirectoryCreate -path $($component.Path)
+              }
             }
             'DirectoryDelete' {
-              Invoke-DirectoryDelete -path $($component.Path)
+              if (-not (Confirm-DirectoryDelete -path $($component.Path))) {
+                Invoke-DirectoryDelete -path $($component.Path)
+              }
             }
             'DirectoryCopy' {
-              Invoke-DirectoryCopy -source $component.Source -target $component.Target
+              if (-not (Confirm-DirectoryCopy -source $component.Source -target $component.Target)) {
+                Invoke-DirectoryCopy -source $component.Source -target $component.Target
+              }
             }
             'CommandRun' {
-              Invoke-CommandRun -command $($component.Command) -arguments @($component.Arguments | % { $($_) })
+              if (-not (Confirm-CommandRun -validations $component.Validate)) {
+                Invoke-CommandRun -command $($component.Command) -arguments @($component.Arguments | % { $($_) })
+              }
             }
             'FileDownload' {
-              Invoke-FileDownload -localPath $component.Target -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Source
+              if (-not (Confirm-FileDownload -localPath $component.Target -sha512 $($component.sha512))) {
+                Invoke-FileDownload -localPath $component.Target -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Source
+              }
             }
             'ChecksumFileDownload' {
+              # always download these items wether they're on the filesystem already or not
               Invoke-FileDownload -localPath $component.Target -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Source
             }
             'SymbolicLink' {
+              if (-not (Confirm-SymbolicLink -target $component.Target -link $component.Link)) {
+                Invoke-SymbolicLink -target $component.Target -link $component.Link
+              }
               Invoke-SymbolicLink -target $component.Target -link $component.Link
             }
             'ExeInstall' {
-              Invoke-FileDownload -localPath ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })) -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
-              Invoke-CommandRun -command ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })) -arguments @($component.Arguments | % { $($_) })
+              $localPath = ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName }))
+              if ((-not (Confirm-FileDownload -localPath $localPath -sha512 $($component.sha512))) -or (-not (Confirm-CommandRun -validations $component.Validate))) {
+                Invoke-FileDownload -localPath $localPath -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
+                Invoke-CommandRun -command $localPath -arguments @($component.Arguments | % { $($_) })
+              }
             }
             'MsiInstall' {
-              Invoke-FileDownload -localPath ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $component.ComponentName, $component.ProductId) -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
-              Invoke-CommandRun -command ('{0}\system32\msiexec.exe' -f $env:WinDir) -arguments @('/i', ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $component.ComponentName, $component.ProductId), '/log', ('{0}\log\{1}-{2}.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $component.ComponentName), '/quiet', '/norestart')
+              $localPath = ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $component.ComponentName, $component.ProductId)
+              if ((-not (Confirm-FileDownload -localPath $localPath -sha512 $($component.sha512))) -or (-not (Confirm-CommandRun -validations $component.Validate))) {
+                Invoke-FileDownload -localPath $localPath -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
+                Invoke-CommandRun -command ('{0}\system32\msiexec.exe' -f $env:WinDir) -arguments @('/i', $localPath, '/log', ('{0}\log\{1}-{2}.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $component.ComponentName), '/quiet', '/norestart')
+              }
             }
             'MsuInstall' {
-              Invoke-FileDownload -localPath ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })) -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
-              Invoke-CommandRun -command ('{0}\system32\wusa.exe' -f $env:WinDir) -arguments @(('{0}\Temp\{1}.msu' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })), '/quiet', '/norestart')
+              $localPath = ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName }))
+              if ((-not (Confirm-FileDownload -localPath $localPath -sha512 $($component.sha512))) -or (-not (Confirm-CommandRun -validations $component.Validate))) {
+                Invoke-FileDownload -localPath $localPath -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
+                Invoke-CommandRun -command ('{0}\system32\wusa.exe' -f $env:WinDir) -arguments @($localPath, '/quiet', '/norestart')
+              }
             }
             'WindowsFeatureInstall' {
               # todo: implement WindowsFeatureInstall in the DynamicConfig module
               Write-Log -message ('{0} :: not implemented: WindowsFeatureInstall.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
             }
             'ZipInstall' {
-              Invoke-FileDownload -localPath ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })) -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
+              $localPath = ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName }))
+              if (-not (Confirm-FileDownload -localPath $localPath -sha512 $($component.sha512))) {
+                Invoke-FileDownload -localPath $localPath -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
+              }
+              # todo: confirm or refute prior install with comparison of directory and zip contents
               Invoke-ZipInstall -path ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })) -destination $component.Destination -overwrite
             }
             'ServiceControl' {
