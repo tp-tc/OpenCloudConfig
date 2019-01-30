@@ -487,8 +487,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ DisableIndexing = $item.ComponentName }"
           SetScript = {
-            # Disable indexing on all disk volumes.
-            Get-WmiObject Win32_Volume -Filter "IndexingEnabled=$true" | Set-WmiInstance -Arguments @{IndexingEnabled=$false}
+            Invoke-DisableIndexing -eventLogSource 'occ-dsc'
           }
           TestScript = { return $false }
         }
