@@ -11,8 +11,12 @@ function Write-Log {
     [string] $source = 'OpenCloudConfig',
     [string] $logName = 'Application'
   )
-  if (!([Diagnostics.EventLog]::Exists($logName)) -or !([Diagnostics.EventLog]::SourceExists($source))) {
-    New-EventLog -LogName $logName -Source $source
+  if ((-not ([System.Diagnostics.EventLog]::Exists($logName))) -or (-not ([System.Diagnostics.EventLog]::SourceExists($source)))) {
+    try {
+      New-EventLog -LogName $logName -Source $source
+    } catch {
+      Write-Error -Exception $_.Exception -message ('failed to create event log source: {0}/{1}' -f $logName, $source)
+    }
   }
   switch ($severity) {
     'DEBUG' {
