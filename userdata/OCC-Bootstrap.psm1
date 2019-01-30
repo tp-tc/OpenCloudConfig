@@ -88,6 +88,11 @@ function Install-Dependencies {
         'ModuleVersion' = '2.0.4'
       },
       @{
+        'ModuleName' = 'PSDscResources';
+        'Repository' = 'PSGallery';
+        'ModuleVersion' = '2.9.0.0'
+      },
+      @{
         'ModuleName' = 'xPSDesiredStateConfiguration';
         'Repository' = 'PSGallery';
         'ModuleVersion' = '8.4.0.0'
