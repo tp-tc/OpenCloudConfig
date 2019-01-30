@@ -364,11 +364,7 @@ Configuration xDynamicConfig {
             Invoke-FileDownload -localPath ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName })) -sha512 $($using:item.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $using:item.Url -eventLogSource 'occ-dsc'
           }
           TestScript = {
-            if ($using:item.sha512) {
-              $tempFile = ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.sha512)
-            } else {
-              $tempFile = ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName)
-            }
+            $tempFile = ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName }))
             return (Test-Path -Path $tempFile -ErrorAction SilentlyContinue)
           }
         }
