@@ -89,7 +89,7 @@ Configuration xDynamicConfig {
       }
       'Microsoft Windows 10*' {
         if (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') {
-          $workerType = 'gecko-t-win7-32-hw'
+          $workerType = 'gecko-t-win10-a64-beta'
         } elseif (Test-Path -Path 'C:\dsc\GW10UX.semaphore' -ErrorAction SilentlyContinue) {
           $workerType = 'gecko-t-win10-64-ux'
         } else {
