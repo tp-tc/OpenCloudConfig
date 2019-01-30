@@ -1705,7 +1705,11 @@ function Invoke-OpenCloudConfig {
         'Microsoft Windows 10*' {
           $isWorker = $true
           $runDscOnWorker = $true
-          $workerType = $(if (Test-Path -Path 'C:\dsc\GW10UX.semaphore' -ErrorAction SilentlyContinue) { 'gecko-t-win10-64-ux' } else { 'gecko-t-win10-64-hw' })
+          if (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') {
+            $workerType = 'gecko-t-win10-a64-beta'
+          } else {
+            $workerType = $(if (Test-Path -Path 'C:\dsc\GW10UX.semaphore' -ErrorAction SilentlyContinue) { 'gecko-t-win10-64-ux' } else { 'gecko-t-win10-64-hw' })
+          }
         }
       }
       Write-Log -message ('{0} :: isWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $isWorker) -severity 'INFO'
