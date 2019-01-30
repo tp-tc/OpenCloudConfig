@@ -159,6 +159,23 @@ function Install-Dependencies {
     Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
+function Get-ComponentAppliedState {
+  param (
+    [object] $component,
+    [object[]] $appliedComponents
+  )
+  return [bool]($appliedComponents | ? { (($_.ComponentType -eq $component.ComponentType) -and ($_.ComponentName -eq $component.ComponentName)) })
+}
+function Get-AllDependenciesAppliedState {
+  param (
+    [object[]] $dependencies,
+    [object[]] $appliedComponents
+  )
+  if (-not ($dependencies)) {
+    return $true
+  }
+  return (-not (($dependencies | % { (Get-ComponentAppliedState -component $_ -appliedComponents $appliedComponents) }) -contains $false))
+}
 function Invoke-CustomDesiredStateProvider {
   param (
     [string] $workerType,
@@ -173,18 +190,21 @@ function Invoke-CustomDesiredStateProvider {
     $manifestUri = ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/Manifest/{3}.json?{4}' -f $sourceOrg, $sourceRepo, $sourceRev, $workerType, [Guid]::NewGuid())
     Write-Log -severity 'debug' -message ('{0} :: manifest uri determined as: {1}' -f $($MyInvocation.MyCommand.Name), $manifestUri)
     $manifest = ((Invoke-WebRequest -Uri $manifestUri -UseBasicParsing).Content.Replace('mozilla-releng/OpenCloudConfig/master', ('{0}/{1}/{2}' -f $sourceOrg, $sourceRepo, $sourceRev)) | ConvertFrom-Json)
-    $installedComponents = @()
-    $i = 0
-    while ($installedComponents.Length -lt $manifest.Components.Length) {
-      Write-Log -severity 'debug' -message ('{0} :: manifest sweep {1} commencing' -f $($MyInvocation.MyCommand.Name), ++$i)
-      foreach ($item in $manifest.Components) {
-        $installedComponents += {
-          ComponentName = $item.ComponentName;
-          ComponentType = $item.ComponentType
+    
+    $appliedComponents = @()
+    # loop through the manifest until all components have been applied
+    while ($appliedComponents.Length -lt $manifest.Components.Length) {
+      # loop through all components that have not already been applied
+      foreach ($component in ($manifest.Components | ? { (-not (Get-ComponentAppliedState -component $_ -appliedComponents $appliedComponents)) })) {
+        if (Get-AllDependenciesAppliedState -dependencies $component.DependsOn -appliedComponents $appliedComponents) {
+          $appliedComponents += New-Object -TypeName 'PSObject' -Property @{ 'ComponentName' = $component.ComponentName; 'ComponentType' = $component.ComponentType; 'AppliedState' = 'Success' }
+          if ($component.DependsOn) {
+            Write-Log -severity 'debug' -message ('{0} :: component {1}_{2} applied. component has {3} dependencies ({4}) which have already been applied' -f $($MyInvocation.MyCommand.Name), $component.ComponentType, $component.ComponentName, $component.DependsOn.Length, (($component.DependsOn | % { '{0}_{1}' -f $_.ComponentType, $_.ComponentName }) -join ', '))
+          } else {
+            Write-Log -severity 'debug' -message ('{0} :: component {1}_{2} applied. component has no dependencies' -f $($MyInvocation.MyCommand.Name), $component.ComponentType, $component.ComponentName)
+          }
         }
-        Write-Log -severity 'debug' -message ('{0} :: component {1} {2} applied' -f $($MyInvocation.MyCommand.Name), $item.ComponentType, $item.ComponentName)
       }
-      Write-Log -severity 'debug' -message ('{0} :: manifest sweep {1} completed' -f $($MyInvocation.MyCommand.Name), $i)
     }
   }
   end {
