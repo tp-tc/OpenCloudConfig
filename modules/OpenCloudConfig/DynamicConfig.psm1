@@ -41,7 +41,7 @@ function Invoke-DirectoryDelete {
   }
   process {
     try {
-      Remove-Item $path -Confirm:$false -force
+      Remove-Item $path -Confirm:$false -recurse -force
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: deleted directory {1}.' -f  $($MyInvocation.MyCommand.Name), $path)
     } catch {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: error deleting directory {1}. {2}' -f  $($MyInvocation.MyCommand.Name), $path, $_.Exception.Message)
