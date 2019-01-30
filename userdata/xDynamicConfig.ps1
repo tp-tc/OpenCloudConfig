@@ -5,7 +5,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
 
 Configuration xDynamicConfig {
-  Import-DscResource -ModuleName PSDesiredStateConfiguration,xPSDesiredStateConfiguration,xWindowsUpdate,OpenCloudConfig
+  Import-DscResource -ModuleName PSDesiredStateConfiguration
+  Import-DscResource -ModuleName xPSDesiredStateConfiguration
+  Import-DscResource -ModuleName xWindowsUpdate
+  Import-DscResource -ModuleName OpenCloudConfig
 
   $sourceOrg = $(if ((Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -ErrorAction SilentlyContinue) -and (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name 'Organisation' -ErrorAction SilentlyContinue)) { (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name 'Organisation').Organisation } else { 'mozilla-releng' })
   $sourceRepo = $(if ((Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -ErrorAction SilentlyContinue) -and (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name 'Repository' -ErrorAction SilentlyContinue)) { (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name 'Repository').Repository } else { 'OpenCloudConfig' })
