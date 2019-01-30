@@ -522,7 +522,11 @@ function Invoke-RegistryValueSet {
   }
   process {
     try {
-      Set-ItemProperty -Path $path -Type $valueType -Name $valueName -Value $valueData -Force
+      if (Get-ItemProperty -Path $path -Name $valueName) {
+        Set-ItemProperty -Path $path -Name $valueName -Value $valueData -Force
+      } else {
+        New-ItemProperty -Path $path -PropertyType $valueType -Name $valueName -Value $valueData -Force
+      }
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: registry value set to: [{1}]{2}{3} for key {4} at path {5}' -f $($MyInvocation.MyCommand.Name), $valueType, $valueData, $(if ($hex) { '(hex)' } else { '' }), $valueName, $path)
     } catch {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to set registry value to: [{1}]{2}{3} for key {4} at path {5}. {6}' -f $($MyInvocation.MyCommand.Name), $valueType, $valueData, $(if ($hex) { '(hex)' } else { '' }), $valueName, $path, $_.Exception.Message)
