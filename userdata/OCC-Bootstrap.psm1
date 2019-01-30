@@ -159,6 +159,25 @@ function Install-Dependencies {
     Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
+function Invoke-CustomDesiredStateProvider {
+  param (
+    [string] $workerType,
+    [string] $sourceOrg = 'mozilla-releng',
+    [string] $sourceRepo = 'OpenCloudConfig',
+    [string] $sourceRev = 'master'
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    $manifestUri = ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/Manifest/{3}.json?{4}' -f $sourceOrg, $sourceRepo, $sourceRev, $workerType, [Guid]::NewGuid())
+    Write-Log -severity 'debug' -message ('{0} :: manifest uri determined as: {1}' -f $($MyInvocation.MyCommand.Name), $manifestUri)
+    $manifest = ((Invoke-WebRequest -Uri $manifestUri -UseBasicParsing).Content.Replace('mozilla-releng/OpenCloudConfig/master', ('{0}/{1}/{2}' -f $sourceOrg, $sourceRepo, $sourceRev)) | ConvertFrom-Json)
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
 function Invoke-RemoteDesiredStateConfig {
   param (
     [string] $url
@@ -1879,7 +1898,12 @@ function Invoke-OpenCloudConfig {
         Write-Log -message ('{0} :: event log source "occ-dsc" detected.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
       }
       Install-Dependencies
-      Invoke-RemoteDesiredStateConfig -url ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/xDynamicConfig.ps1' -f $sourceOrg, $sourceRepo, $sourceRev)
+      if (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') {
+        Invoke-CustomDesiredStateProvider -sourceRev $sourceRev -workerType 'gecko-t-win10-a64-beta'
+      } else {
+        Invoke-RemoteDesiredStateConfig -url ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/xDynamicConfig.ps1' -f $sourceOrg, $sourceRepo, $sourceRev)
+      }
+      
       Stop-Transcript
       # end run dsc #################################################################################################################################################
       
