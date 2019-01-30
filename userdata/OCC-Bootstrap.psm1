@@ -199,15 +199,13 @@ function Invoke-CustomDesiredStateProvider {
         if (Get-AllDependenciesAppliedState -dependencies $component.DependsOn -appliedComponents $appliedComponents) {
           switch ($component.ComponentType) {
             'DirectoryCreate' {
-              # todo: implement DirectoryCreate
-              Write-Log -message ('{0} :: not implemented: DirectoryCreate.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+              Invoke-DirectoryCreate -path $($component.Path)
             }
             'DirectoryDelete' {
               Invoke-DirectoryDelete -path $($component.Path)
             }
             'DirectoryCopy' {
-              # todo: implement DirectoryCopy
-              Write-Log -message ('{0} :: not implemented: DirectoryCopy.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+              Invoke-DirectoryCopy -source $component.Source -target $component.Target
             }
             'CommandRun' {
               Invoke-CommandRun -command $($component.Command) -arguments @($component.Arguments | % { $($_) })
@@ -217,8 +215,6 @@ function Invoke-CustomDesiredStateProvider {
             }
             'ChecksumFileDownload' {
               Invoke-FileDownload -localPath $component.Target -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Source
-              # todo: implement ChecksumFileDownload
-              Write-Log -message ('{0} :: not implemented: ChecksumFileDownload.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
             }
             'SymbolicLink' {
               Invoke-SymbolicLink -target $component.Target -link $component.Link
@@ -229,26 +225,24 @@ function Invoke-CustomDesiredStateProvider {
             }
             'MsiInstall' {
               Invoke-FileDownload -localPath ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $component.ComponentName, $component.ProductId) -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
-              # todo: implement MsiInstall
-              Write-Log -message ('{0} :: not implemented: MsiInstall.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+              Invoke-CommandRun -command ('{0}\system32\msiexec.exe' -f $env:WinDir) -arguments @('/i', ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $component.ComponentName, $component.ProductId), '/log', ('{0}\log\{1}-{2}.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $component.ComponentName), '/quiet', '/norestart')
             }
             'MsuInstall' {
               Invoke-FileDownload -localPath ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })) -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
-              # todo: implement MsuInstall
-              Write-Log -message ('{0} :: not implemented: MsuInstall.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+              Invoke-CommandRun -command ('{0}\system32\wusa.exe' -f $env:WinDir) -arguments @(('{0}\Temp\{1}.msu' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })), '/quiet', '/norestart')
             }
             'WindowsFeatureInstall' {
-              # todo: implement WindowsFeatureInstall
+              # todo: implement WindowsFeatureInstall in the DynamicConfig module
               Write-Log -message ('{0} :: not implemented: WindowsFeatureInstall.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
             }
             'ZipInstall' {
               Invoke-FileDownload -localPath ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })) -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
-              # todo: implement ZipInstall
-              Write-Log -message ('{0} :: not implemented: ZipInstall.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+              Invoke-ZipInstall -path ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })) -destination $component.Destination
             }
             'ServiceControl' {
-              # todo: implement ServiceControl
-              Write-Log -message ('{0} :: not implemented: ServiceControl.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+              # todo: implement ServiceControl in the DynamicConfig module
+              Set-ServiceState -name $component.Name -state $component.State
+              Set-Service -name $component.Name -StartupType $component.StartupType
             }
             'EnvironmentVariableSet' {
               Invoke-EnvironmentVariableSet -name $component.Name -value $component.Value -target $component.Target
@@ -260,17 +254,16 @@ function Invoke-CustomDesiredStateProvider {
               Invoke-EnvironmentVariableSet -name $component.Name -value (@(($component.Values + @(((Get-ChildItem env: | ? { $_.Name -ieq $component.Name } | Select-Object -first 1).Value) -split ';')) | select -Unique) -join ';') -target $component.Target
             }
             'RegistryKeySet' {
-              # todo: implement RegistryKeySet
-              Write-Log -message ('{0} :: not implemented: RegistryKeySet.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+              Invoke-RegistryKeySet -path $component.Key -valueName $component.ValueName
             }
             'RegistryValueSet' {
-              Invoke-RegistryKeySetOwner -key $component.Key -sid $component.SetOwner -eventLogSource 'occ-dsc'
-              # todo: implement RegistryValueSet
-              Write-Log -message ('{0} :: not implemented: RegistryValueSet.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+              if ($component.SetOwner) {
+                Invoke-RegistryKeySetOwner -key $component.Key -sid $component.SetOwner
+              }
+              Invoke-RegistryValueSet -path $component.Key -valueName $component.ValueName -valueType $component.ValueType -valueData $component.ValueData -hex $component.Hex
             }
             'DisableIndexing' {
-              # todo: implement DisableIndexing
-              Write-Log -message ('{0} :: not implemented: DisableIndexing.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+              Invoke-DisableIndexing
             }
             'FirewallRule' {
               Invoke-FirewallRuleSet -component $component.ComponentName -action $component.Action -direction $component.Direction -remoteAddress $component.RemoteAddress -program $component.Program -protocol $component.Protocol -localPort $component.LocalPort

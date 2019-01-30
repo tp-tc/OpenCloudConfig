@@ -4,6 +4,30 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
 
+function Invoke-DirectoryCreate {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [string] $path,
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+  process {
+    try {
+      New-Item -Path $path -ItemType 'directory' -force
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: created directory {1}.' -f  $($MyInvocation.MyCommand.Name), $path)
+    } catch {
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: error creating directory {1}. {2}' -f  $($MyInvocation.MyCommand.Name), $path, $_.Exception.Message)
+    }
+  }
+  end {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+}
+
 function Invoke-DirectoryDelete {
   [CmdletBinding()]
   param (
@@ -20,7 +44,7 @@ function Invoke-DirectoryDelete {
       Remove-Item $path -Confirm:$false -force
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: deleted directory {1}.' -f  $($MyInvocation.MyCommand.Name), $path)
     } catch {
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: error deleting directory ({1}). {2}' -f  $($MyInvocation.MyCommand.Name), $path, $_.Exception.Message)
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: error deleting directory {1}. {2}' -f  $($MyInvocation.MyCommand.Name), $path, $_.Exception.Message)
       try {
         Start-Process 'icacls' -ArgumentList @($path, '/grant', ('{0}:(OI)(CI)F' -f $env:Username), '/inheritance:r') -Wait -NoNewWindow -PassThru | Out-Null
         Remove-Item $path -Confirm:$false -force
@@ -28,6 +52,34 @@ function Invoke-DirectoryDelete {
         Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: error resetting permissions or deleting directory ({1}). {2}' -f  $($MyInvocation.MyCommand.Name), $path, $_.Exception.Message)
         throw
       }
+    }
+  }
+  end {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+}
+
+function Invoke-DirectoryCopy {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [string] $source,
+
+    [Parameter(Mandatory = $true)]
+    [string] $target,
+
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+  process {
+    try {
+      Copy-Item -Path $source -Destination $target -Container
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: copied directory {1} to {2}.' -f  $($MyInvocation.MyCommand.Name), $source, $target)
+    } catch {
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: error copying directory {1} to {2}. {3}' -f  $($MyInvocation.MyCommand.Name), $source, $target, $_.Exception.Message)
     }
   }
   end {
@@ -247,6 +299,96 @@ function Invoke-RegistryKeySetOwner {
   }
 }
 
+function Invoke-RegistryKeySet {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [string] $path,
+
+    [Parameter(Mandatory = $true)]
+    [string] $valueName,
+    
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+  process {
+    try {
+      New-Item -Path $path -Name $valueName -Force
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: registry key {1} created at {2}' -f $($MyInvocation.MyCommand.Name), $valueName, $path)
+    } catch {
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to create registry key {1} at {2}. {3}' -f $($MyInvocation.MyCommand.Name), $valueName, $path, $_.Exception.Message)
+      throw
+    }
+  }
+  end {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+}
+
+function Invoke-RegistryValueSet {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [string] $path,
+
+    [Parameter(Mandatory = $true)]
+    [string] $valueName,
+
+    [Parameter(Mandatory = $true)]
+    [string] $valueType,
+
+    [Parameter(Mandatory = $true)]
+    [string] $valueData,
+
+    [switch] $hex = $false,
+    
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+  process {
+    try {
+      Set-ItemProperty -Path $path -Type $valueType -Name $valueName -Value $valueData -Force
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: registry value set to: [{1}]{2}{3} for key {4} at path {5}' -f $($MyInvocation.MyCommand.Name), $valueType, $valueData, $(if ($hex) { '(hex)' } else { '' }), $valueName, $path)
+    } catch {
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to set registry value to: [{1}]{2}{3} for key {4} at path {5}. {6}' -f $($MyInvocation.MyCommand.Name), $valueType, $valueData, $(if ($hex) { '(hex)' } else { '' }), $valueName, $path, $_.Exception.Message)
+      throw
+    }
+  }
+  end {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+}
+
+function Invoke-DisableIndexing {
+  [CmdletBinding()]
+  param (    
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+  process {
+    try {
+      # Disable indexing on all disk volumes.
+      Get-WmiObject Win32_Volume -Filter "IndexingEnabled=$true" | Set-WmiInstance -Arguments @{IndexingEnabled=$false}
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: indexing disabled' -f $($MyInvocation.MyCommand.Name))
+    } catch {
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed disable indexing. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message)
+      throw
+    }
+  }
+  end {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+}
+
 function Invoke-FirewallRuleSet {
   [CmdletBinding()]
   param (
@@ -370,6 +512,36 @@ function Invoke-ReplaceInFile {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: replaced occurences of: {1} with: {2} in: {3}' -f $($MyInvocation.MyCommand.Name), $matchString, $replaceString, $path)
     } catch {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to replace occurences of: {1} with: {2} in: {3}. {4}' -f $($MyInvocation.MyCommand.Name), $matchString, $replaceString, $path, $_.Exception.Message)
+      throw
+    }
+  }
+  end {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+}
+
+Add-Type -AssemblyName 'System.IO.Compression.FileSystem'
+function Invoke-ZipInstall {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [string] $path,
+
+    [Parameter(Mandatory = $true)]
+    [string] $destination,
+    
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
+  }
+  process {
+    try {
+      [System.IO.Compression.ZipFile]::ExtractToDirectory($path, $destination)
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: zip: {1} extracted to: {2}' -f $($MyInvocation.MyCommand.Name), $path, $destination)
+    } catch {
+      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to extract zip: {1} to: {2}. {3}' -f $($MyInvocation.MyCommand.Name), $path, $destination, $_.Exception.Message)
       throw
     }
   }
