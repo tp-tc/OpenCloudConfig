@@ -113,7 +113,7 @@ function Install-Dependencies {
       @{
         'ModuleName' = 'OpenCloudConfig';
         'Repository' = 'PSGallery';
-        'ModuleVersion' = '0.0.20'
+        'ModuleVersion' = '0.0.23'
       }
     ),
     [string[]] $purgeModules = @('OpenCloudConfig')
@@ -218,59 +218,59 @@ function Invoke-CustomDesiredStateProvider {
         if (Get-AllDependenciesAppliedState -dependencies $component.DependsOn -appliedComponents $appliedComponents) {
           switch ($component.ComponentType) {
             'DirectoryCreate' {
-              if (-not (Confirm-DirectoryCreate -path $($component.Path))) {
-                Invoke-DirectoryCreate -path $($component.Path)
+              if (-not (Confirm-DirectoryCreate -component $component.ComponentName -path $($component.Path))) {
+                Invoke-DirectoryCreate -component $component.ComponentName -path $($component.Path)
               }
             }
             'DirectoryDelete' {
-              if (-not (Confirm-DirectoryDelete -path $($component.Path))) {
-                Invoke-DirectoryDelete -path $($component.Path)
+              if (-not (Confirm-DirectoryDelete -component $component.ComponentName -path $($component.Path))) {
+                Invoke-DirectoryDelete -component $component.ComponentName -path $($component.Path)
               }
             }
             'DirectoryCopy' {
-              if (-not (Confirm-DirectoryCopy -source $component.Source -target $component.Target)) {
-                Invoke-DirectoryCopy -source $component.Source -target $component.Target
+              if (-not (Confirm-DirectoryCopy -component $component.ComponentName -source $component.Source -target $component.Target)) {
+                Invoke-DirectoryCopy -component $component.ComponentName -source $component.Source -target $component.Target
               }
             }
             'CommandRun' {
-              if (-not (Confirm-CommandRun -validations $component.Validate)) {
-                Invoke-CommandRun -command $($component.Command) -arguments @($component.Arguments | % { $($_) })
+              if (-not (Confirm-CommandRun -component $component.ComponentName -validations $component.Validate)) {
+                Invoke-CommandRun -component $component.ComponentName -command $($component.Command) -arguments @($component.Arguments | % { $($_) })
               }
             }
             'FileDownload' {
-              if (-not (Confirm-FileDownload -localPath $component.Target -sha512 $($component.sha512))) {
-                Invoke-FileDownload -localPath $component.Target -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Source
+              if (-not (Confirm-FileDownload -component $component.ComponentName -localPath $component.Target -sha512 $($component.sha512))) {
+                Invoke-FileDownload -component $component.ComponentName -localPath $component.Target -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Source
               }
             }
             'ChecksumFileDownload' {
               # always download these items wether they're on the filesystem already or not
-              Invoke-FileDownload -localPath $component.Target -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Source
+              Invoke-FileDownload -component $component.ComponentName -localPath $component.Target -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Source
             }
             'SymbolicLink' {
-              if (-not (Confirm-SymbolicLink -target $component.Target -link $component.Link)) {
-                Invoke-SymbolicLink -target $component.Target -link $component.Link
+              if (-not (Confirm-SymbolicLink -component $component.ComponentName -target $component.Target -link $component.Link)) {
+                Invoke-SymbolicLink -component $component.ComponentName -target $component.Target -link $component.Link
               }
-              Invoke-SymbolicLink -target $component.Target -link $component.Link
+              Invoke-SymbolicLink -component $component.ComponentName -target $component.Target -link $component.Link
             }
             'ExeInstall' {
               $localPath = ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName }))
-              if ((-not (Confirm-FileDownload -localPath $localPath -sha512 $($component.sha512))) -or (-not (Confirm-CommandRun -validations $component.Validate))) {
-                Invoke-FileDownload -localPath $localPath -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
-                Invoke-CommandRun -command $localPath -arguments @($component.Arguments | % { $($_) })
+              if ((-not (Confirm-FileDownload -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512))) -or (-not (Confirm-CommandRun -component $component.ComponentName -validations $component.Validate))) {
+                Invoke-FileDownload -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
+                Invoke-CommandRun -component $component.ComponentName -command $localPath -arguments @($component.Arguments | % { $($_) })
               }
             }
             'MsiInstall' {
               $localPath = ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $component.ComponentName, $component.ProductId)
-              if ((-not (Confirm-FileDownload -localPath $localPath -sha512 $($component.sha512))) -or (-not (Confirm-CommandRun -validations $component.Validate))) {
-                Invoke-FileDownload -localPath $localPath -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
-                Invoke-CommandRun -command ('{0}\system32\msiexec.exe' -f $env:WinDir) -arguments @('/i', $localPath, '/log', ('{0}\log\{1}-{2}.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $component.ComponentName), '/quiet', '/norestart')
+              if ((-not (Confirm-FileDownload -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512))) -or (-not (Confirm-CommandRun -component $component.ComponentName -validations $component.Validate))) {
+                Invoke-FileDownload -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
+                Invoke-CommandRun -component $component.ComponentName -command ('{0}\system32\msiexec.exe' -f $env:WinDir) -arguments @('/i', $localPath, '/log', ('{0}\log\{1}-{2}.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $component.ComponentName), '/quiet', '/norestart')
               }
             }
             'MsuInstall' {
               $localPath = ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName }))
-              if ((-not (Confirm-FileDownload -localPath $localPath -sha512 $($component.sha512))) -or (-not (Confirm-CommandRun -validations $component.Validate))) {
-                Invoke-FileDownload -localPath $localPath -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
-                Invoke-CommandRun -command ('{0}\system32\wusa.exe' -f $env:WinDir) -arguments @($localPath, '/quiet', '/norestart')
+              if ((-not (Confirm-FileDownload -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512))) -or (-not (Confirm-CommandRun -component $component.ComponentName -validations $component.Validate))) {
+                Invoke-FileDownload -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
+                Invoke-CommandRun -component $component.ComponentName -command ('{0}\system32\wusa.exe' -f $env:WinDir) -arguments @($localPath, '/quiet', '/norestart')
               }
             }
             'WindowsFeatureInstall' {
@@ -279,11 +279,11 @@ function Invoke-CustomDesiredStateProvider {
             }
             'ZipInstall' {
               $localPath = ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName }))
-              if (-not (Confirm-FileDownload -localPath $localPath -sha512 $($component.sha512))) {
-                Invoke-FileDownload -localPath $localPath -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
+              if (-not (Confirm-FileDownload -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512))) {
+                Invoke-FileDownload -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
               }
               # todo: confirm or refute prior install with comparison of directory and zip contents
-              Invoke-ZipInstall -path ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })) -destination $component.Destination -overwrite
+              Invoke-ZipInstall -component $component.ComponentName -path ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })) -destination $component.Destination -overwrite
             }
             'ServiceControl' {
               # todo: implement ServiceControl in the DynamicConfig module
@@ -291,31 +291,31 @@ function Invoke-CustomDesiredStateProvider {
               Set-Service -name $component.Name -StartupType $component.StartupType
             }
             'EnvironmentVariableSet' {
-              Invoke-EnvironmentVariableSet -name $component.Name -value $component.Value -target $component.Target
+              Invoke-EnvironmentVariableSet -component $component.ComponentName -name $component.Name -value $component.Value -target $component.Target
             }
             'EnvironmentVariableUniqueAppend' {
-              Invoke-EnvironmentVariableSet -name $component.Name -value (@((@(((Get-ChildItem env: | ? { $_.Name -ieq $component.Name } | Select-Object -first 1).Value) -split ';') + $component.Values) | select -Unique) -join ';') $component.Target
+              Invoke-EnvironmentVariableSet -component $component.ComponentName -name $component.Name -value (@((@(((Get-ChildItem env: | ? { $_.Name -ieq $component.Name } | Select-Object -first 1).Value) -split ';') + $component.Values) | select -Unique) -join ';') $component.Target
             }
             'EnvironmentVariableUniquePrepend' {
-              Invoke-EnvironmentVariableSet -name $component.Name -value (@(($component.Values + @(((Get-ChildItem env: | ? { $_.Name -ieq $component.Name } | Select-Object -first 1).Value) -split ';')) | select -Unique) -join ';') -target $component.Target
+              Invoke-EnvironmentVariableSet -component $component.ComponentName -name $component.Name -value (@(($component.Values + @(((Get-ChildItem env: | ? { $_.Name -ieq $component.Name } | Select-Object -first 1).Value) -split ';')) | select -Unique) -join ';') -target $component.Target
             }
             'RegistryKeySet' {
-              Invoke-RegistryKeySet -path $component.Key -valueName $component.ValueName
+              Invoke-RegistryKeySet -component $component.ComponentName -path $component.Key -valueName $component.ValueName
             }
             'RegistryValueSet' {
               if ($component.SetOwner) {
-                Invoke-RegistryKeySetOwner -key $component.Key -sid $component.SetOwner
+                Invoke-RegistryKeySetOwner -component $component.ComponentName -key $component.Key -sid $component.SetOwner
               }
-              Invoke-RegistryValueSet -path $component.Key -valueName $component.ValueName -valueType $component.ValueType -valueData $component.ValueData -hex $component.Hex
+              Invoke-RegistryValueSet -component $component.ComponentName -path $component.Key -valueName $component.ValueName -valueType $component.ValueType -valueData $component.ValueData -hex $component.Hex
             }
             'DisableIndexing' {
-              Invoke-DisableIndexing
+              Invoke-DisableIndexing -component $component.ComponentName
             }
             'FirewallRule' {
               Invoke-FirewallRuleSet -component $component.ComponentName -action $component.Action -direction $component.Direction -remoteAddress $component.RemoteAddress -program $component.Program -protocol $component.Protocol -localPort $component.LocalPort
             }
             'ReplaceInFile' {
-              Invoke-ReplaceInFile -path $component.Path -matchString $component.Match -replaceString $component.Replace
+              Invoke-ReplaceInFile -component $component.ComponentName -path $component.Path -matchString $component.Match -replaceString $component.Replace
             }
           }
           $appliedComponents += New-Object -TypeName 'PSObject' -Property @{ 'ComponentName' = $component.ComponentName; 'ComponentType' = $component.ComponentType; 'AppliedState' = 'Success' }
