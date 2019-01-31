@@ -521,11 +521,38 @@ function Invoke-RegistryValueSet {
     Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
   }
   process {
+    switch -regex (($path).Split('\')[0]) {
+      'HKEY_CURRENT_USER' {
+        $path = $path.Replace('HKEY_CURRENT_USER\', 'HKCU:\')
+      }
+      'HKEY_LOCAL_MACHINE' {
+        $path = $path.Replace('HKEY_LOCAL_MACHINE\', 'HKLM:\')
+      }
+      'HKEY_CLASSES_ROOT' {
+        $path = $path.Replace('HKEY_CLASSES_ROOT\', 'HKCR:\')
+      }
+      'HKEY_CURRENT_CONFIG' {
+        $path = $path.Replace('HKEY_CURRENT_CONFIG\', 'HKCC:\')
+      }
+      'HKEY_USERS' {
+        $path = $path.Replace('HKEY_USERS\', 'HKU:\')
+      }
+    }
     try {
-      if (Get-ItemProperty -Path $path -Name $valueName) {
+      if (-not (Get-Item -Path $path)) {
+        try {
+          New-Item -Path $path -Force
+          Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: registry path: {1} created' -f $($MyInvocation.MyCommand.Name), $path)
+        } catch {
+          Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to create registry path {1}. {6}' -f $($MyInvocation.MyCommand.Name), $path, $_.Exception.Message)
+        }
+      } else {
+        Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: registry path: {1} detected' -f $($MyInvocation.MyCommand.Name), $path)
+      }
+      if (Get-ItemProperty -Path $path -Name $valueName -ErrorAction 'SilentlyContinue') {
         Set-ItemProperty -Path $path -Name $valueName -Value $valueData -Force
       } else {
-        New-ItemProperty -Path $path -PropertyType $valueType -Name $valueName -Value $valueData -Force
+        New-ItemProperty -Path $path -Name $valueName -PropertyType $valueType -Value $valueData -Force
       }
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: registry value set to: [{1}]{2}{3} for key {4} at path {5}' -f $($MyInvocation.MyCommand.Name), $valueType, $valueData, $(if ($hex) { '(hex)' } else { '' }), $valueName, $path)
     } catch {
