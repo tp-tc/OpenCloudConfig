@@ -50,8 +50,8 @@
       "State": "Running",
       "DependsOn": [
         {
-             "ComponentType": "ChecksumFileDownload",
-             "ComponentName": "NxLogPaperTrailConfiguration"
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "NxLogPaperTrailConfiguration"
         }
       ]
     },
@@ -655,7 +655,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.11.2/generic-worker-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v12.0.0/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe",
       "sha512": "c2c3b75ab638675998e108f4b9ba205f25c50d197faca32ed8a85bd060de06bd3735d9bc31092dcb7506b6e8132de58bf2b983c683442d9a3eb4221eb286e376"
     },
@@ -681,9 +681,9 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/taskcluster-proxy/releases/download/v4.1.0/taskcluster-proxy-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/taskcluster-proxy/releases/download/v5.1.0/taskcluster-proxy-windows-amd64.exe",
       "Target": "C:\\generic-worker\\taskcluster-proxy.exe",
-      "sha512": "83dd123441f6bc0336103b65716ad016715864840055e07ec1959f74cd68b7e9cf5fc6e7e1034d7d4802486f1cbddc342475a61e49da06a878c3f74b8652d193"
+      "sha512": "66dc995d3950f92e4007e0d021ff66d7ce9e9c45e95dd1295b31dc01362f558df893d5db6cec85b2b3832172be454acc0ca079447e7b99fdddb47a58ea84f2f9"
     },
     {
       "ComponentName": "LiveLog_Get",
@@ -779,7 +779,7 @@
             "Arguments": [
               "--version"
             ],
-            "Like": "generic-worker 10.11.2 *"
+            "Like": "generic-worker 12.0.0 *"
           }
         ]
       }
@@ -1245,16 +1245,16 @@
           "C:\\Program Files (x86)\\Microsoft SDKs\\Windows Kits\\10\\ExtensionSDKs\\Microsoft.UniversalCRT.Debug\\10.0.10240.0\\Redist\\Debug\\arm\\ucrtbased.dll"
         ]
       }
-     },
-    {  
-	  "ComponentName": "framework35",
+    },
+    {
+      "ComponentName": "framework35",
       "ComponentType": "CommandRun",
       "Command": "DISM",
       "Arguments": [
         "/Online",
-		"/Enable-Feature",
-		"/FeatureName:NetFx3",
-		"/All"
+        "/Enable-Feature",
+        "/FeatureName:NetFx3",
+        "/All"
       ],
       "Validate": {
         "PathsExist": [
