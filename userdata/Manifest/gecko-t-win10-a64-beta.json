@@ -81,8 +81,8 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\Program Files\\GNU\\GnuPG\\pub\\gpg.exe",
-          "C:\\Program Files\\GNU\\GnuPG\\pub\\gpg2.exe"
+          "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg.exe",
+          "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg2.exe"
         ]
       },
       "sha512": "b1c48d84d041055db3d3e3cbd22ef2f3300728b06c76660b9b78ececf56b7ccbc80addb39a64c0a4eb68bf3463ceb6d254dedda047049ce680e9d543dd8a9af9"
@@ -97,8 +97,8 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\Program Files\\7-Zip\\7z.exe",
-          "C:\\Program Files\\7-Zip\\7z.dll"
+          "C:\\Program Files (x86)\\7-Zip\\7z.exe",
+          "C:\\Program Files (x86)\\7-Zip\\7z.dll"
         ]
       },
       "sha512": "ad8298ae7d170c9a3e7f66a6098dd017adcd7912ba3938237db88dca141b6606b095a1c7c7fff0a2d4b47405ffbd25d65e5d8d98a55a8abaf3ced12854c18c4c"
@@ -344,7 +344,7 @@
         }
       ],
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Mercurial/mercurial.ini",
-      "Target": "C:\\Program Files\\Mercurial\\Mercurial.ini"
+      "Target": "C:\\Program Files (x86)\\Mercurial\\Mercurial.ini"
     },
     {
       "ComponentName": "robustcheckout",
@@ -404,7 +404,7 @@
       ],
       "Name": "PATH",
       "Values": [
-        "C:\\Program Files\\Mercurial",
+        "C:\\Program Files (x86)\\Mercurial",
         "C:\\mozilla-build\\7zip",
         "C:\\mozilla-build\\info-zip",
         "C:\\mozilla-build\\kdiff3",
@@ -523,7 +523,7 @@
       "ComponentName": "NSSMInstall",
       "ComponentType": "CommandRun",
       "Comment": "NSSM is required to install Generic Worker as a service. Currently ZipInstall fails, so using 7z instead.",
-      "Command": "C:\\Program Files\\7-Zip\\7z.exe",
+      "Command": "C:\\Program Files (x86)\\7-Zip\\7z.exe",
       "Arguments": [
         "x",
         "-oC:\\",
@@ -799,7 +799,7 @@
       "ComponentName": "CarbonClone",
       "ComponentType": "CommandRun",
       "Comment": "Bug 1316329 - support creation of symlinks by task users",
-      "Command": "C:\\Program Files\\Mercurial\\hg.exe",
+      "Command": "C:\\Program Files (x86)\\Mercurial\\hg.exe",
       "Arguments": [
         "clone",
         "--insecure",
@@ -822,7 +822,7 @@
       "ComponentName": "CarbonUpdate",
       "ComponentType": "CommandRun",
       "Comment": "Bug 1316329 - support creation of symlinks by task users",
-      "Command": "C:\\Program Files\\Mercurial\\hg.exe",
+      "Command": "C:\\Program Files (x86)\\Mercurial\\hg.exe",
       "Arguments": [
         "update",
         "2.4.0",
@@ -923,8 +923,8 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\Program Files\\Mozilla Maintenance Service\\maintenanceservice.exe",
-          "C:\\Program Files\\Mozilla Maintenance Service\\Uninstall.exe"
+          "C:\\Program Files (x86)\\Mozilla Maintenance Service\\maintenanceservice.exe",
+          "C:\\Program Files (x86)\\Mozilla Maintenance Service\\Uninstall.exe"
         ]
       }
     },
@@ -934,7 +934,7 @@
       "Comment": "See https://bugzilla.mozilla.org/show_bug.cgi?id=1067756#c21",
       "Command": "icacls.exe",
       "Arguments": [
-        "\"C:\\Program Files\\Mozilla Maintenance Service\"",
+        "\"C:\\Program Files (x86)\\Mozilla Maintenance Service\"",
         "/grant",
         "Everyone:(OI)(CI)F"
       ],
@@ -1199,10 +1199,10 @@
       "ComponentName": "OpenSshUnzip",
       "ComponentType": "CommandRun",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
-      "Command": "C:\\Program Files\\7-Zip\\7z.exe",
+      "Command": "C:\\Program Files (x86)\\7-Zip\\7z.exe",
       "Arguments": [
         "x",
-        "-o\"C:\\Program Files\"",
+        "-o\"C:\\Program Files (x86)\"",
         "C:\\Windows\\Temp\\OpenSSH-Win32.zip"
       ],
       "DependsOn": [
@@ -1217,9 +1217,9 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\Program Files\\OpenSSH-Win32\\sshd.exe",
-          "C:\\Program Files\\OpenSSH-Win32\\ssh-agent.exe",
-          "C:\\Program Files\\OpenSSH-Win32\\install-sshd.ps1"
+          "C:\\Program Files (x86)\\OpenSSH-Win32\\sshd.exe",
+          "C:\\Program Files (x86)\\OpenSSH-Win32\\ssh-agent.exe",
+          "C:\\Program Files (x86)\\OpenSSH-Win32\\install-sshd.ps1"
         ]
       }
     },
@@ -1240,7 +1240,7 @@
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        "\"C:\\Program Files\\OpenSSH-Win32\\install-sshd.ps1\""
+        "\"C:\\Program Files (x86)\\OpenSSH-Win32\\install-sshd.ps1\""
       ],
       "DependsOn": [
         {
