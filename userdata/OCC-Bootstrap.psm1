@@ -306,7 +306,7 @@ function Invoke-CustomDesiredStateProvider {
               if ($component.SetOwner) {
                 Invoke-RegistryKeySetOwner -verbose -component $component.ComponentName -key $component.Key -sid $component.SetOwner
               }
-              Invoke-RegistryValueSet -verbose -component $component.ComponentName -path $component.Key -valueName $component.ValueName -valueType $component.ValueType -valueData $component.ValueData -hex $component.Hex
+              Invoke-RegistryValueSet -verbose -component $component.ComponentName -path $component.Key -valueName $component.ValueName -valueType $component.ValueType -valueData $component.ValueData -hex:$component.Hex
             }
             'DisableIndexing' {
               Invoke-DisableIndexing -verbose -component $component.ComponentName
