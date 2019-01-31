@@ -10,10 +10,9 @@
       "ComponentName": "NxLog",
       "ComponentType": "MsiInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Url": "https://nxlog.co/system/files/products/files/348/nxlog-ce-2.9.1716.msi",
+      "Url": "https://nxlog.co/system/files/products/files/348/nxlog-ce-2.10.2150.msi",
       "Name": "NxLog-CE",
-      "ProductId": "FC526514-AFD9-4A5C-8677-56241539609D",
-      "sha512": "70f5516bca0ff7814833ef397c01dbcd1c7011c0ef4b0f2aeda2e1aa7c02fe680eddfd1c0656f8d438559e34e5a841360dc6dafa7843c610528df2e1defb02be"
+      "ProductId": "FC526514-AFD9-4A5C-8677-56241539609D"
     },
     {
       "ComponentName": "PaperTrailEncryptionCertificate",
@@ -32,7 +31,7 @@
       "ComponentName": "NxLogPaperTrailConfiguration",
       "ComponentType": "ChecksumFileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win10.conf",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win10arm64.conf",
       "Target": "C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf",
       "DependsOn": [
         {
