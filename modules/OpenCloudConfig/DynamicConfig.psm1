@@ -18,18 +18,18 @@ function Invoke-DirectoryCreate {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     try {
       New-Item -Path $path -ItemType 'directory' -force
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: created directory {2}.' -f  $($MyInvocation.MyCommand.Name), $componentName, $path)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: created directory {2}.' -f  $($MyInvocation.MyCommand.Name), $componentName, $path)
     } catch {
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: error creating directory {2}. {3}' -f  $($MyInvocation.MyCommand.Name), $componentName, $path, $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: error creating directory {2}. {3}' -f  $($MyInvocation.MyCommand.Name), $componentName, $path, $_.Exception.Message)
     }
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -47,20 +47,20 @@ function Confirm-DirectoryCreate {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     try {
       $result = (Test-Path -Path $path -PathType 'Container' -ErrorAction SilentlyContinue)
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: directory {2} existence {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $path, $(if ($result) { 'confirmed' } else { 'refuted' }))
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: directory {2} existence {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $path, $(if ($result) { 'confirmed' } else { 'refuted' }))
     } catch {
       $result = $false
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed to confirm or refute directory {2} existence. {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $path, $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to confirm or refute directory {2} existence. {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $path, $_.Exception.Message)
     }
     return $result
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -78,24 +78,24 @@ function Invoke-DirectoryDelete {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     try {
       Remove-Item $path -Confirm:$false -recurse -force
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: deleted directory {2}.' -f  $($MyInvocation.MyCommand.Name), $componentName, $path)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: deleted directory {2}.' -f  $($MyInvocation.MyCommand.Name), $componentName, $path)
     } catch {
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'warn' -message ('{0}/{1} :: error deleting directory {2}. {3}' -f  $($MyInvocation.MyCommand.Name), $componentName, $path, $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'warn' -message ('{0} ({1}) :: error deleting directory {2}. {3}' -f  $($MyInvocation.MyCommand.Name), $componentName, $path, $_.Exception.Message)
       try {
         Start-Process 'icacls' -ArgumentList @($path, '/grant', ('{0}:(OI)(CI)F' -f $env:Username), '/inheritance:r') -Wait -NoNewWindow -PassThru | Out-Null
         Remove-Item $path -Confirm:$false -recurse -force
       } catch {
-        Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: error resetting permissions or deleting directory ({2}). {3}' -f  $($MyInvocation.MyCommand.Name), $componentName, $path, $_.Exception.Message)
+        Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: error resetting permissions or deleting directory ({2}). {3}' -f  $($MyInvocation.MyCommand.Name), $componentName, $path, $_.Exception.Message)
       }
     }
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -113,20 +113,20 @@ function Confirm-DirectoryDelete {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     try {
       $result = (-not (Test-Path -Path $path -PathType 'Container' -ErrorAction SilentlyContinue))
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: directory {2} absence {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $path, $(if ($result) { 'confirmed' } else { 'refuted' }))
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: directory {2} absence {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $path, $(if ($result) { 'confirmed' } else { 'refuted' }))
     } catch {
       $result = $false
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed to confirm or refute directory {2} absence. {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $path, $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to confirm or refute directory {2} absence. {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $path, $_.Exception.Message)
     }
     return $result
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -147,18 +147,18 @@ function Invoke-DirectoryCopy {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     try {
       Copy-Item -Path $source -Destination $target -Container
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: copied directory {2} to {3}.' -f  $($MyInvocation.MyCommand.Name), $componentName, $source, $target)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: copied directory {2} to {3}.' -f  $($MyInvocation.MyCommand.Name), $componentName, $source, $target)
     } catch {
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: error copying directory {2} to {3}. {4}' -f  $($MyInvocation.MyCommand.Name), $componentName, $source, $target, $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: error copying directory {2} to {3}. {4}' -f  $($MyInvocation.MyCommand.Name), $componentName, $source, $target, $_.Exception.Message)
     }
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -179,21 +179,21 @@ function Confirm-DirectoryCopy {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     try {
       # todo: compare folder contents
       $result = (Test-Path -Path $target -PathType 'Container' -ErrorAction SilentlyContinue)
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: directory {2} existence {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $target, $(if ($result) { 'confirmed' } else { 'refuted' }))
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: directory {2} existence {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $target, $(if ($result) { 'confirmed' } else { 'refuted' }))
     } catch {
       $result = $false
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed to confirm or refute directory {2} existence. {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $target, $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to confirm or refute directory {2} existence. {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $target, $_.Exception.Message)
     }
     return $result
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -213,7 +213,7 @@ function Invoke-CommandRun {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     $redirectStandardOutput = ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), [IO.Path]::GetFileNameWithoutExtension($command))
@@ -222,28 +222,28 @@ function Invoke-CommandRun {
       $process = (Start-Process $command -ArgumentList $arguments -NoNewWindow -RedirectStandardOutput $redirectStandardOutput -RedirectStandardError $redirectStandardError -PassThru)
       Wait-Process -InputObject $process # see: https://stackoverflow.com/a/43728914/68115
       if ($process.ExitCode -and $process.TotalProcessorTime) {
-        Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: command ({2} {3}) exited with code: {4} after a processing time of: {5}.' -f $($MyInvocation.MyCommand.Name), $componentName, $command, ($arguments -join ' '), $process.ExitCode, $process.TotalProcessorTime)
+        Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: command ({2} {3}) exited with code: {4} after a processing time of: {5}.' -f $($MyInvocation.MyCommand.Name), $componentName, $command, ($arguments -join ' '), $process.ExitCode, $process.TotalProcessorTime)
       } else {
-        Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: command ({2} {3}) executed.' -f $($MyInvocation.MyCommand.Name), $componentName, $command, ($arguments -join ' '))
+        Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: command ({2} {3}) executed.' -f $($MyInvocation.MyCommand.Name), $componentName, $command, ($arguments -join ' '))
       }
     } catch {
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: error executing command ({2} {3}). {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $command, ($arguments -join ' '), $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: error executing command ({2} {3}). {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $command, ($arguments -join ' '), $_.Exception.Message)
       $standardErrorFile = (Get-Item -Path $redirectStandardError -ErrorAction SilentlyContinue)
       if (($standardErrorFile) -and $standardErrorFile.Length) {
-        Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: ({2} {3}). {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $command, ($arguments -join ' '), (Get-Content -Path $redirectStandardError -Raw))
+        Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: ({2} {3}). {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $command, ($arguments -join ' '), (Get-Content -Path $redirectStandardError -Raw))
       }
     }
     $standardErrorFile = (Get-Item -Path $redirectStandardError -ErrorAction SilentlyContinue)
     if (($standardErrorFile) -and $standardErrorFile.Length) {
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: ({2} {3}). {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $command, ($arguments -join ' '), (Get-Content -Path $redirectStandardError -Raw))
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: ({2} {3}). {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $command, ($arguments -join ' '), (Get-Content -Path $redirectStandardError -Raw))
     }
     $standardOutputFile = (Get-Item -Path $redirectStandardOutput -ErrorAction SilentlyContinue)
     if (($standardOutputFile) -and $standardOutputFile.Length) {
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: ({2} {3}). log: {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $command, ($arguments -join ' '), $redirectStandardOutput)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: ({2} {3}). log: {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $command, ($arguments -join ' '), $redirectStandardOutput)
     }
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -260,20 +260,20 @@ function Confirm-CommandRun {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     try {
       $result = (Confirm-All -validations $validations -verbose)
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: {2} validations {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $(if (($validations) -and $validations.Length) { $validations.Length } else { 0 }), $(if ($result) { 'confirmed' } else { 'refuted' }))
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: {2} validations {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $(if (($validations) -and $validations.Length) { $validations.Length } else { 0 }), $(if ($result) { 'confirmed' } else { 'refuted' }))
     } catch {
       $result = $false
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed to confirm or refute {2} validations. {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $(if (($validations) -and $validations.Length) { $validations.Length } else { 0 }), $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to confirm or refute {2} validations. {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $(if (($validations) -and $validations.Length) { $validations.Length } else { 0 }), $_.Exception.Message)
     }
     return $result
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -299,7 +299,7 @@ function Invoke-FileDownload {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     if (($sha512) -and (Test-Path -Path $tokenPath -ErrorAction SilentlyContinue)) {
@@ -318,7 +318,7 @@ function Invoke-FileDownload {
     Unblock-File -Path $localPath
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -338,20 +338,20 @@ function Confirm-FileDownload {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     try {
       $result = ((Test-Path -Path $localPath -PathType 'Leaf' -ErrorAction SilentlyContinue) -and ((-not ($sha512)) -or (((Get-FileHash -Path $localPath -Algorithm 'SHA512').Hash -eq $sha512))))
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: download {2} existence {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $localPath, $(if ($result) { 'confirmed' } else { 'refuted' }))
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: download {2} existence {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $localPath, $(if ($result) { 'confirmed' } else { 'refuted' }))
     } catch {
       $result = $false
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed to confirm or refute download {2} existence. {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $localPath, $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to confirm or refute download {2} existence. {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $localPath, $_.Exception.Message)
     }
     return $result
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -372,7 +372,7 @@ function Invoke-SymbolicLink {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     try {
@@ -381,13 +381,13 @@ function Invoke-SymbolicLink {
       } elseif (Test-Path -Path $target -PathType Leaf -ErrorAction SilentlyContinue) {
         & 'cmd' @('/c', 'mklink', $link, $target)
       }
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: created symlink {2} to {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $link, $target)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: created symlink {2} to {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $link, $target)
     } catch {
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed to create symlink {2} to {3}. {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $link, $target, $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to create symlink {2} to {3}. {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $link, $target, $_.Exception.Message)
     }
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -408,21 +408,21 @@ function Confirm-SymbolicLink {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     try {
       # todo: check that link points to target (https://stackoverflow.com/a/16926224/68115)
       $result = ((Test-Path -Path $link -ErrorAction SilentlyContinue) -and ((Get-Item $link).Attributes.ToString() -match 'ReparsePoint'))
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: symlink {2} existence {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $link, $(if ($result) { 'confirmed' } else { 'refuted' }))
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: symlink {2} existence {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $link, $(if ($result) { 'confirmed' } else { 'refuted' }))
     } catch {
       $result = $false
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed to confirm or refute symlink {2} existence. {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $link, $target, $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to confirm or refute symlink {2} existence. {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $link, $target, $_.Exception.Message)
     }
     return $result
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -446,18 +446,18 @@ function Invoke-EnvironmentVariableSet {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     try {
       [Environment]::SetEnvironmentVariable($name, $value, $target)
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: environment variable: {2} set to: {3} for {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $name, $value, $target)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: environment variable: {2} set to: {3} for {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $name, $value, $target)
     } catch {
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed to set environment variable: {2} to: {3} for {4}. {5}' -f $($MyInvocation.MyCommand.Name), $componentName, $name, $value, $target, $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to set environment variable: {2} to: {3} for {4}. {5}' -f $($MyInvocation.MyCommand.Name), $componentName, $name, $value, $target, $_.Exception.Message)
     }
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -478,7 +478,7 @@ function Invoke-RegistryKeySetOwner {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     try {
@@ -511,13 +511,13 @@ function Invoke-RegistryKeySetOwner {
       $regKey = $regKey.OpenSubKey('', 'ReadWriteSubTree', 'ChangePermissions')
       $acl.ResetAccessRule((New-Object System.Security.AccessControl.RegistryAccessRule([System.Security.Principal.SecurityIdentifier]$sid, 'FullControl', @('ObjectInherit', 'ContainerInherit'), 'None', 'Allow')))
       $regKey.SetAccessControl($acl)
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: registry key owner set to: {2} for {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $sid, $key)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: registry key owner set to: {2} for {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $sid, $key)
     } catch {
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed to set registry key owner to: {2} for {3}. {4}' -f $($MyInvocation.MyCommand.Name), $componentName,  $sid, $key, $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to set registry key owner to: {2} for {3}. {4}' -f $($MyInvocation.MyCommand.Name), $componentName,  $sid, $key, $_.Exception.Message)
     }
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -538,18 +538,18 @@ function Invoke-RegistryKeySet {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     try {
       New-Item -Path $path -Name $valueName -Force
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: registry key {2} created at {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $valueName, $path)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: registry key {2} created at {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $valueName, $path)
     } catch {
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed to create registry key {2} at {3}. {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $valueName, $path, $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to create registry key {2} at {3}. {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $valueName, $path, $_.Exception.Message)
     }
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -578,7 +578,7 @@ function Invoke-RegistryValueSet {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     switch -regex (($path).Split('\')[0]) {
@@ -602,25 +602,25 @@ function Invoke-RegistryValueSet {
       if (-not (Get-Item -Path $path -ErrorAction 'SilentlyContinue')) {
         try {
           New-Item -Path $path -Force
-          Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: registry path: {2} created' -f $($MyInvocation.MyCommand.Name), $componentName, $path)
+          Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: registry path: {2} created' -f $($MyInvocation.MyCommand.Name), $componentName, $path)
         } catch {
-          Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed to create registry path {2}. {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $path, $_.Exception.Message)
+          Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to create registry path {2}. {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $path, $_.Exception.Message)
         }
       } else {
-        Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: registry path: {2} detected' -f $($MyInvocation.MyCommand.Name), $componentName, $path)
+        Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: registry path: {2} detected' -f $($MyInvocation.MyCommand.Name), $componentName, $path)
       }
       if (Get-ItemProperty -Path $path -Name $valueName -ErrorAction 'SilentlyContinue') {
         Set-ItemProperty -Path $path -Name $valueName -Value $valueData -Force
       } else {
         New-ItemProperty -Path $path -Name $valueName -PropertyType $valueType -Value $valueData -Force
       }
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: registry value set to: [{2}]{3}{4} for key {5} at path {6}' -f $($MyInvocation.MyCommand.Name), $componentName, $valueType, $valueData, $(if ($hex) { '(hex)' } else { '' }), $valueName, $path)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: registry value set to: [{2}]{3}{4} for key {5} at path {6}' -f $($MyInvocation.MyCommand.Name), $componentName, $valueType, $valueData, $(if ($hex) { '(hex)' } else { '' }), $valueName, $path)
     } catch {
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed to set registry value to: [{2}]{3}{4} for key {5} at path {6}. {7}' -f $($MyInvocation.MyCommand.Name), $componentName, $valueType, $valueData, $(if ($hex) { '(hex)' } else { '' }), $valueName, $path, $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to set registry value to: [{2}]{3}{4} for key {5} at path {6}. {7}' -f $($MyInvocation.MyCommand.Name), $componentName, $valueType, $valueData, $(if ($hex) { '(hex)' } else { '' }), $valueName, $path, $_.Exception.Message)
     }
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -635,19 +635,19 @@ function Invoke-DisableIndexing {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     try {
       # Disable indexing on all disk volumes.
       Get-WmiObject Win32_Volume -Filter "IndexingEnabled=$true" | Set-WmiInstance -Arguments @{IndexingEnabled=$false}
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: indexing disabled' -f $($MyInvocation.MyCommand.Name), $componentName)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: indexing disabled' -f $($MyInvocation.MyCommand.Name), $componentName)
     } catch {
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed disable indexing. {2}' -f $($MyInvocation.MyCommand.Name), $componentName, $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed disable indexing. {2}' -f $($MyInvocation.MyCommand.Name), $componentName, $_.Exception.Message)
     }
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -675,7 +675,7 @@ function Invoke-FirewallRuleSet {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     $dir = $(if ($direction -ieq 'Outbound') { 'out' } else { 'in' })
@@ -695,9 +695,9 @@ function Invoke-FirewallRuleSet {
             & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $action), ('protocol={0}' -f $protocol), ('localport={0}' -f $localPort))
           }
         }
-        Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: firewall rule: {2} created' -f $($MyInvocation.MyCommand.Name), $componentName, $ruleName)
+        Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: firewall rule: {2} created' -f $($MyInvocation.MyCommand.Name), $componentName, $ruleName)
       } catch {
-        Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed to create firewall rule: {2}. {3}' -f $($MyInvocation.MyCommand.Name), $componentName,  $ruleName, $_.Exception.Message)
+        Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to create firewall rule: {2}. {3}' -f $($MyInvocation.MyCommand.Name), $componentName,  $ruleName, $_.Exception.Message)
       }
     } elseif (($protocol -eq 'ICMPv4') -or ($protocol -eq 'ICMPv6')) {
       $ruleName = ('{0} ({1} {2} {3}): {4}' -f $componentName, $protocol, $action)
@@ -715,9 +715,9 @@ function Invoke-FirewallRuleSet {
             & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $action), ('protocol={0}:8,any' -f $protocol), ('localport={0}' -f $localPort))
           }
         }
-        Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: firewall rule: {2} created' -f $($MyInvocation.MyCommand.Name), $componentName, $ruleName)
+        Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: firewall rule: {2} created' -f $($MyInvocation.MyCommand.Name), $componentName, $ruleName)
       } catch {
-        Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed to create firewall rule: {2}. {3}' -f $($MyInvocation.MyCommand.Name), $componentName,  $ruleName, $_.Exception.Message)
+        Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to create firewall rule: {2}. {3}' -f $($MyInvocation.MyCommand.Name), $componentName,  $ruleName, $_.Exception.Message)
       }
     } elseif ($program) {
       $ruleName = ('{0} ({1} {2}): {3}' -f $componentName, $program, $direction, $action)
@@ -735,14 +735,14 @@ function Invoke-FirewallRuleSet {
             & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $action), ('program={0}' -f $program))
           }
         }
-        Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: firewall rule: {2} created' -f $($MyInvocation.MyCommand.Name), $componentName, $ruleName)
+        Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: firewall rule: {2} created' -f $($MyInvocation.MyCommand.Name), $componentName, $ruleName)
       } catch {
-        Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed to create firewall rule: {2}. {3}' -f $($MyInvocation.MyCommand.Name), $componentName,  $ruleName, $_.Exception.Message)
+        Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to create firewall rule: {2}. {3}' -f $($MyInvocation.MyCommand.Name), $componentName,  $ruleName, $_.Exception.Message)
       }
     }
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -766,19 +766,19 @@ function Invoke-ReplaceInFile {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     try {
       $content = ((Get-Content -Path $path) | Foreach-Object { $_ -replace $matchString, (Invoke-Expression -Command $replaceString) })
       [System.IO.File]::WriteAllLines($path, $content, (New-Object System.Text.UTF8Encoding $false))
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: replaced occurences of: {2} with: {3} in: {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $matchString, $replaceString, $path)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: replaced occurences of: {2} with: {3} in: {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $matchString, $replaceString, $path)
     } catch {
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed to replace occurences of: {2} with: {3} in: {4}. {5}' -f $($MyInvocation.MyCommand.Name), $componentName, $matchString, $replaceString, $path, $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to replace occurences of: {2} with: {3} in: {4}. {5}' -f $($MyInvocation.MyCommand.Name), $componentName, $matchString, $replaceString, $path, $_.Exception.Message)
     }
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -802,20 +802,20 @@ function Invoke-ZipInstall {
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
   process {
     if ($overwrite) {
-      Invoke-DirectoryDelete -component $componentName -path $destination -eventLogName $eventLogName -eventLogSource $eventLogSource
+      Invoke-DirectoryDelete -verbose:$verbose -component $componentName -path $destination -eventLogName $eventLogName -eventLogSource $eventLogSource
     }
     try {
       [System.IO.Compression.ZipFile]::ExtractToDirectory($path, $destination)
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0}/{1} :: zip: {2} extracted to: {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $path, $destination)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: zip: {2} extracted to: {3}' -f $($MyInvocation.MyCommand.Name), $componentName, $path, $destination)
     } catch {
-      Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0}/{1} :: failed to extract zip: {2} to: {3}. {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $path, $destination, $_.Exception.Message)
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to extract zip: {2} to: {3}. {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $path, $destination, $_.Exception.Message)
     }
   }
   end {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0}/{1} :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
   }
 }
