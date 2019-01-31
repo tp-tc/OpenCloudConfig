@@ -76,7 +76,6 @@ function Invoke-DirectoryDelete {
         Remove-Item $path -Confirm:$false -recurse -force
       } catch {
         Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: error resetting permissions or deleting directory ({1}). {2}' -f  $($MyInvocation.MyCommand.Name), $path, $_.Exception.Message)
-        throw
       }
     }
   }
@@ -201,7 +200,6 @@ function Invoke-CommandRun {
       if (($standardErrorFile) -and $standardErrorFile.Length) {
         Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: ({1} {2}). {3}' -f $($MyInvocation.MyCommand.Name), $command, ($arguments -join ' '), (Get-Content -Path $redirectStandardError -Raw))
       }
-      throw
     }
     $standardErrorFile = (Get-Item -Path $redirectStandardError -ErrorAction SilentlyContinue)
     if (($standardErrorFile) -and $standardErrorFile.Length) {
@@ -269,14 +267,12 @@ function Invoke-FileDownload {
         Write-Verbose ('downloaded {0} from tooltool' -f $localPath)
       } else {
         Write-Verbose ('failed to download {0} from tooltool' -f $localPath)
-        throw ('failed to download {0} from tooltool' -f $localPath)
       }
     } else {
       if ((Get-RemoteResource -localPath $localPath -url $url -eventLogSource $eventLogSource)) {
         Write-Verbose ('downloaded {0} from {1}' -f $localPath, $url)
       } else {
         Write-Verbose ('failed to download {0} from {1}' -f $localPath, $url)
-        throw ('failed to download {0} from {1}' -f $localPath, $url)
       }
     }
     Unblock-File -Path $localPath
@@ -340,7 +336,6 @@ function Invoke-SymbolicLink {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: created symlink {1} to {2}' -f $($MyInvocation.MyCommand.Name), $link, $target)
     } catch {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to create symlink {1} to {2}. {3}' -f $($MyInvocation.MyCommand.Name), $link, $target, $_.Exception.Message)
-      throw
     }
   }
   end {
@@ -403,7 +398,6 @@ function Invoke-EnvironmentVariableSet {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: environment variable: {1} set to: {2} for {3}' -f $($MyInvocation.MyCommand.Name), $name, $value, $target)
     } catch {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to set environment variable: {1} to: {2} for {3}. {4}' -f $($MyInvocation.MyCommand.Name), $name, $value, $target, $_.Exception.Message)
-      throw
     }
   }
   end {
@@ -460,7 +454,6 @@ function Invoke-RegistryKeySetOwner {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: registry key owner set to: {1} for {2}' -f $($MyInvocation.MyCommand.Name), $sid, $key)
     } catch {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to set registry key owner to: {1} for {2}. {3}' -f $($MyInvocation.MyCommand.Name),  $sid, $key, $_.Exception.Message)
-      throw
     }
   }
   end {
@@ -489,7 +482,6 @@ function Invoke-RegistryKeySet {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: registry key {1} created at {2}' -f $($MyInvocation.MyCommand.Name), $valueName, $path)
     } catch {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to create registry key {1} at {2}. {3}' -f $($MyInvocation.MyCommand.Name), $valueName, $path, $_.Exception.Message)
-      throw
     }
   }
   end {
@@ -539,7 +531,7 @@ function Invoke-RegistryValueSet {
       }
     }
     try {
-      if (-not (Get-Item -Path $path)) {
+      if (-not (Get-Item -Path $path -ErrorAction 'SilentlyContinue')) {
         try {
           New-Item -Path $path -Force
           Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: registry path: {1} created' -f $($MyInvocation.MyCommand.Name), $path)
@@ -557,7 +549,6 @@ function Invoke-RegistryValueSet {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: registry value set to: [{1}]{2}{3} for key {4} at path {5}' -f $($MyInvocation.MyCommand.Name), $valueType, $valueData, $(if ($hex) { '(hex)' } else { '' }), $valueName, $path)
     } catch {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to set registry value to: [{1}]{2}{3} for key {4} at path {5}. {6}' -f $($MyInvocation.MyCommand.Name), $valueType, $valueData, $(if ($hex) { '(hex)' } else { '' }), $valueName, $path, $_.Exception.Message)
-      throw
     }
   }
   end {
@@ -581,7 +572,6 @@ function Invoke-DisableIndexing {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: indexing disabled' -f $($MyInvocation.MyCommand.Name))
     } catch {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed disable indexing. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message)
-      throw
     }
   }
   end {
@@ -636,7 +626,6 @@ function Invoke-FirewallRuleSet {
         Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: firewall rule: {1} created' -f $($MyInvocation.MyCommand.Name), $ruleName)
       } catch {
         Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to create firewall rule: {1}. {2}' -f $($MyInvocation.MyCommand.Name),  $ruleName, $_.Exception.Message)
-        throw
       }
     } elseif (($protocol -eq 'ICMPv4') -or ($protocol -eq 'ICMPv6')) {
       $ruleName = ('{0} ({1} {2} {3}): {4}' -f $componentName, $protocol, $action)
@@ -657,7 +646,6 @@ function Invoke-FirewallRuleSet {
         Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: firewall rule: {1} created' -f $($MyInvocation.MyCommand.Name), $ruleName)
       } catch {
         Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to create firewall rule: {1}. {2}' -f $($MyInvocation.MyCommand.Name),  $ruleName, $_.Exception.Message)
-        throw
       }
     } elseif ($program) {
       $ruleName = ('{0} ({1} {2}): {3}' -f $componentName, $program, $direction, $action)
@@ -678,7 +666,6 @@ function Invoke-FirewallRuleSet {
         Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: firewall rule: {1} created' -f $($MyInvocation.MyCommand.Name), $ruleName)
       } catch {
         Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to create firewall rule: {1}. {2}' -f $($MyInvocation.MyCommand.Name),  $ruleName, $_.Exception.Message)
-        throw
       }
     }
   }
@@ -712,7 +699,6 @@ function Invoke-ReplaceInFile {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: replaced occurences of: {1} with: {2} in: {3}' -f $($MyInvocation.MyCommand.Name), $matchString, $replaceString, $path)
     } catch {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to replace occurences of: {1} with: {2} in: {3}. {4}' -f $($MyInvocation.MyCommand.Name), $matchString, $replaceString, $path, $_.Exception.Message)
-      throw
     }
   }
   end {
@@ -747,7 +733,6 @@ function Invoke-ZipInstall {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} :: zip: {1} extracted to: {2}' -f $($MyInvocation.MyCommand.Name), $path, $destination)
     } catch {
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} :: failed to extract zip: {1} to: {2}. {3}' -f $($MyInvocation.MyCommand.Name), $path, $destination, $_.Exception.Message)
-      throw
     }
   }
   end {
