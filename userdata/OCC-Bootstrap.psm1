@@ -2035,6 +2035,10 @@ function Invoke-OpenCloudConfig {
         }
       }
       Set-WinrmConfig -settings @{'MaxEnvelopeSizekb'=32696;'MaxTimeoutms'=180000}
+      if (Test-Path -Path ('{0}\log\*.dsc-run.log' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
+        Stop-Transcript -ErrorAction SilentlyContinue
+        Remove-Item -Path ('{0}\log\*.dsc-run.log' -f $env:SystemDrive) -force
+      }
       $transcript = ('{0}\log\{1}.dsc-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
       # end pre dsc setup ###########################################################################################################################################
 
