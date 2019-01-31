@@ -87,7 +87,11 @@ function Write-Log {
       break
     }
   }
-  Write-EventLog -LogName $logName -Source $source -EntryType $entryType -EventId $eventId -Message $message
+  try {
+    Write-EventLog -LogName $logName -Source $source -EntryType $entryType -EventId $eventId -Message $message
+  } catch {
+    Write-Error -Exception $_.Exception -message ('failed to write to event log source: {0}/{1}. the log message was: {2}' -f $logName, $source, $message)
+  }
   Write-Verbose -Message $message
 }
 
