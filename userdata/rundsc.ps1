@@ -68,7 +68,7 @@ function Install-SupportingModules {
         try {
           Remove-Module -Name $moduleName -Force -ErrorAction SilentlyContinue
           Join-Path -Path $env:PSModulePath.split(';') -ChildPath $moduleName | % { Remove-Item -path $_ -recurse -force -ErrorAction SilentlyContinue }
-          Remove-Item -path $modulePath -recurse -force
+          Remove-Item -path $modulePath -recurse -force -ErrorAction SilentlyContinue
           if (Test-Path -Path $modulePath -ErrorAction SilentlyContinue) {
             Write-Log -message ('{0} :: failed to remove module: {1}.' -f $($MyInvocation.MyCommand.Name), $moduleName) -severity 'ERROR'
           } else {
