@@ -109,14 +109,25 @@ function Install-Dependencies {
       @{
         'ModuleName' = 'OpenCloudConfig';
         'Repository' = 'PSGallery';
-        'ModuleVersion' = '0.0.18'
+        'ModuleVersion' = '0.0.19'
       }
-    )
+    ),
+    [string[]] $purgeModules = @('OpenCloudConfig')
   )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
+    foreach ($purgeModule in $purgeModules) {
+      if ((Get-Module -Name $purgeModule -ErrorAction SilentlyContinue) -or ((Test-Path -Path (Join-Path -Path $env:PSModulePath.Split(';') -ChildPath $purgeModule) -ErrorAction SilentlyContinue) -contains $true)) {
+        try {
+          Remove-Module -Name $purgeModule -Force -ErrorAction SilentlyContinue
+          Remove-Item -path (Join-Path -Path $env:PSModulePath.Split(';') -ChildPath $purgeModule) -recurse -force -ErrorAction SilentlyContinue
+        } catch {
+          Write-Log -message ('{0} :: error removing module: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $moduleName, $_.Exception.Message) -severity 'ERROR'
+        }
+      }
+    }
     foreach ($packageProviderName in $packageProviders.Keys) {
       $version = $packageProviders.Item($packageProviderName)
       $packageProvider = (Get-PackageProvider -Name $packageProviderName -ForceBootstrap:$true)
