@@ -867,6 +867,7 @@
       "Comment": "Bug 1316329 - support creation of symlinks by task users",
       "Command": "powershell",
       "Arguments": [
+        "-NoProfile",
         "-command",
         "\"& {&'Import-Module' Carbon}\";",
         "\"& {&'Grant-Privilege' -Identity Everyone -Privilege SeCreateSymbolicLinkPrivilege}\""
@@ -1137,6 +1138,7 @@
       "Comment": "Bug 1353889 - Grant all users account write access to Mozilla registry key",
       "Command": "powershell",
       "Arguments": [
+        "-NoProfile",
         "-command",
         "\"& {& (Get-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla').SetAccessRule(New-Object System.Security.AccessControl.RegistryAccessRule ('Everyone', 'FullControl', 'Allow'))}\";",
         "\"& {& ((Get-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla') | Set-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla')}\""
@@ -1244,6 +1246,7 @@
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
       "Command": "powershell.exe",
       "Arguments": [
+        "-NoProfile",
         "-ExecutionPolicy",
         "Bypass",
         "-File",
