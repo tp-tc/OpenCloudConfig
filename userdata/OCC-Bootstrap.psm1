@@ -294,10 +294,10 @@ function Invoke-CustomDesiredStateProvider {
               Invoke-EnvironmentVariableSet -verbose -component $component.ComponentName -name $component.Name -value $component.Value -target $component.Target
             }
             'EnvironmentVariableUniqueAppend' {
-              Invoke-EnvironmentVariableSet -verbose -component $component.ComponentName -name $component.Name -value (@((@(((Get-ChildItem env: | ? { $_.Name -ieq $component.Name } | Select-Object -first 1).Value) -split ';') + $component.Values) | select -Unique) -join ';') $component.Target
+              Invoke-EnvironmentVariableSet -verbose -component $component.ComponentName -name $component.Name -value (@((@((((Get-ChildItem env: | ? { $_.Name -ieq $component.Name } | Select-Object -first 1).Value) -split ';') | ? { $component.Values -notcontains $_ }) + $component.Values) | Select-Object -Unique) -join ';') $component.Target
             }
             'EnvironmentVariableUniquePrepend' {
-              Invoke-EnvironmentVariableSet -verbose -component $component.ComponentName -name $component.Name -value (@(($component.Values + @(((Get-ChildItem env: | ? { $_.Name -ieq $component.Name } | Select-Object -first 1).Value) -split ';')) | select -Unique) -join ';') -target $component.Target
+              Invoke-EnvironmentVariableSet -verbose -component $component.ComponentName -name $component.Name -value (@(($component.Values + @((((Get-ChildItem env: | ? { $_.Name -ieq $component.Name } | Select-Object -first 1).Value) -split ';') | ? { $component.Values -notcontains $_ })) | Select-Object -Unique) -join ';') -target $component.Target
             }
             'RegistryKeySet' {
               Invoke-RegistryKeySet -verbose -component $component.ComponentName -path $component.Key -valueName $component.ValueName
