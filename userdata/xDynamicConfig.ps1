@@ -5,7 +5,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
 
 Configuration xDynamicConfig {
-  Import-DscResource -ModuleName PSDesiredStateConfiguration,xPSDesiredStateConfiguration,xWindowsUpdate
+  Import-DscResource -ModuleName PSDesiredStateConfiguration,xPSDesiredStateConfiguration,xWindowsUpdate,OpenCloudConfig
 
   $sourceOrg = $(if ((Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -ErrorAction SilentlyContinue) -and (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name 'Organisation' -ErrorAction SilentlyContinue)) { (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name 'Organisation').Organisation } else { 'mozilla-releng' })
   $sourceRepo = $(if ((Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -ErrorAction SilentlyContinue) -and (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name 'Repository' -ErrorAction SilentlyContinue)) { (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name 'Repository').Repository } else { 'OpenCloudConfig' })
@@ -19,7 +19,7 @@ Configuration xDynamicConfig {
 
   if ($locationType -eq 'AWS') {
     Script GpgKeyImport {
-      DependsOn = @('[Script]InstallSupportingModules', '[Script]ExeInstall_GpgForWin')
+      DependsOn = @('[Script]ExeInstall_GpgForWin')
       GetScript = { @{ Result = (((Test-Path -Path ('{0}\SysWOW64\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\SysWOW64\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot)).length -gt 0kb)) -or ((Test-Path -Path ('{0}\System32\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\System32\config\systemprofile\AppData\Roaming\gnupg\secring.gpg' -f $env:SystemRoot)).length -gt 0kb))) } }
       SetScript = {
         if ("${env:ProgramFiles(x86)}") {
@@ -68,32 +68,6 @@ Configuration xDynamicConfig {
       }
       TestScript = { if ((Test-Path -Path ('{0}\builds\*.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (-not (Compare-Object -ReferenceObject (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/Manifest/releng-secrets.json' -f $using:sourceOrg, $using:sourceRepo, $using:sourceRev) -UseBasicParsing | ConvertFrom-Json) -DifferenceObject (Get-ChildItem -Path ('{0}\builds' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer } | % { $_.Name })))) { $true } else { $false } }
     }
-  }
-
-  $supportingModules = @(
-    ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/OCC-User.psm1' -f $sourceOrg, $sourceRepo, $sourceRev),
-    ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/OCC-Validate.psm1' -f $sourceOrg, $sourceRepo, $sourceRev),
-    ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/OCC-Archive.psm1' -f $sourceOrg, $sourceRepo, $sourceRev)
-  )
-  Script InstallSupportingModules {
-    GetScript = "@{ Script = InstallSupportingModules }"
-    SetScript = {
-      $modulesPath = ('{0}\Modules' -f $pshome)
-      foreach ($url in $using:supportingModules) {
-        $filename = [IO.Path]::GetFileName($url)
-        $moduleName = [IO.Path]::GetFileNameWithoutExtension($filename)
-        $modulePath = ('{0}\{1}' -f $modulesPath, $moduleName)
-        if (Test-Path -Path $modulePath -ErrorAction SilentlyContinue) {
-          Remove-Module -Name $moduleName -Force -ErrorAction SilentlyContinue
-          Remove-Item -path $modulePath -recurse -force
-        }
-        New-Item -ItemType Directory -Force -Path $modulePath
-        (New-Object Net.WebClient).DownloadFile(('{0}?{1}' -f $url, [Guid]::NewGuid()), ('{0}\{1}' -f $modulePath, $filename))
-        Unblock-File -Path ('{0}\{1}' -f $modulePath, $filename)
-        Import-Module -Name $moduleName
-      }
-    }
-    TestScript = { return $false }
   }
 
   if ($locationType -eq 'AWS') {
@@ -178,16 +152,10 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ DirectoryDelete = $($item.Path) }"
           SetScript = {
-            try {
-              Remove-Item $($using:item.Path) -Confirm:$false -force
-            } catch {
-              Start-Process 'icacls' -ArgumentList @($($using:item.Path), '/grant', ('{0}:(OI)(CI)F' -f $env:Username), '/inheritance:r') -Wait -NoNewWindow -PassThru | Out-Null
-              Remove-Item $($using:item.Path) -Confirm:$false -force
-              # todo: another try catch block with move to recycle bin, empty recycle bin
-            }
+            Invoke-DirectoryDelete -path $($using:item.Path) -eventLogSource 'occ-dsc'
           }
           TestScript = {
-            return Log-Validation (Validate-PathsNotExistOrNotRequested -items @($using:item.Path) -verbose) -verbose
+            return Confirm-LogValidation -source 'occ-dsc' -satisfied (Confirm-PathsNotExistOrNotRequested -items @($using:item.Path) -verbose) -verbose
           }
         }
         Log ('Log_DirectoryDelete_{0}' -f $item.ComponentName) {
@@ -213,10 +181,10 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ CommandRun = $item.ComponentName }"
           SetScript = {
-            Start-Process $($using:item.Command) -ArgumentList @($using:item.Arguments | % { $($_) }) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName) -RedirectStandardError ('{0}\log\{1}-{2}-stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $using:item.ComponentName)
+            Invoke-CommandRun -command $($using:item.Command) -arguments @($using:item.Arguments | % { $($_) }) -eventLogSource 'occ-dsc'
           }
           TestScript = {
-            return Log-Validation (Validate-All -validations $using:item.Validate -verbose) -verbose
+            return Confirm-LogValidation -source 'occ-dsc' -satisfied (Confirm-All -validations $using:item.Validate -verbose) -verbose
           }
         }
         Log ('Log_CommandRun_{0}' -f $item.ComponentName) {
@@ -229,24 +197,10 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ FileDownload = $item.ComponentName }"
           SetScript = {
-            if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
-              $webClient = New-Object System.Net.WebClient
-              $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
-              $webClient.DownloadFile(('https://tooltool.mozilla-releng.net/sha512/{0}' -f $using:item.sha512), $using:item.Target)
-            } else {
-              try {
-                (New-Object Net.WebClient).DownloadFile($using:item.Source, $using:item.Target)
-                Write-Verbose ('Downloaded {0} to {1} on first attempt' -f $using:item.Source, $using:item.Target)
-              } catch {
-                # handle redirects (eg: sourceforge)
-                Invoke-WebRequest -Uri $using:item.Source -OutFile $using:item.Target -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
-                Write-Verbose ('Downloaded {0} to {1} on second attempt' -f $using:item.Source, $using:item.Target)
-              }
-            }
-            Unblock-File -Path $using:item.Target
+            Invoke-FileDownload -localPath $using:item.Target -sha512 $($using:item.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $using:item.Source -eventLogSource 'occ-dsc'
           }
           TestScript = {
-            return ((Log-Validation (Validate-PathsExistOrNotRequested -items @($using:item.Target) -verbose) -verbose) -and ((-not ($using:item.sha512)) -or ((Get-FileHash -Path $using:item.Target -Algorithm 'SHA512').Hash -eq $using:item.sha512)))
+            return ((Confirm-LogValidation -source 'occ-dsc' -satisfied (Confirm-PathsExistOrNotRequested -items @($using:item.Target) -verbose) -verbose) -and ((-not ($using:item.sha512)) -or ((Get-FileHash -Path $using:item.Target -Algorithm 'SHA512').Hash -eq $using:item.sha512)))
           }
         }
         Log ('Log_FileDownload_{0}' -f $item.ComponentName) {
@@ -259,26 +213,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ ChecksumFileDownload = $item.ComponentName }"
           SetScript = {
-            $tempTarget = ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target))
-            if (Test-Path -Path $tempTarget -ErrorAction SilentlyContinue) {
-              Remove-Item -Path $tempTarget -Force
-              Write-Verbose ('Deleted {0}' -f $tempTarget)
-            }
-            if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
-              $webClient = New-Object System.Net.WebClient
-              $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
-              $webClient.DownloadFile(('https://tooltool.mozilla-releng.net/sha512/{0}' -f $using:item.sha512), $tempTarget)
-            } else {
-              try {
-                (New-Object Net.WebClient).DownloadFile($using:item.Source, $tempTarget)
-                Write-Verbose ('Downloaded {0} to {1} on first attempt' -f $using:item.Source, $tempTarget)
-              } catch {
-                # handle redirects (eg: sourceforge)
-                Invoke-WebRequest -Uri $using:item.Source -OutFile $tempTarget -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
-                Write-Verbose ('Downloaded {0} to {1} on second attempt' -f $using:item.Source, $tempTarget)
-              }
-            }
-            Unblock-File -Path $tempTarget
+            Invoke-FileDownload -localPath ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)) -sha512 $($using:item.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $using:item.Source -eventLogSource 'occ-dsc'
           }
           TestScript = { return $false }
         }
@@ -301,14 +236,10 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ SymbolicLink = $item.ComponentName }"
           SetScript = {
-            if (Test-Path -Path $using:item.Target -PathType Container -ErrorAction SilentlyContinue) {
-              & 'cmd' @('/c', 'mklink', '/D', $using:item.Link, $using:item.Target)
-            } elseif (Test-Path -Path $using:item.Target -PathType Leaf -ErrorAction SilentlyContinue) {
-              & 'cmd' @('/c', 'mklink', $using:item.Link, $using:item.Target)
-            }
+            Invoke-SymbolicLink -target $using:item.Target -link $using:item.Link -eventLogSource 'occ-dsc'
           }
           TestScript = {
-            return Log-Validation ((Test-Path -Path $using:item.Link -ErrorAction SilentlyContinue) -and ((Get-Item $using:item.Link).Attributes.ToString() -match "ReparsePoint")) -verbose
+            return Confirm-LogValidation -source 'occ-dsc' -satisfied ((Test-Path -Path $using:item.Link -ErrorAction SilentlyContinue) -and ((Get-Item $using:item.Link).Attributes.ToString() -match "ReparsePoint")) -verbose
           }
         }
         Log ('Log_SymbolicLink_{0}' -f $item.ComponentName) {
@@ -321,24 +252,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ ExeDownload = $item.ComponentName }"
           SetScript = {
-            if ($using:item.sha512) {
-              $tempFile = ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.sha512)
-            } else {
-              $tempFile = ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName)
-            }
-            if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
-              $webClient = New-Object System.Net.WebClient
-              $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
-              $webClient.DownloadFile(('https://tooltool.mozilla-releng.net/sha512/{0}' -f $using:item.sha512), $tempFile)
-            } else {
-              try {
-                (New-Object Net.WebClient).DownloadFile($using:item.Url, $tempFile)
-              } catch {
-                # handle redirects (eg: sourceforge)
-                Invoke-WebRequest -Uri $using:item.Url -OutFile $tempFile -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
-              }
-            }
-            Unblock-File -Path $tempFile
+            Invoke-FileDownload -localPath ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName })) -sha512 $($using:item.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $using:item.Url -eventLogSource 'occ-dsc'
           }
           TestScript = {
             if ($using:item.sha512) {
@@ -357,18 +271,10 @@ Configuration xDynamicConfig {
           DependsOn = ('[Script]ExeDownload_{0}' -f $item.ComponentName)
           GetScript = "@{ ExeInstall = $item.ComponentName }"
           SetScript = {
-            if ($using:item.sha512) {
-              $exe = ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.sha512)
-            } else {
-              $exe = ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $using:item.ComponentName)
-            }
-            $process = Start-Process $exe -ArgumentList $using:item.Arguments -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}-{2}-stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), ('{0}.exe' -f $using:item.ComponentName)) -RedirectStandardError ('{0}\log\{1}-{2}-stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), ('{0}.exe' -f $using:item.ComponentName))
-            if (-not (($process.ExitCode -eq 0) -or ($using:item.AllowedExitCodes -contains $process.ExitCode))) {
-              throw
-            }
+            Invoke-CommandRun -command ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName })) -arguments @($using:item.Arguments | % { $($_) }) -eventLogSource 'occ-dsc'
           }
           TestScript = {
-            return Log-Validation (Validate-All -validations $using:item.Validate -verbose) -verbose
+            return Confirm-LogValidation -source 'occ-dsc' -satisfied (Confirm-All -validations $using:item.Validate -verbose) -verbose
           }
         }
         Log ('Log_ExeInstall_{0}' -f $item.ComponentName) {
@@ -381,19 +287,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ MsiDownload = $item.ComponentName }"
           SetScript = {
-            if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
-              $webClient = New-Object System.Net.WebClient
-              $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
-              $webClient.DownloadFile(('https://tooltool.mozilla-releng.net/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $using:item.ComponentName, $using:item.ProductId))
-            } else {
-              try {
-                (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $using:item.ComponentName, $using:item.ProductId))
-              } catch {
-                # handle redirects (eg: sourceforge)
-                Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $using:item.ComponentName, $using:item.ProductId) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
-              }
-            }
-            Unblock-File -Path ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $using:item.ComponentName, $using:item.ProductId)
+            Invoke-FileDownload -localPath ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $using:item.ComponentName, $using:item.ProductId) -sha512 $($using:item.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $using:item.Url -eventLogSource 'occ-dsc'
           }
           TestScript = { return (Test-Path -Path ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $using:item.ComponentName, $using:item.ProductId) -ErrorAction SilentlyContinue) }
         }
@@ -419,19 +313,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ MsuDownload = $item.ComponentName }"
           SetScript = {
-            if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
-              $webClient = New-Object System.Net.WebClient
-              $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
-              $webClient.DownloadFile(('https://tooltool.mozilla-releng.net/sha512/{0}' -f $using:item.sha512), ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $using:item.ComponentName))
-            } else {
-              try {
-                (New-Object Net.WebClient).DownloadFile($using:item.Url, ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $using:item.ComponentName))
-              } catch {
-                # handle redirects (eg: sourceforge)
-                Invoke-WebRequest -Uri $using:item.Url -OutFile ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $using:item.ComponentName) -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
-              }
-            }
-            Unblock-File -Path ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $using:item.ComponentName)
+            Invoke-FileDownload -localPath ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName })) -sha512 $($using:item.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $using:item.Url -eventLogSource 'occ-dsc'
           }
           TestScript = { return (Test-Path -Path ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $using:item.ComponentName) -ErrorAction SilentlyContinue) }
         }
@@ -442,7 +324,7 @@ Configuration xDynamicConfig {
         xHotfix ('MsuInstall_{0}' -f $item.ComponentName) {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           Id = $item.Id
-          Path = ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $item.ComponentName)
+          Path = ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $(if ($item.sha512) { $item.sha512 } else { $item.ComponentName }))
           Ensure = 'Present'
         }
         Log ('Log_MsuInstall_{0}' -f $item.ComponentName) {
@@ -466,24 +348,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ ZipDownload = $item.ComponentName }"
           SetScript = {
-            if ($using:item.sha512) {
-              $tempFile = ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.sha512)
-            } else {
-              $tempFile = ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $using:item.ComponentName)
-            }
-            if (($using:item.sha512) -and (Test-Path -Path ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue)) {
-              $webClient = New-Object System.Net.WebClient
-              $webClient.Headers.Add('Authorization', ('Bearer {0}' -f (Get-Content ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -Raw)))
-              $webClient.DownloadFile(('https://tooltool.mozilla-releng.net/sha512/{0}' -f $using:item.sha512), $tempFile)
-            } else {
-              try {
-                (New-Object Net.WebClient).DownloadFile($using:item.Url, $tempFile)
-              } catch {
-                # handle redirects (eg: sourceforge)
-                Invoke-WebRequest -Uri $using:item.Url -OutFile $tempFile -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
-              }
-            }
-            Unblock-File -Path $tempFile
+            Invoke-FileDownload -localPath ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName })) -sha512 $($using:item.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $using:item.Url -eventLogSource 'occ-dsc'
           }
           TestScript = {
             if ($using:item.sha512) {
@@ -526,10 +391,10 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ EnvironmentVariableSet = $item.ComponentName }"
           SetScript = {
-            [Environment]::SetEnvironmentVariable($using:item.Name, $using:item.Value, $using:item.Target)
+            Invoke-EnvironmentVariableSet -name $using:item.Name -value $using:item.Value -target $using:item.Target -eventLogSource 'occ-dsc'
           }
           TestScript = {
-            return Log-Validation ((Get-ChildItem env: | ? { $_.Name -ieq $using:item.Name } | Select-Object -first 1).Value -eq $using:item.Value) -verbose
+            return Confirm-LogValidation -source 'occ-dsc' -satisfied ((Get-ChildItem env: | ? { $_.Name -ieq $using:item.Name } | Select-Object -first 1).Value -eq $using:item.Value) -verbose
           }
         }
         Log ('Log_EnvironmentVariableSet_{0}' -f $item.ComponentName) {
@@ -542,8 +407,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ EnvironmentVariableUniqueAppend = $item.ComponentName }"
           SetScript = {
-            $value = (@((@(((Get-ChildItem env: | ? { $_.Name -ieq $using:item.Name } | Select-Object -first 1).Value) -split ';') + $using:item.Values) | select -Unique) -join ';')
-            [Environment]::SetEnvironmentVariable($using:item.Name, $value, $using:item.Target)
+            Invoke-EnvironmentVariableSet -name $using:item.Name -value (@((@(((Get-ChildItem env: | ? { $_.Name -ieq $using:item.Name } | Select-Object -first 1).Value) -split ';') + $using:item.Values) | select -Unique) -join ';') $using:item.Target -eventLogSource 'occ-dsc'
           }
           TestScript = { return $false }
         }
@@ -557,8 +421,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ EnvironmentVariableUniquePrepend = $item.ComponentName }"
           SetScript = {
-            $value = (@(($using:item.Values + @(((Get-ChildItem env: | ? { $_.Name -ieq $using:item.Name } | Select-Object -first 1).Value) -split ';')) | select -Unique) -join ';')
-            [Environment]::SetEnvironmentVariable($using:item.Name, $value, $using:item.Target)
+            Invoke-EnvironmentVariableSet -name $using:item.Name -value (@(($using:item.Values + @(((Get-ChildItem env: | ? { $_.Name -ieq $using:item.Name } | Select-Object -first 1).Value) -split ';')) | select -Unique) -join ';') -target $using:item.Target -eventLogSource 'occ-dsc'
           }
           TestScript = { return $false }
         }
@@ -586,35 +449,7 @@ Configuration xDynamicConfig {
             DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
             GetScript = "@{ RegistryTakeOwnership = $item.ComponentName }"
             SetScript = {
-              $ntdll = Add-Type -Member '[DllImport("ntdll.dll")] public static extern int RtlAdjustPrivilege(ulong a, bool b, bool c, ref bool d);' -Name NtDll -PassThru
-              @{ SeTakeOwnership = 9; SeBackup =  17; SeRestore = 18 }.Values | % { $null = $ntdll::RtlAdjustPrivilege($_, 1, 0, [ref]0) }
-              $key = ($using:item.Key).Replace(('{0}\' -f ($using:item.Key).Split('\')[0]), '')
-              switch -regex (($using:item.Key).Split('\')[0]) {
-                'HKCU|HKEY_CURRENT_USER' {
-                  $hive = 'CurrentUser'
-                }
-                'HKLM|HKEY_LOCAL_MACHINE' {
-                  $hive = 'LocalMachine'
-                }
-                'HKCR|HKEY_CLASSES_ROOT' {
-                  $hive = 'ClassesRoot'
-                }
-                'HKCC|HKEY_CURRENT_CONFIG' {
-                  $hive = 'CurrentConfig'
-                }
-                'HKU|HKEY_USERS' {
-                  $hive = 'Users'
-                }
-              }
-              $regKey = [Microsoft.Win32.Registry]::$hive.OpenSubKey($key, 'ReadWriteSubTree', 'TakeOwnership')
-              $acl = New-Object System.Security.AccessControl.RegistrySecurity
-              $acl.SetOwner([System.Security.Principal.SecurityIdentifier]$item.SetOwner)
-              $regKey.SetAccessControl($acl)
-              $acl.SetAccessRuleProtection($false, $false)
-              $regKey.SetAccessControl($acl)
-              $regKey = $regKey.OpenSubKey('', 'ReadWriteSubTree', 'ChangePermissions')
-              $acl.ResetAccessRule((New-Object System.Security.AccessControl.RegistryAccessRule([System.Security.Principal.SecurityIdentifier]$item.SetOwner, 'FullControl', @('ObjectInherit', 'ContainerInherit'), 'None', 'Allow')))
-              $regKey.SetAccessControl($acl)
+              Invoke-RegistryKeySetOwner -key $using:item.Key -sid $using:item.SetOwner -eventLogSource 'occ-dsc'
             }
             TestScript = { return $false }
           }
@@ -654,57 +489,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ FirewallRule = $item.ComponentName }"
           SetScript = {
-            if ($using:item.Direction -ieq 'Outbound') {
-              $dir = 'out'
-            } else {
-              $dir = 'in'
-            }
-            if (($using:item.Protocol) -and ($using:item.LocalPort)) {
-              $ruleName = ('{0} ({1} {2} {3}): {4}' -f $using:item.ComponentName, $using:item.Protocol, $using:item.LocalPort, $using:item.Direction, $using:item.Action)
-              if (Get-Command 'New-NetFirewallRule' -errorAction SilentlyContinue) {
-                if ($using:item.RemoteAddress) {
-                  New-NetFirewallRule -DisplayName $ruleName -Protocol $using:item.Protocol -LocalPort $using:item.LocalPort -Direction $using:item.Direction -Action $using:item.Action -RemoteAddress $using:item.RemoteAddress
-                } else {
-                  New-NetFirewallRule -DisplayName $ruleName -Protocol $using:item.Protocol -LocalPort $using:item.LocalPort -Direction $using:item.Direction -Action $using:item.Action
-                }
-              } else {
-                if ($using:item.RemoteAddress) {
-                  & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $using:item.Action), ('protocol={0}' -f $using:item.Protocol), ('localport={0}' -f $using:item.LocalPort), ('remoteip={0}' -f $using:item.RemoteAddress))
-                } else {
-                  & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $using:item.Action), ('protocol={0}' -f $using:item.Protocol), ('localport={0}' -f $using:item.LocalPort))
-                }
-              }
-            } elseif (($using:item.Protocol -eq 'ICMPv4') -or ($using:item.Protocol -eq 'ICMPv6')) {
-              $ruleName = ('{0} ({1} {2} {3}): {4}' -f $using:item.ComponentName, $using:item.Protocol, $using:item.Action)
-              if (Get-Command 'New-NetFirewallRule' -errorAction SilentlyContinue) {
-                if ($using:item.RemoteAddress) {
-                  New-NetFirewallRule -DisplayName $ruleName -Protocol $using:item.Protocol -IcmpType 8 -Action $using:item.Action -RemoteAddress $using:item.RemoteAddress
-                } else {
-                  New-NetFirewallRule -DisplayName $ruleName -Protocol $using:item.Protocol -IcmpType 8 -Action $using:item.Action
-                }
-              } else {
-                if ($using:item.RemoteAddress) {
-                  & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $using:item.Action), ('protocol={0}:8,any' -f $using:item.Protocol), ('localport={0}' -f $using:item.LocalPort), ('remoteip={0}' -f $using:item.RemoteAddress))
-                } else {
-                  & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $using:item.Action), ('protocol={0}:8,any' -f $using:item.Protocol), ('localport={0}' -f $using:item.LocalPort))
-                }
-              }
-            } elseif ($using:item.Program) {
-              $ruleName = ('{0} ({1} {2}): {3}' -f $using:item.ComponentName, $using:item.Program, $using:item.Direction, $using:item.Action)
-              if (Get-Command 'New-NetFirewallRule' -errorAction SilentlyContinue) {
-                if ($using:item.RemoteAddress) {
-                  New-NetFirewallRule -DisplayName $ruleName -Program $using:item.Program -Direction $using:item.Direction -Action $using:item.Action -RemoteAddress $using:item.RemoteAddress
-                } else {
-                  New-NetFirewallRule -DisplayName $ruleName -Program $using:item.Program -Direction $using:item.Direction -Action $using:item.Action
-                }
-              } else {
-                if ($using:item.RemoteAddress) {
-                  & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $using:item.Action), ('program={0}' -f $using:item.Program), ('remoteip={0}' -f $using:item.RemoteAddress))
-                } else {
-                  & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name="{0}"' -f $ruleName), ('dir={0}' -f $dir), ('action={0}' -f $using:item.Action), ('program={0}' -f $using:item.Program))
-                }
-              }
-            }
+            Invoke-FirewallRuleSet -component $using:item.ComponentName -action $using:item.Action -direction $using:item.Direction -remoteAddress $using:item.RemoteAddress -program $using:item.Program -protocol $using:item.Protocol -localPort $using:item.LocalPort -eventLogSource 'occ-dsc'
           }
           TestScript = {
             if ($using:item.LocalPort) {
@@ -715,7 +500,7 @@ Configuration xDynamicConfig {
               return $false
             }
             if (Get-Command 'Get-NetFirewallRule' -errorAction SilentlyContinue) {
-              return Log-Validation ([bool](Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue)) -verbose
+              return Confirm-LogValidation -source 'occ-dsc' -satisfied ([bool](Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue)) -verbose
             } else {
               return ((& 'netsh.exe' @('advfirewall', 'firewall', 'show', 'rule', $ruleName)) -notcontains 'No rules match the specified criteria.')
             }
@@ -731,8 +516,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ ReplaceInFile = $item.ComponentName }"
           SetScript = {
-            $content = ((Get-Content -Path $using:item.Path) | Foreach-Object { $_ -replace $using:item.Match, (Invoke-Expression -Command $using:item.Replace) })
-            [System.IO.File]::WriteAllLines($using:item.Path, $content, (New-Object System.Text.UTF8Encoding $false))
+            Invoke-ReplaceInFile -path $using:item.Path -matchString $using:item.Match -replaceString $using:item.Replace -eventLogSource 'occ-dsc'
           }
           TestScript = { return $false }
         }
@@ -745,7 +529,7 @@ Configuration xDynamicConfig {
   }
   if (($locationType -eq 'AWS') -and ($workerType)) {
     Script CotGpgKeyImport {
-      DependsOn = @('[Script]InstallSupportingModules', '[Script]ExeInstall_GpgForWin', '[File]DirectoryCreate_GenericWorkerDirectory')
+      DependsOn = @('[Script]ExeInstall_GpgForWin', '[File]DirectoryCreate_GenericWorkerDirectory')
       GetScript = "@{ Script = CotGpgKeyImport }"
       SetScript = {
         if ("${env:ProgramFiles(x86)}") {

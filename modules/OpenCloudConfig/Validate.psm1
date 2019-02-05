@@ -4,7 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #>
 
-function Validate-All {
+function Confirm-All {
   [CmdletBinding()]
   param(
     [object] $validations
@@ -29,20 +29,20 @@ function Validate-All {
         (($validations.CommandsReturn) -and ($validations.CommandsReturn.Length -gt 0)) -or
         (($validations.FilesContain) -and ($validations.FilesContain.Length -gt 0))
       ) -and (
-        Validate-PathsExistOrNotRequested -items $validations.PathsExist -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
+        Confirm-PathsExistOrNotRequested -items $validations.PathsExist -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
       ) -and (
-        Validate-PathsNotExistOrNotRequested -items $validations.PathsNotExist -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
+        Confirm-PathsNotExistOrNotRequested -items $validations.PathsNotExist -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
       ) -and (
-        Validate-CommandsReturnOrNotRequested -items $validations.CommandsReturn -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
+        Confirm-CommandsReturnOrNotRequested -items $validations.CommandsReturn -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
       ) -and (
-        Validate-FilesContainOrNotRequested -items $validations.FilesContain -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
+        Confirm-FilesContainOrNotRequested -items $validations.FilesContain -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
       )
     )
   }
   end {}
 }
 
-function Validate-PathsExistOrNotRequested {
+function Confirm-PathsExistOrNotRequested {
   [CmdletBinding()]
   param(
     [object[]] $items
@@ -70,7 +70,7 @@ function Validate-PathsExistOrNotRequested {
   end {}
 }
 
-function Validate-PathsNotExistOrNotRequested {
+function Confirm-PathsNotExistOrNotRequested {
   [CmdletBinding()]
   param(
     [object[]] $items
@@ -98,7 +98,7 @@ function Validate-PathsNotExistOrNotRequested {
   end {}
 }
 
-function Validate-CommandsReturnOrNotRequested {
+function Confirm-CommandsReturnOrNotRequested {
   [CmdletBinding()]
   param(
     [object[]] $items
@@ -117,10 +117,14 @@ function Validate-CommandsReturnOrNotRequested {
         Write-Verbose ('Command: {0} {1}' -f $cr.Command, ($cr.Arguments -join ' '))
         if ($cr.Match) {
           Write-Verbose ('Search (match): {0}' -f $cr.Match)
-          if (@(& $cr.Command $cr.Arguments 2>&1) -contains $cr.Match) {
-            Write-Verbose ('Output (match): {0}' -f $_)
-            $true
-          } else {
+          try {
+            if (@(& $cr.Command $cr.Arguments 2>&1) -contains $cr.Match) {
+              Write-Verbose ('Output (match): {0}' -f $_)
+              $true
+            } else {
+              $false
+            }
+          } catch {
             $false
           }
         } elseif ($cr.Like) {
@@ -140,7 +144,7 @@ function Validate-CommandsReturnOrNotRequested {
   end {}
 }
 
-function Validate-FilesContainOrNotRequested {
+function Confirm-FilesContainOrNotRequested {
   [CmdletBinding()]
   param(
     [object[]] $items
@@ -178,12 +182,20 @@ function Validate-FilesContainOrNotRequested {
   end {}
 }
 
-function Log-Validation {
+function Confirm-LogValidation {
   [CmdletBinding()]
   param(
-    [bool] $validationsSatisfied
+    [Parameter(Mandatory = $true)]
+    [Alias('satisfied')]
+    [bool] $validationsSatisfied,
+
+    [string] $eventLogName = 'Application',
+
+    [Alias('source')]
+    [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
+    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message @('Validations not satisfied','Validations satisfied')[$validationsSatisfied]
     Write-Verbose @('Validations not satisfied','Validations satisfied')[$validationsSatisfied]
   }
   process {

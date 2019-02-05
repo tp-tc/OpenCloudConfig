@@ -78,11 +78,31 @@ function Start-LoggedProcess {
     Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
-function Invoke-RemoteDesiredStateConfig {
+function Install-Dependencies {
   param (
-    [string] $url,
     [hashtable] $packageProviders = @{ 'NuGet' = 2.8.5.208 },
-    [string[]] $modules = @('PSDesiredStateConfiguration', 'xPSDesiredStateConfiguration', 'xWindowsUpdate')
+    [hashtable[]] $modules = @(
+      @{
+        'ModuleName' = 'PowerShellGet';
+        'Repository' = 'PSGallery';
+        'ModuleVersion' = '2.0.4'
+      },
+      @{
+        'ModuleName' = 'xPSDesiredStateConfiguration';
+        'Repository' = 'PSGallery';
+        'ModuleVersion' = '8.4.0.0'
+      },
+      @{
+        'ModuleName' = 'xWindowsUpdate';
+        'Repository' = 'PSGallery';
+        'ModuleVersion' = '2.7.0.0'
+      },
+      @{
+        'ModuleName' = 'OpenCloudConfig';
+        'Repository' = 'PSGallery';
+        'ModuleVersion' = '0.0.9'
+      }
+    )
   )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
@@ -94,32 +114,60 @@ function Invoke-RemoteDesiredStateConfig {
       if ((-not ($packageProvider)) -or ($packageProvider.Version -lt $version)) {
         try {
           Install-PackageProvider -Name $packageProviderName -MinimumVersion $version -Force
-          Write-Log -message ('{0} :: powershell package provider: {1}, version: {2}, installed.' -f $($MyInvocation.MyCommand.Name), $packageProviderName, $version) -severity 'INFO'
+          Write-Log -message ('{0} :: powershell package provider: {1}, version: {2}, installed' -f $($MyInvocation.MyCommand.Name), $packageProviderName, $version) -severity 'INFO'
         } catch {
           Write-Log -message ('{0} :: failed to install powershell package provider: {1}, version: {2}. {3}' -f $($MyInvocation.MyCommand.Name), $packageProviderName, $version, $_.Exception.Message) -severity 'ERROR'
         }
       } else {
-        Write-Log -message ('{0} :: powershell package provider: {1}, version: {2}, detected.' -f $($MyInvocation.MyCommand.Name), $packageProviderName, $packageProvider.Version) -severity 'DEBUG'
+        Write-Log -message ('{0} :: powershell package provider: {1}, version: {2}, detected' -f $($MyInvocation.MyCommand.Name), $packageProviderName, $packageProvider.Version) -severity 'DEBUG'
       }
     }
-    foreach ($module in @('xPSDesiredStateConfiguration', 'xWindowsUpdate')) {
-      if (Get-Module -ListAvailable -Name $module) {
-        Write-Log -message ('{0} :: powershell module: {1}, detected.' -f $($MyInvocation.MyCommand.Name), $module) -severity 'DEBUG'
+    foreach ($module in $modules) {
+      if ((Get-Module -ListAvailable -Name $module['ModuleName'] | ? { $_.Version -eq $module['ModuleVersion'] })) {
+        Write-Log -message ('{0} :: powershell module: {1}, version: {2}, detected.' -f $($MyInvocation.MyCommand.Name), $module['ModuleName'], $module['ModuleVersion']) -severity 'DEBUG'
       } else {
+        Write-Log -message ('{0} :: powershell module: {1}, version: {2}, not detected' -f $($MyInvocation.MyCommand.Name), $module['ModuleName'], $module['ModuleVersion']) -severity 'DEBUG'
+        if (@(Get-PSRepository -Name $module['Repository'])[0].InstallationPolicy -ne 'Trusted') {
+          Set-PSRepository -Name $module['Repository'] -InstallationPolicy 'Trusted'
+          Write-Log -message ('{0} :: installation policy for repository: {1}, set to "Trusted"' -f $($MyInvocation.MyCommand.Name), $module['Repository']) -severity 'INFO'
+        }
         try {
-          Install-Module -Name $module -Force
-          Write-Log -message ('{0} :: powershell module: {1}, installed.' -f $($MyInvocation.MyCommand.Name), $module) -severity 'INFO'
+          # AllowClobber was introduced in powershell 6
+          if (((Get-Command 'Install-Module').ParameterSets | Select-Object -ExpandProperty 'Parameters' | Where-Object { $_.Name -eq 'AllowClobber' })) {
+            Install-Module -Name $module['ModuleName'] -RequiredVersion $module['ModuleVersion'] -Repository $module['Repository'] -Force -AllowClobber
+          } else {
+            Install-Module -Name $module['ModuleName'] -RequiredVersion $module['ModuleVersion'] -Repository $module['Repository'] -Force
+          }
+          # todo: log an exception if we don't get the module, wait for instance build to time out.
+          while (-not (Get-Module -ListAvailable -Name $module['ModuleName'] | ? { $_.Version -eq $module['ModuleVersion'] })) {
+            Write-Log -message ('{0} :: waiting for installation of powershell module: {1}, version: {2}, from repository: {3}, to complete' -f $($MyInvocation.MyCommand.Name), $module['ModuleName'], $module['ModuleVersion'], $module['Repository']) -severity 'DEBUG'
+            Start-Sleep -Seconds 30
+          }
+          Write-Log -message ('{0} :: powershell module: {1}, version: {2}, from repository: {3}, installed' -f $($MyInvocation.MyCommand.Name), $module['ModuleName'], $module['ModuleVersion'], $module['Repository']) -severity 'INFO'
         } catch {
-          Write-Log -message ('{0} :: failed to install powershell module: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $module, $_.Exception.Message) -severity 'ERROR'
+          Write-Log -message ('{0} :: failed to install powershell module: {1}, version: {2}, from repository: {3}. {4}' -f $($MyInvocation.MyCommand.Name), $module['ModuleName'], $module['ModuleVersion'], $module['Repository'], $_.Exception.Message) -severity 'ERROR'
         }
       }
     }
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
+function Invoke-RemoteDesiredStateConfig {
+  param (
+    [string] $url
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
     Stop-DesiredStateConfig
     $config = [IO.Path]::GetFileNameWithoutExtension($url)
     $target = ('{0}\{1}.ps1' -f $env:Temp, $config)
     Remove-Item $target -confirm:$false -force -ErrorAction SilentlyContinue
     (New-Object Net.WebClient).DownloadFile(('{0}?{1}' -f $url, [Guid]::NewGuid()), $target)
-    Write-Log -message ('{0} :: downloaded {1}, from {2}.' -f $($MyInvocation.MyCommand.Name), $target, $url) -severity 'DEBUG'
+    Write-Log -message ('{0} :: downloaded {1}, from {2}' -f $($MyInvocation.MyCommand.Name), $target, $url) -severity 'DEBUG'
     Unblock-File -Path $target
     . $target
     $mof = ('{0}\{1}' -f $env:Temp, $config)
@@ -1814,7 +1862,15 @@ function Invoke-OpenCloudConfig {
       #  $sourceRev = 'function-refactor'
       #}
       Start-Transcript -Path $transcript -Append
-      Invoke-RemoteDesiredStateConfig -url ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/xDynamicConfig.ps1' -f $sourceOrg, $sourceRepo, $sourceRev) -workerType $workerType
+
+      if (-not ([Diagnostics.EventLog]::SourceExists('occ-dsc'))) {
+        New-EventLog -LogName 'Application' -Source 'occ-dsc'
+        Write-Log -message ('{0} :: event log source "occ-dsc" created.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+      } else {
+        Write-Log -message ('{0} :: event log source "occ-dsc" detected.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+      }
+      Install-Dependencies
+      Invoke-RemoteDesiredStateConfig -url ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/xDynamicConfig.ps1' -f $sourceOrg, $sourceRepo, $sourceRev)
       Stop-Transcript
       # end run dsc #################################################################################################################################################
       
