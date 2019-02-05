@@ -36,6 +36,8 @@ function Confirm-All {
         Confirm-CommandsReturnOrNotRequested -items $validations.CommandsReturn -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
       ) -and (
         Confirm-FilesContainOrNotRequested -items $validations.FilesContain -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
+      ) -and (
+        Confirm-ServiceExistAndStatusMatchOrNotRequested -items $validations.ServiceStatus -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
       )
     )
   }
@@ -177,6 +179,41 @@ function Confirm-FilesContainOrNotRequested {
           $false
         }
       }) -contains $false)) # all files existed and no files failed to contain a match (see '-not' above)
+    ))
+  }
+  end {}
+}
+
+function Confirm-ServiceExistAndStatusMatchOrNotRequested {
+  [CmdletBinding()]
+  param(
+    [object[]] $items
+  )
+  begin {
+    Write-Verbose ('{0} :: {1} validation{2} specified.' -f $($MyInvocation.MyCommand.Name), $items.Length, ('s','')[($items.Length -eq 1)])
+  }
+  process {
+    # either no validation files-contain are specified
+    return ((-not ($items)) -or (
+      # validation files-contain are specified
+      (($items) -and ($items.Length -gt 0)) -and
+      # all validations for service state are satisfied
+      (-not (@($items | % {
+        $ss = $_
+        $service = (Get-Service -Name $ss.Name -ErrorAction 'SilentlyContinue')
+        if ($service) {
+          if ($service.Status -ieq $ss.Status) {
+            Write-Verbose ('Service: {0}, expected status: {1} matches actual status: {2}' -f $ss.Name, $ss.Status, $service.Status)
+            $true
+          } else {
+            Write-Verbose ('Service: {0}, expected status: {1} does not match actual status: {2}' -f $ss.Name, $ss.Status, $service.Status)
+            $false
+          }
+        } else {
+          Write-Verbose ('Service: {0} not found' -f $ss.Name)
+          $false
+        }
+      }) -contains $false)) # all service names existed and all service states matched validation values (see '-not' above)
     ))
   }
   end {}
