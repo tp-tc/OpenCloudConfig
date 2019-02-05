@@ -699,7 +699,7 @@
       "ComponentName": "HgShared",
       "ComponentType": "DirectoryCreate",
       "Comment": "allows builds to use `hg robustcheckout ...`",
-      "Path": "y:\\hg-shared"
+      "Path": "C:\\hg-shared"
     },
     {
       "ComponentName": "HgSharedAccessRights",
@@ -707,7 +707,7 @@
       "Comment": "allows builds to use `hg robustcheckout ...`",
       "Command": "icacls.exe",
       "Arguments": [
-        "y:\\hg-shared",
+        "C:\\hg-shared",
         "/grant",
         "Everyone:(OI)(CI)F"
       ],
@@ -722,7 +722,7 @@
       "ComponentName": "PipCache",
       "ComponentType": "DirectoryCreate",
       "Comment": "share pip cache across subsequent task users",
-      "Path": "y:\\pip-cache"
+      "Path": "C:\\pip-cache"
     },
     {
       "ComponentName": "PipCacheAccessRights",
@@ -730,7 +730,7 @@
       "Comment": "share pip cache across subsequent task users",
       "Command": "icacls.exe",
       "Arguments": [
-        "y:\\pip-cache",
+        "C:\\pip-cache",
         "/grant",
         "Everyone:(OI)(CI)F"
       ],
@@ -752,14 +752,14 @@
         }
       ],
       "Name": "PIP_DOWNLOAD_CACHE",
-      "Value": "y:\\pip-cache",
+      "Value": "C:\\pip-cache",
       "Target": "Machine"
     },
     {
       "ComponentName": "TooltoolCache",
       "ComponentType": "DirectoryCreate",
       "Comment": "share tooltool cache across subsequent task users",
-      "Path": "y:\\tooltool-cache"
+      "Path": "C:\\tooltool-cache"
     },
     {
       "ComponentName": "TooltoolCacheAccessRights",
@@ -767,7 +767,7 @@
       "Comment": "share tooltool cache across subsequent task users",
       "Command": "icacls.exe",
       "Arguments": [
-        "y:\\tooltool-cache",
+        "C:\\tooltool-cache",
         "/grant",
         "Everyone:(OI)(CI)F"
       ],
@@ -789,7 +789,7 @@
         }
       ],
       "Name": "TOOLTOOL_CACHE",
-      "Value": "y:\\tooltool-cache",
+      "Value": "C:\\tooltool-cache",
       "Target": "Machine"
     },
     {
@@ -1208,6 +1208,7 @@
       "Command": "C:\\Program Files (x86)\\7-Zip\\7z.exe",
       "Arguments": [
         "x",
+        "-aoa",
         "-o\"C:\\Program Files (x86)\"",
         "C:\\Windows\\Temp\\OpenSSH-Win32.zip"
       ],
