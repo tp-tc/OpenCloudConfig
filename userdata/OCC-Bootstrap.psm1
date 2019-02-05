@@ -2036,8 +2036,10 @@ function Invoke-OpenCloudConfig {
       }
       Set-WinrmConfig -settings @{'MaxEnvelopeSizekb'=32696;'MaxTimeoutms'=180000}
       if (Test-Path -Path ('{0}\log\*.dsc-run.log' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
-        Stop-Transcript -ErrorAction SilentlyContinue
-        Remove-Item -Path ('{0}\log\*.dsc-run.log' -f $env:SystemDrive) -force
+        try {
+          Stop-Transcript
+        } catch {}
+        Remove-Item -Path ('{0}\log\*.dsc-run.log' -f $env:SystemDrive) -force -ErrorAction SilentlyContinue
       }
       $transcript = ('{0}\log\{1}.dsc-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
       # end pre dsc setup ###########################################################################################################################################
@@ -2120,11 +2122,11 @@ function Invoke-OpenCloudConfig {
     }
 
     # archive dsc logs
-    Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
+    Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue }
     $zipFilePath = ('{0}\log\{1}.userdata-run.zip' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     New-ZipFile -ZipFilePath $zipFilePath -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') } | % { $_.FullName })
     Write-Log -message ('{0} :: log archive {1} created.' -f $($MyInvocation.MyCommand.Name), $zipFilePath) -severity 'INFO'
-    Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and (-not $_.Name.EndsWith('.dsc-run.log')) } | % { Remove-Item -Path $_.FullName -Force }
+    Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and (-not $_.Name.EndsWith('.dsc-run.log')) } | % { Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue }
 
     if ((-not ($isWorker)) -and (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
       Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
