@@ -412,7 +412,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ EnvironmentVariableUniqueAppend = $item.ComponentName }"
           SetScript = {
-            Invoke-EnvironmentVariableSet -component $using:item.ComponentName -name $using:item.Name -value (@((@(((Get-ChildItem env: | ? { $_.Name -ieq $using:item.Name } | Select-Object -first 1).Value) -split ';') + $using:item.Values) | select -Unique) -join ';') $using:item.Target -eventLogSource 'occ-dsc'
+            Invoke-EnvironmentVariableUniqueAppend -verbose -component $using:item -eventLogSource 'occ-dsc'
           }
           TestScript = { return $false }
         }
@@ -426,7 +426,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ EnvironmentVariableUniquePrepend = $item.ComponentName }"
           SetScript = {
-            Invoke-EnvironmentVariableSet -component $using:item.ComponentName -name $using:item.Name -value (@(($using:item.Values + @(((Get-ChildItem env: | ? { $_.Name -ieq $using:item.Name } | Select-Object -first 1).Value) -split ';')) | select -Unique) -join ';') -target $using:item.Target -eventLogSource 'occ-dsc'
+            Invoke-EnvironmentVariableUniquePrepend -verbose -component $using:item -eventLogSource 'occ-dsc'
           }
           TestScript = { return $false }
         }

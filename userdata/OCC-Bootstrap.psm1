@@ -113,7 +113,7 @@ function Install-Dependencies {
       @{
         'ModuleName' = 'OpenCloudConfig';
         'Repository' = 'PSGallery';
-        'ModuleVersion' = '0.0.25'
+        'ModuleVersion' = '0.0.26'
       }
     ),
     [string[]] $purgeModules = @('OpenCloudConfig')
@@ -294,10 +294,10 @@ function Invoke-CustomDesiredStateProvider {
               Invoke-EnvironmentVariableSet -verbose -component $component.ComponentName -name $component.Name -value $component.Value -target $component.Target
             }
             'EnvironmentVariableUniqueAppend' {
-              Invoke-EnvironmentVariableSet -verbose -component $component.ComponentName -name $component.Name -value (@((@((((Get-ChildItem env: | ? { $_.Name -ieq $component.Name } | Select-Object -first 1).Value) -split ';') | ? { $component.Values -notcontains $_ }) + $component.Values) | Select-Object -Unique) -join ';') $component.Target
+              Invoke-EnvironmentVariableUniqueAppend -verbose -component $component
             }
             'EnvironmentVariableUniquePrepend' {
-              Invoke-EnvironmentVariableSet -verbose -component $component.ComponentName -name $component.Name -value (@(($component.Values + @((((Get-ChildItem env: | ? { $_.Name -ieq $component.Name } | Select-Object -first 1).Value) -split ';') | ? { $component.Values -notcontains $_ })) | Select-Object -Unique) -join ';') -target $component.Target
+              Invoke-EnvironmentVariableUniquePrepend -verbose -component $component
             }
             'RegistryKeySet' {
               Invoke-RegistryKeySet -verbose -component $component.ComponentName -path $component.Key -valueName $component.ValueName

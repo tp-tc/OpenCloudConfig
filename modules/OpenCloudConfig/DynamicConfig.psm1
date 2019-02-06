@@ -461,6 +461,46 @@ function Invoke-EnvironmentVariableSet {
   }
 }
 
+function Invoke-EnvironmentVariableUniqueAppend {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [string] $component,
+    
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+  }
+  process {
+    Invoke-EnvironmentVariableSet -verbose:$verbose -logName $eventLogName -source $eventLogSource -component $component.ComponentName -name $component.Name -value (@((@((((Get-ChildItem env: | ? { $_.Name -ieq $component.Name } | Select-Object -first 1).Value) -split ';') | ? { $component.Values -notcontains $_ }) + $component.Values) | Select-Object -Unique) -join ';') -target $component.Target
+  }
+  end {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+  }
+}
+
+function Invoke-EnvironmentVariableUniquePrepend {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [string] $component,
+    
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+  }
+  process {
+    Invoke-EnvironmentVariableSet -verbose:$verbose -logName $eventLogName -source $eventLogSource -component $component.ComponentName -name $component.Name -value (@(($component.Values + @((((Get-ChildItem env: | ? { $_.Name -ieq $component.Name } | Select-Object -first 1).Value) -split ';') | ? { $component.Values -notcontains $_ })) | Select-Object -Unique) -join ';') -target $component.Target
+  }
+  end {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+  }
+}
+
 function Invoke-RegistryKeySetOwner {
   [CmdletBinding()]
   param (
