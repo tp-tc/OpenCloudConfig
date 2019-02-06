@@ -113,7 +113,7 @@ function Install-Dependencies {
       @{
         'ModuleName' = 'OpenCloudConfig';
         'Repository' = 'PSGallery';
-        'ModuleVersion' = '0.0.28'
+        'ModuleVersion' = '0.0.34'
       }
     ),
     [string[]] $purgeModules = @('OpenCloudConfig')
@@ -218,39 +218,39 @@ function Invoke-CustomDesiredStateProvider {
         if (Get-AllDependenciesAppliedState -dependencies $component.DependsOn -appliedComponents $appliedComponents) {
           switch ($component.ComponentType) {
             'DirectoryCreate' {
-              if (-not (Confirm-DirectoryCreate -verbose -component $component.ComponentName -path $($component.Path))) {
-                Invoke-DirectoryCreate -verbose -component $component.ComponentName -path $($component.Path)
+              if (-not (Confirm-DirectoryCreate -verbose -component $component)) {
+                Invoke-DirectoryCreate -verbose -component $component
               }
             }
             'DirectoryDelete' {
-              if (-not (Confirm-DirectoryDelete -verbose -component $component.ComponentName -path $($component.Path))) {
-                Invoke-DirectoryDelete -verbose -component $component.ComponentName -path $($component.Path)
+              if (-not (Confirm-DirectoryDelete -verbose -component $component)) {
+                Invoke-DirectoryDelete -verbose -component $component
               }
             }
             'DirectoryCopy' {
-              if (-not (Confirm-DirectoryCopy -verbose -component $component.ComponentName -source $component.Source -target $component.Target)) {
-                Invoke-DirectoryCopy -verbose -component $component.ComponentName -source $component.Source -target $component.Target
+              if (-not (Confirm-DirectoryCopy -verbose -component $component)) {
+                Invoke-DirectoryCopy -verbose -component $component
               }
             }
             'CommandRun' {
-              if (-not (Confirm-CommandRun -verbose -component $component.ComponentName -validations $component.Validate)) {
-                Invoke-CommandRun -verbose -component $component.ComponentName -command $($component.Command) -arguments @($component.Arguments | % { $($_) })
+              if (-not (Confirm-CommandRun -verbose -component $component)) {
+                Invoke-CommandRun -verbose -component $component
               }
             }
             'FileDownload' {
-              if (-not (Confirm-FileDownload -verbose -component $component.ComponentName -localPath $component.Target -sha512 $($component.sha512))) {
-                Invoke-FileDownload -verbose -component $component.ComponentName -localPath $component.Target -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Source
+              if (-not (Confirm-FileDownload -verbose -component $component -localPath $component.Target)) {
+                Invoke-FileDownload -verbose -component $component -localPath $component.Target
               }
             }
             'ChecksumFileDownload' {
               # always download these items wether they're on the filesystem already or not
-              Invoke-FileDownload -verbose -component $component.ComponentName -localPath $component.Target -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Source
+              Invoke-FileDownload -verbose -component $component -localPath $component.Target
             }
             'SymbolicLink' {
-              if (-not (Confirm-SymbolicLink -verbose -component $component.ComponentName -target $component.Target -link $component.Link)) {
-                Invoke-SymbolicLink -verbose -component $component.ComponentName -target $component.Target -link $component.Link
+              if (-not (Confirm-SymbolicLink -verbose -component $component)) {
+                Invoke-SymbolicLink -verbose -component $component
               }
-              Invoke-SymbolicLink -verbose -component $component.ComponentName -target $component.Target -link $component.Link
+              Invoke-SymbolicLink -verbose -component $component
             }
             'ExeInstall' {
               if (-not (Confirm-ExeInstall -verbose -component $component)) {
@@ -273,11 +273,11 @@ function Invoke-CustomDesiredStateProvider {
             }
             'ZipInstall' {
               $localPath = ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName }))
-              if (-not (Confirm-FileDownload -verbose -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512))) {
-                Invoke-FileDownload -verbose -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
+              if (-not (Confirm-FileDownload -verbose -component $component -localPath $localPath)) {
+                Invoke-FileDownload -verbose -component $component -localPath $localPath
               }
               # todo: confirm or refute prior install with comparison of directory and zip contents
-              Invoke-ZipInstall -verbose -component $component.ComponentName -path ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })) -destination $component.Destination -overwrite
+              Invoke-ZipInstall -verbose -component $component -path $localPath -overwrite
             }
             'ServiceControl' {
               # todo: implement ServiceControl in the DynamicConfig module
@@ -285,7 +285,7 @@ function Invoke-CustomDesiredStateProvider {
               Set-Service -name $component.Name -StartupType $component.StartupType
             }
             'EnvironmentVariableSet' {
-              Invoke-EnvironmentVariableSet -verbose -component $component.ComponentName -name $component.Name -value $component.Value -target $component.Target
+              Invoke-EnvironmentVariableSet -verbose -component $component
             }
             'EnvironmentVariableUniqueAppend' {
               Invoke-EnvironmentVariableUniqueAppend -verbose -component $component
@@ -294,22 +294,26 @@ function Invoke-CustomDesiredStateProvider {
               Invoke-EnvironmentVariableUniquePrepend -verbose -component $component
             }
             'RegistryKeySet' {
-              Invoke-RegistryKeySet -verbose -component $component.ComponentName -path $component.Key -valueName $component.ValueName
+              Invoke-RegistryKeySet -verbose -component $component
             }
             'RegistryValueSet' {
               if ($component.SetOwner) {
-                Invoke-RegistryKeySetOwner -verbose -component $component.ComponentName -key $component.Key -sid $component.SetOwner
+                Invoke-RegistryKeySetOwner -verbose -component $component
               }
-              Invoke-RegistryValueSet -verbose -component $component.ComponentName -path $component.Key -valueName $component.ValueName -valueType $component.ValueType -valueData $component.ValueData -hex:$component.Hex
+              Invoke-RegistryValueSet -verbose -component $component
             }
             'DisableIndexing' {
-              Invoke-DisableIndexing -verbose -component $component.ComponentName
+              if (-not (Confirm-DisableIndexing -verbose -component $component)) {
+                Invoke-DisableIndexing -verbose -component $component
+              }
             }
             'FirewallRule' {
-              Invoke-FirewallRuleSet -verbose -component $component.ComponentName -action $component.Action -direction $component.Direction -remoteAddress $component.RemoteAddress -program $component.Program -protocol $component.Protocol -localPort $component.LocalPort
+              if (-not (Confirm-FirewallRuleSet -verbose -component $component)) {
+                Invoke-FirewallRuleSet -verbose -component $component
+              }
             }
             'ReplaceInFile' {
-              Invoke-ReplaceInFile -verbose -component $component.ComponentName -path $component.Path -matchString $component.Match -replaceString $component.Replace
+              Invoke-ReplaceInFile -verbose -component $component
             }
           }
           $appliedComponents += New-Object -TypeName 'PSObject' -Property @{ 'ComponentName' = $component.ComponentName; 'ComponentType' = $component.ComponentType; 'AppliedState' = 'Success' }

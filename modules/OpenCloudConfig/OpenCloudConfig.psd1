@@ -10,7 +10,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
   RootModule = 'OpenCloudConfig.psm1'
 
   # Version number of this module.
-  ModuleVersion = '0.0.28'
+  ModuleVersion = '0.0.34'
 
   # ID used to uniquely identify this module
   GUID = 'd1235f10-0ae3-4353-9a31-0abeb2b9093e'
@@ -86,6 +86,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
    'Confirm-DirectoryDelete',
    'Invoke-DirectoryCopy',
    'Confirm-DirectoryCopy',
+   'Invoke-LoggedCommandRun',
    'Invoke-CommandRun',
    'Confirm-CommandRun',
    'Invoke-FileDownload',
@@ -99,7 +100,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
    'Invoke-RegistryKeySet',
    'Invoke-RegistryValueSet',
    'Invoke-DisableIndexing',
+   'Confirm-DisableIndexing',
    'Invoke-FirewallRuleSet',
+   'Confirm-FirewallRuleSet',
    'Invoke-ReplaceInFile',
    'Invoke-ZipInstall',
    'Invoke-ExeInstall',

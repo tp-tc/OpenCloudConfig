@@ -165,7 +165,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ DirectoryDelete = $($item.Path) }"
           SetScript = {
-            Invoke-DirectoryDelete -component $using:item.ComponentName -path $($using:item.Path) -eventLogSource 'occ-dsc'
+            Invoke-DirectoryDelete -verbose -component $using:item -eventLogSource 'occ-dsc'
           }
           TestScript = {
             return Confirm-LogValidation -source 'occ-dsc' -satisfied (Confirm-PathsNotExistOrNotRequested -items @($using:item.Path) -verbose) -verbose
@@ -194,7 +194,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ CommandRun = $item.ComponentName }"
           SetScript = {
-            Invoke-CommandRun -component $using:item.ComponentName -command $($using:item.Command) -arguments @($using:item.Arguments | % { $($_) }) -eventLogSource 'occ-dsc'
+            Invoke-CommandRun -verbose -component $using:item -eventLogSource 'occ-dsc'
           }
           TestScript = {
             return Confirm-LogValidation -source 'occ-dsc' -satisfied (Confirm-All -validations $using:item.Validate -verbose) -verbose
@@ -210,7 +210,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ FileDownload = $item.ComponentName }"
           SetScript = {
-            Invoke-FileDownload -component $using:item.ComponentName -localPath $using:item.Target -sha512 $($using:item.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $using:item.Source -eventLogSource 'occ-dsc'
+            Invoke-FileDownload -verbose -component $using:item -localPath $using:item.Target -eventLogSource 'occ-dsc'
           }
           TestScript = {
             return ((Confirm-LogValidation -source 'occ-dsc' -satisfied (Confirm-PathsExistOrNotRequested -items @($using:item.Target) -verbose) -verbose) -and ((-not ($using:item.sha512)) -or ((Get-FileHash -Path $using:item.Target -Algorithm 'SHA512').Hash -eq $using:item.sha512)))
@@ -226,7 +226,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ ChecksumFileDownload = $item.ComponentName }"
           SetScript = {
-            Invoke-FileDownload -component $using:item.ComponentName -localPath ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)) -sha512 $($using:item.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $using:item.Source -eventLogSource 'occ-dsc'
+            Invoke-FileDownload -verbose -component $using:item -localPath ('{0}\Temp\{1}' -f $env:SystemRoot, [IO.Path]::GetFileName($using:item.Target)) -eventLogSource 'occ-dsc'
           }
           TestScript = { return $false }
         }
@@ -249,7 +249,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ SymbolicLink = $item.ComponentName }"
           SetScript = {
-            Invoke-SymbolicLink -component $using:item.ComponentName -target $using:item.Target -link $using:item.Link -eventLogSource 'occ-dsc'
+            Invoke-SymbolicLink -verbose -component $using:item -eventLogSource 'occ-dsc'
           }
           TestScript = {
             return Confirm-LogValidation -source 'occ-dsc' -satisfied ((Test-Path -Path $using:item.Link -ErrorAction SilentlyContinue) -and ((Get-Item $using:item.Link).Attributes.ToString() -match "ReparsePoint")) -verbose
@@ -265,7 +265,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ ExeDownload = $item.ComponentName }"
           SetScript = {
-            Invoke-FileDownload -component $using:item.ComponentName -localPath ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName })) -sha512 $($using:item.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $using:item.Url -eventLogSource 'occ-dsc'
+            Invoke-FileDownload -verbose -component $using:item -localPath ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName })) -eventLogSource 'occ-dsc'
           }
           TestScript = {
             $tempFile = ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName }))
@@ -280,7 +280,7 @@ Configuration xDynamicConfig {
           DependsOn = ('[Script]ExeDownload_{0}' -f $item.ComponentName)
           GetScript = "@{ ExeInstall = $item.ComponentName }"
           SetScript = {
-            Invoke-CommandRun -component $using:item.ComponentName -command ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName })) -arguments @($using:item.Arguments | % { $($_) }) -eventLogSource 'occ-dsc'
+            Invoke-LoggedCommandRun -verbose -componentName $using:item.ComponentName -command ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName })) -arguments @($using:item.Arguments | % { $($_) }) -eventLogSource 'occ-dsc'
           }
           TestScript = {
             return Confirm-LogValidation -source 'occ-dsc' -satisfied (Confirm-All -validations $using:item.Validate -verbose) -verbose
@@ -296,7 +296,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ MsiDownload = $item.ComponentName }"
           SetScript = {
-            Invoke-FileDownload -component $using:item.ComponentName -localPath ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $using:item.ComponentName, $using:item.ProductId) -sha512 $($using:item.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $using:item.Url -eventLogSource 'occ-dsc'
+            Invoke-FileDownload -verbose -component $using:item -localPath ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $using:item.ComponentName, $using:item.ProductId) -eventLogSource 'occ-dsc'
           }
           TestScript = { return (Test-Path -Path ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $using:item.ComponentName, $using:item.ProductId) -ErrorAction SilentlyContinue) }
         }
@@ -322,7 +322,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ MsuDownload = $item.ComponentName }"
           SetScript = {
-            Invoke-FileDownload -component $using:item.ComponentName -localPath ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName })) -sha512 $($using:item.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $using:item.Url -eventLogSource 'occ-dsc'
+            Invoke-FileDownload -verbose -component $using:item -localPath ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName })) -eventLogSource 'occ-dsc'
           }
           TestScript = { return (Test-Path -Path ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $using:item.ComponentName) -ErrorAction SilentlyContinue) }
         }
@@ -357,7 +357,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ ZipDownload = $item.ComponentName }"
           SetScript = {
-            Invoke-FileDownload -component $using:item.ComponentName -localPath ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName })) -sha512 $($using:item.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $using:item.Url -eventLogSource 'occ-dsc'
+            Invoke-FileDownload -verbose -component $using:item -localPath ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName })) -eventLogSource 'occ-dsc'
           }
           TestScript = {
             $tempFile = ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName }))
@@ -396,7 +396,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ EnvironmentVariableSet = $item.ComponentName }"
           SetScript = {
-            Invoke-EnvironmentVariableSet -component $using:item.ComponentName -name $using:item.Name -value $using:item.Value -target $using:item.Target -eventLogSource 'occ-dsc'
+            Invoke-EnvironmentVariableSet -verbose -component $using:item -eventLogSource 'occ-dsc'
           }
           TestScript = {
             return Confirm-LogValidation -source 'occ-dsc' -satisfied ((Get-ChildItem env: | ? { $_.Name -ieq $using:item.Name } | Select-Object -first 1).Value -eq $using:item.Value) -verbose
@@ -454,7 +454,7 @@ Configuration xDynamicConfig {
             DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
             GetScript = "@{ RegistryTakeOwnership = $item.ComponentName }"
             SetScript = {
-              Invoke-RegistryKeySetOwner -component $using:item.ComponentName -key $using:item.Key -sid $using:item.SetOwner -eventLogSource 'occ-dsc'
+              Invoke-RegistryKeySetOwner -verbose -component $using:item -eventLogSource 'occ-dsc'
             }
             TestScript = { return $false }
           }
@@ -479,9 +479,9 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ DisableIndexing = $item.ComponentName }"
           SetScript = {
-            Invoke-DisableIndexing -component $using:item.ComponentName -eventLogSource 'occ-dsc'
+            Invoke-DisableIndexing -verbose -component $using:item -eventLogSource 'occ-dsc'
           }
-          TestScript = { return $false }
+          TestScript = { return (Confirm-DisableIndexing -verbose -component $using:item -eventLogSource 'occ-dsc') }
         }
         Log ('Log_DisableIndexing_{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]DisableIndexing_{0}' -f $item.ComponentName)
@@ -493,22 +493,9 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ FirewallRule = $item.ComponentName }"
           SetScript = {
-            Invoke-FirewallRuleSet -component $using:item.ComponentName -action $using:item.Action -direction $using:item.Direction -remoteAddress $using:item.RemoteAddress -program $using:item.Program -protocol $using:item.Protocol -localPort $using:item.LocalPort -eventLogSource 'occ-dsc'
+            Invoke-FirewallRuleSet -verbose -component $using:item -eventLogSource 'occ-dsc'
           }
-          TestScript = {
-            if ($using:item.LocalPort) {
-              $ruleName = ('{0} ({1} {2} {3}): {4}' -f $using:item.ComponentName, $using:item.Protocol, $using:item.LocalPort, $using:item.Direction, $using:item.Action)
-            } elseif ($using:item.Program) {
-              $ruleName = ('{0} ({1} {2}): {3}' -f $using:item.ComponentName, $using:item.Program, $using:item.Direction, $using:item.Action)
-            } else {
-              return $false
-            }
-            if (Get-Command 'Get-NetFirewallRule' -errorAction SilentlyContinue) {
-              return Confirm-LogValidation -source 'occ-dsc' -satisfied ([bool](Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue)) -verbose
-            } else {
-              return ((& 'netsh.exe' @('advfirewall', 'firewall', 'show', 'rule', $ruleName)) -notcontains 'No rules match the specified criteria.')
-            }
-          }
+          TestScript = { return (Confirm-FirewallRuleSet -verbose -component $using:item -eventLogSource 'occ-dsc') }
         }
         Log ('Log_FirewallRule_{0}' -f $item.ComponentName) {
           DependsOn = ('[Script]FirewallRule_{0}' -f $item.ComponentName)
@@ -520,7 +507,7 @@ Configuration xDynamicConfig {
           DependsOn = @( @($item.DependsOn) | ? { (($_) -and ($_.ComponentType)) } | % { ('[{0}]{1}_{2}' -f $componentMap.Item($_.ComponentType), $_.ComponentType, $_.ComponentName) } )
           GetScript = "@{ ReplaceInFile = $item.ComponentName }"
           SetScript = {
-            Invoke-ReplaceInFile -component $using:item.ComponentName -path $using:item.Path -matchString $using:item.Match -replaceString $using:item.Replace -eventLogSource 'occ-dsc'
+            Invoke-ReplaceInFile -verbose -component $using:item -eventLogSource 'occ-dsc'
           }
           TestScript = { return $false }
         }
