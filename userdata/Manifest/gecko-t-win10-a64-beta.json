@@ -1140,7 +1140,7 @@
       "Arguments": [
         "-NoProfile",
         "-command",
-        "\"& {& (Get-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla').SetAccessRule((New-Object -TypeName 'System.Security.AccessControl.RegistryAccessRule' -ArgumentList @('Everyone', 'FullControl', 'Allow')))}\""
+        "\"& {(Get-Acl -Path 'HKLM:\\SOFTWARE\\Mozilla').SetAccessRule((New-Object -TypeName 'System.Security.AccessControl.RegistryAccessRule' -ArgumentList @('Everyone', 'FullControl', 'Allow')))}\""
       ],
       "DependsOn": [
         {
