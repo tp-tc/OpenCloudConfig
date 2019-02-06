@@ -520,7 +520,7 @@ function Invoke-RegistryKeySetOwner {
       }
       $regKey = [Microsoft.Win32.Registry]::$hive.OpenSubKey($subkey, 'ReadWriteSubTree', 'TakeOwnership')
       $acl = New-Object System.Security.AccessControl.RegistrySecurity
-      $acl.SetOwner([System.Security.Principal.SecurityIdentifier]$sid)
+      $acl.SetOwner([System.Security.Principal.SecurityIdentifier]$component.SetOwner)
       $regKey.SetAccessControl($acl)
       $acl.SetAccessRuleProtection($false, $false)
       $regKey.SetAccessControl($acl)

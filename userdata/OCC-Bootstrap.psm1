@@ -113,7 +113,7 @@ function Install-Dependencies {
       @{
         'ModuleName' = 'OpenCloudConfig';
         'Repository' = 'PSGallery';
-        'ModuleVersion' = '0.0.35'
+        'ModuleVersion' = '0.0.36'
       }
     ),
     [string[]] $purgeModules = @('OpenCloudConfig')
