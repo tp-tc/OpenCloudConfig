@@ -113,7 +113,7 @@ function Install-Dependencies {
       @{
         'ModuleName' = 'OpenCloudConfig';
         'Repository' = 'PSGallery';
-        'ModuleVersion' = '0.0.26'
+        'ModuleVersion' = '0.0.28'
       }
     ),
     [string[]] $purgeModules = @('OpenCloudConfig')
@@ -253,24 +253,18 @@ function Invoke-CustomDesiredStateProvider {
               Invoke-SymbolicLink -verbose -component $component.ComponentName -target $component.Target -link $component.Link
             }
             'ExeInstall' {
-              $localPath = ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName }))
-              if ((-not (Confirm-FileDownload -verbose -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512))) -or (-not (Confirm-CommandRun -verbose -component $component.ComponentName -validations $component.Validate))) {
-                Invoke-FileDownload -verbose -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
-                Invoke-CommandRun -verbose -component $component.ComponentName -command $localPath -arguments @($component.Arguments | % { $($_) })
+              if (-not (Confirm-ExeInstall -verbose -component $component)) {
+                Invoke-ExeInstall -verbose -component $component
               }
             }
             'MsiInstall' {
-              $localPath = ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $component.ComponentName, $component.ProductId)
-              if ((-not (Confirm-FileDownload -verbose -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512))) -or (-not (Confirm-CommandRun -verbose -component $component.ComponentName -validations $component.Validate))) {
-                Invoke-FileDownload -verbose -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
-                Invoke-CommandRun -verbose -component $component.ComponentName -command ('{0}\system32\msiexec.exe' -f $env:WinDir) -arguments @('/i', $localPath, '/log', ('{0}\log\{1}-{2}.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $component.ComponentName), '/quiet', '/norestart')
+              if (-not (Confirm-MsiInstall -verbose -component $component)) {
+                Invoke-MsiInstall -verbose -component $component
               }
             }
             'MsuInstall' {
-              $localPath = ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName }))
-              if ((-not (Confirm-FileDownload -verbose -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512))) -or (-not (Confirm-CommandRun -verbose -component $component.ComponentName -validations $component.Validate))) {
-                Invoke-FileDownload -verbose -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512) -tooltoolHost 'tooltool.mozilla-releng.net' -tokenPath ('{0}\builds\occ-installers.tok' -f $env:SystemDrive) -url $component.Url
-                Invoke-CommandRun -verbose -component $component.ComponentName -command ('{0}\system32\wusa.exe' -f $env:WinDir) -arguments @($localPath, '/quiet', '/norestart')
+              if (-not (Confirm-MsuInstall -verbose -component $component)) {
+                Invoke-MsuInstall -verbose -component $component
               }
             }
             'WindowsFeatureInstall' {

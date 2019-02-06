@@ -465,19 +465,19 @@ function Invoke-EnvironmentVariableUniqueAppend {
   [CmdletBinding()]
   param (
     [Parameter(Mandatory = $true)]
-    [string] $component,
+    [object] $component,
     
     [string] $eventLogName = 'Application',
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
   }
   process {
-    Invoke-EnvironmentVariableSet -verbose:$verbose -logName $eventLogName -source $eventLogSource -component $component.ComponentName -name $component.Name -value (@((@((((Get-ChildItem env: | ? { $_.Name -ieq $component.Name } | Select-Object -first 1).Value) -split ';') | ? { $component.Values -notcontains $_ }) + $component.Values) | Select-Object -Unique) -join ';') -target $component.Target
+    Invoke-EnvironmentVariableSet -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -component $component.ComponentName -name $component.Name -value (@((@((((Get-ChildItem env: | ? { $_.Name -ieq $component.Name } | Select-Object -first 1).Value) -split ';') | ? { $component.Values -notcontains $_ }) + $component.Values) | Select-Object -Unique) -join ';') -target $component.Target
   }
   end {
-    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -485,19 +485,19 @@ function Invoke-EnvironmentVariableUniquePrepend {
   [CmdletBinding()]
   param (
     [Parameter(Mandatory = $true)]
-    [string] $component,
+    [object] $component,
     
     [string] $eventLogName = 'Application',
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
   }
   process {
-    Invoke-EnvironmentVariableSet -verbose:$verbose -logName $eventLogName -source $eventLogSource -component $component.ComponentName -name $component.Name -value (@(($component.Values + @((((Get-ChildItem env: | ? { $_.Name -ieq $component.Name } | Select-Object -first 1).Value) -split ';') | ? { $component.Values -notcontains $_ })) | Select-Object -Unique) -join ';') -target $component.Target
+    Invoke-EnvironmentVariableSet -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -component $component.ComponentName -name $component.Name -value (@(($component.Values + @((((Get-ChildItem env: | ? { $_.Name -ieq $component.Name } | Select-Object -first 1).Value) -split ';') | ? { $component.Values -notcontains $_ })) | Select-Object -Unique) -join ';') -target $component.Target
   }
   end {
-    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
   }
 }
 
@@ -857,5 +857,203 @@ function Invoke-ZipInstall {
   }
   end {
     Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+  }
+}
+
+function Invoke-DownloadInstall {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [object] $component,
+
+    [Parameter(Mandatory = $true)]
+    [ValidateSet('exe', 'msi', 'msu')]
+    [string] $format,
+
+    [string] $localPath = $(if ($format -eq 'msi') { ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $component.ComponentName, $component.ProductId) } else { ('{0}\Temp\{1}.{2}' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName }), $format) }),
+
+    [string] $tooltoolHost = 'tooltool.mozilla-releng.net',
+    [string] $tokenPath = ('{0}\builds\occ-installers.tok' -f $env:SystemDrive),
+    
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
+  }
+  process {
+    switch ($format) {
+      'exe' {
+        $command = $localPath
+        $arguments = @($component.Arguments | % { $($_) })
+      }
+      'msi' {
+        $command = ('{0}\system32\msiexec.exe' -f $env:WinDir)
+        $arguments = @('/i', $localPath, '/log', ('{0}\log\{1}-{2}.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $component.ComponentName), '/quiet', '/norestart')
+      }
+      'msu' {
+        $command = ('{0}\system32\wusa.exe' -f $env:WinDir)
+        $arguments = @($localPath, '/quiet', '/norestart')
+      }
+    }
+    Invoke-FileDownload -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512) -tooltoolHost $tooltoolHost -tokenPath $tokenPath -url $component.Url
+    Invoke-CommandRun -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -component $component.ComponentName -command $command -arguments $arguments
+  }
+  end {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
+  }
+}
+
+function Confirm-DownloadInstall {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [object] $component,
+
+    [string] $localPath = $(if ($format -eq 'msi') { ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $component.ComponentName, $component.ProductId) } else { ('{0}\Temp\{1}.{2}' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName }), $format) }),
+
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
+  }
+  process {
+    return ((Confirm-FileDownload -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -component $component.ComponentName -localPath $localPath -sha512 $($component.sha512)) -and (Confirm-CommandRun -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -component $component.ComponentName -validations $component.Validate))
+  }
+  end {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
+  }
+}
+
+function Invoke-ExeInstall {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [object] $component,
+
+    [string] $localPath = ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })),
+    
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
+  }
+  process {
+    Invoke-DownloadInstall -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -component $component -localPath $localPath -format 'exe'
+  }
+  end {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
+  }
+}
+
+function Confirm-ExeInstall {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [object] $component,
+
+    [string] $localPath = ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })),
+    
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
+  }
+  process {
+    return (Confirm-DownloadInstall -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -component $component -localPath $localPath)
+  }
+  end {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
+  }
+}
+
+function Invoke-MsiInstall {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [object] $component,
+
+    [string] $localPath = ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $component.ComponentName, $component.ProductId),
+    
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
+  }
+  process {
+    Invoke-DownloadInstall -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -component $component -localPath $localPath -format 'msi'
+  }
+  end {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
+  }
+}
+
+function Confirm-MsiInstall {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [object] $component,
+
+    [string] $localPath = ('{0}\Temp\{1}_{2}.msi' -f $env:SystemRoot, $component.ComponentName, $component.ProductId),
+    
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
+  }
+  process {
+    return (Confirm-DownloadInstall -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -component $component -localPath $localPath)
+  }
+  end {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
+  }
+}
+
+function Invoke-MsuInstall {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [object] $component,
+
+    [string] $localPath = ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })),
+    
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
+  }
+  process {
+    Invoke-DownloadInstall -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -component $component -localPath $localPath -format 'msu'
+  }
+  end {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
+  }
+}
+
+function Confirm-MsuInstall {
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [object] $component,
+
+    [string] $localPath = ('{0}\Temp\{1}.msu' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName })),
+    
+    [string] $eventLogName = 'Application',
+    [string] $eventLogSource = 'OpenCloudConfig'
+  )
+  begin {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
+  }
+  process {
+    return (Confirm-DownloadInstall -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -component $component -localPath $localPath)
+  }
+  end {
+    Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
   }
 }
