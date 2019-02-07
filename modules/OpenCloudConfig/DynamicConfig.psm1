@@ -834,7 +834,7 @@ function Invoke-ReplaceInFile {
   process {
     try {
       $content = ((Get-Content -Path $component.Path) | Foreach-Object { $_ -replace $component.Match, (Invoke-Expression -Command $component.Replace) })
-      [System.IO.File]::WriteAllLines($component.Path, $content, (New-Object System.Text.UTF8Encoding $false))
+      [System.IO.File]::WriteAllLines($component.Path, $content, (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
       Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: replaced occurences of: {2} with: {3} in: {4}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $component.Match, $component.Replace, $component.Path)
     } catch {
       Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to replace occurences of: {2} with: {3} in: {4}. {5}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $component.Match, $component.Replace, $component.Path, $_.Exception.Message)
