@@ -116,19 +116,25 @@ function Install-Dependencies {
         'ModuleVersion' = '0.0.37'
       }
     ),
-    [string[]] $purgeModules = @('OpenCloudConfig')
+    # if modules are detected with a version **less than** specified in ModuleVersion below, they will be purged
+    [hashtable[]] $purgeModules = @(
+      @{
+        'ModuleName' = 'OpenCloudConfig';
+        'ModuleVersion' = '0.0.37'
+      }
+    )
   )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     foreach ($purgeModule in $purgeModules) {
-      if ((Get-Module -Name $purgeModule -ErrorAction SilentlyContinue) -or ((Test-Path -Path (Join-Path -Path $env:PSModulePath.Split(';') -ChildPath $purgeModule) -ErrorAction SilentlyContinue) -contains $true)) {
+      if ((Get-Module -ListAvailable -Name $purgeModule['ModuleName'] | ? { $_.Version -lt $purgeModule['ModuleVersion'] })) {
         try {
-          Remove-Module -Name $purgeModule -Force -ErrorAction SilentlyContinue
-          Remove-Item -path (Join-Path -Path $env:PSModulePath.Split(';') -ChildPath $purgeModule) -recurse -force -ErrorAction SilentlyContinue
+          Remove-Module -Name $purgeModule['ModuleName'] -Force -ErrorAction SilentlyContinue
+          Remove-Item -path (Join-Path -Path $env:PSModulePath.Split(';') -ChildPath $purgeModule['ModuleName']) -recurse -force -ErrorAction SilentlyContinue
         } catch {
-          Write-Log -message ('{0} :: error removing module: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $moduleName, $_.Exception.Message) -severity 'ERROR'
+          Write-Log -message ('{0} :: error removing module: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $purgeModule['ModuleName'], $_.Exception.Message) -severity 'ERROR'
         }
       }
     }
