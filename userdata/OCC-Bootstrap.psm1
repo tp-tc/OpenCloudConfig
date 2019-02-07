@@ -220,26 +220,36 @@ function Invoke-CustomDesiredStateProvider {
             'DirectoryCreate' {
               if (-not (Confirm-DirectoryCreate -verbose -component $component)) {
                 Invoke-DirectoryCreate -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of DirectoryCreate component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
               }
             }
             'DirectoryDelete' {
               if (-not (Confirm-DirectoryDelete -verbose -component $component)) {
                 Invoke-DirectoryDelete -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of DirectoryDelete component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
               }
             }
             'DirectoryCopy' {
               if (-not (Confirm-DirectoryCopy -verbose -component $component)) {
                 Invoke-DirectoryCopy -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of DirectoryCopy component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
               }
             }
             'CommandRun' {
               if (-not (Confirm-CommandRun -verbose -component $component)) {
                 Invoke-CommandRun -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of CommandRun component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
               }
             }
             'FileDownload' {
               if (-not (Confirm-FileDownload -verbose -component $component -localPath $component.Target)) {
                 Invoke-FileDownload -verbose -component $component -localPath $component.Target
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of FileDownload component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
               }
             }
             'ChecksumFileDownload' {
@@ -255,16 +265,22 @@ function Invoke-CustomDesiredStateProvider {
             'ExeInstall' {
               if (-not (Confirm-ExeInstall -verbose -component $component)) {
                 Invoke-ExeInstall -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of ExeInstall component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
               }
             }
             'MsiInstall' {
               if (-not (Confirm-MsiInstall -verbose -component $component)) {
                 Invoke-MsiInstall -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of MsiInstall component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
               }
             }
             'MsuInstall' {
               if (-not (Confirm-MsuInstall -verbose -component $component)) {
                 Invoke-MsuInstall -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of MsuInstall component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
               }
             }
             'WindowsFeatureInstall' {
@@ -305,11 +321,15 @@ function Invoke-CustomDesiredStateProvider {
             'DisableIndexing' {
               if (-not (Confirm-DisableIndexing -verbose -component $component)) {
                 Invoke-DisableIndexing -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of DisableIndexing component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
               }
             }
             'FirewallRule' {
               if (-not (Confirm-FirewallRuleSet -verbose -component $component)) {
                 Invoke-FirewallRuleSet -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of FirewallRule component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
               }
             }
             'ReplaceInFile' {
