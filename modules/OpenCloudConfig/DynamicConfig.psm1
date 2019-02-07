@@ -821,9 +821,6 @@ function Invoke-ReplaceInFile {
   param (
     [Parameter(Mandatory = $true)]
     [object] $component,
-
-    [Parameter(Mandatory = $true)]
-    [string] $path,
     
     [string] $eventLogName = 'Application',
     [string] $eventLogSource = 'OpenCloudConfig'
