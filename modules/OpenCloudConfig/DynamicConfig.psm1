@@ -43,7 +43,7 @@ function Confirm-DirectoryCreate {
   }
   process {
     try {
-      $result = (Test-Path -Path $component.Path -PathType 'Container' -ErrorAction SilentlyContinue)
+      $result = (Test-Path -Path $component.Path -PathType 'Container' -ErrorAction 'SilentlyContinue')
       Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: directory {2} existence {3}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $component.Path, $(if ($result) { 'confirmed' } else { 'refuted' }))
     } catch {
       $result = $false
@@ -101,7 +101,7 @@ function Confirm-DirectoryDelete {
   }
   process {
     try {
-      $result = (-not (Test-Path -Path $component.Path -PathType 'Container' -ErrorAction SilentlyContinue))
+      $result = (-not (Test-Path -Path $component.Path -PathType 'Container' -ErrorAction 'SilentlyContinue'))
       Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: directory {2} absence {3}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $component.Path, $(if ($result) { 'confirmed' } else { 'refuted' }))
     } catch {
       $result = $false
@@ -154,7 +154,7 @@ function Confirm-DirectoryCopy {
   process {
     try {
       # todo: compare folder contents
-      $result = (Test-Path -Path $component.Target -PathType 'Container' -ErrorAction SilentlyContinue)
+      $result = (Test-Path -Path $component.Target -PathType 'Container' -ErrorAction 'SilentlyContinue')
       Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: directory {2} existence {3}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $component.Target, $(if ($result) { 'confirmed' } else { 'refuted' }))
     } catch {
       $result = $false
@@ -197,16 +197,16 @@ function Invoke-LoggedCommandRun {
       }
     } catch {
       Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: error executing command ({2} {3}). {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $command, ($arguments -join ' '), $_.Exception.Message)
-      $standardErrorFile = (Get-Item -Path $redirectStandardError -ErrorAction SilentlyContinue)
+      $standardErrorFile = (Get-Item -Path $redirectStandardError -ErrorAction 'SilentlyContinue')
       if (($standardErrorFile) -and $standardErrorFile.Length) {
         Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: ({2} {3}). {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $command, ($arguments -join ' '), (Get-Content -Path $redirectStandardError -Raw))
       }
     }
-    $standardErrorFile = (Get-Item -Path $redirectStandardError -ErrorAction SilentlyContinue)
+    $standardErrorFile = (Get-Item -Path $redirectStandardError -ErrorAction 'SilentlyContinue')
     if (($standardErrorFile) -and $standardErrorFile.Length) {
       Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: ({2} {3}). {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $command, ($arguments -join ' '), (Get-Content -Path $redirectStandardError -Raw))
     }
-    $standardOutputFile = (Get-Item -Path $redirectStandardOutput -ErrorAction SilentlyContinue)
+    $standardOutputFile = (Get-Item -Path $redirectStandardOutput -ErrorAction 'SilentlyContinue')
     if (($standardOutputFile) -and $standardOutputFile.Length) {
       Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: ({2} {3}). log: {4}' -f $($MyInvocation.MyCommand.Name), $componentName, $command, ($arguments -join ' '), $redirectStandardOutput)
     }
@@ -282,7 +282,7 @@ function Invoke-FileDownload {
     Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
   }
   process {
-    if (($component.sha512) -and (Test-Path -Path $tokenPath -ErrorAction SilentlyContinue)) {
+    if (($component.sha512) -and (Test-Path -Path $tokenPath -ErrorAction 'SilentlyContinue')) {
       if ((Get-TooltoolResource -localPath $localPath -sha512 $component.sha512 -tokenPath $tokenPath -tooltoolHost $tooltoolHost -eventLogName $eventLogName -eventLogSource $eventLogSource)) {
         Write-Verbose ('downloaded {0} from tooltool' -f $localPath)
       } else {
@@ -320,7 +320,7 @@ function Confirm-FileDownload {
   }
   process {
     try {
-      $result = ((Test-Path -Path $localPath -PathType 'Leaf' -ErrorAction SilentlyContinue) -and ((-not ($component.sha512)) -or (((Get-FileHash -Path $localPath -Algorithm 'SHA512').Hash -eq $component.sha512))))
+      $result = ((Test-Path -Path $localPath -PathType 'Leaf' -ErrorAction 'SilentlyContinue') -and ((-not ($component.sha512)) -or (((Get-FileHash -Path $localPath -Algorithm 'SHA512').Hash -eq $component.sha512))))
       Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: download {2} existence {3}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $localPath, $(if ($result) { 'confirmed' } else { 'refuted' }))
     } catch {
       $result = $false
@@ -347,9 +347,9 @@ function Invoke-SymbolicLink {
   }
   process {
     try {
-      if (Test-Path -Path $component.Target -PathType Container -ErrorAction SilentlyContinue) {
+      if (Test-Path -Path $component.Target -PathType Container -ErrorAction 'SilentlyContinue') {
         & 'cmd' @('/c', 'mklink', '/D', $component.Link, $component.Target)
-      } elseif (Test-Path -Path $component.Target -PathType Leaf -ErrorAction SilentlyContinue) {
+      } elseif (Test-Path -Path $component.Target -PathType Leaf -ErrorAction 'SilentlyContinue') {
         & 'cmd' @('/c', 'mklink', $component.Link, $component.Target)
       }
       Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: created symlink {2} to {3}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $component.Link, $component.Target)
@@ -377,7 +377,7 @@ function Confirm-SymbolicLink {
   process {
     try {
       # todo: check that link points to target (https://stackoverflow.com/a/16926224/68115)
-      $result = ((Test-Path -Path $component.Link -ErrorAction SilentlyContinue) -and ((Get-Item -Path $component.Link).Attributes.ToString() -match 'ReparsePoint'))
+      $result = ((Test-Path -Path $component.Link -ErrorAction 'SilentlyContinue') -and ((Get-Item -Path $component.Link).Attributes.ToString() -match 'ReparsePoint'))
       Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: symlink {2} existence {3}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $component.Link, $(if ($result) { 'confirmed' } else { 'refuted' }))
     } catch {
       $result = $false
@@ -694,7 +694,7 @@ function Invoke-FirewallRuleSet {
     if (($component.Protocol) -and ($component.LocalPort)) {
       $ruleName = ('{0} ({1} {2} {3}): {4}' -f $component.ComponentName, $component.Protocol, $component.LocalPort, $component.Direction, $component.Action)
       try {
-        if (Get-Command 'New-NetFirewallRule' -errorAction SilentlyContinue) {
+        if (Get-Command 'New-NetFirewallRule' -ErrorAction 'SilentlyContinue') {
           if ($component.RemoteAddress) {
             New-NetFirewallRule -DisplayName $ruleName -Protocol $component.Protocol -LocalPort $component.LocalPort -Direction $component.Direction -Action $component.Action -RemoteAddress $component.RemoteAddress
           } else {
@@ -714,7 +714,7 @@ function Invoke-FirewallRuleSet {
     } elseif (($component.Protocol -eq 'ICMPv4') -or ($component.Protocol -eq 'ICMPv6')) {
       $ruleName = ('{0} ({1} {2} {3}): {4}' -f $component.ComponentName, $component.Protocol, $component.Action)
       try {
-        if (Get-Command 'New-NetFirewallRule' -errorAction SilentlyContinue) {
+        if (Get-Command 'New-NetFirewallRule' -ErrorAction 'SilentlyContinue') {
           if ($component.RemoteAddress) {
             New-NetFirewallRule -DisplayName $ruleName -Protocol $component.Protocol -IcmpType 8 -Action $component.Action -RemoteAddress $component.RemoteAddress
           } else {
@@ -734,7 +734,7 @@ function Invoke-FirewallRuleSet {
     } elseif ($component.Program) {
       $ruleName = ('{0} ({1} {2}): {3}' -f $component.ComponentName, $component.Program, $component.Direction, $component.Action)
       try {
-        if (Get-Command 'New-NetFirewallRule' -errorAction SilentlyContinue) {
+        if (Get-Command 'New-NetFirewallRule' -ErrorAction 'SilentlyContinue') {
           if ($component.RemoteAddress) {
             New-NetFirewallRule -DisplayName $ruleName -Program $component.Program -Direction $component.Direction -Action $component.Action -RemoteAddress $component.RemoteAddress
           } else {
@@ -781,8 +781,8 @@ function Confirm-FirewallRuleSet {
       } else {
         $result = $false
       }
-      if (Get-Command 'Get-NetFirewallRule' -errorAction SilentlyContinue) {
-        $result = (Confirm-LogValidation -source 'occ-dsc' -satisfied ([bool](Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue)) -verbose)
+      if (Get-Command 'Get-NetFirewallRule' -ErrorAction 'SilentlyContinue') {
+        $result = (Confirm-LogValidation -source 'occ-dsc' -satisfied ([bool](Get-NetFirewallRule -DisplayName $ruleName -ErrorAction 'SilentlyContinue')) -verbose)
       } else {
         $result = ((& 'netsh.exe' @('advfirewall', 'firewall', 'show', 'rule', $ruleName)) -notcontains 'No rules match the specified criteria.')
       }
@@ -1019,7 +1019,14 @@ function Confirm-MsiInstall {
     Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
   }
   process {
-    return (Confirm-DownloadInstall -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -component $component -localPath $localPath)
+    try {
+      $result = [bool](Get-WmiObject -Class 'Win32_Product' -Filter ('Name="{0}" AND IdentifyingNumber="{{{1}}}"' -f $component.Name, $component.ProductId) -ErrorAction 'SilentlyContinue')
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: msi: {2} with product id: {3} existence {4}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $component.Name, $component.ProductId, $(if ($result) { 'confirmed' } else { 'refuted' }))
+    } catch {
+      $result = $false
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to confirm or refute existence of msi {2} with product id: {3}. {4}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $component.Name, $component.ProductId, $_.Exception.Message)
+    }
+    return $result
   }
   end {
     Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
@@ -1063,7 +1070,14 @@ function Confirm-MsuInstall {
     Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
   }
   process {
-    return (Confirm-DownloadInstall -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -component $component -localPath $localPath)
+    try {
+      $result = [bool](Get-WmiObject -Class 'Win32_QuickFixEngineering' -Filter ('HotFixId="{0}"' -f $component.Id) -ErrorAction 'SilentlyContinue')
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: msu with hot fix id: {2} existence {3}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $component.Id, $(if ($result) { 'confirmed' } else { 'refuted' }))
+    } catch {
+      $result = $false
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to confirm or refute existence of msu with hot fix id: {2}. {3}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $component.Id, $_.Exception.Message)
+    }
+    return $result
   }
   end {
     Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, (Get-Date).ToUniversalTime())
