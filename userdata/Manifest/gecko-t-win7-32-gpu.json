@@ -547,9 +547,9 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.11.2/generic-worker-windows-386.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v12.0.0/generic-worker-windows-386.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe",
-      "sha512": "0672ca55ad6b1144253613267315ae060639c5e06ded501b313eca6d3a6a96888c8fa2c26d76862108a0eea65faa31ecefe0cd708095a51e361d3e351fa18548"
+      "sha512": "951ebd4999bc4f5d79e2d6b91d69c02ea19e54e0c48837258591a98b75e14432285952acdbc36c98dd3fc1df06d6c0a3035dcf6856000602f8fa01995df0ebed"
     },
     {
       "ComponentName": "LiveLogDownload",
@@ -573,9 +573,9 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/taskcluster-proxy/releases/download/v4.1.0/taskcluster-proxy-windows-386.exe",
+      "Source": "https://github.com/taskcluster/taskcluster-proxy/releases/download/v5.1.0/taskcluster-proxy-windows-386.exe",
       "Target": "C:\\generic-worker\\taskcluster-proxy.exe",
-      "sha512": "367a9f942206c1e74ec7b7f2f0dd09bde55ad37f3e5a62380effcde85bb030dcf85c580bc6d2e21b06df6ad1eefc8322a484e2efdc22566db649d61421f35d66"
+      "sha512": "83ec125f0fa8b8989e28cefa3b35c560556bf518c446f406a6320f758f6aaecac8b9e43a234cb1f2bdeb8d5126d68182aecfb2824b22668f3119812e2f587b25"
     },
     {
       "ComponentName": "LiveLog_Get",
@@ -671,7 +671,7 @@
             "Arguments": [
               "--version"
             ],
-            "Like": "generic-worker 10.11.2 *"
+            "Like": "generic-worker 12.0.0 *"
           }
         ]
       }

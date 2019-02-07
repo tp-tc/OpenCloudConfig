@@ -549,7 +549,7 @@
       ],
       "Source": "https://github.com/taskcluster/generic-worker/releases/download/v12.0.0/generic-worker-windows-386.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe",
-      "sha512": "0672ca55ad6b1144253613267315ae060639c5e06ded501b313eca6d3a6a96888c8fa2c26d76862108a0eea65faa31ecefe0cd708095a51e361d3e351fa18548"
+      "sha512": "951ebd4999bc4f5d79e2d6b91d69c02ea19e54e0c48837258591a98b75e14432285952acdbc36c98dd3fc1df06d6c0a3035dcf6856000602f8fa01995df0ebed"
     },
     {
       "ComponentName": "LiveLogDownload",
