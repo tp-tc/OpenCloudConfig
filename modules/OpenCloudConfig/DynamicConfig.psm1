@@ -320,8 +320,26 @@ function Confirm-FileDownload {
   }
   process {
     try {
-      $result = ((Test-Path -Path $localPath -PathType 'Leaf' -ErrorAction 'SilentlyContinue') -and ((-not ($component.sha512)) -or (((Get-FileHash -Path $localPath -Algorithm 'SHA512').Hash -eq $component.sha512))))
-      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: download {2} existence {3}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $localPath, $(if ($result) { 'confirmed' } else { 'refuted' }))
+      if (Test-Path -Path $localPath -PathType 'Leaf' -ErrorAction 'SilentlyContinue') {
+        Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: downloaded file exists at {2}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $localPath)
+        if ([bool]($component.sha512)) {
+          Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: expected sha512 hash supplied {2}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $component.sha512)
+          $actualSha512Hash = (Get-FileHash -Path $localPath -Algorithm 'SHA512').Hash
+          if ($actualSha512Hash -eq $component.sha512) {
+            Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: expected sha512 hash {2} matches actual sha512 hash {3}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $component.sha512, $actualSha512Hash)
+            $result = $true
+          } else {
+            Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'warn' -message ('{0} ({1}) :: expected sha512 hash {2} does not match actual sha512 hash {3}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $component.sha512, $actualSha512Hash)
+            $result = $false
+          }
+        } else {
+          Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: expected sha512 hash not supplied' -f $($MyInvocation.MyCommand.Name), $component.ComponentName)
+          $result = $true
+        }
+      } else {
+        Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: downloaded file does not exist at {2}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $localPath)
+        $result = $false
+      }      
     } catch {
       $result = $false
       Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'error' -message ('{0} ({1}) :: failed to confirm or refute download {2} existence. {3}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $localPath, $_.Exception.Message)
