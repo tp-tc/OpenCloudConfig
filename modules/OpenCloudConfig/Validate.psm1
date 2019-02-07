@@ -7,37 +7,51 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 function Confirm-All {
   [CmdletBinding()]
   param(
-    [object] $validations
+    [object] $validations,
+
+    [string] $componentName,
+
+    [string] $eventLogName = 'Application',
+
+    [Alias('source')]
+    [string] $eventLogSource
   )
-  begin {
+  begin {}
+  process {
     if (-not ($validations) -or (
         (-not ($validations.PathsExist)) -and
         (-not ($validations.PathsNotExist)) -and
         (-not ($validations.CommandsReturn)) -and
-        (-not ($validations.FilesContain))
+        (-not ($validations.FilesContain)) -and
+        (-not ($validations.ServiceStatus))
       )
     ) {
-      Write-Verbose ('{0} :: No validations specified.' -f $($MyInvocation.MyCommand.Name))
+      if ((Get-Command -Name 'Write-Log' -ErrorAction 'SilentlyContinue') -and $componentName -and $eventLogSource) {
+        Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: no validations specified' -f $($MyInvocation.MyCommand.Name), $componentName)
+      } else {
+        Write-Verbose ('{0} :: No validations specified.' -f $($MyInvocation.MyCommand.Name))
+      }
+      # if no validations are specified, we return false, so that the component is deemed to be not yet applied.
+      return $false
     }
-  }
-  process {
     return (
       # if no validations are specified, this function will return $false and cause the calling resource's set script to be run
       (
         (($validations.PathsExist) -and ($validations.PathsExist.Length -gt 0)) -or
         (($validations.PathsNotExist) -and ($validations.PathsNotExist.Length -gt 0)) -or
         (($validations.CommandsReturn) -and ($validations.CommandsReturn.Length -gt 0)) -or
-        (($validations.FilesContain) -and ($validations.FilesContain.Length -gt 0))
+        (($validations.FilesContain) -and ($validations.FilesContain.Length -gt 0)) -or
+        (($validations.ServiceStatus) -and ($validations.ServiceStatus.Length -gt 0))
       ) -and (
-        Confirm-PathsExistOrNotRequested -items $validations.PathsExist -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
+        Confirm-PathsExistOrNotRequested -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -componentName $componentName -items $validations.PathsExist
       ) -and (
-        Confirm-PathsNotExistOrNotRequested -items $validations.PathsNotExist -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
+        Confirm-PathsNotExistOrNotRequested -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -componentName $componentName -items $validations.PathsNotExist
       ) -and (
-        Confirm-CommandsReturnOrNotRequested -items $validations.CommandsReturn -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
+        Confirm-CommandsReturnOrNotRequested -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -componentName $componentName -items $validations.CommandsReturn
       ) -and (
-        Confirm-FilesContainOrNotRequested -items $validations.FilesContain -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
+        Confirm-FilesContainOrNotRequested -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -componentName $componentName -items $validations.FilesContain
       ) -and (
-        Confirm-ServiceExistAndStatusMatchOrNotRequested -items $validations.ServiceStatus -verbose:$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
+        Confirm-ServiceExistAndStatusMatchOrNotRequested -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -componentName $componentName -items $validations.ServiceStatus
       )
     )
   }
@@ -47,10 +61,21 @@ function Confirm-All {
 function Confirm-PathsExistOrNotRequested {
   [CmdletBinding()]
   param(
-    [object[]] $items
+    [object[]] $items,
+
+    [string] $componentName,
+
+    [string] $eventLogName = 'Application',
+
+    [Alias('source')]
+    [string] $eventLogSource
   )
   begin {
-    Write-Verbose ('{0} :: {1} validation{2} specified.' -f $($MyInvocation.MyCommand.Name), $items.Length, ('s','')[($items.Length -eq 1)])
+    if ((Get-Command -Name 'Write-Log' -ErrorAction 'SilentlyContinue') -and $componentName -and $eventLogSource) {
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: {2} validation{3} specified' -f $($MyInvocation.MyCommand.Name), $componentName, $items.Length, ('s','')[($items.Length -eq 1)])
+    } else {
+      Write-Verbose ('{0} :: {1} validation{2} specified.' -f $($MyInvocation.MyCommand.Name), $items.Length, ('s','')[($items.Length -eq 1)])
+    }
   }
   process {
     # either no validation paths-exist are specified
@@ -75,10 +100,21 @@ function Confirm-PathsExistOrNotRequested {
 function Confirm-PathsNotExistOrNotRequested {
   [CmdletBinding()]
   param(
-    [object[]] $items
+    [object[]] $items,
+
+    [string] $componentName,
+
+    [string] $eventLogName = 'Application',
+
+    [Alias('source')]
+    [string] $eventLogSource
   )
   begin {
-    Write-Verbose ('{0} :: {1} validation{2} specified.' -f $($MyInvocation.MyCommand.Name), $items.Length, ('s','')[($items.Length -eq 1)])
+    if ((Get-Command -Name 'Write-Log' -ErrorAction 'SilentlyContinue') -and $componentName -and $eventLogSource) {
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: {2} validation{3} specified' -f $($MyInvocation.MyCommand.Name), $componentName, $items.Length, ('s','')[($items.Length -eq 1)])
+    } else {
+      Write-Verbose ('{0} :: {1} validation{2} specified.' -f $($MyInvocation.MyCommand.Name), $items.Length, ('s','')[($items.Length -eq 1)])
+    }
   }
   process {
     # either no validation paths-exist are specified
@@ -103,10 +139,21 @@ function Confirm-PathsNotExistOrNotRequested {
 function Confirm-CommandsReturnOrNotRequested {
   [CmdletBinding()]
   param(
-    [object[]] $items
+    [object[]] $items,
+
+    [string] $componentName,
+
+    [string] $eventLogName = 'Application',
+
+    [Alias('source')]
+    [string] $eventLogSource
   )
   begin {
-    Write-Verbose ('{0} :: {1} validation{2} specified.' -f $($MyInvocation.MyCommand.Name), $items.Length, ('s','')[($items.Length -eq 1)])
+    if ((Get-Command -Name 'Write-Log' -ErrorAction 'SilentlyContinue') -and $componentName -and $eventLogSource) {
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: {2} validation{3} specified' -f $($MyInvocation.MyCommand.Name), $componentName, $items.Length, ('s','')[($items.Length -eq 1)])
+    } else {
+      Write-Verbose ('{0} :: {1} validation{2} specified.' -f $($MyInvocation.MyCommand.Name), $items.Length, ('s','')[($items.Length -eq 1)])
+    }
   }
   process {
     # either no validation commands-return are specified
@@ -149,10 +196,21 @@ function Confirm-CommandsReturnOrNotRequested {
 function Confirm-FilesContainOrNotRequested {
   [CmdletBinding()]
   param(
-    [object[]] $items
+    [object[]] $items,
+
+    [string] $componentName,
+
+    [string] $eventLogName = 'Application',
+
+    [Alias('source')]
+    [string] $eventLogSource
   )
   begin {
-    Write-Verbose ('{0} :: {1} validation{2} specified.' -f $($MyInvocation.MyCommand.Name), $items.Length, ('s','')[($items.Length -eq 1)])
+    if ((Get-Command -Name 'Write-Log' -ErrorAction 'SilentlyContinue') -and $componentName -and $eventLogSource) {
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: {2} validation{3} specified' -f $($MyInvocation.MyCommand.Name), $componentName, $items.Length, ('s','')[($items.Length -eq 1)])
+    } else {
+      Write-Verbose ('{0} :: {1} validation{2} specified.' -f $($MyInvocation.MyCommand.Name), $items.Length, ('s','')[($items.Length -eq 1)])
+    }
   }
   process {
     # either no validation files-contain are specified
@@ -187,10 +245,21 @@ function Confirm-FilesContainOrNotRequested {
 function Confirm-ServiceExistAndStatusMatchOrNotRequested {
   [CmdletBinding()]
   param(
-    [object[]] $items
+    [object[]] $items,
+
+    [string] $componentName,
+
+    [string] $eventLogName = 'Application',
+
+    [Alias('source')]
+    [string] $eventLogSource
   )
   begin {
-    Write-Verbose ('{0} :: {1} validation{2} specified.' -f $($MyInvocation.MyCommand.Name), $items.Length, ('s','')[($items.Length -eq 1)])
+    if ((Get-Command -Name 'Write-Log' -ErrorAction 'SilentlyContinue') -and $componentName -and $eventLogSource) {
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: {2} validation{3} specified' -f $($MyInvocation.MyCommand.Name), $componentName, $items.Length, ('s','')[($items.Length -eq 1)])
+    } else {
+      Write-Verbose ('{0} :: {1} validation{2} specified.' -f $($MyInvocation.MyCommand.Name), $items.Length, ('s','')[($items.Length -eq 1)])
+    }
   }
   process {
     # either no validation files-contain are specified
@@ -226,14 +295,19 @@ function Confirm-LogValidation {
     [Alias('satisfied')]
     [bool] $validationsSatisfied,
 
+    [string] $componentName,
+
     [string] $eventLogName = 'Application',
 
     [Alias('source')]
     [string] $eventLogSource = 'OpenCloudConfig'
   )
   begin {
-    Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message @('Validations not satisfied','Validations satisfied')[$validationsSatisfied]
-    Write-Verbose @('Validations not satisfied','Validations satisfied')[$validationsSatisfied]
+    if ((Get-Command -Name 'Write-Log' -ErrorAction 'SilentlyContinue') -and $componentName -and $eventLogSource) {
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: {2}' -f $($MyInvocation.MyCommand.Name), $componentName, @('validations not satisfied','validations satisfied')[$validationsSatisfied])
+    } else {
+      Write-Verbose @('Validations not satisfied','Validations satisfied')[$validationsSatisfied]
+    }
   }
   process {
     return $validationsSatisfied

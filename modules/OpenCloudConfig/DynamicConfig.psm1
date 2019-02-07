@@ -250,7 +250,7 @@ function Confirm-CommandRun {
   }
   process {
     try {
-      $result = (Confirm-All -validations $component.Validate -verbose)
+      $result = (Confirm-All -verbose:$verbose -eventLogName $eventLogName -eventLogSource $eventLogSource -componentName $component.ComponentName -validations $component.Validate)
       Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'info' -message ('{0} ({1}) :: {2} validations {3}' -f $($MyInvocation.MyCommand.Name), $component.ComponentName, $(if (($component.Validate) -and $component.Validate.Length) { $component.Validate.Length } else { 0 }), $(if ($result) { 'confirmed' } else { 'refuted' }))
     } catch {
       $result = $false

@@ -197,7 +197,7 @@ Configuration xDynamicConfig {
             Invoke-CommandRun -verbose -component $using:item -eventLogSource 'occ-dsc'
           }
           TestScript = {
-            return Confirm-LogValidation -source 'occ-dsc' -satisfied (Confirm-All -validations $using:item.Validate -verbose) -verbose
+            return Confirm-LogValidation -source 'occ-dsc' -satisfied (Confirm-All -verbose -source 'occ-dsc' -componentName $using:item.ComponentName -validations $using:item.Validate) -verbose
           }
         }
         Log ('Log_CommandRun_{0}' -f $item.ComponentName) {
@@ -283,7 +283,7 @@ Configuration xDynamicConfig {
             Invoke-LoggedCommandRun -verbose -componentName $using:item.ComponentName -command ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName })) -arguments @($using:item.Arguments | % { $($_) }) -eventLogSource 'occ-dsc'
           }
           TestScript = {
-            return Confirm-LogValidation -source 'occ-dsc' -satisfied (Confirm-All -validations $using:item.Validate -verbose) -verbose
+            return Confirm-LogValidation -source 'occ-dsc' -satisfied (Confirm-All -verbose -source 'occ-dsc' -componentName $using:item.ComponentName -validations $using:item.Validate) -verbose
           }
         }
         Log ('Log_ExeInstall_{0}' -f $item.ComponentName) {
