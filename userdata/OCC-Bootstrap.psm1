@@ -168,12 +168,12 @@ function Install-Dependencies {
           } else {
             Install-Module -Name $module['ModuleName'] -RequiredVersion $module['ModuleVersion'] -Repository $module['Repository'] -Force
           }
-          # todo: log an exception if we don't get the module, wait for instance build to time out.
-          while (-not (Get-Module -ListAvailable -Name $module['ModuleName'] | ? { $_.Version -eq $module['ModuleVersion'] })) {
-            Write-Log -message ('{0} :: waiting for installation of powershell module: {1}, version: {2}, from repository: {3}, to complete' -f $($MyInvocation.MyCommand.Name), $module['ModuleName'], $module['ModuleVersion'], $module['Repository']) -severity 'DEBUG'
-            Start-Sleep -Seconds 30
+          if (-not (Get-Module -ListAvailable -Name $module['ModuleName'] | ? { $_.Version -eq $module['ModuleVersion'] })) {
+            # PSDscResources fails to install on windows 7 but is not required on that os, for dsc to function correctly
+            Write-Log -message ('{0} :: installation of powershell module: {1}, version: {2}, from repository: {3}, did not succeed' -f $($MyInvocation.MyCommand.Name), $module['ModuleName'], $module['ModuleVersion'], $module['Repository']) -severity 'ERROR'
+          } else {
+            Write-Log -message ('{0} :: powershell module: {1}, version: {2}, from repository: {3}, installed' -f $($MyInvocation.MyCommand.Name), $module['ModuleName'], $module['ModuleVersion'], $module['Repository']) -severity 'INFO'
           }
-          Write-Log -message ('{0} :: powershell module: {1}, version: {2}, from repository: {3}, installed' -f $($MyInvocation.MyCommand.Name), $module['ModuleName'], $module['ModuleVersion'], $module['Repository']) -severity 'INFO'
         } catch {
           Write-Log -message ('{0} :: failed to install powershell module: {1}, version: {2}, from repository: {3}. {4}' -f $($MyInvocation.MyCommand.Name), $module['ModuleName'], $module['ModuleVersion'], $module['Repository'], $_.Exception.Message) -severity 'ERROR'
         }

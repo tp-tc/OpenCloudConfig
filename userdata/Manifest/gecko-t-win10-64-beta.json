@@ -1144,13 +1144,15 @@
       "ComponentName": "nircmd",
       "ComponentType": "FileDownload",
       "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/nircmd/nircmd.exe",
-      "Target": "C:\\Windows\\System32\\nircmd.exe"
+      "Target": "C:\\Windows\\System32\\nircmd.exe",
+      "sha512": "560aaadebcbd425d35fc3a567c987a5f15a5f091962328f0479c1ec2378c732cca892eb3252179c8895413b0f3d08f44fbcf8c9d2375877c81622f42e6549c86"
     },
     {
       "ComponentName": "nircmdc",
       "ComponentType": "FileDownload",
       "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/nircmd/nircmdc.exe",
-      "Target": "C:\\Windows\\System32\\nircmdc.exe"
+      "Target": "C:\\Windows\\System32\\nircmdc.exe",
+      "sha512": "0ad1ba0df5efdf0354c2ecc9e97be03823636feeda1a4afe7666bdc661cd22b309d0a05e16453b6692c68f0ad5fd05abec480a5cdc13612fab2a3353c8eb1cc6"
     },
     {
       "ComponentName": "reg_DisableNewAppAlert",
@@ -1566,7 +1568,7 @@
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1497308",
       "Path": "C:\\Windows\\System32\\drivers\\etc\\hosts",
       "Match": "127\\.0\\.0\\.1 (hostname|i-[a-f0-9]{17})\\.(workertype|gecko-([1-3]-b-win2012(-alpha|-beta)?|t-win(7-32|10-64)(-gpu(-a|-b)?|-alpha|-beta|-cu)?))\\.(ec2region|(us|eu)[ewc][12])\\.mozilla\\.com",
-      "Replace": "('127.0.0.1 {0}.{1}' -f ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-id')), ((Get-ItemProperty 'HKLM:SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters').'NV Domain').Replace('wintest.releng.', ''))",
+      "Replace": "('127.0.0.1 {0}.{1}' -f ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-id')), ((Get-ItemProperty -Path 'HKLM:SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters' -Name 'NV Domain').'NV Domain').Replace('wintest.releng.', ''))",
       "DependsOn": [
         {
           "ComponentType": "ChecksumFileDownload",
