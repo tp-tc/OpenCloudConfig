@@ -1675,7 +1675,7 @@ function Set-ChainOfTrustKeyAndShutdown {
       default {
         if (-not (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue)) {
           Write-Log -message ('{0} :: cot key missing. generating key.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
-          Start-LoggedProcess -filePath 'C:\generic-worker\generic-worker.exe' -ArgumentList @('new-openpgp-keypair', '--file', 'C:\generic-worker\cot.key') -name 'generic-worker-new-openpgp-keypair'
+          Start-LoggedProcess -filePath 'C:\generic-worker\generic-worker.exe' -ArgumentList @('new-ed25519-keypair', '--file', 'C:\generic-worker\cot.key') -name 'generic-worker-new-ed25519-keypair'
           if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
             Write-Log -message ('{0} :: cot key generated.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
           } else {
