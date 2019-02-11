@@ -434,7 +434,7 @@
       ],
       "Source": "https://github.com/taskcluster/generic-worker/releases/download/v11.1.0/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe",
-      "sha512": "c2c3b75ab638675998e108f4b9ba205f25c50d197faca32ed8a85bd060de06bd3735d9bc31092dcb7506b6e8132de58bf2b983c683442d9a3eb4221eb286e376"
+      "sha512": "9679a3af8b6daa57f1f4249c0ee8f1d1984ad67d238bcf06cb6d19fd0c2229101b3ec19ba71cc087930ead795286b4df21de29bd088098ecf698744c9b533df0"
     },
     {
       "ComponentName": "LiveLogDownload",
@@ -1542,7 +1542,7 @@
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1494048",
       "Command": "icacls.exe",
       "Arguments": [
-        "c:\\ProgramData\\Mozilla",
+        "C:\\ProgramData\\Mozilla",
         "/grant",
         "Everyone:(OI)(CI)F"
       ],
@@ -1551,7 +1551,19 @@
           "ComponentType": "CommandRun",
           "ComponentName": "maintenanceservice_install"
         }
-      ]
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "icacls.exe",
+            "Arguments": [
+              "C:\\ProgramData\\Mozilla",
+              "/T"
+            ],
+            "Match": "Everyone:(OI)(CI)(F)"
+          }
+        ]
+      }
     },
     {
       "ComponentName": "HostsFile",
@@ -1573,105 +1585,6 @@
           "ComponentName": "HostsFile"
         }
       ]
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_DeferUpgrade",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1510220",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate",
-      "ValueName": "DeferUpgrade",
-      "ValueType": "Dword",
-      "ValueData": 1
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_DeferUpgradePeriod",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1510220",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate",
-      "ValueName": "DeferUpgradePeriod",
-      "ValueType": "Dword",
-      "ValueData": 8
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_DeferUpdatePeriod",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1510220",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate",
-      "ValueName": "DeferUpdatePeriod",
-      "ValueType": "Dword",
-      "ValueData": 4
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_AU_NoAutoRebootWithLoggedOnUsers",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485628",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
-      "ValueName": "NoAutoRebootWithLoggedOnUsers",
-      "ValueType": "Dword",
-      "ValueData": 1
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_AU_NoAutoUpdate",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485628",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
-      "ValueName": "NoAutoUpdate",
-      "ValueType": "Dword",
-      "ValueData": 1
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_AU_AUOptions",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485628",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
-      "ValueName": "AUOptions",
-      "ValueType": "Dword",
-      "ValueData": 1
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_AU_ScheduledInstallDay",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485628",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
-      "ValueName": "ScheduledInstallDay",
-      "ValueType": "Dword",
-      "ValueData": 1
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_AU_ScheduledInstallTime",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485628",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
-      "ValueName": "ScheduledInstallTime",
-      "ValueType": "Dword",
-      "ValueData": 1
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_AU_AutomaticMaintenanceEnabled",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485628",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
-      "ValueName": "AutomaticMaintenanceEnabled",
-      "ValueType": "Dword",
-      "ValueData": 0
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_AU_AllowMUUpdateService",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485628",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
-      "ValueName": "AllowMUUpdateService",
-      "ValueType": "Dword",
-      "ValueData": 0
-    },
-    {
-      "ComponentName": "reg_ScheduleMaintenance_MaintenanceDisabled",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485628",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\Maintenance",
-      "ValueName": "MaintenanceDisabled",
-      "ValueType": "Dword",
-      "ValueData": 1
     }
   ],
   "ProvisionerConfiguration": {
