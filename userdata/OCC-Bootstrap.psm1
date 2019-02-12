@@ -1650,43 +1650,47 @@ function Set-ChainOfTrustKeyAndShutdown {
     switch -regex ($workerType) {
       # level 3 builder needs key added by user intervention and must already exist in cot repo
       '^gecko-3-b-win2012(-c[45])?$' {
-        while (-not (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue)) {
-          Write-Log -message ('{0} :: cot key missing. awaiting user intervention.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+        while ((-not (Test-Path -Path 'C:\generic-worker\ed25519.key' -ErrorAction SilentlyContinue)) -or (-not (Test-Path -Path 'C:\generic-worker\openpgp.key' -ErrorAction SilentlyContinue))) {
+          Write-Log -message ('{0} :: ed25519 and/or openpgp key missing. awaiting user intervention.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
           Sleep 60
         }
-        while (-not ((Get-Item -Path 'C:\generic-worker\cot.key').Length -gt 0)) {
-          Write-Log -message ('{0} :: cot key empty. awaiting user intervention.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+        while ((-not ((Get-Item -Path 'C:\generic-worker\ed25519.key').Length -gt 0)) -or (-not ((Get-Item -Path 'C:\generic-worker\openpgp.key').Length -gt 0))) {
+          Write-Log -message ('{0} :: ed25519 and/or openpgp key empty. awaiting user intervention.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
           Sleep 60
         }
         while (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).Length -gt 0) {
           Write-Log -message ('{0} :: rdp session detected. awaiting user disconnect.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
           Sleep 60
         }
-        if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
-          Start-LoggedProcess -filePath 'icacls' -ArgumentList @('C:\generic-worker\cot.key', '/grant', 'Administrators:(GA)') -name 'icacls-cot-grant-admin'
-          Start-LoggedProcess -filePath 'icacls' -ArgumentList @('C:\generic-worker\cot.key', '/inheritance:r') -name 'icacls-cot-inheritance-remove'
-          Write-Log -message ('{0} :: cot key detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+        if ((Test-Path -Path 'C:\generic-worker\ed25519.key' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'C:\generic-worker\openpgp.key' -ErrorAction SilentlyContinue)) {
+          foreach ($keyAlgorithm in @('ed25519', 'openpgp')) {
+            Start-LoggedProcess -filePath 'icacls' -ArgumentList @(('C:\generic-worker\{0}.key' -f $keyAlgorithm), '/grant', 'Administrators:(GA)') -name ('icacls-{0}-grant-admin' -f $keyAlgorithm)
+            Start-LoggedProcess -filePath 'icacls' -ArgumentList @(('C:\generic-worker\{0}.key' -f $keyAlgorithm), '/inheritance:r') -name ('icacls-{0}-inheritance-remove' -f $keyAlgorithm)
+          }
+          Write-Log -message ('{0} :: ed25519 and openpgp keys detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
           & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
         } else {
-          Write-Log -message ('{0} :: cot key intervention failed. awaiting timeout or cancellation.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+          Write-Log -message ('{0} :: ed25519 and/or openpgp key intervention failed. awaiting timeout or cancellation.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
         }
       }
       # all other workers can generate new keys. these don't require trust from cot repo
       default {
-        if (-not (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue)) {
-          Write-Log -message ('{0} :: cot key missing. generating key.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
-          Start-LoggedProcess -filePath 'C:\generic-worker\generic-worker.exe' -ArgumentList @('new-ed25519-keypair', '--file', 'C:\generic-worker\cot.key') -name 'generic-worker-new-ed25519-keypair'
-          if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
-            Write-Log -message ('{0} :: cot key generated.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-          } else {
-            Write-Log -message ('{0} :: cot key generation failed.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+        foreach ($keyAlgorithm in @('ed25519', 'openpgp')) {
+          if (-not (Test-Path -Path ('C:\generic-worker\{0}.key' -f $keyAlgorithm) -ErrorAction SilentlyContinue)) {
+            Write-Log -message ('{0} :: {1} key missing. generating key.' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'WARN'
+            Start-LoggedProcess -filePath 'C:\generic-worker\generic-worker.exe' -ArgumentList @(('new-{0}-keypair' -f $keyAlgorithm), '--file', ('C:\generic-worker\{0}.key' -f $keyAlgorithm)) -name ('generic-worker-new-{0}-keypair' -f $keyAlgorithm)
+            if (Test-Path -Path ('C:\generic-worker\{0}.key' -f $keyAlgorithm) -ErrorAction SilentlyContinue) {
+              Write-Log -message ('{0} :: {1} key generated.' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'INFO'
+            } else {
+              Write-Log -message ('{0} :: {1} key generation failed.' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'ERROR'
+            }
           }
         }
-        if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
-          Write-Log -message ('{0} :: cot key detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+        if ((Test-Path -Path 'C:\generic-worker\ed25519.key' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'C:\generic-worker\openpgp.key' -ErrorAction SilentlyContinue)) {
+          Write-Log -message ('{0} :: ed25519 and openpgp keys detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
           & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
         } else {
-          Write-Log -message ('{0} :: cot key missing. awaiting timeout or cancellation.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+          Write-Log -message ('{0} :: ed25519 and/or openpgp key missing. awaiting timeout or cancellation.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
         }
         if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
           & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
