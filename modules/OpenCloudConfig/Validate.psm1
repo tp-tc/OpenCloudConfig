@@ -16,7 +16,11 @@ function Confirm-All {
     [Alias('source')]
     [string] $eventLogSource
   )
-  begin {}
+  begin {
+    if ((Get-Command -Name 'Write-Log' -ErrorAction 'SilentlyContinue') -and $componentName -and $eventLogSource) {
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: begin - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    }
+  }
   process {
     if (-not ($validations) -or (
         (-not ($validations.PathsExist)) -and
@@ -55,7 +59,11 @@ function Confirm-All {
       )
     )
   }
-  end {}
+  end {
+    if ((Get-Command -Name 'Write-Log' -ErrorAction 'SilentlyContinue') -and $componentName -and $eventLogSource) {
+      Write-Log -verbose:$verbose -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} ({1}) :: end - {2:o}' -f $($MyInvocation.MyCommand.Name), $componentName, (Get-Date).ToUniversalTime())
+    }
+  }
 }
 
 function Confirm-PathsExistOrNotRequested {
