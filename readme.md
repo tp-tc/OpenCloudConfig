@@ -39,7 +39,7 @@ Which manifest to run is currently determined by the ssh key associated with the
 Running the following command at an elevated powershell prompt (or providing it as EC2 userdata) will start OCC (from the master branch) on an instance:
 
     $gitBranchOrRef = 'master'
-    Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/{0}/userdata/rundsc.ps1?{1}' -f $gitBranchOrRef, [Guid]::NewGuid())
+    Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/{0}/userdata/rundsc.ps1?{1}' -f $gitBranchOrRef, [Guid]::NewGuid()))
 
 Instance configuration is defined in json format and currently includes implementations for these instance configuration mechanisms (most source parameters are expected to be a URL):
 
