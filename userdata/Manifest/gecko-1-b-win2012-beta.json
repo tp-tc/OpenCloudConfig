@@ -839,92 +839,36 @@
       "Target": "C:\\mozilla-build\\tooltool.py"
     },
     {
-      "ComponentName": "Win32ToolToolManifest",
-      "ComponentType": "ChecksumFileDownload",
-      "Comment": "Latest tooltool manifest from mozilla central",
-      "Source": "https://hg.mozilla.org/mozilla-central/raw-file/tip/browser/config/tooltool-manifests/win32/releng.manifest",
-      "Target": "C:\\Windows\\Temp\\releng.manifest.win32.tt"
-    },
-    {
-      "ComponentName": "Win64ToolToolManifest",
-      "ComponentType": "ChecksumFileDownload",
-      "Comment": "Latest tooltool manifest from mozilla central",
-      "Source": "https://hg.mozilla.org/mozilla-central/raw-file/tip/browser/config/tooltool-manifests/win64/releng.manifest",
-      "Target": "C:\\Windows\\Temp\\releng.manifest.win64.tt"
-    },
-    {
-      "ComponentName": "ToolToolPreCacheWin32",
-      "ComponentType": "CommandRun",
-      "Comment": "Prepopulates the local tooltool cache",
-      "Command": "C:\\mozilla-build\\python\\python.exe",
-      "Arguments": [
-        "C:\\mozilla-build\\tooltool.py",
-        "fetch",
-        "--url",
-        "https://tooltool.mozilla-releng.net",
-        "-c",
-        "C:\\builds\\tooltool_cache",
-        "--authentication-file",
-        "C:\\builds\\relengapi.tok",
-        "-m",
-        "C:\\Windows\\Temp\\releng.manifest.win32.tt"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "FileDownload",
-          "ComponentName": "ToolToolInstall"
-        },
-        {
-          "ComponentType": "ChecksumFileDownload",
-          "ComponentName": "Win32ToolToolManifest"
-        }
-      ]
-    },
-    {
-      "ComponentName": "ToolToolPreCacheWin64",
-      "ComponentType": "CommandRun",
-      "Comment": "Prepopulates the local tooltool cache",
-      "Command": "C:\\mozilla-build\\python\\python.exe",
-      "Arguments": [
-        "C:\\mozilla-build\\tooltool.py",
-        "fetch",
-        "--url",
-        "https://tooltool.mozilla-releng.net",
-        "-c",
-        "C:\\builds\\tooltool_cache",
-        "--authentication-file",
-        "C:\\builds\\relengapi.tok",
-        "-m",
-        "C:\\Windows\\Temp\\releng.manifest.win64.tt"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "FileDownload",
-          "ComponentName": "ToolToolInstall"
-        },
-        {
-          "ComponentType": "ChecksumFileDownload",
-          "ComponentName": "Win64ToolToolManifest"
-        }
-      ]
+      "ComponentName": "dir_TOOLTOOL_CACHE",
+      "ComponentType": "DirectoryCreate",
+      "Path": "Y:\\tooltool_cache"
     },
     {
       "ComponentName": "env_TOOLTOOL_CACHE",
       "ComponentType": "EnvironmentVariableSet",
       "Comment": "Tells the build system where to find the local tooltool cache",
+      "Name": "TOOLTOOL_CACHE",
+      "Value": "Y:\\tooltool_cache",
+      "Target": "Machine",
       "DependsOn": [
         {
-          "ComponentType": "CommandRun",
-          "ComponentName": "ToolToolPreCacheWin32"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "ToolToolPreCacheWin64"
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "dir_TOOLTOOL_CACHE"
         }
-      ],
-      "Name": "TOOLTOOL_CACHE",
-      "Value": "C:\\builds\\tooltool_cache",
-      "Target": "Machine"
+      ]
+    },
+    {
+      "ComponentName": "link_TOOLTOOL_CACHE",
+      "ComponentType": "SymbolicLink",
+      "Comment": "Provides backwards compatibility to hardcoded cache paths",
+      "Target": "Y:\\tooltool_cache",
+      "Link": "C:\\builds\\tooltool_cache",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "dir_TOOLTOOL_CACHE"
+        }
+      ]
     },
     {
       "ComponentName": "ToolToolCacheAccessRights",
@@ -932,24 +876,20 @@
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1421114",
       "Command": "icacls.exe",
       "Arguments": [
-        "c:\\builds\\tooltool_cache",
+        "Y:\\tooltool_cache",
         "/grant",
         "Everyone:(OI)(CI)F"
       ],
       "DependsOn": [
         {
-          "ComponentType": "CommandRun",
-          "ComponentName": "ToolToolPreCacheWin32"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "ToolToolPreCacheWin64"
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "dir_TOOLTOOL_CACHE"
         }
       ]
     },
     {
       "ComponentName": "env_PATH",
-      "ComponentType": "EnvironmentVariableUniquePrepend",
+      "ComponentType": "EnvironmentVariableUniqueAppend",
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
