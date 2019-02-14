@@ -703,7 +703,7 @@
         "utility": 0.9,
         "launchSpec": {
           "IamInstanceProfile": {
-            "Arn": "arn:aws:iam::692406183521:instance-profile/taskcluster-level-1-sccache"
+            "Arn": "arn:aws:iam::692406183521:instance-profile/windows-ami-builder"
           },
           "BlockDeviceMappings": [
             {
@@ -734,7 +734,7 @@
         "utility": 1,
         "launchSpec": {
           "IamInstanceProfile": {
-            "Arn": "arn:aws:iam::692406183521:instance-profile/taskcluster-level-1-sccache"
+            "Arn": "arn:aws:iam::692406183521:instance-profile/windows-ami-builder"
           },
           "BlockDeviceMappings": [
             {
