@@ -1524,6 +1524,33 @@
         "userData": {},
         "utility": 1
       }
-    ]
+    ],
+    "userData": {
+      "genericWorker": {
+        "config": {
+          "cachesDir": "Y:\\caches",
+          "cleanUpTaskDirs": true,
+          "disableReboots": true,
+          "downloadsDir": "Y:\\downloads",
+          "ed25519SigningKeyLocation": "C:\\generic-worker\\ed25519.key",
+          "livelogCertificate": "C:\\generic-worker\\livelog.crt",
+          "livelogExecutable": "C:\\generic-worker\\livelog.exe",
+          "livelogGETPort": 60023,
+          "livelogKey": "C:\\generic-worker\\livelog.key",
+          "livelogPUTPort": 60022,
+          "numberOfTasksToRun": 0,
+          "openpgpSigningKeyLocation": "C:\\generic-worker\\openpgp.key",
+          "runAfterUserCreation": "C:\\generic-worker\\task-user-init.cmd",
+          "runTasksAsCurrentUser": true,
+          "sentryProject": "generic-worker",
+          "shutdownMachineOnIdle": false,
+          "shutdownMachineOnInternalError": true,
+          "subdomain": "taskcluster-worker.net",
+          "taskclusterProxyExecutable": "C:\\generic-worker\\taskcluster-proxy.exe",
+          "taskclusterProxyPort": 80,
+          "tasksDir": "Z:\\"
+        }
+      }
+    }
   }
 }
