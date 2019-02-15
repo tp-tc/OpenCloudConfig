@@ -215,6 +215,10 @@ while [ -z "$aws_ami_id" ]; do
     if [[ $snapshot_block_device_mappings == *"/dev/sdc"* ]]; then
       dev_sdc_volume_id=$(aws ec2 describe-instances --region ${aws_region} --instance-id ${aws_instance_id} --query 'Reservations[*].Instances[*].BlockDeviceMappings[2].Ebs.VolumeId' --output text)
       aws ec2 detach-volume --region ${aws_region} --instance-id ${aws_instance_id} --device /dev/sdc --volume-id ${dev_sdc_volume_id}
+      until `aws ec2 wait volume-available --region ${aws_region} --volume-ids "${dev_sdc_volume_id}" >/dev/null 2>&1`;
+      do
+        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdc_volume_id} detaching..."
+      done
       echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdc_volume_id} detached from ${aws_instance_id} /dev/sdc"
       aws ec2 delete-volume --region ${aws_region} --volume-id ${dev_sdc_volume_id}
       echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdc_volume_id} deleted"
@@ -231,6 +235,10 @@ while [ -z "$aws_ami_id" ]; do
   if [[ $snapshot_block_device_mappings == *"xvdf"* ]]; then
     xvdf_volume_id=$(aws ec2 describe-instances --region ${aws_region} --instance-id ${aws_instance_id} --query 'Reservations[*].Instances[*].BlockDeviceMappings[1].Ebs.VolumeId' --output text)
     aws ec2 detach-volume --region ${aws_region} --instance-id ${aws_instance_id} --device xvdf --volume-id ${xvdf_volume_id}
+    until `aws ec2 wait volume-available --region ${aws_region} --volume-ids "${xvdf_volume_id}" >/dev/null 2>&1`;
+    do
+      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${xvdf_volume_id} detaching..."
+    done
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${xvdf_volume_id} detached from ${aws_instance_id} xvdf"
     aws ec2 delete-volume --region ${aws_region} --volume-id ${xvdf_volume_id}
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${xvdf_volume_id} deleted"
