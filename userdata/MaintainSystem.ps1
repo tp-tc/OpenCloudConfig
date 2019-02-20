@@ -106,11 +106,11 @@ function Invoke-OccReset {
           $oldSha512Hash = (Get-FileHash -Path $oldScriptPath -Algorithm 'SHA512').Hash
 
           if ($newSha512Hash -ne $oldSha512Hash) {
-            Write-Log -message ('{0} :: rundsc hashes do not match (old: {1}, new: {2})' -f $($MyInvocation.MyCommand.Name), $oldSha512Hash, $newSha512Hash) -severity 'INFO'
+            Write-Log -message ('{0} :: rundsc hashes do not match (old: {1}, new: {2})' -f $($MyInvocation.MyCommand.Name), ('{0}...{1}' -f $oldSha512Hash.Substring(0, 9), $oldSha512Hash.Substring($oldSha512Hash.length - 9, 9)), ('{0}...{1}' -f $newSha512Hash.Substring(0, 9), $newSha512Hash.Substring($newSha512Hash.length - 9, 9))) -severity 'INFO'
             Remove-Item -Path $oldScriptPath -force -ErrorAction SilentlyContinue
             Move-item -LiteralPath $newScriptPath -Destination $oldScriptPath
           } else {
-            Write-Log -message ('{0} :: rundsc hashes match (old: {1}, new: {2})' -f $($MyInvocation.MyCommand.Name), $oldSha512Hash, $newSha512Hash) -severity 'DEBUG'
+            Write-Log -message ('{0} :: rundsc hashes match (old: {1}, new: {2})' -f $($MyInvocation.MyCommand.Name), ('{0}...{1}' -f $oldSha512Hash.Substring(0, 9), $oldSha512Hash.Substring($oldSha512Hash.length - 9, 9)), ('{0}...{1}' -f $newSha512Hash.Substring(0, 9), $newSha512Hash.Substring($newSha512Hash.length - 9, 9))) -severity 'DEBUG'
             Remove-Item -Path $newScriptPath -force -ErrorAction SilentlyContinue
           }
         } else {
