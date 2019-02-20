@@ -164,7 +164,7 @@ function Invoke-OccReset {
                 }
               }
               if (($gwConfig.publicIP) -and ($gwConfig.publicIP.length)) {
-                Write-Log -message ('{0} :: gw publicIP appears to be set in {1} with a length of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.publicIP.length) -severity 'DEBUG'
+                Write-Log -message ('{0} :: gw publicIP appears to be set in {1} with a value of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.publicIP) -severity 'DEBUG'
               } else {
                 Write-Log -message ('{0} :: gw publicIP is not set in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
                 $gwConfig.publicIP = (Get-NetIPAddress | ? { $_.AddressFamily -eq 'IPv4' -and $_.IPAddress.StartsWith('10.') }).IPAddress
@@ -172,7 +172,7 @@ function Invoke-OccReset {
                 Write-Log -message ('{0} :: gw publicIP set to {1} in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.publicIP, $gwConfigPath) -severity 'INFO'
               }
               if (($gwConfig.workerId) -and ($gwConfig.workerId.length) -and ($gwConfig.workerId -ieq $env:COMPUTERNAME)) {
-                Write-Log -message ('{0} :: gw workerId appears to be set in {1} with a length of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.workerId.length) -severity 'DEBUG'
+                Write-Log -message ('{0} :: gw workerId appears to be set in {1} with a value of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.workerId) -severity 'DEBUG'
               } else {
                 Write-Log -message ('{0} :: gw workerId is not set in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
                 $gwConfig.workerId = $env:COMPUTERNAME
@@ -180,7 +180,7 @@ function Invoke-OccReset {
                 Write-Log -message ('{0} :: gw workerId set to {1} in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.workerId, $gwConfigPath) -severity 'INFO'
               }
               if (($gwConfig.signingKeyLocation) -and ($gwConfig.signingKeyLocation.length)) {
-                Write-Log -message ('{0} :: gw signingKeyLocation appears to be set in {1} with a length of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.signingKeyLocation.length) -severity 'DEBUG'
+                Write-Log -message ('{0} :: gw signingKeyLocation appears to be set in {1} with a value of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.signingKeyLocation) -severity 'DEBUG'
               } else {
                 Write-Log -message ('{0} :: gw signingKeyLocation is not set in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
                 $gwConfig.signingKeyLocation = 'C:\generic-worker\generic-worker-gpg-signing-key.key'
@@ -188,12 +188,20 @@ function Invoke-OccReset {
                 Write-Log -message ('{0} :: gw signingKeyLocation set to {1} in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.signingKeyLocation, $gwConfigPath) -severity 'INFO'
               }
               if (($gwConfig.workerType) -and ($gwConfig.workerType.length)) {
-                Write-Log -message ('{0} :: gw workerType appears to be set in {1} with a length of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.workerType.length) -severity 'DEBUG'
+                Write-Log -message ('{0} :: gw workerType appears to be set in {1} with a value of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.workerType) -severity 'DEBUG'
               } else {
                 Write-Log -message ('{0} :: gw workerType is not set in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
                 $gwConfig.workerType = $(if (Test-Path -Path 'C:\dsc\GW10UX.semaphore' -ErrorAction SilentlyContinue) { 'gecko-t-win10-64-ux' } else { 'gecko-t-win10-64-hw' })
                 [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
                 Write-Log -message ('{0} :: gw workerType set to {1} in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.workerType, $gwConfigPath) -severity 'INFO'
+              }
+              if (($gwConfig.provisionerId) -and ($gwConfig.provisionerId.length) -and ($gwConfig.provisionerId -ieq 'releng-hardware')) {
+                Write-Log -message ('{0} :: gw provisionerId appears to be set in {1} with a value of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.provisionerId) -severity 'DEBUG'
+              } else {
+                Write-Log -message ('{0} :: gw provisionerId is not set in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
+                $gwConfig.provisionerId = 'releng-hardware'
+                [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
+                Write-Log -message ('{0} :: gw provisionerId set to {1} in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.provisionerId, $gwConfigPath) -severity 'INFO'
               }
             } elseif (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 13.*') {
               Write-Log -message ('{0} :: gw 13+ exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
