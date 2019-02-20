@@ -687,7 +687,7 @@
     },
     {
       "ComponentName": "TaskClusterProxyDownload",
-      "ComponentType": "FileDownload",
+      "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
         {
           "ComponentType": "DirectoryCreate",
