@@ -2090,8 +2090,6 @@ function Invoke-OpenCloudConfig {
 
       switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
         'Microsoft Windows 10*' {
-          Stop-DesiredStateConfig
-          Remove-DesiredStateConfigTriggers
           Invoke-CustomDesiredStateProvider -sourceOrg $sourceOrg -sourceRepo $sourceRepo -sourceRev $sourceRev -workerType $workerType
         }
         default {

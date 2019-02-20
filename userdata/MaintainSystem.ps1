@@ -48,6 +48,7 @@ function Run-MaintainSystem {
   }
   process {
     Remove-OldTaskDirectories
+    Disable-DesiredStateConfig
     Invoke-OccReset
   }
   end {
@@ -233,6 +234,35 @@ function Invoke-OccReset {
       }
     } catch {
       Write-Log -message ('{0} :: exception - {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
+function Disable-DesiredStateConfig {
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    try {
+      if (${env:COMPUTERNAME}.ToLower().StartsWith('t-w1064-')) {
+        # terminate any running dsc process
+        $dscpid = (Get-WmiObject msft_providers | ? {$_.provider -like 'dsccore'} | Select-Object -ExpandProperty HostProcessIdentifier)
+        if ($dscpid) {
+          Get-Process -Id $dscpid | Stop-Process -f
+          Write-Log -message ('{0} :: dsc process with pid {1}, stopped.' -f $($MyInvocation.MyCommand.Name), $dscpid) -severity 'DEBUG'
+        }
+        foreach ($mof in @('Previous', 'backup', 'Current')) {
+          if (Test-Path -Path ('{0}\System32\Configuration\{1}.mof' -f $env:SystemRoot, $mof) -ErrorAction SilentlyContinue) {
+            Remove-Item -Path ('{0}\System32\Configuration\{1}.mof' -f $env:SystemRoot, $mof) -confirm:$false -force
+            Write-Log -message ('{0}\System32\Configuration\{1}.mof deleted' -f $env:SystemRoot, $mof) -severity 'INFO'
+          }
+        }
+      }
+    }
+    catch {
+      Write-Log -message ('{0} :: failed to disable dsc: {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
     }
   }
   end {
