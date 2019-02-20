@@ -170,6 +170,22 @@ function Invoke-OccReset {
                 [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
                 Write-Log -message ('{0} :: gw publicIP set to {1} in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.publicIP, $gwConfigPath) -severity 'INFO'
               }
+              if (($gwConfig.workerId) -and ($gwConfig.workerId.length) -and ($gwConfig.workerId -ieq $env:COMPUTERNAME)) {
+                Write-Log -message ('{0} :: gw workerId appears to be set in {1} with a length of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.workerId.length) -severity 'DEBUG'
+              } else {
+                Write-Log -message ('{0} :: gw workerId is not set in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
+                $gwConfig.workerId = $env:COMPUTERNAME
+                [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
+                Write-Log -message ('{0} :: gw workerId set to {1} in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.workerId, $gwConfigPath) -severity 'INFO'
+              }
+              if (($gwConfig.signingKeyLocation) -and ($gwConfig.signingKeyLocation.length)) {
+                Write-Log -message ('{0} :: gw signingKeyLocation appears to be set in {1} with a length of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.signingKeyLocation.length) -severity 'DEBUG'
+              } else {
+                Write-Log -message ('{0} :: gw signingKeyLocation is not set in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
+                $gwConfig.signingKeyLocation = 'C:\generic-worker\generic-worker-gpg-signing-key.key'
+                [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
+                Write-Log -message ('{0} :: gw signingKeyLocation set to {1} in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.signingKeyLocation, $gwConfigPath) -severity 'INFO'
+              }
             } elseif (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 13.*') {
               Write-Log -message ('{0} :: gw 13+ exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
 
