@@ -215,7 +215,7 @@ function Invoke-OccReset {
                 Write-Log -message ('{0} :: gw queueBaseURL appears to be set in {1} with a value of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.queueBaseURL) -severity 'DEBUG'
               } else {
                 Write-Log -message ('{0} :: gw queueBaseURL is not set in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
-                $gwConfig.queueBaseURL = 'releng-hardware'
+                $gwConfig.queueBaseURL = 'https://queue.taskcluster.net'
                 [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
                 Write-Log -message ('{0} :: gw queueBaseURL set to {1} in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.queueBaseURL, $gwConfigPath) -severity 'INFO'
               }
