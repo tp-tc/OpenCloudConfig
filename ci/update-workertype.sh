@@ -91,7 +91,6 @@ case "${tc_worker_type}" in
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win7-32-base-20171018'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko test worker for Windows 7 32 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
-    gw_tasks_dir='Z:\'
     root_username=root
     worker_username=GenericWorker
     ;;
@@ -99,7 +98,6 @@ case "${tc_worker_type}" in
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win7-32-base-20171018'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko test worker for Windows 7 32 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
-    gw_tasks_dir='Z:\'
     root_username=root
     worker_username=GenericWorker
     ;;
@@ -107,7 +105,6 @@ case "${tc_worker_type}" in
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_10_Enterprise_1803_17134_285_en-US_x64_MBR-VAC-*'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
-    gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
     ;;
@@ -115,7 +112,6 @@ case "${tc_worker_type}" in
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-ena-base-*'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko builder for Windows; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
-    gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
     ;;
@@ -123,7 +119,6 @@ case "${tc_worker_type}" in
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_Server-2016-English-Full-Base-*'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners amazon --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="RelOps image builder for Windows; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
-    gw_tasks_dir='Z:\'
     root_username=Administrator
     worker_username=GenericWorker
     ;;
@@ -132,7 +127,8 @@ case "${tc_worker_type}" in
     exit 67
     ;;
 esac
-instance_types=$(jq -c '.ProvisionerConfiguration.instanceTypes' ${manifest})
+provisioner_configuration_instance_types=$(jq -c '.ProvisionerConfiguration.instanceTypes' ${manifest})
+provisioner_configuration_userdata=$(jq -c '.ProvisionerConfiguration.userData' ${manifest})
 snapshot_block_device_mappings=$(jq -c '.ProvisionerConfiguration.instanceTypes[0].launchSpec.BlockDeviceMappings' ${manifest})
 snapshot_aws_instance_type=$(jq -c -r '.ProvisionerConfiguration.instanceTypes[0].instanceType' ${manifest})
 if [ -z "${aws_base_ami_id}" ]; then
@@ -178,7 +174,7 @@ fi
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] occ manifest set to: ${occ_manifest}"
 
 curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq '.' > ./${tc_worker_type}-pre.json
-cat ./${tc_worker_type}-pre.json | jq --arg gwtasksdir $gw_tasks_dir --arg occmanifest $occ_manifest --arg deploydate "$(date --utc +"%F %T.%3NZ")" --arg deploymentId $aws_client_token --argjson instanceTypes $instance_types -c 'del(.workerType, .lastModified) | .secrets."generic-worker".config.tasksDir = $gwtasksdir | .secrets."generic-worker".config.workerTypeMetadata."machine-setup".manifest = $occmanifest | .secrets."generic-worker".config.workerTypeMetadata."machine-setup"."ami-created" = $deploydate | .instanceTypes = $instanceTypes | .secrets."generic-worker".config.deploymentId = $deploymentId' > ./${tc_worker_type}.json
+cat ./${tc_worker_type}-pre.json | jq --arg occmanifest $occ_manifest --arg deploydate "$(date --utc +"%F %T.%3NZ")" --arg deploymentId $aws_client_token --argjson instanceTypes $provisioner_configuration_instance_types --argjson userData $provisioner_configuration_userdata -c 'del(.workerType, .lastModified, .userData, .secrets.files, .secrets."generic-worker") | .instanceTypes = $instanceTypes | .userData = $userData | .userData.genericWorker.config.deploymentId = $deploymentId | .userData.genericWorker.config.workerTypeMetadata."machine-setup".manifest = $occmanifest | .userData.genericWorker.config.workerTypeMetadata."machine-setup"."ami-created" = $deploydate' > ./${tc_worker_type}.json
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] active amis (pre-update): $(cat ./${tc_worker_type}.json | jq -c '[.regions[] | {region: .region, ami: .launchSpec.ImageId}]')"
 
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] latest base ami for: ${aws_base_ami_search_term}, in region: ${aws_region}, is: ${aws_base_ami_id}"
@@ -190,8 +186,7 @@ while [ -z "$aws_instance_id" ]; do
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] create instance failed. retrying..."
   fi
 done
-until `aws ec2 create-tags --region ${aws_region} --resources "${aws_instance_id}" --tags "Key=WorkerType,Value=golden-${tc_worker_type}" >/dev/null 2>&1`;
-do
+until `aws ec2 create-tags --region ${aws_region} --resources "${aws_instance_id}" --tags "Key=WorkerType,Value=golden-${tc_worker_type}" >/dev/null 2>&1`; do
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for instance instantiation"
 done
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] instance: ${aws_instance_id} instantiated and tagged: WorkerType=golden-${tc_worker_type} (https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Instances:instanceId=${aws_instance_id})"
@@ -202,8 +197,7 @@ aws_instance_public_ip="$(aws ec2 describe-instances --region ${aws_region} --in
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] instance public ip: ${aws_instance_public_ip}"
 
 # wait for instance stopped state
-until `aws ec2 wait instance-stopped --region ${aws_region} --instance-ids "${aws_instance_id}" >/dev/null 2>&1`;
-do
+until `aws ec2 wait instance-stopped --region ${aws_region} --instance-ids "${aws_instance_id}" >/dev/null 2>&1`; do
   instance_state=$(aws ec2 describe-instances --region ${aws_region} --instance-id ${aws_instance_id} --query 'Reservations[*].Instances[*].State.Name' --output text)
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for instance to shut down. current state: ${instance_state}"
   if [ "${instance_state}" == "terminated" ]; then
@@ -219,13 +213,15 @@ while [ -z "$aws_ami_id" ]; do
     if [[ $snapshot_block_device_mappings == *"/dev/sdc"* ]]; then
       dev_sdc_volume_id=$(aws ec2 describe-instances --region ${aws_region} --instance-id ${aws_instance_id} --query 'Reservations[*].Instances[*].BlockDeviceMappings[2].Ebs.VolumeId' --output text)
       aws ec2 detach-volume --region ${aws_region} --instance-id ${aws_instance_id} --device /dev/sdc --volume-id ${dev_sdc_volume_id}
+      until `aws ec2 wait volume-available --region ${aws_region} --volume-ids "${dev_sdc_volume_id}" >/dev/null 2>&1`; do
+        echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdc_volume_id} detaching..."
+      done
       echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdc_volume_id} detached from ${aws_instance_id} /dev/sdc"
       aws ec2 delete-volume --region ${aws_region} --volume-id ${dev_sdc_volume_id}
       echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdc_volume_id} deleted"
     fi
     aws ec2 detach-volume --region ${aws_region} --instance-id ${aws_instance_id} --device /dev/sdb --volume-id ${dev_sdb_volume_id}
-    until `aws ec2 wait volume-available --region ${aws_region} --volume-ids "${dev_sdb_volume_id}" >/dev/null 2>&1`;
-    do
+    until `aws ec2 wait volume-available --region ${aws_region} --volume-ids "${dev_sdb_volume_id}" >/dev/null 2>&1`; do
       echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdb_volume_id} detaching..."
     done
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${dev_sdb_volume_id} detached from ${aws_instance_id} /dev/sdb"
@@ -235,6 +231,9 @@ while [ -z "$aws_ami_id" ]; do
   if [[ $snapshot_block_device_mappings == *"xvdf"* ]]; then
     xvdf_volume_id=$(aws ec2 describe-instances --region ${aws_region} --instance-id ${aws_instance_id} --query 'Reservations[*].Instances[*].BlockDeviceMappings[1].Ebs.VolumeId' --output text)
     aws ec2 detach-volume --region ${aws_region} --instance-id ${aws_instance_id} --device xvdf --volume-id ${xvdf_volume_id}
+    until `aws ec2 wait volume-available --region ${aws_region} --volume-ids "${xvdf_volume_id}" >/dev/null 2>&1`; do
+      echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${xvdf_volume_id} detaching..."
+    done
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${xvdf_volume_id} detached from ${aws_instance_id} xvdf"
     aws ec2 delete-volume --region ${aws_region} --volume-id ${xvdf_volume_id}
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${xvdf_volume_id} deleted"
@@ -247,8 +246,7 @@ done
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ami: ${aws_ami_id} creation in progress: https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Images:visibility=owned-by-me;search=${aws_ami_id}"
 aws ec2 create-tags --region ${aws_region} --resources "${aws_ami_id}" --tags "Key=WorkerType,Value=${tc_worker_type}"
 sleep 30
-until `aws ec2 wait image-available --region ${aws_region} --image-ids "${aws_ami_id}" >/dev/null 2>&1`;
-do
+until `aws ec2 wait image-available --region ${aws_region} --image-ids "${aws_ami_id}" >/dev/null 2>&1`; do
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for ami availability (${aws_region} ${aws_ami_id})"
 done
 cat ./${tc_worker_type}.json | jq --arg ec2region $aws_region --arg amiid $aws_ami_id -c '(.regions[] | select(.region == $ec2region) | .launchSpec.ImageId) = $amiid' > ./.${tc_worker_type}.json && rm ./${tc_worker_type}.json && mv ./.${tc_worker_type}.json ./${tc_worker_type}.json
@@ -281,8 +279,7 @@ jq -c '[.regions[].region] | .[]' ./${tc_worker_type}.json | sed 's/"//g' | grep
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ami: ${aws_region} ${aws_ami_id} copy to ${region} ${aws_copied_ami_id} in progress: https://${region}.console.aws.amazon.com/ec2/v2/home?region=${region}#Images:visibility=owned-by-me;search=${aws_copied_ami_id}"
   aws ec2 create-tags --region ${region} --resources "${aws_copied_ami_id}" --tags "Key=WorkerType,Value=${tc_worker_type}"
   sleep 30
-  until `aws ec2 wait image-available --region ${region} --image-ids "${aws_copied_ami_id}" >/dev/null 2>&1`;
-  do
+  until `aws ec2 wait image-available --region ${region} --image-ids "${aws_copied_ami_id}" >/dev/null 2>&1`; do
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for ami availability (${region} ${aws_copied_ami_id})"
   done
   cat ./${tc_worker_type}.json | jq --arg ec2region $region --arg amiid $aws_copied_ami_id -c '(.regions[] | select(.region == $ec2region) | .launchSpec.ImageId) = $amiid' > ./.${tc_worker_type}.json && rm ./${tc_worker_type}.json && mv ./.${tc_worker_type}.json ./${tc_worker_type}.json
@@ -300,17 +297,6 @@ jq -c '[.regions[].region] | .[]' ./${tc_worker_type}.json | sed 's/"//g' | grep
     aws ec2 delete-snapshot --region ${region} --snapshot-id ${old_snap} || true
   done
 done
-
-# Overlay userdata/Configuration/GenericWorker/generic-worker.config on top of the generic-worker config section of the worker type definition.
-# Only required for generic worker version 10 and higher.
-# Once all workers are on generic-worker version 10 or higher, we can remove this hacky if statement (but keep the lines inside the if statement).
-if [ "$(cat OpenCloudConfig/userdata/Manifest/${tc_worker_type}.json | sed -n 's/.*generic-worker\/releases\/download\/v\([0-9]*\)\..*/\1/p')" -ge 10 ]; then
-  # Decide key runTasksAsCurrentUser based on whether worker type name ends in '-cu'
-  runTasksAsCurrentUser='false'
-  [ "${tc_worker_type:0,-3}" == '-cu' ] && runTasksAsCurrentUser='true'
-  echo $(cat ${tc_worker_type}.json | jq '.secrets."generic-worker".config') $(cat OpenCloudConfig/userdata/Configuration/GenericWorker/generic-worker.config | jq ".runTasksAsCurrentUser = ${runTasksAsCurrentUser}") | jq --slurp add > merged-gw-config.json
-  cat ${tc_worker_type}.json | jq --sort-keys --slurpfile 'gwconfig' merged-gw-config.json '.secrets."generic-worker".config=$gwconfig[0]' > .${tc_worker_type}.json && rm ${tc_worker_type}.json && mv .${tc_worker_type}.json ${tc_worker_type}.json
-fi
 
 cat ./${tc_worker_type}.json | curl -D ./update-response-headers.txt --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ./update-response.json
 if ! grep -q "HTTP/1.1 200 OK" ./update-response-headers.txt; then

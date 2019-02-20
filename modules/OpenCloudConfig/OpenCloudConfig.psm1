@@ -55,7 +55,11 @@ function Write-Log {
     [string] $logName = 'Application'
   )
   if ((-not ([System.Diagnostics.EventLog]::Exists($logName))) -or (-not ([System.Diagnostics.EventLog]::SourceExists($source)))) {
-    New-EventLog -LogName $logName -Source $source
+    try {
+      New-EventLog -LogName $logName -Source $source
+    } catch {
+      Write-Error -Exception $_.Exception -message ('failed to create event log source: {0}/{1}' -f $logName, $source)
+    }
   }
   switch ($severity[0].ToString().ToLower()) {
     # debug
@@ -83,7 +87,12 @@ function Write-Log {
       break
     }
   }
-  Write-EventLog -LogName $logName -Source $source -EntryType $entryType -EventId $eventId -Message $message
+  try {
+    Write-EventLog -LogName $logName -Source $source -EntryType $entryType -EventId $eventId -Message $message
+  } catch {
+    Write-Error -Exception $_.Exception -message ('failed to write to event log source: {0}/{1}. the log message was: {2}' -f $logName, $source, $message)
+    Write-Verbose -Message ('failed to write to event log source: {0}/{1}. the log message was: {2}' -f $logName, $source, $message)
+  }
   Write-Verbose -Message $message
 }
 
@@ -123,7 +132,7 @@ function Get-TooltoolResource {
         throw ('invalid or null token found at {0}' -f $tokenPath)
       }
     } catch {
-      Write-Log -LogName $eventLogName -Source $eventLogSource -Severity 'error' -message ('{0} :: failed to read valid tooltool bearer token at {1}. {2}' -f $($MyInvocation.MyCommand.Name), $tokenPath, $_.Exception.Message)
+      Write-Log -logName $eventLogName -source $eventLogSource -Severity 'error' -message ('{0} :: failed to read valid tooltool bearer token at {1}. {2}' -f $($MyInvocation.MyCommand.Name), $tokenPath, $_.Exception.Message)
       throw
     }
 
@@ -160,7 +169,7 @@ function Get-RemoteResource {
           Remove-Item $localPath -force
           Write-Log -logName $eventLogName -source $eventLogSource -severity 'warn' -message ('{0} :: deleted {1} before download from {2}' -f $($MyInvocation.MyCommand.Name), $localPath, $url)
         } catch {
-          Write-Log -LogName $eventLogName -Source $eventLogSource -Severity 'error' -message ('{0} :: failed to delete {1} before download from {2}. {3}' -f $($MyInvocation.MyCommand.Name), $localPath, $url, $_.Exception.Message)
+          Write-Log -logName $eventLogName -source $eventLogSource -Severity 'error' -message ('{0} :: failed to delete {1} before download from {2}. {3}' -f $($MyInvocation.MyCommand.Name), $localPath, $url, $_.Exception.Message)
         }
       }
       $webClient = New-Object -TypeName 'System.Net.WebClient'
@@ -171,7 +180,7 @@ function Get-RemoteResource {
       $webClient.DownloadFile($url, $localPath)
       Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: remote resource downloaded from {1} to {2} on first attempt' -f $($MyInvocation.MyCommand.Name), $url, $localPath)
     } catch {
-      Write-Log -LogName $eventLogName -Source $eventLogSource -Severity 'error' -message ('{0} :: failed to download remote resource from {1} to {2} on first attempt. {3}' -f $($MyInvocation.MyCommand.Name), $url, $localPath, $_.Exception.Message)
+      Write-Log -logName $eventLogName -source $eventLogSource -Severity 'error' -message ('{0} :: failed to download remote resource from {1} to {2} on first attempt. {3}' -f $($MyInvocation.MyCommand.Name), $url, $localPath, $_.Exception.Message)
       try {
         # handle redirects (eg: sourceforge)
         if ($headers) {
@@ -181,7 +190,7 @@ function Get-RemoteResource {
         }
         Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: remote resource downloaded from {1} to {2} on second attempt' -f $($MyInvocation.MyCommand.Name), $url, $localPath)
       } catch {
-        Write-Log -LogName $eventLogName -Source $eventLogSource -Severity 'error' -message ('{0} :: failed to download remote resource from {1} to {2} on second attempt. {3}' -f $($MyInvocation.MyCommand.Name), $url, $localPath, $_.Exception.Message)
+        Write-Log -logName $eventLogName -source $eventLogSource -Severity 'error' -message ('{0} :: failed to download remote resource from {1} to {2} on second attempt. {3}' -f $($MyInvocation.MyCommand.Name), $url, $localPath, $_.Exception.Message)
         return $false
       }
     }

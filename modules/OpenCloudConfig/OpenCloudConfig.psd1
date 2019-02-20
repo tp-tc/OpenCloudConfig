@@ -10,7 +10,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
   RootModule = 'OpenCloudConfig.psm1'
 
   # Version number of this module.
-  ModuleVersion = '0.0.9'
+  ModuleVersion = '0.0.43'
 
   # ID used to uniquely identify this module
   GUID = 'd1235f10-0ae3-4353-9a31-0abeb2b9093e'
@@ -80,14 +80,37 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
    'New-ZipFile',
 
    # DynamicConfig.psm1
+   'Invoke-DirectoryCreate',
+   'Confirm-DirectoryCreate',
    'Invoke-DirectoryDelete',
+   'Confirm-DirectoryDelete',
+   'Invoke-DirectoryCopy',
+   'Confirm-DirectoryCopy',
+   'Invoke-LoggedCommandRun',
    'Invoke-CommandRun',
+   'Confirm-CommandRun',
    'Invoke-FileDownload',
+   'Confirm-FileDownload',
    'Invoke-SymbolicLink',
+   'Confirm-SymbolicLink',
    'Invoke-EnvironmentVariableSet',
+   'Invoke-EnvironmentVariableUniqueAppend',
+   'Invoke-EnvironmentVariableUniquePrepend',
    'Invoke-RegistryKeySetOwner',
+   'Invoke-RegistryKeySet',
+   'Invoke-RegistryValueSet',
+   'Invoke-DisableIndexing',
+   'Confirm-DisableIndexing',
    'Invoke-FirewallRuleSet',
+   'Confirm-FirewallRuleSet',
    'Invoke-ReplaceInFile',
+   'Invoke-ZipInstall',
+   'Invoke-ExeInstall',
+   'Confirm-ExeInstall',
+   'Invoke-MsiInstall',
+   'Confirm-MsiInstall',
+   'Invoke-MsuInstall',
+   'Confirm-MsuInstall',
 
    # User.psm1
    'Set-KnownFolderPath',
@@ -98,6 +121,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
    'Confirm-PathsNotExistOrNotRequested',
    'Confirm-CommandsReturnOrNotRequested',
    'Confirm-FilesContainOrNotRequested',
+   'Confirm-ServiceExistAndStatusMatchOrNotRequested',
    'Confirm-LogValidation'
   )
 

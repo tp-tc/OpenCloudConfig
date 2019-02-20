@@ -671,7 +671,7 @@
     },
     {
       "ComponentName": "env_PATH",
-      "ComponentType": "EnvironmentVariableUniquePrepend",
+      "ComponentType": "EnvironmentVariableUniqueAppend",
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
@@ -750,8 +750,9 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v8.3.0/generic-worker-windows-386.exe",
-      "Target": "C:\\generic-worker\\generic-worker.exe"
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v13.0.2/generic-worker-windows-386.exe",
+      "Target": "C:\\generic-worker\\generic-worker.exe",
+      "sha512": "959b2fbf2bcaaf36039be0f6d34d1f8da6ad86e071d056da119acbf7d460b170a9c070351b6222c296c1486aeb880e39f426a7ec7bacbe8cda09800346f4e1b7"
     },
     {
       "ComponentName": "LiveLogDownload",
@@ -820,7 +821,7 @@
             "Arguments": [
               "--version"
             ],
-            "Match": "generic-worker 8.3.0"
+            "Like": "generic-worker 13.0.2 *"
           }
         ]
       }

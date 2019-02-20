@@ -11,8 +11,12 @@ function Write-Log {
     [string] $source = 'OpenCloudConfig',
     [string] $logName = 'Application'
   )
-  if (!([Diagnostics.EventLog]::Exists($logName)) -or !([Diagnostics.EventLog]::SourceExists($source))) {
-    New-EventLog -LogName $logName -Source $source
+  if ((-not ([System.Diagnostics.EventLog]::Exists($logName))) -or (-not ([System.Diagnostics.EventLog]::SourceExists($source)))) {
+    try {
+      New-EventLog -LogName $logName -Source $source
+    } catch {
+      Write-Error -Exception $_.Exception -message ('failed to create event log source: {0}/{1}' -f $logName, $source)
+    }
   }
   switch ($severity) {
     'DEBUG' {
@@ -36,7 +40,11 @@ function Write-Log {
       break
     }
   }
-  Write-EventLog -LogName $logName -Source $source -EntryType $entryType -Category 0 -EventID $eventId -Message $message
+  try {
+    Write-EventLog -LogName $logName -Source $source -EntryType $entryType -Category 0 -EventID $eventId -Message $message
+  } catch {
+    Write-Error -Exception $_.Exception -message ('failed to write to event log source: {0}/{1}. the log message was: {2}' -f $logName, $source, $message)
+  }
   if ([Environment]::UserInteractive -and $env:OccConsoleOutput) {
     $fc = @{ 'Information' = 'White'; 'Error' = 'Red'; 'Warning' = 'DarkYellow'; 'SuccessAudit' = 'DarkGray' }[$entryType]
     Write-Host -object $message -ForegroundColor $fc
@@ -88,6 +96,11 @@ function Install-Dependencies {
         'ModuleVersion' = '2.0.4'
       },
       @{
+        'ModuleName' = 'PSDscResources';
+        'Repository' = 'PSGallery';
+        'ModuleVersion' = '2.9.0.0'
+      },
+      @{
         'ModuleName' = 'xPSDesiredStateConfiguration';
         'Repository' = 'PSGallery';
         'ModuleVersion' = '8.4.0.0'
@@ -100,7 +113,14 @@ function Install-Dependencies {
       @{
         'ModuleName' = 'OpenCloudConfig';
         'Repository' = 'PSGallery';
-        'ModuleVersion' = '0.0.9'
+        'ModuleVersion' = '0.0.43'
+      }
+    ),
+    # if modules are detected with a version **less than** specified in ModuleVersion below, they will be purged
+    [hashtable[]] $purgeModules = @(
+      @{
+        'ModuleName' = 'OpenCloudConfig';
+        'ModuleVersion' = '0.0.43'
       }
     )
   )
@@ -108,6 +128,16 @@ function Install-Dependencies {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
+    foreach ($purgeModule in $purgeModules) {
+      if ((Get-Module -ListAvailable -Name $purgeModule['ModuleName'] | ? { $_.Version -lt $purgeModule['ModuleVersion'] })) {
+        try {
+          Remove-Module -Name $purgeModule['ModuleName'] -Force -ErrorAction SilentlyContinue
+          Remove-Item -path (Join-Path -Path $env:PSModulePath.Split(';') -ChildPath $purgeModule['ModuleName']) -recurse -force -ErrorAction SilentlyContinue
+        } catch {
+          Write-Log -message ('{0} :: error removing module: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $purgeModule['ModuleName'], $_.Exception.Message) -severity 'ERROR'
+        }
+      }
+    }
     foreach ($packageProviderName in $packageProviders.Keys) {
       $version = $packageProviders.Item($packageProviderName)
       $packageProvider = (Get-PackageProvider -Name $packageProviderName -ForceBootstrap:$true)
@@ -138,14 +168,186 @@ function Install-Dependencies {
           } else {
             Install-Module -Name $module['ModuleName'] -RequiredVersion $module['ModuleVersion'] -Repository $module['Repository'] -Force
           }
-          # todo: log an exception if we don't get the module, wait for instance build to time out.
-          while (-not (Get-Module -ListAvailable -Name $module['ModuleName'] | ? { $_.Version -eq $module['ModuleVersion'] })) {
-            Write-Log -message ('{0} :: waiting for installation of powershell module: {1}, version: {2}, from repository: {3}, to complete' -f $($MyInvocation.MyCommand.Name), $module['ModuleName'], $module['ModuleVersion'], $module['Repository']) -severity 'DEBUG'
-            Start-Sleep -Seconds 30
+          if (-not (Get-Module -ListAvailable -Name $module['ModuleName'] | ? { $_.Version -eq $module['ModuleVersion'] })) {
+            # PSDscResources fails to install on windows 7 but is not required on that os, for dsc to function correctly
+            Write-Log -message ('{0} :: installation of powershell module: {1}, version: {2}, from repository: {3}, did not succeed' -f $($MyInvocation.MyCommand.Name), $module['ModuleName'], $module['ModuleVersion'], $module['Repository']) -severity 'ERROR'
+          } else {
+            Write-Log -message ('{0} :: powershell module: {1}, version: {2}, from repository: {3}, installed' -f $($MyInvocation.MyCommand.Name), $module['ModuleName'], $module['ModuleVersion'], $module['Repository']) -severity 'INFO'
           }
-          Write-Log -message ('{0} :: powershell module: {1}, version: {2}, from repository: {3}, installed' -f $($MyInvocation.MyCommand.Name), $module['ModuleName'], $module['ModuleVersion'], $module['Repository']) -severity 'INFO'
         } catch {
           Write-Log -message ('{0} :: failed to install powershell module: {1}, version: {2}, from repository: {3}. {4}' -f $($MyInvocation.MyCommand.Name), $module['ModuleName'], $module['ModuleVersion'], $module['Repository'], $_.Exception.Message) -severity 'ERROR'
+        }
+      }
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
+function Get-ComponentAppliedState {
+  param (
+    [object] $component,
+    [object[]] $appliedComponents
+  )
+  return [bool]($appliedComponents | ? { (($_.ComponentType -eq $component.ComponentType) -and ($_.ComponentName -eq $component.ComponentName)) })
+}
+function Get-AllDependenciesAppliedState {
+  param (
+    [object[]] $dependencies,
+    [object[]] $appliedComponents
+  )
+  if (-not ($dependencies)) {
+    return $true
+  }
+  return (-not (($dependencies | % { (Get-ComponentAppliedState -component $_ -appliedComponents $appliedComponents) }) -contains $false))
+}
+function Invoke-CustomDesiredStateProvider {
+  param (
+    [string] $workerType,
+    [string] $sourceOrg = 'mozilla-releng',
+    [string] $sourceRepo = 'OpenCloudConfig',
+    [string] $sourceRev = 'master'
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    $manifestUri = ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/Manifest/{3}.json?{4}' -f $sourceOrg, $sourceRepo, $sourceRev, $workerType, [Guid]::NewGuid())
+    Write-Log -severity 'debug' -message ('{0} :: manifest uri determined as: {1}' -f $($MyInvocation.MyCommand.Name), $manifestUri)
+    $manifest = ((Invoke-WebRequest -Uri $manifestUri -UseBasicParsing).Content.Replace('mozilla-releng/OpenCloudConfig/master', ('{0}/{1}/{2}' -f $sourceOrg, $sourceRepo, $sourceRev)) | ConvertFrom-Json)
+    
+    $appliedComponents = @()
+    # loop through the manifest until all components have been applied
+    while ($appliedComponents.Length -lt $manifest.Components.Length) {
+      # loop through all components that have not already been applied
+      foreach ($component in ($manifest.Components | ? { (-not (Get-ComponentAppliedState -component $_ -appliedComponents $appliedComponents)) })) {
+        if (Get-AllDependenciesAppliedState -dependencies $component.DependsOn -appliedComponents $appliedComponents) {
+          switch ($component.ComponentType) {
+            'DirectoryCreate' {
+              if (-not (Confirm-DirectoryCreate -verbose -component $component)) {
+                Invoke-DirectoryCreate -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of DirectoryCreate component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
+              }
+            }
+            'DirectoryDelete' {
+              if (-not (Confirm-DirectoryDelete -verbose -component $component)) {
+                Invoke-DirectoryDelete -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of DirectoryDelete component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
+              }
+            }
+            'DirectoryCopy' {
+              if (-not (Confirm-DirectoryCopy -verbose -component $component)) {
+                Invoke-DirectoryCopy -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of DirectoryCopy component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
+              }
+            }
+            'CommandRun' {
+              if (-not (Confirm-CommandRun -verbose -component $component)) {
+                Invoke-CommandRun -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of CommandRun component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
+              }
+            }
+            'FileDownload' {
+              if (-not (Confirm-FileDownload -verbose -component $component -localPath $component.Target)) {
+                Invoke-FileDownload -verbose -component $component -localPath $component.Target
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of FileDownload component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
+              }
+            }
+            'ChecksumFileDownload' {
+              # always download these items wether they're on the filesystem already or not
+              Invoke-FileDownload -verbose -component $component -localPath $component.Target
+            }
+            'SymbolicLink' {
+              if (-not (Confirm-SymbolicLink -verbose -component $component)) {
+                Invoke-SymbolicLink -verbose -component $component
+              }
+              Invoke-SymbolicLink -verbose -component $component
+            }
+            'ExeInstall' {
+              if (-not (Confirm-ExeInstall -verbose -component $component)) {
+                Invoke-ExeInstall -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of ExeInstall component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
+              }
+            }
+            'MsiInstall' {
+              if (-not (Confirm-MsiInstall -verbose -component $component)) {
+                Invoke-MsiInstall -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of MsiInstall component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
+              }
+            }
+            'MsuInstall' {
+              if (-not (Confirm-MsuInstall -verbose -component $component)) {
+                Invoke-MsuInstall -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of MsuInstall component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
+              }
+            }
+            'WindowsFeatureInstall' {
+              # todo: implement WindowsFeatureInstall in the DynamicConfig module
+              Write-Log -message ('{0} :: not implemented: WindowsFeatureInstall.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+            }
+            'ZipInstall' {
+              $localPath = ('{0}\Temp\{1}.zip' -f $env:SystemRoot, $(if ($component.sha512) { $component.sha512 } else { $component.ComponentName }))
+              if (-not (Confirm-FileDownload -verbose -component $component -localPath $localPath)) {
+                Invoke-FileDownload -verbose -component $component -localPath $localPath
+              }
+              # todo: confirm or refute prior install with comparison of directory and zip contents
+              Invoke-ZipInstall -verbose -component $component -path $localPath -overwrite
+            }
+            'ServiceControl' {
+              # todo: implement ServiceControl in the DynamicConfig module
+              Set-ServiceState -name $component.Name -state $component.State
+              Set-Service -name $component.Name -StartupType $component.StartupType
+            }
+            'EnvironmentVariableSet' {
+              Invoke-EnvironmentVariableSet -verbose -component $component
+            }
+            'EnvironmentVariableUniqueAppend' {
+              Invoke-EnvironmentVariableUniqueAppend -verbose -component $component
+            }
+            'EnvironmentVariableUniquePrepend' {
+              Invoke-EnvironmentVariableUniquePrepend -verbose -component $component
+            }
+            'RegistryKeySet' {
+              Invoke-RegistryKeySet -verbose -component $component
+            }
+            'RegistryValueSet' {
+              if ($component.SetOwner) {
+                Invoke-RegistryKeySetOwner -verbose -component $component
+              }
+              Invoke-RegistryValueSet -verbose -component $component
+            }
+            'DisableIndexing' {
+              if (-not (Confirm-DisableIndexing -verbose -component $component)) {
+                Invoke-DisableIndexing -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of DisableIndexing component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
+              }
+            }
+            'FirewallRule' {
+              if (-not (Confirm-FirewallRuleSet -verbose -component $component)) {
+                Invoke-FirewallRuleSet -verbose -component $component
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of FirewallRule component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
+              }
+            }
+            'ReplaceInFile' {
+              Invoke-ReplaceInFile -verbose -component $component
+            }
+          }
+          $appliedComponents += New-Object -TypeName 'PSObject' -Property @{ 'ComponentName' = $component.ComponentName; 'ComponentType' = $component.ComponentType; 'AppliedState' = 'Success' }
+          if ($component.DependsOn) {
+            Write-Log -severity 'debug' -message ('{0} :: component {1}_{2} applied. component has {3} dependencies ({4}) which have already been applied' -f $($MyInvocation.MyCommand.Name), $component.ComponentType, $component.ComponentName, $component.DependsOn.Length, (($component.DependsOn | % { '{0}_{1}' -f $_.ComponentType, $_.ComponentName }) -join ', '))
+          } else {
+            Write-Log -severity 'debug' -message ('{0} :: component {1}_{2} applied. component has no dependencies' -f $($MyInvocation.MyCommand.Name), $component.ComponentType, $component.ComponentName)
+          }
         }
       }
     }
@@ -1070,7 +1272,7 @@ function Set-DefaultStrongCryptography {
 function Set-SystemClock {
   param (
     [string] $locationType,
-    [string] $ntpserverlist = $(if ($locationType -eq 'DataCenter') { "infoblox1.private.$MozSpace.mozilla.com" } else { '0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org' })
+    [string] $ntpserverlist = $(if (($locationType -eq 'DataCenter') -and (${env:PROCESSOR_ARCHITEW6432} -ne 'ARM64')) { "infoblox1.private.$MozSpace.mozilla.com" } else { '0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org' })
   )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
@@ -1410,8 +1612,8 @@ function Invoke-HardwareDiskCleanup {
     if ($percentfree -lt $WarnPercent) {
       Write-Log -message "Current available disk space WARNING $perfree%" -severity 'WARN'
       Write-Log -message "Attempting to clean and optimize disk" -severity 'WARN'
-      Start-Process -Wait Dism.exe /online /Cleanup-Image /StartComponentCleanup
-      Start-Process -Wait cleanmgr.exe /autoclean
+      #Start-Process -Wait Dism.exe /online /Cleanup-Image /StartComponentCleanup
+      #Start-Process -Wait cleanmgr.exe /autoclean
       optimize-Volume $driveletter
       $freespace = Get-WmiObject -Class Win32_logicalDisk | ? {$_.DriveType -eq '3'}
       $percentfree = $freespace.FreeSpace / $freespace.Size
@@ -1448,43 +1650,47 @@ function Set-ChainOfTrustKeyAndShutdown {
     switch -regex ($workerType) {
       # level 3 builder needs key added by user intervention and must already exist in cot repo
       '^gecko-3-b-win2012(-c[45])?$' {
-        while (-not (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue)) {
-          Write-Log -message ('{0} :: cot key missing. awaiting user intervention.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+        while ((-not (Test-Path -Path 'C:\generic-worker\ed25519.key' -ErrorAction SilentlyContinue)) -or (-not (Test-Path -Path 'C:\generic-worker\openpgp.key' -ErrorAction SilentlyContinue))) {
+          Write-Log -message ('{0} :: ed25519 and/or openpgp key missing. awaiting user intervention.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
           Sleep 60
         }
-        while (-not ((Get-Item -Path 'C:\generic-worker\cot.key').Length -gt 0)) {
-          Write-Log -message ('{0} :: cot key empty. awaiting user intervention.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+        while ((-not ((Get-Item -Path 'C:\generic-worker\ed25519.key').Length -gt 0)) -or (-not ((Get-Item -Path 'C:\generic-worker\openpgp.key').Length -gt 0))) {
+          Write-Log -message ('{0} :: ed25519 and/or openpgp key empty. awaiting user intervention.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
           Sleep 60
         }
         while (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).Length -gt 0) {
           Write-Log -message ('{0} :: rdp session detected. awaiting user disconnect.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
           Sleep 60
         }
-        if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
-          Start-LoggedProcess -filePath 'icacls' -ArgumentList @('C:\generic-worker\cot.key', '/grant', 'Administrators:(GA)') -name 'icacls-cot-grant-admin'
-          Start-LoggedProcess -filePath 'icacls' -ArgumentList @('C:\generic-worker\cot.key', '/inheritance:r') -name 'icacls-cot-inheritance-remove'
-          Write-Log -message ('{0} :: cot key detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+        if ((Test-Path -Path 'C:\generic-worker\ed25519.key' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'C:\generic-worker\openpgp.key' -ErrorAction SilentlyContinue)) {
+          foreach ($keyAlgorithm in @('ed25519', 'openpgp')) {
+            Start-LoggedProcess -filePath 'icacls' -ArgumentList @(('C:\generic-worker\{0}.key' -f $keyAlgorithm), '/grant', 'Administrators:(GA)') -name ('icacls-{0}-grant-admin' -f $keyAlgorithm)
+            Start-LoggedProcess -filePath 'icacls' -ArgumentList @(('C:\generic-worker\{0}.key' -f $keyAlgorithm), '/inheritance:r') -name ('icacls-{0}-inheritance-remove' -f $keyAlgorithm)
+          }
+          Write-Log -message ('{0} :: ed25519 and openpgp keys detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
           & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
         } else {
-          Write-Log -message ('{0} :: cot key intervention failed. awaiting timeout or cancellation.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+          Write-Log -message ('{0} :: ed25519 and/or openpgp key intervention failed. awaiting timeout or cancellation.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
         }
       }
       # all other workers can generate new keys. these don't require trust from cot repo
       default {
-        if (-not (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue)) {
-          Write-Log -message ('{0} :: cot key missing. generating key.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
-          Start-LoggedProcess -filePath 'C:\generic-worker\generic-worker.exe' -ArgumentList @('new-openpgp-keypair', '--file', 'C:\generic-worker\cot.key') -name 'generic-worker-new-openpgp-keypair'
-          if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
-            Write-Log -message ('{0} :: cot key generated.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-          } else {
-            Write-Log -message ('{0} :: cot key generation failed.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+        foreach ($keyAlgorithm in @('ed25519', 'openpgp')) {
+          if (-not (Test-Path -Path ('C:\generic-worker\{0}.key' -f $keyAlgorithm) -ErrorAction SilentlyContinue)) {
+            Write-Log -message ('{0} :: {1} key missing. generating key.' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'WARN'
+            Start-LoggedProcess -filePath 'C:\generic-worker\generic-worker.exe' -ArgumentList @(('new-{0}-keypair' -f $keyAlgorithm), '--file', ('C:\generic-worker\{0}.key' -f $keyAlgorithm)) -name ('generic-worker-new-{0}-keypair' -f $keyAlgorithm)
+            if (Test-Path -Path ('C:\generic-worker\{0}.key' -f $keyAlgorithm) -ErrorAction SilentlyContinue) {
+              Write-Log -message ('{0} :: {1} key generated.' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'INFO'
+            } else {
+              Write-Log -message ('{0} :: {1} key generation failed.' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'ERROR'
+            }
           }
         }
-        if (Test-Path -Path 'C:\generic-worker\cot.key' -ErrorAction SilentlyContinue) {
-          Write-Log -message ('{0} :: cot key detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+        if ((Test-Path -Path 'C:\generic-worker\ed25519.key' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'C:\generic-worker\openpgp.key' -ErrorAction SilentlyContinue)) {
+          Write-Log -message ('{0} :: ed25519 and openpgp keys detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
           & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
         } else {
-          Write-Log -message ('{0} :: cot key missing. awaiting timeout or cancellation.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+          Write-Log -message ('{0} :: ed25519 and/or openpgp key missing. awaiting timeout or cancellation.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
         }
         if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
           & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
@@ -1705,7 +1911,11 @@ function Invoke-OpenCloudConfig {
         'Microsoft Windows 10*' {
           $isWorker = $true
           $runDscOnWorker = $true
-          $workerType = $(if (Test-Path -Path 'C:\dsc\GW10UX.semaphore' -ErrorAction SilentlyContinue) { 'gecko-t-win10-64-ux' } else { 'gecko-t-win10-64-hw' })
+          if (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') {
+            $workerType = 'gecko-t-win10-a64-beta'
+          } else {
+            $workerType = $(if (Test-Path -Path 'C:\dsc\GW10UX.semaphore' -ErrorAction SilentlyContinue) { 'gecko-t-win10-64-ux' } else { 'gecko-t-win10-64-hw' })
+          }
         }
       }
       Write-Log -message ('{0} :: isWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $isWorker) -severity 'INFO'
@@ -1853,6 +2063,12 @@ function Invoke-OpenCloudConfig {
         }
       }
       Set-WinrmConfig -settings @{'MaxEnvelopeSizekb'=32696;'MaxTimeoutms'=180000}
+      if (Test-Path -Path ('{0}\log\*.dsc-run.log' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
+        try {
+          Stop-Transcript
+        } catch {}
+        Remove-Item -Path ('{0}\log\*.dsc-run.log' -f $env:SystemDrive) -force -ErrorAction SilentlyContinue
+      }
       $transcript = ('{0}\log\{1}.dsc-run.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
       # end pre dsc setup ###########################################################################################################################################
 
@@ -1870,7 +2086,13 @@ function Invoke-OpenCloudConfig {
         Write-Log -message ('{0} :: event log source "occ-dsc" detected.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
       }
       Install-Dependencies
-      Invoke-RemoteDesiredStateConfig -url ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/xDynamicConfig.ps1' -f $sourceOrg, $sourceRepo, $sourceRev)
+      if (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') {
+        Write-Log -message ('{0} :: arm 64 architecture detected' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+        Invoke-CustomDesiredStateProvider -sourceOrg $sourceOrg -sourceRepo $sourceRepo -sourceRev $sourceRev -workerType 'gecko-t-win10-a64-beta'
+      } else {
+        Invoke-RemoteDesiredStateConfig -url ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/xDynamicConfig.ps1' -f $sourceOrg, $sourceRepo, $sourceRev)
+      }
+      
       Stop-Transcript
       # end run dsc #################################################################################################################################################
       
@@ -1928,11 +2150,11 @@ function Invoke-OpenCloudConfig {
     }
 
     # archive dsc logs
-    Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force }
+    Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue }
     $zipFilePath = ('{0}\log\{1}.userdata-run.zip' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
     New-ZipFile -ZipFilePath $zipFilePath -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') } | % { $_.FullName })
     Write-Log -message ('{0} :: log archive {1} created.' -f $($MyInvocation.MyCommand.Name), $zipFilePath) -severity 'INFO'
-    Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and (-not $_.Name.EndsWith('.dsc-run.log')) } | % { Remove-Item -Path $_.FullName -Force }
+    Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and (-not $_.Name.EndsWith('.dsc-run.log')) } | % { Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue }
 
     if ((-not ($isWorker)) -and (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
       Remove-Item -Path $lock -force -ErrorAction SilentlyContinue

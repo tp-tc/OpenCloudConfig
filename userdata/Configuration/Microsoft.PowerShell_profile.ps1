@@ -38,19 +38,14 @@ if (Get-ItemProperty 'HKCU:\Control Panel\Cursors' -ErrorAction SilentlyContinue
 ((New-Object -c Shell.Application).Namespace('{0}\System32\WindowsPowerShell\v1.0' -f $env:SystemRoot).parsename('powershell.exe')).InvokeVerb('taskbarpin')
 ((New-Object -c Shell.Application).Namespace('{0}\System32' -f $env:SystemRoot).parsename('cmd.exe')).InvokeVerb('taskbarpin')
 ((New-Object -c Shell.Application).Namespace('{0}\System32' -f $env:SystemRoot).parsename('eventvwr.msc')).InvokeVerb('taskbarpin')
-((New-Object -c Shell.Application).Namespace('{0}\Sublime Text 3' -f $env:ProgramFiles).parsename('sublime_text.exe')).InvokeVerb('taskbarpin')
+if (Test-Path -Path ('{0}\Sublime Text 3' -f $env:ProgramFiles) -ErrorAction 'SilentlyContinue') {
+  ((New-Object -c Shell.Application).Namespace('{0}\Sublime Text 3' -f $env:ProgramFiles).parsename('sublime_text.exe')).InvokeVerb('taskbarpin')
+} elseif (Test-Path -Path ('{0}\Sublime Text 3' -f ${env:ProgramFiles(x86)}) -ErrorAction 'SilentlyContinue') {
+  ((New-Object -c Shell.Application).Namespace('{0}\Sublime Text 3' -f ${env:ProgramFiles(x86)}).parsename('sublime_text.exe')).InvokeVerb('taskbarpin')
+}
 
-$md = @'
-[DllImport("user32.dll")]
-public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-
-[DllImport("user32.dll")]
-public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-
-[DllImport("user32.dll", SetLastError = true)]
-public static extern bool SetLayeredWindowAttributes(IntPtr hWnd, uint crKey, int bAlpha, uint dwFlags);
-'@
-if ((Get-ItemProperty -Path ('{0}\System32\hal.dll' -f $env:SystemRoot)).VersionInfo.FileVersion.Split('.')[0] -ne '10') { # Windows versions other than 10
+if (-not ((Get-WmiObject -Class 'Win32_OperatingSystem').Caption.Contains('Windows 10'))) { # Windows versions other than 10
+  $md = '[DllImport("user32.dll")] public static extern int GetWindowLong(IntPtr hWnd, int nIndex); [DllImport("user32.dll")] public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong); [DllImport("user32.dll", SetLastError = true)] public static extern bool SetLayeredWindowAttributes(IntPtr hWnd, uint crKey, int bAlpha, uint dwFlags);'
   # transparent powershell and cmd windows
   $user32 = Add-Type -Name 'User32' -Namespace 'Win32' -PassThru -MemberDefinition $md
   Get-Process | Where-Object { @('powershell', 'cmd') -contains $_.ProcessName } | % {
