@@ -162,6 +162,14 @@ function Invoke-OccReset {
                   Write-Log -message ('{0} :: gw livelogSecret copied to {1} from {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwMasterConfigPath) -severity 'INFO'
                 }
               }
+              if (($gwConfig.publicIP) -and ($gwConfig.publicIP.length)) {
+                Write-Log -message ('{0} :: gw publicIP appears to be set in {1} with a length of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.publicIP.length) -severity 'DEBUG'
+              } else {
+                Write-Log -message ('{0} :: gw publicIP is not set in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
+                $gwConfig.publicIP = (Get-NetIPAddress | ? { $_.AddressFamily -eq 'IPv4' -and $_.IPAddress.StartsWith('10.') }).IPAddress
+                [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
+                Write-Log -message ('{0} :: gw publicIP set to {1} in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.publicIP, $gwConfigPath) -severity 'INFO'
+              }
             } elseif (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 13.*') {
               Write-Log -message ('{0} :: gw 13+ exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
 
