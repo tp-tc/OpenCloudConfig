@@ -98,7 +98,7 @@ function Invoke-OccReset {
         $guid = [Guid]::NewGuid()
         $scriptUrl = ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/rundsc.ps1?{0}' -f $guid)
         $newScriptPath = ('C:\dsc\rundsc-{0}.ps1' -f $guid)
-        (New-Object Net.WebClient).DownloadFile($scriptUrl, $newScriptPath)
+        New-Object Net.WebClient).DownloadFile($scriptUrl, $newScriptPath)
 
         $oldScriptPath = 'C:\dsc\rundsc.ps1'
         if (Test-Path -Path $oldScriptPath -ErrorAction SilentlyContinue) {
