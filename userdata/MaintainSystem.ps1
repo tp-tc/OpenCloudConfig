@@ -98,7 +98,7 @@ function Invoke-OccReset {
         $guid = [Guid]::NewGuid()
         $scriptUrl = ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/rundsc.ps1?{0}' -f $guid)
         $newScriptPath = ('C:\dsc\rundsc-{0}.ps1' -f $guid)
-        New-Object Net.WebClient).DownloadFile($scriptUrl, $newScriptPath)
+        (New-Object Net.WebClient).DownloadFile($scriptUrl, $newScriptPath)
 
         $oldScriptPath = 'C:\dsc\rundsc.ps1'
         if (Test-Path -Path $oldScriptPath -ErrorAction SilentlyContinue) {
@@ -134,7 +134,7 @@ function Invoke-OccReset {
             if (Test-Path -Path $ed25519SigningKeyLocationPath -ErrorAction SilentlyContinue) {
               Write-Log -message ('{0} :: detected ed25519SigningKey at {1}' -f $($MyInvocation.MyCommand.Name), $ed25519SigningKeyLocationPath) -severity 'DEBUG'
             } else {
-              & $gwExePath @(('new-ed25519-keypair', '--file', $ed25519SigningKeyLocationPath)
+              & $gwExePath @('new-ed25519-keypair', '--file', $ed25519SigningKeyLocationPath)
               Write-Log -message ('{0} :: generated ed25519SigningKey at {1}' -f $($MyInvocation.MyCommand.Name), $ed25519SigningKeyLocationPath) -severity 'INFO'
             }
             if (-not ($gwConfig.ed25519SigningKeyLocation)) {
@@ -145,7 +145,7 @@ function Invoke-OccReset {
             if (Test-Path -Path $openpgpSigningKeyLocationPath -ErrorAction SilentlyContinue) {
               Write-Log -message ('{0} :: detected openpgpSigningKey at {1}' -f $($MyInvocation.MyCommand.Name), $openpgpSigningKeyLocationPath) -severity 'DEBUG'
             } else {
-              & $gwExePath @(('new-openpgp-keypair', '--file', $openpgpSigningKeyLocationPath)
+              & $gwExePath @('new-openpgp-keypair', '--file', $openpgpSigningKeyLocationPath)
               Write-Log -message ('{0} :: generated openpgpSigningKey at {1}' -f $($MyInvocation.MyCommand.Name), $openpgpSigningKeyLocationPath) -severity 'INFO'
             }
             if (-not ($gwConfig.openpgpSigningKeyLocation)) {
