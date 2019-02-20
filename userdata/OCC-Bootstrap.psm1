@@ -2045,8 +2045,12 @@ function Invoke-OpenCloudConfig {
         'Microsoft Windows 7*' {
           # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
           Set-NetworkCategory -category 'private'
-          # this setting persists only for the current session
-          Enable-PSRemoting -Force
+          try {
+            # this setting persists only for the current session
+            Enable-PSRemoting -Force
+          } catch {
+            Write-Log -message ('{0} :: {1} - error enabling powershell remoting. {2}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+          }
           #if (-not ($isWorker)) {
           #  Set-DefaultProfileProperties
           #}
@@ -2054,15 +2058,23 @@ function Invoke-OpenCloudConfig {
         'Microsoft Windows 10*' {
           # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
           Set-NetworkCategory -category 'private'
-          # this setting persists only for the current session
-          Enable-PSRemoting -SkipNetworkProfileCheck -Force
+          try {
+            # this setting persists only for the current session
+            Enable-PSRemoting -SkipNetworkProfileCheck -Force
+          } catch {
+            Write-Log -message ('{0} :: {1} - error enabling powershell remoting. {2}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+          }
           #if (-not ($isWorker)) {
           #  Set-DefaultProfileProperties
           #}
         }
         default {
-          # this setting persists only for the current session
-          Enable-PSRemoting -SkipNetworkProfileCheck -Force
+          try {
+            # this setting persists only for the current session
+            Enable-PSRemoting -SkipNetworkProfileCheck -Force
+          } catch {
+            Write-Log -message ('{0} :: {1} - error enabling powershell remoting. {2}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+          }
         }
       }
       Set-WinrmConfig -settings @{'MaxEnvelopeSizekb'=32696;'MaxTimeoutms'=180000}
