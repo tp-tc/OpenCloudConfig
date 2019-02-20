@@ -120,6 +120,7 @@ function Invoke-OccReset {
         }
 
         $gwConfigPath = 'C:\generic-worker\gen_worker.config'
+        #$gwConfig = (Get-Content $gwConfigPath -raw | ConvertFrom-Json)
         $gwMasterConfigPath = 'C:\generic-worker\master-generic-worker.json'
         $gwExePath = 'C:\generic-worker\generic-worker.exe'
         if (Test-Path -Path $gwConfigPath -ErrorAction SilentlyContinue) {
@@ -127,6 +128,12 @@ function Invoke-OccReset {
           if (Test-Path -Path $gwExePath -ErrorAction SilentlyContinue) {
             if (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 10.11.2 *') {
               Write-Log -message ('{0} :: gw 10.11.2 exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
+              $cleanupSemaphorePath = 'C:\DSC\20190220-cleanup-complete.txt'
+              if (-not (Test-Path -Path $cleanupSemaphorePath -ErrorAction SilentlyContinue)) {
+                Remove-Item -Path $gwConfigPath -force -ErrorAction SilentlyContinue
+                New-Item -Path $cleanupSemaphorePath -type file -force
+                Write-Log -message ('{0} :: removed {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'INFO'
+              }
             } elseif (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 13.*') {
               Write-Log -message ('{0} :: gw 13+ exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
             }
