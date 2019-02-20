@@ -118,41 +118,54 @@ function Invoke-OccReset {
           Write-Log -message ('{0} :: existing rundsc not found. downloaded rundsc applied' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
         }
 
-        $gwConfigPath = 'C:\generic-worker\generic-worker.config'
+        $gwConfigPath = 'C:\generic-worker\gen_worker.config'
         $gwExePath = 'C:\generic-worker\generic-worker.exe'
         if (Test-Path -Path $gwConfigPath -ErrorAction SilentlyContinue) {
           Write-Log -message ('{0} :: gw config found at {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'DEBUG'
-          if ((Test-Path -Path $gwExePath -ErrorAction SilentlyContinue) -and (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 13.*')) {
-            Write-Log -message ('{0} :: gw 13+ exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
+          if (Test-Path -Path $gwExePath -ErrorAction SilentlyContinue) {
+            if (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 10.11.2 *') {
+              Write-Log -message ('{0} :: gw 10.11.2 exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
 
-            $gwConfig = Get-Content $gwConfigPath -raw | ConvertFrom-Json
-            if ($gwConfig.signingKeyLocation) {
-              Write-Log -message ('{0} :: removing signingKeyLocation {1} from {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.signingKeyLocation, $gwConfigPath) -severity 'DEBUG'
-              $gwConfig.PSObject.Properties.Remove('signingKeyLocation') #"signingKeyLocation": "C:\\generic-worker\\generic-worker-gpg-signing-key.key",
+              $gwConfig = Get-Content $gwConfigPath -raw | ConvertFrom-Json
+              if (($gwConfig.accessToken) -and ($gwConfig.accessToken.length)) {
+                Write-Log -message ('{0} :: gw accessToken appears to be set in {1} with a length of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.accessToken.length) -severity 'DEBUG'
+              } else {
+                Write-Log -message ('{0} :: gw accessToken is not set in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'DEBUG'
+                #[System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
+              }
+              
+            } elseif (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 13.*') {
+              Write-Log -message ('{0} :: gw 13+ exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
+
+              $gwConfig = Get-Content $gwConfigPath -raw | ConvertFrom-Json
+              if ($gwConfig.signingKeyLocation) {
+                Write-Log -message ('{0} :: removing signingKeyLocation {1} from {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.signingKeyLocation, $gwConfigPath) -severity 'DEBUG'
+                $gwConfig.PSObject.Properties.Remove('signingKeyLocation') #"signingKeyLocation": "C:\\generic-worker\\generic-worker-gpg-signing-key.key",
+              }
+              $ed25519SigningKeyLocationPath = 'C:\generic-worker\ed25519.key'
+              if (Test-Path -Path $ed25519SigningKeyLocationPath -ErrorAction SilentlyContinue) {
+                Write-Log -message ('{0} :: detected ed25519SigningKey at {1}' -f $($MyInvocation.MyCommand.Name), $ed25519SigningKeyLocationPath) -severity 'DEBUG'
+              } else {
+                & $gwExePath @('new-ed25519-keypair', '--file', $ed25519SigningKeyLocationPath)
+                Write-Log -message ('{0} :: generated ed25519SigningKey at {1}' -f $($MyInvocation.MyCommand.Name), $ed25519SigningKeyLocationPath) -severity 'INFO'
+              }
+              if (-not ($gwConfig.ed25519SigningKeyLocation)) {
+                Write-Log -message ('{0} :: adding ed25519SigningKeyLocation {1} to {2}' -f $($MyInvocation.MyCommand.Name), $ed25519SigningKeyLocationPath, $gwConfigPath) -severity 'INFO'
+                $gwConfig.Add('ed25519SigningKeyLocation', $ed25519SigningKeyLocationPath)
+              }
+              $openpgpSigningKeyLocationPath = 'C:\generic-worker\openpgp.key'
+              if (Test-Path -Path $openpgpSigningKeyLocationPath -ErrorAction SilentlyContinue) {
+                Write-Log -message ('{0} :: detected openpgpSigningKey at {1}' -f $($MyInvocation.MyCommand.Name), $openpgpSigningKeyLocationPath) -severity 'DEBUG'
+              } else {
+                & $gwExePath @('new-openpgp-keypair', '--file', $openpgpSigningKeyLocationPath)
+                Write-Log -message ('{0} :: generated openpgpSigningKey at {1}' -f $($MyInvocation.MyCommand.Name), $openpgpSigningKeyLocationPath) -severity 'INFO'
+              }
+              if (-not ($gwConfig.openpgpSigningKeyLocation)) {
+                Write-Log -message ('{0} :: adding openpgpSigningKeyLocation {1} to {2}' -f $($MyInvocation.MyCommand.Name), $openpgpSigningKeyLocationPath, $gwConfigPath) -severity 'INFO'
+                $gwConfig.Add('openpgpSigningKeyLocation', $openpgpSigningKeyLocationPath)
+              }
+              [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
             }
-            $ed25519SigningKeyLocationPath = 'C:\generic-worker\ed25519.key'
-            if (Test-Path -Path $ed25519SigningKeyLocationPath -ErrorAction SilentlyContinue) {
-              Write-Log -message ('{0} :: detected ed25519SigningKey at {1}' -f $($MyInvocation.MyCommand.Name), $ed25519SigningKeyLocationPath) -severity 'DEBUG'
-            } else {
-              & $gwExePath @('new-ed25519-keypair', '--file', $ed25519SigningKeyLocationPath)
-              Write-Log -message ('{0} :: generated ed25519SigningKey at {1}' -f $($MyInvocation.MyCommand.Name), $ed25519SigningKeyLocationPath) -severity 'INFO'
-            }
-            if (-not ($gwConfig.ed25519SigningKeyLocation)) {
-              Write-Log -message ('{0} :: adding ed25519SigningKeyLocation {1} to {2}' -f $($MyInvocation.MyCommand.Name), $ed25519SigningKeyLocationPath, $gwConfigPath) -severity 'INFO'
-              $gwConfig.Add('ed25519SigningKeyLocation', $ed25519SigningKeyLocationPath)
-            }
-            $openpgpSigningKeyLocationPath = 'C:\generic-worker\openpgp.key'
-            if (Test-Path -Path $openpgpSigningKeyLocationPath -ErrorAction SilentlyContinue) {
-              Write-Log -message ('{0} :: detected openpgpSigningKey at {1}' -f $($MyInvocation.MyCommand.Name), $openpgpSigningKeyLocationPath) -severity 'DEBUG'
-            } else {
-              & $gwExePath @('new-openpgp-keypair', '--file', $openpgpSigningKeyLocationPath)
-              Write-Log -message ('{0} :: generated openpgpSigningKey at {1}' -f $($MyInvocation.MyCommand.Name), $openpgpSigningKeyLocationPath) -severity 'INFO'
-            }
-            if (-not ($gwConfig.openpgpSigningKeyLocation)) {
-              Write-Log -message ('{0} :: adding openpgpSigningKeyLocation {1} to {2}' -f $($MyInvocation.MyCommand.Name), $openpgpSigningKeyLocationPath, $gwConfigPath) -severity 'INFO'
-              $gwConfig.Add('openpgpSigningKeyLocation', $openpgpSigningKeyLocationPath)
-            }
-            [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
           }
         } else {
           Write-Log -message ('{0} :: existing gw config not found' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
