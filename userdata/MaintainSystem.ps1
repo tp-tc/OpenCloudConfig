@@ -128,16 +128,27 @@ function Invoke-OccReset {
               Write-Log -message ('{0} :: gw 10.11.2 exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
 
               $gwConfig = (Get-Content $gwConfigPath -raw | ConvertFrom-Json)
+              $gwMasterConfig = (Get-Content $gwMasterConfigPath -raw | ConvertFrom-Json)
               if (($gwConfig.accessToken) -and ($gwConfig.accessToken.length)) {
                 Write-Log -message ('{0} :: gw accessToken appears to be set in {1} with a length of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.accessToken.length) -severity 'DEBUG'
               } else {
                 Write-Log -message ('{0} :: gw accessToken is not set in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
-                $gwMasterConfig = (Get-Content $gwMasterConfigPath -raw | ConvertFrom-Json)
                 if (($gwMasterConfig.accessToken) -and ($gwMasterConfig.accessToken.length)) {
                   Write-Log -message ('{0} :: gw accessToken appears to be set in {1} with a length of {2}' -f $($MyInvocation.MyCommand.Name), $gwMasterConfigPath, $gwMasterConfig.accessToken.length) -severity 'INFO'
                   $gwConfig.accessToken = $gwMasterConfig.accessToken
                   [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
                   Write-Log -message ('{0} :: gw accessToken copied to {1} from {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwMasterConfigPath) -severity 'INFO'
+                }
+              }
+              if (($gwConfig.clientId) -and ($gwConfig.clientId.length)) {
+                Write-Log -message ('{0} :: gw clientId appears to be set in {1} with a length of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.clientId.length) -severity 'DEBUG'
+              } else {
+                Write-Log -message ('{0} :: gw clientId is not set in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
+                if (($gwMasterConfig.clientId) -and ($gwMasterConfig.clientId.length)) {
+                  Write-Log -message ('{0} :: gw clientId appears to be set in {1} with a length of {2}' -f $($MyInvocation.MyCommand.Name), $gwMasterConfigPath, $gwMasterConfig.clientId.length) -severity 'INFO'
+                  $gwConfig.clientId = $gwMasterConfig.clientId
+                  [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
+                  Write-Log -message ('{0} :: gw clientId copied to {1} from {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwMasterConfigPath) -severity 'INFO'
                 }
               }
             } elseif (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 13.*') {
