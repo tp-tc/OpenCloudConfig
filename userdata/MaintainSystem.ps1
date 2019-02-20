@@ -211,6 +211,16 @@ function Invoke-OccReset {
                 [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
                 Write-Log -message ('{0} :: gw provisionerId set to {1} in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.provisionerId, $gwConfigPath) -severity 'INFO'
               }
+              if (($gwConfig.queueBaseURL) -and ($gwConfig.queueBaseURL.length) -and ($gwConfig.queueBaseURL -ieq 'https://queue.taskcluster.net')) {
+                Write-Log -message ('{0} :: gw queueBaseURL appears to be set in {1} with a value of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.queueBaseURL) -severity 'DEBUG'
+              } else {
+                Write-Log -message ('{0} :: gw queueBaseURL is not set in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
+                $gwConfig.queueBaseURL = 'releng-hardware'
+                [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
+                Write-Log -message ('{0} :: gw queueBaseURL set to {1} in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.queueBaseURL, $gwConfigPath) -severity 'INFO'
+              }
+              #authBaseURL, provisionerBaseURL, purgeCacheBaseURL, queueBaseURL
+              #auth.taskcluster.net, aws-provisioner.taskcluster.net, purge-cache.taskcluster.net, and queue.taskcluster.net
             } elseif (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 13.*') {
               Write-Log -message ('{0} :: gw 13+ exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
 
