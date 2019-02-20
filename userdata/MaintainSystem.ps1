@@ -137,7 +137,7 @@ function Invoke-OccReset {
                   Write-Log -message ('{0} :: gw accessToken appears to be set in {1} with a length of {2}' -f $($MyInvocation.MyCommand.Name), $gwMasterConfigPath, $gwMasterConfig.accessToken.length) -severity 'INFO'
                   $gwConfig.accessToken = $gwMasterConfig.accessToken
                   [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
-                  Write-Log -message ('{0} :: gw accessToken copied to {1} from {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig, $gwMasterConfigPath) -severity 'INFO'
+                  Write-Log -message ('{0} :: gw accessToken copied to {1} from {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwMasterConfigPath) -severity 'INFO'
                 }
               }
             } elseif (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 13.*') {
