@@ -1913,6 +1913,7 @@ function Invoke-OpenCloudConfig {
           $runDscOnWorker = $true
           if (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') {
             $workerType = 'gecko-t-win10-a64-beta'
+            Write-Log -message ('{0} :: arm 64 architecture detected' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
           } else {
             $workerType = $(if (Test-Path -Path 'C:\dsc\GW10UX.semaphore' -ErrorAction SilentlyContinue) { 'gecko-t-win10-64-ux' } else { 'gecko-t-win10-64-hw' })
           }
@@ -2086,11 +2087,14 @@ function Invoke-OpenCloudConfig {
         Write-Log -message ('{0} :: event log source "occ-dsc" detected.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
       }
       Install-Dependencies
-      if (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') {
-        Write-Log -message ('{0} :: arm 64 architecture detected' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
-        Invoke-CustomDesiredStateProvider -sourceOrg $sourceOrg -sourceRepo $sourceRepo -sourceRev $sourceRev -workerType 'gecko-t-win10-a64-beta'
-      } else {
-        Invoke-RemoteDesiredStateConfig -url ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/xDynamicConfig.ps1' -f $sourceOrg, $sourceRepo, $sourceRev)
+
+      switch -wildcard ((Get-WmiObject -class Win32_OperatingSystem).Caption) {
+        'Microsoft Windows 10*' {
+          Invoke-CustomDesiredStateProvider -sourceOrg $sourceOrg -sourceRepo $sourceRepo -sourceRev $sourceRev -workerType $workerType
+        }
+        default {
+          Invoke-RemoteDesiredStateConfig -url ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/xDynamicConfig.ps1' -f $sourceOrg, $sourceRepo, $sourceRev)
+        }
       }
       
       Stop-Transcript
