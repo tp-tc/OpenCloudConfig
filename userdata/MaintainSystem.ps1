@@ -119,6 +119,7 @@ function Invoke-OccReset {
         }
 
         $gwConfigPath = 'C:\generic-worker\gen_worker.config'
+        $gwMasterConfigPath = 'C:\generic-worker\master-generic-worker.json'
         $gwExePath = 'C:\generic-worker\generic-worker.exe'
         if (Test-Path -Path $gwConfigPath -ErrorAction SilentlyContinue) {
           Write-Log -message ('{0} :: gw config found at {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'DEBUG'
@@ -126,14 +127,19 @@ function Invoke-OccReset {
             if (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 10.11.2 *') {
               Write-Log -message ('{0} :: gw 10.11.2 exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
 
-              $gwConfig = Get-Content $gwConfigPath -raw | ConvertFrom-Json
+              $gwConfig = (Get-Content $gwConfigPath -raw | ConvertFrom-Json)
               if (($gwConfig.accessToken) -and ($gwConfig.accessToken.length)) {
                 Write-Log -message ('{0} :: gw accessToken appears to be set in {1} with a length of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.accessToken.length) -severity 'DEBUG'
               } else {
-                Write-Log -message ('{0} :: gw accessToken is not set in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'DEBUG'
-                #[System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
+                Write-Log -message ('{0} :: gw accessToken is not set in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
+                $gwMasterConfig = (Get-Content $gwMasterConfigPath -raw | ConvertFrom-Json)
+                if (($gwMasterConfig.accessToken) -and ($gwMasterConfig.accessToken.length)) {
+                  Write-Log -message ('{0} :: gw accessToken appears to be set in {1} with a length of {2}' -f $($MyInvocation.MyCommand.Name), $gwMasterConfigPath, $gwMasterConfig.accessToken.length) -severity 'INFO'
+                  $gwConfig.accessToken = $gwMasterConfig.accessToken
+                  [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
+                  Write-Log -message ('{0} :: gw accessToken copied to {1} from {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig, $gwMasterConfigPath) -severity 'INFO'
+                }
               }
-              
             } elseif (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 13.*') {
               Write-Log -message ('{0} :: gw 13+ exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
 
