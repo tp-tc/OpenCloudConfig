@@ -48,6 +48,7 @@ function Run-MaintainSystem {
   }
   process {
     Remove-OldTaskDirectories
+    Invoke-OccReset
   }
   end {
     Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
@@ -81,6 +82,84 @@ function Remove-OldTaskDirectories {
       } else {
         Write-Log -message ('no task directories detected matching pattern: {0}' -f $target) -severity 'DEBUG'
       }
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
+function Invoke-OccReset {
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    try {
+      if (${env:COMPUTERNAME}.ToLower().StartsWith('t-w1064-')) {
+        $guid = [Guid]::NewGuid()
+        $scriptUrl = ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/rundsc.ps1?{0}' -f $guid)
+        $newScriptPath = ('C:\dsc\rundsc-{0}.ps1' -f $guid)
+        (New-Object Net.WebClient).DownloadFile($scriptUrl, $newScriptPath)
+
+        $oldScriptPath = 'C:\dsc\rundsc.ps1'
+        if (Test-Path -Path $oldScriptPath -ErrorAction SilentlyContinue) {
+          $newSha512Hash = (Get-FileHash -Path $newScriptPath -Algorithm 'SHA512').Hash
+          $oldSha512Hash = (Get-FileHash -Path $oldScriptPath -Algorithm 'SHA512').Hash
+
+          if ($newSha512Hash -ne $oldSha512Hash) {
+            Write-Log -message ('{0} :: rundsc hashes do not match (old: {1}, new: {2})' -f $($MyInvocation.MyCommand.Name), $oldSha512Hash, $newSha512Hash) -severity 'INFO'
+            Remove-Item -Path $oldScriptPath -force -ErrorAction SilentlyContinue
+            Move-item -LiteralPath $newScriptPath -Destination $oldScriptPath
+          } else {
+            Write-Log -message ('{0} :: rundsc hashes match (old: {1}, new: {2})' -f $($MyInvocation.MyCommand.Name), $oldSha512Hash, $newSha512Hash) -severity 'DEBUG'
+            Remove-Item -Path $newScriptPath -force -ErrorAction SilentlyContinue
+          }
+        } else {
+          Move-item -LiteralPath $newScriptPath -Destination $oldScriptPath
+          Write-Log -message ('{0} :: existing rundsc not found. downloaded rundsc applied' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+        }
+
+        $gwConfigPath = 'C:\generic-worker\generic-worker.config'
+        $gwExePath = 'C:\generic-worker\generic-worker.exe'
+        if (Test-Path -Path $gwConfigPath -ErrorAction SilentlyContinue) {
+          Write-Log -message ('{0} :: gw config found at {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'DEBUG'
+          if ((Test-Path -Path $gwExePath -ErrorAction SilentlyContinue) -and (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 13.*')) {
+            Write-Log -message ('{0} :: gw 13+ exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
+
+            $gwConfig = Get-Content $gwConfigPath -raw | ConvertFrom-Json
+            if ($gwConfig.signingKeyLocation) {
+              Write-Log -message ('{0} :: removing signingKeyLocation {1} from {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.signingKeyLocation, $gwConfigPath) -severity 'DEBUG'
+              $gwConfig.PSObject.Properties.Remove('signingKeyLocation') #"signingKeyLocation": "C:\\generic-worker\\generic-worker-gpg-signing-key.key",
+            }
+            $ed25519SigningKeyLocationPath = 'C:\generic-worker\ed25519.key'
+            if (Test-Path -Path $ed25519SigningKeyLocationPath -ErrorAction SilentlyContinue) {
+              Write-Log -message ('{0} :: detected ed25519SigningKey at {1}' -f $($MyInvocation.MyCommand.Name), $ed25519SigningKeyLocationPath) -severity 'DEBUG'
+            } else {
+              & $gwExePath @(('new-ed25519-keypair', '--file', $ed25519SigningKeyLocationPath)
+              Write-Log -message ('{0} :: generated ed25519SigningKey at {1}' -f $($MyInvocation.MyCommand.Name), $ed25519SigningKeyLocationPath) -severity 'INFO'
+            }
+            if (-not ($gwConfig.ed25519SigningKeyLocation)) {
+              Write-Log -message ('{0} :: adding ed25519SigningKeyLocation {1} to {2}' -f $($MyInvocation.MyCommand.Name), $ed25519SigningKeyLocationPath, $gwConfigPath) -severity 'INFO'
+              $gwConfig.Add('ed25519SigningKeyLocation', $ed25519SigningKeyLocationPath)
+            }
+            $openpgpSigningKeyLocationPath = 'C:\generic-worker\openpgp.key'
+            if (Test-Path -Path $openpgpSigningKeyLocationPath -ErrorAction SilentlyContinue) {
+              Write-Log -message ('{0} :: detected openpgpSigningKey at {1}' -f $($MyInvocation.MyCommand.Name), $openpgpSigningKeyLocationPath) -severity 'DEBUG'
+            } else {
+              & $gwExePath @(('new-openpgp-keypair', '--file', $openpgpSigningKeyLocationPath)
+              Write-Log -message ('{0} :: generated openpgpSigningKey at {1}' -f $($MyInvocation.MyCommand.Name), $openpgpSigningKeyLocationPath) -severity 'INFO'
+            }
+            if (-not ($gwConfig.openpgpSigningKeyLocation)) {
+              Write-Log -message ('{0} :: adding openpgpSigningKeyLocation {1} to {2}' -f $($MyInvocation.MyCommand.Name), $openpgpSigningKeyLocationPath, $gwConfigPath) -severity 'INFO'
+              $gwConfig.Add('openpgpSigningKeyLocation', $openpgpSigningKeyLocationPath)
+            }
+            [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
+          }
+        } else {
+          Write-Log -message ('{0} :: existing gw config not found' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+        }
+      }
+    } catch {
+      Write-Log -message ('{0} :: exception - {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
     }
   }
   end {
