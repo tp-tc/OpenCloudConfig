@@ -179,6 +179,14 @@ function Invoke-OccReset {
                 [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
                 Write-Log -message ('{0} :: gw workerId set to {1} in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.workerId, $gwConfigPath) -severity 'INFO'
               }
+              if (($gwConfig.workerGroup) -and ($gwConfig.workerGroup.length) -and ($gwConfig.workerGroup -ieq $env:MozSpace)) {
+                Write-Log -message ('{0} :: gw workerGroup appears to be set in {1} with a value of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.workerGroup) -severity 'DEBUG'
+              } else {
+                Write-Log -message ('{0} :: gw workerGroup is not set in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
+                $gwConfig.workerGroup = $env:MozSpace
+                [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
+                Write-Log -message ('{0} :: gw workerGroup set to {1} in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.workerGroup, $gwConfigPath) -severity 'INFO'
+              }
               if (($gwConfig.signingKeyLocation) -and ($gwConfig.signingKeyLocation.length)) {
                 Write-Log -message ('{0} :: gw signingKeyLocation appears to be set in {1} with a value of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.signingKeyLocation) -severity 'DEBUG'
               } else {
