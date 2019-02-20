@@ -151,6 +151,17 @@ function Invoke-OccReset {
                   Write-Log -message ('{0} :: gw clientId copied to {1} from {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwMasterConfigPath) -severity 'INFO'
                 }
               }
+              if (($gwConfig.livelogSecret) -and ($gwConfig.livelogSecret.length)) {
+                Write-Log -message ('{0} :: gw livelogSecret appears to be set in {1} with a length of {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwConfig.livelogSecret.length) -severity 'DEBUG'
+              } else {
+                Write-Log -message ('{0} :: gw livelogSecret is not set in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
+                if (($gwMasterConfig.livelogSecret) -and ($gwMasterConfig.livelogSecret.length)) {
+                  Write-Log -message ('{0} :: gw livelogSecret appears to be set in {1} with a length of {2}' -f $($MyInvocation.MyCommand.Name), $gwMasterConfigPath, $gwMasterConfig.livelogSecret.length) -severity 'INFO'
+                  $gwConfig.livelogSecret = $gwMasterConfig.livelogSecret
+                  [System.IO.File]::WriteAllLines($gwConfigPath, ($gwConfig | ConvertTo-Json -Depth 3), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
+                  Write-Log -message ('{0} :: gw livelogSecret copied to {1} from {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath, $gwMasterConfigPath) -severity 'INFO'
+                }
+              }
             } elseif (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 13.*') {
               Write-Log -message ('{0} :: gw 13+ exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
 
