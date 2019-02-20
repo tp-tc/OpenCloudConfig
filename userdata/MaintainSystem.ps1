@@ -65,22 +65,22 @@ function Remove-OldTaskDirectories {
     foreach ($target in ($targets | ? { (Test-Path -Path ('{0}:\' -f $_[0]) -ErrorAction SilentlyContinue) })) {
       $all_task_paths = @(Get-ChildItem -Path $target | Sort-Object -Property { $_.LastWriteTime })
       if ($all_task_paths.length -gt 1) {
-        Write-Log -message ('{0} task directories detected matching pattern: {1}' -f $all_task_paths.length, $target) -severity 'INFO'
+        Write-Log -message ('{0} :: {1} task directories detected matching pattern: {2}' -f $($MyInvocation.MyCommand.Name), $all_task_paths.length, $target) -severity 'INFO'
         $old_task_paths = $all_task_paths[0..($all_task_paths.Length-2)]
         foreach ($old_task_path in $old_task_paths) {
           try {
             & takeown.exe @('/a', '/f', $old_task_path, '/r', '/d', 'Y')
             & icacls.exe @($old_task_path, '/grant', 'Administrators:F', '/t')
             Remove-Item -Path $old_task_path -Force -Recurse
-            Write-Log -message ('removed task directory: {0}, with last write time: {1}' -f $old_task_path.FullName, $old_task_path.LastWriteTime) -severity 'INFO'
+            Write-Log -message ('{0} :: removed task directory: {1}, with last write time: {2}' -f $($MyInvocation.MyCommand.Name), $old_task_path.FullName, $old_task_path.LastWriteTime) -severity 'INFO'
           } catch {
-            Write-Log -message ('failed to remove task directory: {0}, with last write time: {1}. {2}' -f $old_task_path.FullName, $old_task_path.LastWriteTime, $_.Exception.Message) -severity 'ERROR'
+            Write-Log -message ('{0} :: failed to remove task directory: {1}, with last write time: {2}. {3}' -f $($MyInvocation.MyCommand.Name), $old_task_path.FullName, $old_task_path.LastWriteTime, $_.Exception.Message) -severity 'ERROR'
           }
         }
       } elseif ($all_task_paths.length -eq 1) {
-        Write-Log -message ('a single task directory was detected at: {0}, with last write time: {1}' -f $all_task_paths[0].FullName, $all_task_paths[0].LastWriteTime) -severity 'DEBUG'
+        Write-Log -message ('{0} :: a single task directory was detected at: {1}, with last write time: {2}' -f $($MyInvocation.MyCommand.Name), $all_task_paths[0].FullName, $all_task_paths[0].LastWriteTime) -severity 'DEBUG'
       } else {
-        Write-Log -message ('no task directories detected matching pattern: {0}' -f $target) -severity 'DEBUG'
+        Write-Log -message ('{0} :: no task directories detected matching pattern: {1}' -f$($MyInvocation.MyCommand.Name), $target) -severity 'DEBUG'
       }
     }
   }
