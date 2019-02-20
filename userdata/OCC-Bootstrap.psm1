@@ -1883,9 +1883,11 @@ function Invoke-OpenCloudConfig {
         exit
       }
       Write-Log -message ('{0} :: lock file exists but alternate powershell rundsc process not detected.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
-    } elseif ((@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).length -gt 0)) {
-      Write-Log -message ('{0} :: userdata run aborted. generic-worker is running.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-      exit
+    } elseif ((@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).Length -gt 0)) {
+      while ((@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).Length -gt 0)) {
+        Write-Log -message ('{0} :: userdata run paused. generic-worker is running.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+        Start-Sleep -Seconds 30
+      }
     } else {
       $lockDir = [IO.Path]::GetDirectoryName($lock)
       if (-not (Test-Path -Path $lockDir -ErrorAction SilentlyContinue)) {
