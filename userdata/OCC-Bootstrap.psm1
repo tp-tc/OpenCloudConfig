@@ -1639,9 +1639,10 @@ function Invoke-HardwareDiskCleanup {
     Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
-function Set-ChainOfTrustKeyAndShutdown {
+function Set-ChainOfTrustKey {
   param (
-    [string] $workerType
+    [string] $workerType,
+    [switch] $shutdown
   )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
@@ -1667,10 +1668,51 @@ function Set-ChainOfTrustKeyAndShutdown {
             Start-LoggedProcess -filePath 'icacls' -ArgumentList @(('C:\generic-worker\{0}.key' -f $keyAlgorithm), '/grant', 'Administrators:(GA)') -name ('icacls-{0}-grant-admin' -f $keyAlgorithm)
             Start-LoggedProcess -filePath 'icacls' -ArgumentList @(('C:\generic-worker\{0}.key' -f $keyAlgorithm), '/inheritance:r') -name ('icacls-{0}-inheritance-remove' -f $keyAlgorithm)
           }
-          Write-Log -message ('{0} :: ed25519 and openpgp keys detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-          & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
+          if ($shutdown) {
+            Write-Log -message ('{0} :: ed25519 and openpgp keys detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+            & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
+          } else {
+            Write-Log -message ('{0} :: ed25519 and openpgp keys detected' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+          }
         } else {
           Write-Log -message ('{0} :: ed25519 and/or openpgp key intervention failed. awaiting timeout or cancellation.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+        }
+      }
+      '^gecko-t-win10-64-(hw|ux)(-b)?$' {
+        # todo: rewrite this to generate keys if they are missing
+        $gwConfigPath = 'C:\generic-worker\gen_worker.config'
+        $gwExePath = 'C:\generic-worker\generic-worker.exe'
+        if (Test-Path -Path $gwConfigPath -ErrorAction SilentlyContinue) {
+          $gwConfig = (Get-Content $gwConfigPath -raw | ConvertFrom-Json)
+          Write-Log -message ('{0} :: gw config found at {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'DEBUG'
+          if (Test-Path -Path $gwExePath -ErrorAction SilentlyContinue) {
+            if (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 10.11.2 *') {
+              Write-Log -message ('{0} :: gw 10.11.2 exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
+              if (($gwConfig.signingKeyLocation) -and ($gwConfig.signingKeyLocation.Length)) {
+                Write-Log -message ('{0} :: gw signingKeyLocation configured as: {1} in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.signingKeyLocation, $gwConfigPath) -severity 'DEBUG'
+                if (Test-Path -Path $gwConfig.signingKeyLocation -ErrorAction SilentlyContinue) {
+                  $keyFileSize = (Get-Item -Path $gwConfig.signingKeyLocation).Length
+                  Write-Log -message ('{0} :: gw signing key file {1} detected with a file size of {2}kb' -f $($MyInvocation.MyCommand.Name), $gwConfig.signingKeyLocation, ($keyFileSize / 1kb)) -severity 'DEBUG'
+                } else {
+                  Write-Log -message ('{0} :: gw signing key file {1} not detected' -f $($MyInvocation.MyCommand.Name), $gwConfig.signingKeyLocation) -severity 'WARN'
+                }
+              } else {
+                Write-Log -message ('{0} :: gw signingKeyLocation not configured in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
+              }
+            } elseif (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 13.0.2 *') {
+              Write-Log -message ('{0} :: gw 13.0.2 exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
+              foreach ($keyAlgorithm in @('ed25519', 'openpgp')) {
+                if (Test-Path -Path ('C:\generic-worker\{0}.key' -f $keyAlgorithm) -ErrorAction SilentlyContinue) {
+                  $keyFileSize = (Get-Item -Path ('C:\generic-worker\{0}.key' -f $keyAlgorithm)).Length
+                  Write-Log -message ('{0} :: gw {1} signing key file {2} detected with a file size of {3}kb' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm, ('C:\generic-worker\{0}.key' -f $keyAlgorithm), ($keyFileSize / 1kb)) -severity 'DEBUG'
+                } else {
+                  Write-Log -message ('{0} :: gw {1} signing key file {2} not detected' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm, ('C:\generic-worker\{0}.key' -f $keyAlgorithm)) -severity 'WARN'
+                }
+              }
+            }
+          }
+        } else {
+          Write-Log -message ('{0} :: existing gw config not found' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
         }
       }
       # all other workers can generate new keys. these don't require trust from cot repo
@@ -1687,15 +1729,21 @@ function Set-ChainOfTrustKeyAndShutdown {
           }
         }
         if ((Test-Path -Path 'C:\generic-worker\ed25519.key' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'C:\generic-worker\openpgp.key' -ErrorAction SilentlyContinue)) {
-          Write-Log -message ('{0} :: ed25519 and openpgp keys detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-          & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
+          if ($shutdown) {
+            Write-Log -message ('{0} :: ed25519 and openpgp keys detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+            & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
+          } else {
+            Write-Log -message ('{0} :: ed25519 and openpgp keys detected' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+          }
         } else {
           Write-Log -message ('{0} :: ed25519 and/or openpgp key missing. awaiting timeout or cancellation.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
         }
-        if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
-          & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
-        } else {
-          Write-Log -message ('{0} :: rdp session detected. awaiting manual shutdown.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+        if ($shutdown) {
+          if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
+            & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
+          } else {
+            Write-Log -message ('{0} :: rdp session detected. awaiting manual shutdown.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+          }
         }
       }
     }
@@ -2177,13 +2225,15 @@ function Invoke-OpenCloudConfig {
     if ((-not ($isWorker)) -and (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
       Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
       if ($locationType -ne 'DataCenter') {
-        Set-ChainOfTrustKeyAndShutdown -workerType $workerType
+        Set-ChainOfTrustKey -workerType $workerType -shutdown:$true
       }
     } elseif ($isWorker) {
       if ($locationType -ne 'DataCenter') {
         if (-not (Test-VolumeExists -DriveLetter 'Z')) { # if the Z: drive isn't mapped, map it.
           Set-DriveLetters
         }
+      } else {
+        Set-ChainOfTrustKey -workerType $workerType -shutdown:$false
       }
       Wait-GenericWorkerStart -locationType $locationType -lock $lock
     }

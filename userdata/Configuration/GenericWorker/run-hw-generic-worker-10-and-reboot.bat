@@ -9,7 +9,7 @@ ping -n 5 127.0.0.1 1>/nul
 :ManifestCheck 
 rem https://bugzilla.mozilla.org/show_bug.cgi?id=1442472
 ping -n 6 127.0.0.1 1>/nul
-echo Checking for manifest completetion >> C:\generic-worker\generic-worker-wrapper.log
+echo Checking for manifest completion >> C:\generic-worker\generic-worker-wrapper.log
 if exist C:\DSC\EndOfManifest.semaphore GoTo key_pair
 tasklist /FI "IMAGENAME eq powershell.exe" | findstr "powershell.exe" >nul
 if %ERRORLEVEL% == 1 goto loop_reboot
