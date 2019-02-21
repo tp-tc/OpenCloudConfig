@@ -1678,7 +1678,7 @@ function Set-ChainOfTrustKey {
           Write-Log -message ('{0} :: ed25519 and/or openpgp key intervention failed. awaiting timeout or cancellation.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
         }
       }
-      '^gecko-t-win10-64-(hw|ux)(-b)?$' {
+      '^gecko-t-win10-(a64-beta|64-(hw|ux)(-b)?)$' {
         # todo: rewrite this to generate keys if they are missing
         $gwConfigPath = 'C:\generic-worker\gen_worker.config'
         $gwExePath = 'C:\generic-worker\generic-worker.exe'
