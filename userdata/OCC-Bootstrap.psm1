@@ -1651,11 +1651,11 @@ function Set-ChainOfTrustKey {
     switch -regex ($workerType) {
       # level 3 builder needs key added by user intervention and must already exist in cot repo
       '^gecko-3-b-win2012(-c[45])?$' {
-        while ((-not (Test-Path -Path 'C:\generic-worker\ed25519.key' -ErrorAction SilentlyContinue)) -or (-not (Test-Path -Path 'C:\generic-worker\openpgp.key' -ErrorAction SilentlyContinue))) {
+        while ((-not (Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue)) -or (-not (Test-Path -Path 'C:\generic-worker\openpgp-private.key' -ErrorAction SilentlyContinue))) {
           Write-Log -message ('{0} :: ed25519 and/or openpgp key missing. awaiting user intervention.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
           Sleep 60
         }
-        while ((-not ((Get-Item -Path 'C:\generic-worker\ed25519.key').Length -gt 0)) -or (-not ((Get-Item -Path 'C:\generic-worker\openpgp.key').Length -gt 0))) {
+        while ((-not ((Get-Item -Path 'C:\generic-worker\ed25519-private.key').Length -gt 0)) -or (-not ((Get-Item -Path 'C:\generic-worker\openpgp-private.key').Length -gt 0))) {
           Write-Log -message ('{0} :: ed25519 and/or openpgp key empty. awaiting user intervention.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
           Sleep 60
         }
@@ -1663,10 +1663,10 @@ function Set-ChainOfTrustKey {
           Write-Log -message ('{0} :: rdp session detected. awaiting user disconnect.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
           Sleep 60
         }
-        if ((Test-Path -Path 'C:\generic-worker\ed25519.key' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'C:\generic-worker\openpgp.key' -ErrorAction SilentlyContinue)) {
+        if ((Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'C:\generic-worker\openpgp-private.key' -ErrorAction SilentlyContinue)) {
           foreach ($keyAlgorithm in @('ed25519', 'openpgp')) {
-            Start-LoggedProcess -filePath 'icacls' -ArgumentList @(('C:\generic-worker\{0}.key' -f $keyAlgorithm), '/grant', 'Administrators:(GA)') -name ('icacls-{0}-grant-admin' -f $keyAlgorithm)
-            Start-LoggedProcess -filePath 'icacls' -ArgumentList @(('C:\generic-worker\{0}.key' -f $keyAlgorithm), '/inheritance:r') -name ('icacls-{0}-inheritance-remove' -f $keyAlgorithm)
+            Start-LoggedProcess -filePath 'icacls' -ArgumentList @(('C:\generic-worker\{0}-private.key' -f $keyAlgorithm), '/grant', 'Administrators:(GA)') -name ('icacls-{0}-grant-admin' -f $keyAlgorithm)
+            Start-LoggedProcess -filePath 'icacls' -ArgumentList @(('C:\generic-worker\{0}-private.key' -f $keyAlgorithm), '/inheritance:r') -name ('icacls-{0}-inheritance-remove' -f $keyAlgorithm)
           }
           if ($shutdown) {
             Write-Log -message ('{0} :: ed25519 and openpgp keys detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
@@ -1679,7 +1679,6 @@ function Set-ChainOfTrustKey {
         }
       }
       '^gecko-t-win10-(a64-beta|64-(hw|ux)(-b)?)$' {
-        # todo: rewrite this to generate keys if they are missing
         $gwConfigPath = 'C:\generic-worker\gen_worker.config'
         $gwExePath = 'C:\generic-worker\generic-worker.exe'
         if (Test-Path -Path $gwConfigPath -ErrorAction SilentlyContinue) {
@@ -1702,33 +1701,61 @@ function Set-ChainOfTrustKey {
             } elseif (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 13.0.2 *') {
               Write-Log -message ('{0} :: gw 13.0.2 exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
               foreach ($keyAlgorithm in @('ed25519', 'openpgp')) {
-                if (Test-Path -Path ('C:\generic-worker\{0}.key' -f $keyAlgorithm) -ErrorAction SilentlyContinue) {
-                  $keyFileSize = (Get-Item -Path ('C:\generic-worker\{0}.key' -f $keyAlgorithm)).Length
-                  Write-Log -message ('{0} :: gw {1} signing key file {2} detected with a file size of {3}kb' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm, ('C:\generic-worker\{0}.key' -f $keyAlgorithm), ($keyFileSize / 1kb)) -severity 'DEBUG'
+                $privateKeyPath = ('C:\generic-worker\{0}-private.key' -f $keyAlgorithm)
+                $publicKeyPath = ('C:\generic-worker\{0}-public.key' -f $keyAlgorithm)
+                if (-not (Test-Path -Path $privateKeyPath -ErrorAction SilentlyContinue)) {
+                  Write-Log -message ('{0} :: {1} key missing. generating key' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'WARN'
+                  Start-LoggedProcess -filePath 'C:\generic-worker\generic-worker.exe' -ArgumentList @(('new-{0}-keypair' -f $keyAlgorithm), '--file', $privateKeyPath) -redirectStandardOutput $publicKeyPath -name ('generic-worker-new-{0}-keypair' -f $keyAlgorithm)
+                  Start-LoggedProcess -filePath 'icacls' -ArgumentList @($privateKeyPath, '/grant', 'Administrators:(GA)') -name ('icacls-{0}-grant-admin' -f $keyAlgorithm)
+                  Start-LoggedProcess -filePath 'icacls' -ArgumentList @($privateKeyPath, '/inheritance:r') -name ('icacls-{0}-inheritance-remove' -f $keyAlgorithm)
+                  if ((Test-Path -Path $privateKeyPath -ErrorAction SilentlyContinue) -and (Test-Path -Path $publicKeyPath -ErrorAction SilentlyContinue)) {
+                    Write-Log -message ('{0} :: {1} keys generated at: {2}, {3}' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm, $privateKeyPath, $publicKeyPath) -severity 'INFO'
+                  } else {
+                    Write-Log -message ('{0} :: {1} key generation failed' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'ERROR'
+                  }
+                }
+                foreach ($keyPath in @($privateKeyPath, $publicKeyPath)) {
+                  if (Test-Path -Path $keyPath -ErrorAction SilentlyContinue) {
+                    $keyFileSize = (Get-Item -Path $keyPath).Length
+                    Write-Log -message ('{0} :: gw {1} key file {2} detected with a file size of {3:N2}kb' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm, $keyPath, ($keyFileSize / 1kb)) -severity 'DEBUG'
+                  } else {
+                    Write-Log -message ('{0} :: gw {1} key file {2} not detected' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm, $keyPath) -severity 'WARN'
+                  }
+                }
+
+                $configSigningKeyLocation = ($gwConfig.PsObject.Properties | ? { $_.Name -eq ('{0}SigningKeyLocation' -f $keyAlgorithm) }).Value
+                if (($configSigningKeyLocation) -and ($configSigningKeyLocation.Length)) {
+                  if ($configSigningKeyLocation -eq $privateKeyPath) {
+                    Write-Log -message ('{0} :: {1}SigningKeyLocation configured correctly as: {2} in {3}' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm, $configSigningKeyLocation, $gwConfigPath) -severity 'DEBUG'
+                  } else {
+                    Write-Log -message ('{0} :: {1}SigningKeyLocation configured incorrectly as: {2} in {3}' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm, $configSigningKeyLocation, $gwConfigPath) -severity 'ERROR'
+                  }
                 } else {
-                  Write-Log -message ('{0} :: gw {1} signing key file {2} not detected' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm, ('C:\generic-worker\{0}.key' -f $keyAlgorithm)) -severity 'WARN'
+                  Write-Log -message ('{0} :: {1}SigningKeyLocation not configured in {2}' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm, $gwConfigPath) -severity 'ERROR'
                 }
               }
             }
+          } else {
+            Write-Log -message ('{0} :: gw exe not found' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
           }
         } else {
-          Write-Log -message ('{0} :: existing gw config not found' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+          Write-Log -message ('{0} :: gw config not found' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
         }
       }
       # all other workers can generate new keys. these don't require trust from cot repo
       default {
         foreach ($keyAlgorithm in @('ed25519', 'openpgp')) {
-          if (-not (Test-Path -Path ('C:\generic-worker\{0}.key' -f $keyAlgorithm) -ErrorAction SilentlyContinue)) {
-            Write-Log -message ('{0} :: {1} key missing. generating key.' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'WARN'
-            Start-LoggedProcess -filePath 'C:\generic-worker\generic-worker.exe' -ArgumentList @(('new-{0}-keypair' -f $keyAlgorithm), '--file', ('C:\generic-worker\{0}.key' -f $keyAlgorithm)) -name ('generic-worker-new-{0}-keypair' -f $keyAlgorithm)
-            if (Test-Path -Path ('C:\generic-worker\{0}.key' -f $keyAlgorithm) -ErrorAction SilentlyContinue) {
-              Write-Log -message ('{0} :: {1} key generated.' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'INFO'
+          if (-not (Test-Path -Path ('C:\generic-worker\{0}-private.key' -f $keyAlgorithm) -ErrorAction SilentlyContinue)) {
+            Write-Log -message ('{0} :: {1} key missing. generating key' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'WARN'
+            Start-LoggedProcess -filePath 'C:\generic-worker\generic-worker.exe' -ArgumentList @(('new-{0}-keypair' -f $keyAlgorithm), '--file', ('C:\generic-worker\{0}-private.key' -f $keyAlgorithm)) -redirectStandardOutput ('C:\generic-worker\{0}-public.key' -f $keyAlgorithm) -name ('generic-worker-new-{0}-keypair' -f $keyAlgorithm)
+            if (Test-Path -Path ('C:\generic-worker\{0}-private.key' -f $keyAlgorithm) -ErrorAction SilentlyContinue) {
+              Write-Log -message ('{0} :: {1} key generated' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'INFO'
             } else {
-              Write-Log -message ('{0} :: {1} key generation failed.' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'ERROR'
+              Write-Log -message ('{0} :: {1} key generation failed' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'ERROR'
             }
           }
         }
-        if ((Test-Path -Path 'C:\generic-worker\ed25519.key' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'C:\generic-worker\openpgp.key' -ErrorAction SilentlyContinue)) {
+        if ((Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'C:\generic-worker\openpgp-private.key' -ErrorAction SilentlyContinue)) {
           if ($shutdown) {
             Write-Log -message ('{0} :: ed25519 and openpgp keys detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
             & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
@@ -2233,6 +2260,7 @@ function Invoke-OpenCloudConfig {
           Set-DriveLetters
         }
       } else {
+        # todo: generate config file if it does not exist or is invalid (eg: created for an older version of gw)
         Set-ChainOfTrustKey -workerType $workerType -shutdown:$false
       }
       Wait-GenericWorkerStart -locationType $locationType -lock $lock
