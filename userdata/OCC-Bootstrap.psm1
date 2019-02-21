@@ -1692,7 +1692,7 @@ function Set-ChainOfTrustKey {
                 Write-Log -message ('{0} :: gw signingKeyLocation configured as: {1} in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.signingKeyLocation, $gwConfigPath) -severity 'DEBUG'
                 if (Test-Path -Path $gwConfig.signingKeyLocation -ErrorAction SilentlyContinue) {
                   $keyFileSize = (Get-Item -Path $gwConfig.signingKeyLocation).Length
-                  Write-Log -message ('{0} :: gw signing key file {1} detected with a file size of {2}kb' -f $($MyInvocation.MyCommand.Name), $gwConfig.signingKeyLocation, ($keyFileSize / 1kb)) -severity 'DEBUG'
+                  Write-Log -message ('{0} :: gw signing key file {1} detected with a file size of {2:N2}kb' -f $($MyInvocation.MyCommand.Name), $gwConfig.signingKeyLocation, ($keyFileSize / 1kb)) -severity 'DEBUG'
                 } else {
                   Write-Log -message ('{0} :: gw signing key file {1} not detected' -f $($MyInvocation.MyCommand.Name), $gwConfig.signingKeyLocation) -severity 'WARN'
                 }
