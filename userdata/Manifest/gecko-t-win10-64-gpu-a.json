@@ -1095,9 +1095,9 @@
       "ValueData": ""
     },
     {
-      "ComponentName": "GrantGenericWorkerMozillaRegistryWriteAccess",
+      "ComponentName": "GrantEveryoneMozillaRegistryWriteAccess",
       "ComponentType": "CommandRun",
-      "Comment": "Bug 1353889 - Grant GenericWorker account write access to Mozilla registry key",
+      "Comment": "Bug 1353889 - Grant Everyone group write access to Mozilla registry key",
       "Command": "powershell",
       "Arguments": [
         "-command",
