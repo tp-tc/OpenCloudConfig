@@ -104,11 +104,10 @@ for manifest in $(ls ${current_script_dir}/../userdata/Manifest/gecko-*.json); d
           fi
 
           for open_for_edit_manifest in $(ls ${current_script_dir}/../userdata/Manifest/gecko-*.json); do
-            echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} updating ${open_for_edit_manifest}..."
-            # todo: implement manifest updating
+            echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} updating ${ComponentType}/${ComponentName} in $(basename ${open_for_edit_manifest})..."
+            jq --arg ComponentName $ComponentName --arg ComponentType $ComponentType --arg www_url $www_url --arg sha512 $computed_sha512 '(.Components[] | select(.ComponentName == $ComponentName and .ComponentType == $ComponentType and .sha512 == null and (.Source == $www_url or .Url == $www_url))) |= . + { sha512: $sha512 }' ${open_for_edit_manifest} | sponge ${open_for_edit_manifest}
           done;
           cp "${savepath}" ${tmp_dir}/${computed_sha512}
-          exit 1
         fi
       else
         echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")] sha512: ${manifest_sha512} detected in manifest${reset}"
