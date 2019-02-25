@@ -164,7 +164,6 @@ for manifest in $(ls ${current_script_dir}/../userdata/Manifest/gecko-*.json); d
   done
 done
 
-
 git format-patch master
 mv *.patch ${tmp_dir}/
 git checkout master

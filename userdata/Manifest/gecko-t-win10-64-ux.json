@@ -50,8 +50,8 @@
       "State": "Running",
       "DependsOn": [
         {
-             "ComponentType": "ChecksumFileDownload",
-             "ComponentName": "NxLogPaperTrailConfiguration"
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "NxLogPaperTrailConfiguration"
         }
       ]
     },
@@ -1181,16 +1181,16 @@
           "C:\\Program Files (x86)\\Microsoft SDKs\\Windows Kits\\10\\ExtensionSDKs\\Microsoft.UniversalCRT.Debug\\10.0.10240.0\\Redist\\Debug\\arm\\ucrtbased.dll"
         ]
       }
-     },
-    {  
-	  "ComponentName": "framework35",
+    },
+    {
+      "ComponentName": "framework35",
       "ComponentType": "CommandRun",
       "Command": "DISM",
       "Arguments": [
         "/Online",
-		"/Enable-Feature",
-		"/FeatureName:NetFx3",
-		"/All"
+        "/Enable-Feature",
+        "/FeatureName:NetFx3",
+        "/All"
       ],
       "Validate": {
         "PathsExist": [
