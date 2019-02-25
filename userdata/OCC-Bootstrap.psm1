@@ -259,8 +259,11 @@ function Invoke-CustomDesiredStateProvider {
               }
             }
             'ChecksumFileDownload' {
-              # always download these items wether they're on the filesystem already or not
-              Invoke-FileDownload -verbose -component $component -localPath $component.Target
+              if (-not (Confirm-FileDownload -verbose -component $component -localPath $component.Target)) {
+                Invoke-FileDownload -verbose -component $component -localPath $component.Target
+              } else {
+                Write-Log -verbose -message ('{0} :: skipping invocation of FileDownload component: {1}. prior application detected' -f $($MyInvocation.MyCommand.Name), $component.ComponentName) -severity 'DEBUG'
+              }
             }
             'SymbolicLink' {
               if (-not (Confirm-SymbolicLink -verbose -component $component)) {
@@ -1742,7 +1745,6 @@ function Set-ChainOfTrustKey {
           Write-Log -message ('{0} :: gw config not found' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
         }
       }
-      # all other workers can generate new keys. these don't require trust from cot repo
       default {
         foreach ($keyAlgorithm in @('ed25519', 'openpgp')) {
           if (-not (Test-Path -Path ('C:\generic-worker\{0}-private.key' -f $keyAlgorithm) -ErrorAction SilentlyContinue)) {
