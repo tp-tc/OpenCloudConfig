@@ -9,10 +9,11 @@
     {
       "ComponentName": "NxLog",
       "ComponentType": "MsiInstall",
-      "Comment": "Maintenance Toolchain",
-      "Url": "https://nxlog.co/system/files/products/files/348/nxlog-ce-2.10.2102.msi",
+      "Comment": "Maintenance Toolchain - forwards event logs to papertrail",
+      "Url": "https://nxlog.co/system/files/products/files/348/nxlog-ce-2.10.2150.msi",
       "Name": "NXLog-CE",
-      "ProductId": "4594566F-2BCE-49AC-AC27-8847F164CB94"
+      "ProductId": "D5F06971-73E1-4B19-928F-50707ABCCC6E",
+      "sha512": "41e052f8d08099eeccca9f8a78d72ba2a2ef88c67f2e046b3f33af6809c0271baf82c2819609acc7020dc8420cde337c096f7e12a9b4ae555645dfb5b3c961c5"
     },
     {
       "ComponentName": "PaperTrailEncryptionCertificate",

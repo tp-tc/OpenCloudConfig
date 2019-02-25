@@ -9,11 +9,11 @@
     {
       "ComponentName": "NxLog",
       "ComponentType": "MsiInstall",
-      "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Url": "https://nxlog.co/system/files/products/files/348/nxlog-ce-2.9.1716.msi",
-      "Name": "NxLog-CE",
-      "ProductId": "FC526514-AFD9-4A5C-8677-56241539609D",
-      "sha512": "70f5516bca0ff7814833ef397c01dbcd1c7011c0ef4b0f2aeda2e1aa7c02fe680eddfd1c0656f8d438559e34e5a841360dc6dafa7843c610528df2e1defb02be"
+      "Comment": "Maintenance Toolchain - forwards event logs to papertrail",
+      "Url": "https://nxlog.co/system/files/products/files/348/nxlog-ce-2.10.2150.msi",
+      "Name": "NXLog-CE",
+      "ProductId": "D5F06971-73E1-4B19-928F-50707ABCCC6E",
+      "sha512": "41e052f8d08099eeccca9f8a78d72ba2a2ef88c67f2e046b3f33af6809c0271baf82c2819609acc7020dc8420cde337c096f7e12a9b4ae555645dfb5b3c961c5"
     },
     {
       "ComponentName": "PaperTrailEncryptionCertificate",
