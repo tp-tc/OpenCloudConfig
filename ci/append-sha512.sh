@@ -34,7 +34,7 @@ if [[ `git status --porcelain` ]]; then
   git commit -m "whitespace corrected in manifests"
 fi
 
-
+mkdir -p ${tmp_dir}/sha512 ${tmp_dir}/patch
 for manifest in $(ls ${current_script_dir}/../userdata/Manifest/gecko-*.json); do
   json=$(basename ${manifest})
   mkdir -p ${tmp_dir}/${json%.*}/ExeInstall ${tmp_dir}/${json%.*}/MsiInstall ${tmp_dir}/${json%.*}/MsuInstall ${tmp_dir}/${json%.*}/ZipInstall ${tmp_dir}/${json%.*}/FileDownload ${tmp_dir}/${json%.*}/ChecksumFileDownload
@@ -124,18 +124,21 @@ for manifest in $(ls ${current_script_dir}/../userdata/Manifest/gecko-*.json); d
             git add ${current_script_dir}/../userdata/Manifest/gecko-*.json
             git commit -m "sha512 for ${filename} added to manifests" -m "for source: $www_url"
           fi
-          cp "${savepath}" ${tmp_dir}/${computed_sha512}
+          echo ${ComponentType} ${ComponentName} ${filename} ${json%.*}>> ${tmp_dir}/sha512/${computed_sha512}
         fi
       else
         echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")] sha512: ${manifest_sha512} detected in manifest${reset}"
 
-        if [ -f ${tmp_dir}/${manifest_sha512} ] && [ -s ${tmp_dir}/${manifest_sha512} ]; then
+        if [ -f ${tmp_dir}/sha512/${manifest_sha512} ] && [ -s ${tmp_dir}/sha512/${manifest_sha512} ]; then
+          echo ${ComponentType} ${ComponentName} ${filename} ${json%.*}>> ${tmp_dir}/sha512/${manifest_sha512}
           echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")] skipping checks as this component was validated earlier${reset}"
         else
-          # download from url specified by manifest component, check the downloaded file exists and has a nonzero size
-          if curl -sL -o "${savepath}" "${www_url}" && [ -f "${savepath}" ] && [ -s "${savepath}" ]; then
+          if [ -f "${savepath}" ] && [ -s "${savepath}" ]; then
+            echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} detected ${savepath} ($(stat -c '%s' "${savepath}" | numfmt --to=si --suffix=B))"
+            echo ${ComponentType} ${ComponentName} ${filename} ${json%.*}>> ${tmp_dir}/sha512/${manifest_sha512}
+          elif curl -sL -o "${savepath}" "${www_url}" && [ -f "${savepath}" ] && [ -s "${savepath}" ]; then
             echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} downloaded ${savepath} ($(stat -c '%s' "${savepath}" | numfmt --to=si --suffix=B)) from ${www_url}"
-            cp "${savepath}" ${tmp_dir}/${manifest_sha512}
+            echo ${ComponentType} ${ComponentName} ${filename} ${json%.*}>> ${tmp_dir}/sha512/${manifest_sha512}
           elif [ ! -f "${savepath}" ]; then
             echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} ${fg_red}${savepath} download from ${www_url} failed${reset}"
             # since we have a sha in the manifest, try a tooltool download
@@ -143,7 +146,7 @@ for manifest in $(ls ${current_script_dir}/../userdata/Manifest/gecko-*.json); d
               echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")] artifact is available from tooltool ${reset}"
               if curl --header "Authorization: Bearer $(cat ${tooltool_token_path})" -sL -o "${savepath}" ${tooltool_url}/sha512/${manifest_sha512} && [ -f "${savepath}" ] && [ -s "${savepath}" ]; then
                 echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} downloaded ${savepath} ($(stat -c '%s' "${savepath}" | numfmt --to=si --suffix=B)) from ${tooltool_url}/sha512/${manifest_sha512}"
-                cp "${savepath}" ${tmp_dir}/${manifest_sha512}
+                echo ${ComponentType} ${ComponentName} ${filename} ${json%.*}>> ${tmp_dir}/sha512/${manifest_sha512}
               fi
             fi
           fi
@@ -165,6 +168,6 @@ for manifest in $(ls ${current_script_dir}/../userdata/Manifest/gecko-*.json); d
 done
 
 git format-patch master
-mv *.patch ${tmp_dir}/
+mv *.patch ${tmp_dir}/patch/
 git checkout master
 git branch -d ${tmp_git_branch}
