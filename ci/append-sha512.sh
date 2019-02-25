@@ -6,6 +6,8 @@ current_script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd
 current_script_name=$(basename ${0##*/} .sh)
 #tmp_dir=$(mktemp -d)
 tmp_dir=/tmp/${current_script_name}
+tmp_uuid=$(uuidgen)
+tmp_git_branch=${tmp_uuid: -12}
 
 fg_black=`tput setaf 0`
 fg_red=`tput setaf 1`
@@ -22,8 +24,19 @@ if [ ! -f "${tmp_dir}/tooltool.py" ]; then
   echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} tooltool client downloaded to ${tmp_dir}/tooltool.py"
 fi
 
+
+git checkout -b ${tmp_git_branch}
 for manifest in $(ls ${current_script_dir}/../userdata/Manifest/gecko-*.json); do
-  json=$(basename $manifest)
+  jq '.' ${manifest} | sponge ${manifest}
+done;
+if [[ `git status --porcelain` ]]; then
+  git add ${current_script_dir}/../userdata/Manifest/gecko-*.json
+  git commit -m "whitespace corrected in manifests"
+fi
+
+
+for manifest in $(ls ${current_script_dir}/../userdata/Manifest/gecko-*.json); do
+  json=$(basename ${manifest})
   mkdir -p ${tmp_dir}/${json%.*}/ExeInstall ${tmp_dir}/${json%.*}/MsiInstall ${tmp_dir}/${json%.*}/MsuInstall ${tmp_dir}/${json%.*}/ZipInstall ${tmp_dir}/${json%.*}/FileDownload ${tmp_dir}/${json%.*}/ChecksumFileDownload
   echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} $(tput bold)${fg_magenta}${json%.*}${reset}"
   for ComponentType in ExeInstall MsiInstall MsuInstall ZipInstall FileDownload ChecksumFileDownload; do
@@ -107,6 +120,10 @@ for manifest in $(ls ${current_script_dir}/../userdata/Manifest/gecko-*.json); d
             echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} updating ${ComponentType}/${ComponentName} in $(basename ${open_for_edit_manifest})..."
             jq --arg ComponentName $ComponentName --arg ComponentType $ComponentType --arg www_url $www_url --arg sha512 $computed_sha512 '(.Components[] | select(.ComponentName == $ComponentName and .ComponentType == $ComponentType and .sha512 == null and (.Source == $www_url or .Url == $www_url))) |= . + { sha512: $sha512 }' ${open_for_edit_manifest} | sponge ${open_for_edit_manifest}
           done;
+          if [[ `git status --porcelain` ]]; then
+            git add ${current_script_dir}/../userdata/Manifest/gecko-*.json
+            git commit -m "sha512 for ${filename} added to manifests" -m "for source: $www_url"
+          fi
           cp "${savepath}" ${tmp_dir}/${computed_sha512}
         fi
       else
@@ -114,40 +131,41 @@ for manifest in $(ls ${current_script_dir}/../userdata/Manifest/gecko-*.json); d
 
         if [ -f ${tmp_dir}/${manifest_sha512} ] && [ -s ${tmp_dir}/${manifest_sha512} ]; then
           echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")] skipping checks as this component was validated earlier${reset}"
-          exit 0
-        fi
-
-        # download from url specified by manifest component, check the downloaded file exists and has a nonzero size
-        if curl -sL -o "${savepath}" "${www_url}" && [ -f "${savepath}" ] && [ -s "${savepath}" ]; then
-          echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} downloaded ${savepath} ($(stat -c '%s' "${savepath}" | numfmt --to=si --suffix=B)) from ${www_url}"
-          cp "${savepath}" ${tmp_dir}/${manifest_sha512}
-        elif [ ! -f "${savepath}" ]; then
-          echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} ${fg_red}${savepath} download from ${www_url} failed${reset}"
-          # since we have a sha in the manifest, try a tooltool download
-          if curl --header "Authorization: Bearer $(cat ${tooltool_token_path})" --output /dev/null --silent --head --fail ${tooltool_url}/sha512/${manifest_sha512}; then
-            echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")] artifact is available from tooltool ${reset}"
-            if curl --header "Authorization: Bearer $(cat ${tooltool_token_path})" -sL -o "${savepath}" ${tooltool_url}/sha512/${manifest_sha512} && [ -f "${savepath}" ] && [ -s "${savepath}" ]; then
-              echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} downloaded ${savepath} ($(stat -c '%s' "${savepath}" | numfmt --to=si --suffix=B)) from ${tooltool_url}/sha512/${manifest_sha512}"
-              cp "${savepath}" ${tmp_dir}/${manifest_sha512}
+        else
+          # download from url specified by manifest component, check the downloaded file exists and has a nonzero size
+          if curl -sL -o "${savepath}" "${www_url}" && [ -f "${savepath}" ] && [ -s "${savepath}" ]; then
+            echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} downloaded ${savepath} ($(stat -c '%s' "${savepath}" | numfmt --to=si --suffix=B)) from ${www_url}"
+            cp "${savepath}" ${tmp_dir}/${manifest_sha512}
+          elif [ ! -f "${savepath}" ]; then
+            echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} ${fg_red}${savepath} download from ${www_url} failed${reset}"
+            # since we have a sha in the manifest, try a tooltool download
+            if curl --header "Authorization: Bearer $(cat ${tooltool_token_path})" --output /dev/null --silent --head --fail ${tooltool_url}/sha512/${manifest_sha512}; then
+              echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")] artifact is available from tooltool ${reset}"
+              if curl --header "Authorization: Bearer $(cat ${tooltool_token_path})" -sL -o "${savepath}" ${tooltool_url}/sha512/${manifest_sha512} && [ -f "${savepath}" ] && [ -s "${savepath}" ]; then
+                echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} downloaded ${savepath} ($(stat -c '%s' "${savepath}" | numfmt --to=si --suffix=B)) from ${tooltool_url}/sha512/${manifest_sha512}"
+                cp "${savepath}" ${tmp_dir}/${manifest_sha512}
+              fi
             fi
           fi
-        fi
-        if [ -f "${savepath}" ] && [ -s "${savepath}" ]; then
-          computed_sha512=$(sha512sum "${savepath}" | { read sha512 _; echo ${sha512}; })
-          if [ "${computed_sha512}" == "${manifest_sha512}" ]; then
-            echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} computed sha matches manifest sha ${manifest_sha512:0:12}...${manifest_sha512: -12}"
+          if [ -f "${savepath}" ] && [ -s "${savepath}" ]; then
+            computed_sha512=$(sha512sum "${savepath}" | { read sha512 _; echo ${sha512}; })
+            if [ "${computed_sha512}" == "${manifest_sha512}" ]; then
+              echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} computed sha matches manifest sha ${manifest_sha512:0:12}...${manifest_sha512: -12}"
+            else
+              echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} ${fg_red}computed sha ${computed_sha512:0:12}...${computed_sha512: -12} conflicts with manifest sha ${manifest_sha512:0:12}...${manifest_sha512: -12}${reset}"
+            fi
+            
           else
-            echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} ${fg_red}computed sha ${computed_sha512:0:12}...${computed_sha512: -12} conflicts with manifest sha ${manifest_sha512:0:12}...${manifest_sha512: -12}${reset}"
-            exit 1
+            echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} ${fg_red}failed to download artifact from any source${reset}"
           fi
-          
-        else
-          echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} ${fg_red}failed to download artifact from any source${reset}"
-          exit
         fi
       fi
     done
-    [[ $? != 0 ]] && exit $?
   done
-  [[ $? != 0 ]] && exit $?
 done
+
+
+git format-patch master
+mv *.patch ${tmp_dir}/
+git checkout master
+git branch -d ${tmp_git_branch}
