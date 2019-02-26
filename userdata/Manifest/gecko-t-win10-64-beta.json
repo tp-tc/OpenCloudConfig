@@ -1422,6 +1422,12 @@
       ]
     },
     {
+      "ComponentName": "ProgramDataSshDir",
+      "ComponentType": "DirectoryCreate",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
+      "Path": "C:\\ProgramData\\ssh"
+    },
+    {
       "ComponentName": "sshd_config",
       "ComponentType": "ChecksumFileDownload",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1464343",
@@ -1431,6 +1437,10 @@
         {
           "ComponentType": "CommandRun",
           "ComponentName": "InstallOpenSSH"
+        },
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "ProgramDataSshDir"
         }
       ]
     },
