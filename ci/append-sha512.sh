@@ -154,6 +154,24 @@ for manifest in $(ls ${current_script_dir}/../userdata/Manifest/gecko-*.json); d
             computed_sha512=$(sha512sum "${savepath}" | { read sha512 _; echo ${sha512}; })
             if [ "${computed_sha512}" == "${manifest_sha512}" ]; then
               echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} computed sha matches manifest sha ${manifest_sha512:0:12}...${manifest_sha512: -12}"
+
+              if curl --header "Authorization: Bearer $(cat ${tooltool_token_path})" --output /dev/null --silent --head --fail ${tooltool_url}/sha512/${computed_sha512}; then
+                echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")] artifact is available in tooltool ${reset}"
+              else
+                echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} ${fg_yellow}artifact is not available in tooltool ${reset}"
+
+                work_dir=$(pwd)
+                cd ${tmp_dir}/${json%.*}/${ComponentType}
+                python ${tmp_dir}/tooltool.py add --visibility internal "${savepath}" -m ${computed_sha512}.tt
+                if python ${tmp_dir}/tooltool.py validate -m ${computed_sha512}.tt; then
+                  python ${tmp_dir}/tooltool.py upload --url ${tooltool_url} --authentication-file=${tooltool_token_path} --message "Bug 1342892 - OCC component: ${filename}" -m ${computed_sha512}.tt
+                  echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} ${filename} uploaded to tooltool with sha ${computed_sha512}"
+                  rm -f ${computed_sha512}.tt
+                else
+                  echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} ${filename} upload skipped due to manifest validation failure for ${computed_sha512}.tt"
+                fi
+                cd ${work_dir}
+              fi
             else
               echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} ${fg_red}computed sha ${computed_sha512:0:12}...${computed_sha512: -12} conflicts with manifest sha ${manifest_sha512:0:12}...${manifest_sha512: -12}${reset}"
             fi
