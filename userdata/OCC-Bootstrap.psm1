@@ -1968,6 +1968,11 @@ function Invoke-OpenCloudConfig {
     } elseif ((@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).Length -gt 0)) {
       while ((@(Get-Process | ? { $_.ProcessName -eq 'generic-worker' }).Length -gt 0)) {
         Write-Log -message ('{0} :: userdata run paused. generic-worker is running.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+        try {
+          Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/OCC-HealthCheck.ps1?{1}' -f [Guid]::NewGuid()))
+        } catch {
+          Write-Log -message ('{0} :: error executing remote health check script. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+        }
         Start-Sleep -Seconds 30
       }
     } else {
@@ -2131,7 +2136,7 @@ function Invoke-OpenCloudConfig {
             # this setting persists only for the current session
             Enable-PSRemoting -Force
           } catch {
-            Write-Log -message ('{0} :: {1} - error enabling powershell remoting. {2}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+            Write-Log -message ('{0} :: error enabling powershell remoting. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
           }
           #if (-not ($isWorker)) {
           #  Set-DefaultProfileProperties
@@ -2144,7 +2149,7 @@ function Invoke-OpenCloudConfig {
             # this setting persists only for the current session
             Enable-PSRemoting -SkipNetworkProfileCheck -Force
           } catch {
-            Write-Log -message ('{0} :: {1} - error enabling powershell remoting. {2}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+            Write-Log -message ('{0} :: error enabling powershell remoting. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
           }
           #if (-not ($isWorker)) {
           #  Set-DefaultProfileProperties
@@ -2155,7 +2160,7 @@ function Invoke-OpenCloudConfig {
             # this setting persists only for the current session
             Enable-PSRemoting -SkipNetworkProfileCheck -Force
           } catch {
-            Write-Log -message ('{0} :: {1} - error enabling powershell remoting. {2}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+            Write-Log -message ('{0} :: error enabling powershell remoting. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
           }
         }
       }
