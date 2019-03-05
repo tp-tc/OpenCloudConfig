@@ -292,6 +292,12 @@ function Invoke-FileDownload {
         Write-Verbose ('downloaded {0} from tooltool' -f $localPath)
       } else {
         Write-Verbose ('failed to download {0} from tooltool' -f $localPath)
+        $url = $(if ($component.Url) { $component.Url } else { $component.Source })
+        if ((Get-RemoteResource -localPath $localPath -url $url -eventLogSource $eventLogSource)) {
+          Write-Verbose ('downloaded {0} from {1}' -f $localPath, $url)
+        } else {
+          Write-Verbose ('failed to download {0} from {1}' -f $localPath, $url)
+        }
       }
     } else {
       $url = $(if ($component.Url) { $component.Url } else { $component.Source })
