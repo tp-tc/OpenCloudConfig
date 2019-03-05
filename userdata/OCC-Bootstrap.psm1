@@ -1745,9 +1745,19 @@ function Set-ChainOfTrustKey {
             }
           } else {
             Write-Log -message ('{0} :: gw exe not found' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+            try {
+              Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/OCC-HealthCheck.ps1?{1}' -f [Guid]::NewGuid()))
+            } catch {
+              Write-Log -message ('{0} :: error executing remote health check script. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+            }
           }
         } else {
           Write-Log -message ('{0} :: gw config not found' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+          try {
+            Invoke-Expression (New-Object Net.WebClient).DownloadString(('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/OCC-HealthCheck.ps1?{1}' -f [Guid]::NewGuid()))
+          } catch {
+            Write-Log -message ('{0} :: error executing remote health check script. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+          }
         }
       }
       default {
