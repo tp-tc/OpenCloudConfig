@@ -627,28 +627,32 @@ function Set-Ec2ConfigSettings {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
-    $ec2ConfigSettingsFileModified = $false;
-    [xml]$xml = (Get-Content $ec2ConfigSettingsFile)
-    foreach ($plugin in $xml.DocumentElement.Plugins.Plugin) {
-      if ($ec2ConfigSettings.ContainsKey($plugin.Name)) {
-        if ($plugin.State -ne $ec2ConfigSettings[$plugin.Name]) {
-          $plugin.State = $ec2ConfigSettings[$plugin.Name]
-          $ec2ConfigSettingsFileModified = $true
-          Write-Log -message ('{0} :: Ec2Config {1} set to: {2}, in: {3}' -f $($MyInvocation.MyCommand.Name), $plugin.Name, $plugin.State, $ec2ConfigSettingsFile) -severity 'INFO'
+    if (Test-Path -Path $ec2ConfigSettingsFile -ErrorAction SilentlyContinue) {
+      $ec2ConfigSettingsFileModified = $false;
+      [xml]$xml = (Get-Content $ec2ConfigSettingsFile)
+      foreach ($plugin in $xml.DocumentElement.Plugins.Plugin) {
+        if ($ec2ConfigSettings.ContainsKey($plugin.Name)) {
+          if ($plugin.State -ne $ec2ConfigSettings[$plugin.Name]) {
+            $plugin.State = $ec2ConfigSettings[$plugin.Name]
+            $ec2ConfigSettingsFileModified = $true
+            Write-Log -message ('{0} :: Ec2Config {1} set to: {2}, in: {3}' -f $($MyInvocation.MyCommand.Name), $plugin.Name, $plugin.State, $ec2ConfigSettingsFile) -severity 'INFO'
+          }
         }
       }
-    }
-    if ($ec2ConfigSettingsFileModified) {
-      try {
-        Start-LoggedProcess -filePath 'takeown' -ArgumentList @('/a', '/f', ('"{0}"' -f $ec2ConfigSettingsFile)) -name 'takeown-ec2config-settings'
-        Start-LoggedProcess -filePath 'icacls' -ArgumentList @(('"{0}"' -f $ec2ConfigSettingsFile), '/grant', 'Administrators:F') -name 'icacls-ec2config-settings-grant-admin'
-        Start-LoggedProcess -filePath 'icacls' -ArgumentList @(('"{0}"' -f $ec2ConfigSettingsFile), '/grant', 'System:F') -name 'icacls-ec2config-settings-grant-system'
-        $xml.Save($ec2ConfigSettingsFile)
-        Write-Log -message ('{0} :: Ec2Config settings file saved at: {1}' -f $($MyInvocation.MyCommand.Name), $ec2ConfigSettingsFile) -severity 'INFO'
+      if ($ec2ConfigSettingsFileModified) {
+        try {
+          Start-LoggedProcess -filePath 'takeown' -ArgumentList @('/a', '/f', ('"{0}"' -f $ec2ConfigSettingsFile)) -name 'takeown-ec2config-settings'
+          Start-LoggedProcess -filePath 'icacls' -ArgumentList @(('"{0}"' -f $ec2ConfigSettingsFile), '/grant', 'Administrators:F') -name 'icacls-ec2config-settings-grant-admin'
+          Start-LoggedProcess -filePath 'icacls' -ArgumentList @(('"{0}"' -f $ec2ConfigSettingsFile), '/grant', 'System:F') -name 'icacls-ec2config-settings-grant-system'
+          $xml.Save($ec2ConfigSettingsFile)
+          Write-Log -message ('{0} :: Ec2Config settings file saved at: {1}' -f $($MyInvocation.MyCommand.Name), $ec2ConfigSettingsFile) -severity 'INFO'
+        }
+        catch {
+          Write-Log -message ('{0} :: failed to save Ec2Config settings file: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $ec2ConfigSettingsFile, $_.Exception.Message) -severity 'ERROR'
+        }
       }
-      catch {
-        Write-Log -message ('{0} :: failed to save Ec2Config settings file: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $ec2ConfigSettingsFile, $_.Exception.Message) -severity 'ERROR'
-      }
+    } else {
+      Write-Log -message ('{0} :: Ec2Config settings file not found at: {1}' -f $($MyInvocation.MyCommand.Name), $ec2ConfigSettingsFile) -severity 'WARN'
     }
   }
   end {
@@ -2262,7 +2266,7 @@ function Invoke-OpenCloudConfig {
           ($_ -match 'WSManNetworkFailureDetected') -or
           # a service disable attempt through registry settings failed, because another running service interfered with the registry write
           ($_ -match 'Attempted to perform an unauthorized'))}) -contains $true) {
-        if (-not ($isWorker)) {
+        if ((-not ($isWorker)) -and ($locationType -eq 'AWS')) {
           # ensure that Ec2HandleUserData is enabled before reboot (if the RunDesiredStateConfigurationAtStartup scheduled task doesn't yet exist)
           Set-Ec2ConfigSettings
         }
@@ -2294,7 +2298,7 @@ function Invoke-OpenCloudConfig {
 
       # create a scheduled task to run dsc at startup
       New-PowershellScheduledTask -taskName 'RunDesiredStateConfigurationAtStartup' -scriptUrl ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/rundsc.ps1?{3}' -f $sourceOrg, $sourceRepo, $sourceRev, [Guid]::NewGuid()) -scriptPath 'C:\dsc\rundsc.ps1' -sc 'onstart'
-      if (-not ($isWorker)) {
+      if ((-not ($isWorker)) -and ($locationType -eq 'AWS')) {
         # ensure that Ec2HandleUserData is disabled after the RunDesiredStateConfigurationAtStartup scheduled task has been created
         Set-Ec2ConfigSettings
       }
