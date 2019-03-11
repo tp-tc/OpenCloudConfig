@@ -84,10 +84,17 @@
       "Arguments": [
         "/S"
       ],
+      "Timeout": 120,
       "Validate": {
         "PathsExist": [
           "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg.exe",
           "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg2.exe"
+        ],
+        "ServiceStatus": [
+          {
+            "Name": "dirmngr",
+            "Status": "running"
+          }
         ]
       },
       "sha512": "b1c48d84d041055db3d3e3cbd22ef2f3300728b06c76660b9b78ececf56b7ccbc80addb39a64c0a4eb68bf3463ceb6d254dedda047049ce680e9d543dd8a9af9"
