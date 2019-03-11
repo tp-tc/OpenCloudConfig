@@ -1518,15 +1518,17 @@ function Set-ComputerName {
 }
 function Set-DomainName {
   param (
-    [string] $publicKeys = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys'),
-    [string] $workerType = $(if ($publicKeys.StartsWith('0=mozilla-taskcluster-worker-')) { $publicKeys.Replace('0=mozilla-taskcluster-worker-', '') } else { (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/user-data' -UseBasicParsing | ConvertFrom-Json).workerType }),
-    [string] $az = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone')
+    [string] $locationType = $(if ((Get-Service 'Ec2Config' -ErrorAction SilentlyContinue) -or (Get-Service 'AmazonSSMAgent' -ErrorAction SilentlyContinue)) { 'AWS' } elseif (Get-Service 'GCEAgent' -ErrorAction SilentlyContinue) { 'GCP' } else { 'DataCenter' }),
+    [string] $publicKeys = $(if ($locationType -eq 'AWS') { (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys') } else { $null }),
+    [string] $workerType = $(if ($locationType -eq 'AWS') { $(if ($publicKeys.StartsWith('0=mozilla-taskcluster-worker-')) { $publicKeys.Replace('0=mozilla-taskcluster-worker-', '') } else { (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/user-data' -UseBasicParsing | ConvertFrom-Json).workerType }) } elseif ($locationType -eq 'GCP') { (New-Object Net.WebClient).DownloadString('http://169.254.169.254/computeMetadata/v1beta1/instance/attributes/workerType') } else { $null }),
+    [string] $az = $(if ($locationType -eq 'AWS') { (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone') } elseif ($locationType -eq 'GCP') { (New-Object Net.WebClient).DownloadString('http://169.254.169.254/computeMetadata/v1beta1/instance/zone') -replace '.*/' })
   )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     switch -wildcard ($az) {
+      # EC2
       'eu-central-1*'{
         $dnsRegion = 'euc1'
       }
@@ -1541,6 +1543,37 @@ function Set-DomainName {
       }
       'us-west-2*'{
         $dnsRegion = 'usw2'
+      }
+      # GCP
+      'us-central1-*'{
+        $dnsRegion = 'usc1'
+      }
+      'us-east1-*'{
+        $dnsRegion = 'use1'
+      }
+      'us-east4-*'{
+        $dnsRegion = 'use4'
+      }
+      'us-west1-*'{
+        $dnsRegion = 'usw1'
+      }
+      'us-west2-*'{
+        $dnsRegion = 'usw2'
+      }
+      'europe-north1-*'{
+        $dnsRegion = 'eun1'
+      }
+      'europe-west1-*'{
+        $dnsRegion = 'euw1'
+      }
+      'europe-west2-*'{
+        $dnsRegion = 'euw2'
+      }
+      'europe-west3-*'{
+        $dnsRegion = 'euw3'
+      }
+      'europe-west6-*'{
+        $dnsRegion = 'euw6'
       }
     }
     Write-Log -message ('{0} :: availabilityZone: {1}, dnsRegion: {2}.' -f $($MyInvocation.MyCommand.Name), $az, $dnsRegion) -severity 'INFO'
@@ -1927,12 +1960,19 @@ function Initialize-Instance {
       Set-DomainName
       # Turn off DNS address registration (EC2 DNS is configured to not allow it)
       Set-DynamicDnsRegistration -enabled:$false
+    } elseif ($locationType -eq 'GCP') {
+      Set-DomainName
+      # todo: figure out if this is needed on gcp
+      # Set-DynamicDnsRegistration -enabled:$false
     }
     if ($rebootReasons.length) {
       # if this is an ami creation instance (not a worker) ...
       if (($locationType -eq 'AWS') -and (((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys')).StartsWith('0=mozilla-taskcluster-worker-'))) {
         # ensure that Ec2HandleUserData is enabled before reboot (if the RunDesiredStateConfigurationAtStartup scheduled task doesn't yet exist)
         Set-Ec2ConfigSettings
+        # ensure that an up to date nxlog configuration is used as early as possible
+        Set-NxlogConfig -sourceOrg $sourceOrg -sourceRepo $sourceRepo -sourceRev $sourceRev
+      } elseif ($locationType -eq 'GCP') {
         # ensure that an up to date nxlog configuration is used as early as possible
         Set-NxlogConfig -sourceOrg $sourceOrg -sourceRepo $sourceRepo -sourceRev $sourceRev
       }
