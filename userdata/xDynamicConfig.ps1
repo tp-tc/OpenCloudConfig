@@ -71,11 +71,18 @@ Configuration xDynamicConfig {
         $files = Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/Manifest/releng-secrets.json' -f $using:sourceOrg, $using:sourceRepo, $using:sourceRev) -UseBasicParsing | ConvertFrom-Json
         foreach ($file in $files) {
           (New-Object Net.WebClient).DownloadFile(('https://s3.amazonaws.com/windows-opencloudconfig-packages/FirefoxBuildResources/{0}.gpg?raw=true' -f $file), ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file))
+          if (Test-Path -Path ('{0}\builds\{1}' -f $env:SystemDrive, $file) -ErrorAction 'SilentlyContinue') {
+            Remove-Item -Path ('{0}\builds\{1}' -f $env:SystemDrive, $file) -Force
+          }
           Start-Process $gpg -ArgumentList @('-d', ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\builds\{1}' -f $env:SystemDrive, $file) -RedirectStandardError ('{0}\log\{1}.gpg-decrypt-{2}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $file)
           Remove-Item -Path ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file) -Force
         }
       }
-      TestScript = { if ((Test-Path -Path ('{0}\builds\*.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and (-not (Compare-Object -ReferenceObject (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/Manifest/releng-secrets.json' -f $using:sourceOrg, $using:sourceRepo, $using:sourceRev) -UseBasicParsing | ConvertFrom-Json) -DifferenceObject (Get-ChildItem -Path ('{0}\builds' -f $env:SystemDrive) | Where-Object { !$_.PSIsContainer } | % { $_.Name })))) { $true } else { $false } }
+      TestScript = {
+        $remoteFileList = (Invoke-WebRequest -Uri ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/Manifest/releng-secrets.json' -f $using:sourceOrg, $using:sourceRepo, $using:sourceRev) -UseBasicParsing | ConvertFrom-Json)
+        $localFileList = (Get-ChildItem -Path ('{0}\builds' -f $env:SystemDrive) | ? { ((!$_.PSIsContainer) -and ($_.Length -gt 0)) } | % { $_.Name })
+        if ((Test-Path -Path ('{0}\builds\*.tok' -f $env:SystemDrive) -ErrorAction SilentlyContinue) -and ($localFileList) -and (-not (Compare-Object -ReferenceObject $remoteFileList -DifferenceObject $localFileList))) { $true } else { $false }
+      }
     }
   }
 
