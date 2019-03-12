@@ -1811,8 +1811,13 @@ function Set-ChainOfTrustKey {
         }
         if ((Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'C:\generic-worker\openpgp-private.key' -ErrorAction SilentlyContinue)) {
           if ($shutdown) {
-            Write-Log -message ('{0} :: ed25519 and openpgp keys detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-            & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
+            if ($workerType.EndsWith('-gamma')) {
+              Write-Log -message ('{0} :: ed25519 and openpgp keys detected. restarting...' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+              & shutdown @('-r', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
+            } else {
+              Write-Log -message ('{0} :: ed25519 and openpgp keys detected. shutting down...' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+              & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
+            }
           } else {
             Write-Log -message ('{0} :: ed25519 and openpgp keys detected' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
           }
@@ -1821,7 +1826,11 @@ function Set-ChainOfTrustKey {
         }
         if ($shutdown) {
           if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
-            & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
+            if ($workerType.EndsWith('-gamma')) {
+              & shutdown @('-r', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
+            } else {
+              & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
+            }
           } else {
             Write-Log -message ('{0} :: rdp session detected. awaiting manual shutdown.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
           }
