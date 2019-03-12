@@ -2075,22 +2075,27 @@ function Invoke-OpenCloudConfig {
       Write-Log -message ('{0} :: workerType: {1}.' -f $($MyInvocation.MyCommand.Name), $workerType) -severity 'INFO'
       Write-Log -message ('{0} :: runDscOnWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $runDscOnWorker) -severity 'DEBUG'
     } else {
-      try {
-        $userdata = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')
-      } catch {
-        $userdata = $null
-      }
-      $publicKeys = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys')
+      if ($locationType -eq 'AWS') {
+        try {
+          $userdata = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/user-data')
+        } catch {
+          $userdata = $null
+        }
+        $publicKeys = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys')
 
-      if ($publicKeys.StartsWith('0=mozilla-taskcluster-worker-')) {
-        # ami creation instance
-        $isWorker = $false
-        $workerType = $publicKeys.Replace('0=mozilla-taskcluster-worker-', '')
-        Set-WindowsActivation -productKeyMapUrl ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/Configuration/product-key-map.json' -f $sourceOrg, $sourceRepo, $sourceRev)
-      } else {
-        # provisioned worker
+        if ($publicKeys.StartsWith('0=mozilla-taskcluster-worker-')) {
+          # ami creation instance
+          $isWorker = $false
+          $workerType = $publicKeys.Replace('0=mozilla-taskcluster-worker-', '')
+          Set-WindowsActivation -productKeyMapUrl ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/Configuration/product-key-map.json' -f $sourceOrg, $sourceRepo, $sourceRev)
+        } else {
+          # provisioned worker
+          $isWorker = $true
+          $workerType = (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/user-data' -UseBasicParsing | ConvertFrom-Json).workerType
+        }
+      } elseif ($locationType -eq 'GCP') {
         $isWorker = $true
-        $workerType = (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/user-data' -UseBasicParsing | ConvertFrom-Json).workerType
+        $workerType = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/computeMetadata/v1beta1/instance/attributes/workerType')
       }
       Write-Log -message ('{0} :: isWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $isWorker) -severity 'INFO'
       Write-Log -message ('{0} :: workerType: {1}.' -f $($MyInvocation.MyCommand.Name), $workerType) -severity 'INFO'
