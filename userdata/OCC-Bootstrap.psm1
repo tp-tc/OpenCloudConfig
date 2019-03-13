@@ -1686,6 +1686,7 @@ function Invoke-HardwareDiskCleanup {
 }
 function Set-ChainOfTrustKey {
   param (
+    [string] $locationType,
     [string] $workerType,
     [switch] $shutdown
   )
@@ -1811,7 +1812,7 @@ function Set-ChainOfTrustKey {
         }
         if ((Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'C:\generic-worker\openpgp-private.key' -ErrorAction SilentlyContinue)) {
           if ($shutdown) {
-            if ($workerType.EndsWith('-gamma')) {
+            if ($locationType -eq 'GCP') {
               Write-Log -message ('{0} :: ed25519 and openpgp keys detected. restarting...' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
               & shutdown @('-r', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
             } else {
@@ -1826,7 +1827,7 @@ function Set-ChainOfTrustKey {
         }
         if ($shutdown) {
           if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
-            if ($workerType.EndsWith('-gamma')) {
+            if ($locationType -eq 'GCP') {
               & shutdown @('-r', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
             } else {
               & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
@@ -2333,7 +2334,7 @@ function Invoke-OpenCloudConfig {
     if ((-not ($isWorker)) -and (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
       Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
       if ($locationType -ne 'DataCenter') {
-        Set-ChainOfTrustKey -workerType $workerType -shutdown:$true
+        Set-ChainOfTrustKey -locationType $locationType -workerType $workerType -shutdown:$true
       }
     } elseif ($isWorker) {
       if ($locationType -ne 'DataCenter') {
@@ -2342,7 +2343,7 @@ function Invoke-OpenCloudConfig {
         }
       } else {
         # todo: generate config file if it does not exist or is invalid (eg: created for an older version of gw)
-        Set-ChainOfTrustKey -workerType $workerType -shutdown:$false
+        Set-ChainOfTrustKey -locationType $locationType -workerType $workerType -shutdown:$false
       }
       Wait-GenericWorkerStart -locationType $locationType -lock $lock
     }
