@@ -1564,7 +1564,6 @@
     "userData": {
       "genericWorker": {
         "config": {
-          "authBaseURL": "https://auth.taskcluster.net/v1",
           "cachesDir": "Z:\\caches",
           "cleanUpTaskDirs": true,
           "clientId": "project/releng/generic-worker/gecko-1-b-win2012-gamma/production",
@@ -1578,6 +1577,7 @@
           "livelogPUTPort": 60022,
           "numberOfTasksToRun": 0,
           "openpgpSigningKeyLocation": "C:\\generic-worker\\openpgp-private.key",
+          "rootURL": "https://taskcluster.net",
           "runAfterUserCreation": "C:\\generic-worker\\task-user-init.cmd",
           "runTasksAsCurrentUser": false,
           "sentryProject": "generic-worker",
