@@ -9,6 +9,9 @@ zone_uri_list=(`gcloud compute zones list --uri --filter="name~'^(us|europe)-.*$
 zone_name_list=("${zone_uri_list[@]##*/}")
 zone_name_list_shuffled=( $(shuf -e "${zone_name_list[@]}") )
 
+pgpKey=`cat ~/.ssh/occ-secrets-private.key`
+userData="`curl -s https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/gamma/userdata/Manifest/gecko-1-b-win2012-gamma.json | jq -c '.ProvisionerConfiguration.userData' | sed 's/\"/\\\"/g'`"
+
 for zone_name in ${zone_name_list[@]}; do
   # generate a random instance name which does not pre-exist
   existing_instance_uri_list=(`gcloud compute instances list --uri`)
@@ -18,8 +21,6 @@ for zone_name in ${zone_name_list[@]}; do
     instance_name=${names_first[$[$RANDOM % ${#names_first[@]}]]}-${names_middle[$[$RANDOM % ${#names_middle[@]}]]}-${names_last[$[$RANDOM % ${#names_last[@]}]]}
   done
   echo "spawning ${instance_name} in ${zone_name}"
-
-  pgpKey=`cat ~/.ssh/occ-secrets-private.key`
   gcloud compute instances create ${instance_name} \
     --image-project windows-cloud \
     --image-family windows-2012-r2 \
@@ -27,7 +28,7 @@ for zone_name in ${zone_name_list[@]}; do
     --boot-disk-size 120 \
     --boot-disk-type pd-ssd \
     --scopes storage-ro \
-    --metadata windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1,workerType=gecko-1-b-win2012-gamma,sourceOrg=mozilla-releng,sourceRepo=OpenCloudConfig,sourceRevision=gamma,pgpKey="${pgpKey}" \
+    --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=gecko-1-b-win2012-gamma;sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;config=${userData};pgpKey=\"${pgpKey}\"" \
     --zone ${zone_name}
   gcloud beta compute disks create ${instance_name}-disk-1 --size 120 --type pd-ssd --physical-block-size 4096 --zone ${zone_name}
   gcloud compute instances attach-disk ${instance_name} --disk ${instance_name}-disk-1 --zone ${zone_name}
