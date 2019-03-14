@@ -1087,6 +1087,48 @@
       "Target": "C:\\generic-worker\\generic-worker.config"
     },
     {
+      "ComponentName": "GenericWorkerOpenpgpKey",
+      "ComponentType": "CommandRun",
+      "Command": "C:\\generic-worker\\generic-worker.exe",
+      "Arguments": [
+        "new-openpgp-keypair",
+        "--file",
+        "C:\\generic-worker\\openpgp-private.key"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "GenericWorkerDownload"
+        }
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\generic-worker\\openpgp-private.key"
+        ]
+      }
+    },
+    {
+      "ComponentName": "GenericWorkerEd25519Key",
+      "ComponentType": "CommandRun",
+      "Command": "C:\\generic-worker\\generic-worker.exe",
+      "Arguments": [
+        "new-ed25519-keypair",
+        "--file",
+        "C:\\generic-worker\\ed25519-private.key"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ChecksumFileDownload",
+          "ComponentName": "GenericWorkerDownload"
+        }
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\generic-worker\\ed25519-private.key"
+        ]
+      }
+    },
+    {
       "ComponentName": "GenericWorkerInstall",
       "ComponentType": "CommandRun",
       "Command": "C:\\generic-worker\\generic-worker.exe",
