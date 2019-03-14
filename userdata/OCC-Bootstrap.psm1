@@ -1576,6 +1576,9 @@ function Set-DomainName {
       'europe-west3-*'{
         $dnsRegion = 'euw3'
       }
+      'europe-west4-*'{
+        $dnsRegion = 'euw4'
+      }
       'europe-west6-*'{
         $dnsRegion = 'euw6'
       }
