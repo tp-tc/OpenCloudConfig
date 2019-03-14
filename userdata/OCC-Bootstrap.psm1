@@ -1579,6 +1579,9 @@ function Set-DomainName {
       'europe-west6-*'{
         $dnsRegion = 'euw6'
       }
+      default {
+        $dnsRegion = $az
+      }
     }
     Write-Log -message ('{0} :: availabilityZone: {1}, dnsRegion: {2}.' -f $($MyInvocation.MyCommand.Name), $az, $dnsRegion) -severity 'INFO'
     if (Test-Path -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\NV Domain') {

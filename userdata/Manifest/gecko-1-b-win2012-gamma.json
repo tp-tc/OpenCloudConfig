@@ -1075,6 +1075,18 @@
       }
     },
     {
+      "ComponentName": "GenericWorkerConfig",
+      "ComponentType": "FileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "GenericWorkerDirectory"
+        }
+      ],
+      "Source": "http://169.254.169.254/computeMetadata/v1beta1/instance/attributes/gwConfig",
+      "Target": "C:\\generic-worker\\generic-worker.config"
+    },
+    {
       "ComponentName": "GenericWorkerInstall",
       "ComponentType": "CommandRun",
       "Command": "C:\\generic-worker\\generic-worker.exe",
@@ -1084,13 +1096,16 @@
         "--nssm",
         "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe",
         "--config",
-        "C:\\generic-worker\\generic-worker.config",
-        "--configure-for-gcp"
+        "C:\\generic-worker\\generic-worker.config"
       ],
       "DependsOn": [
         {
           "ComponentType": "ChecksumFileDownload",
           "ComponentName": "GenericWorkerDownload"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "GenericWorkerConfig"
         },
         {
           "ComponentType": "FileDownload",
