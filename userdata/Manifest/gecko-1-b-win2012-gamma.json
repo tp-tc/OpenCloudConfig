@@ -989,6 +989,30 @@
       "sha512": "80cc08012a766c1f4c9da82b3d82af1612d6994714e775182d6ffa1e2b61d5fac4eefc2b5031f5d5ff28caa35dd9a5c6ada9147dc80289226b6f8722f0234a95"
     },
     {
+      "ComponentName": "LiveLogCrtDownload",
+      "ComponentType": "FileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "GenericWorkerDirectory"
+        }
+      ],
+      "Source": "http://169.254.169.254/computeMetadata/v1beta1/instance/attributes/livelogcrt",
+      "Target": "C:\\generic-worker\\livelog.crt"
+    },
+    {
+      "ComponentName": "LiveLogKeyDownload",
+      "ComponentType": "FileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "GenericWorkerDirectory"
+        }
+      ],
+      "Source": "http://169.254.169.254/computeMetadata/v1beta1/instance/attributes/livelogkey",
+      "Target": "C:\\generic-worker\\livelog.key"
+    },
+    {
       "ComponentName": "TaskClusterProxyDownload",
       "ComponentType": "FileDownload",
       "DependsOn": [
@@ -1525,8 +1549,10 @@
     "userData": {
       "genericWorker": {
         "config": {
+          "authBaseURL": "https://auth.taskcluster.net/v1",
           "cachesDir": "Z:\\caches",
           "cleanUpTaskDirs": true,
+          "clientId": "project/releng/generic-worker/gecko-1-b-win2012-gamma/production",
           "disableReboots": true,
           "downloadsDir": "Z:\\downloads",
           "ed25519SigningKeyLocation": "C:\\generic-worker\\ed25519-private.key",
@@ -1545,7 +1571,8 @@
           "subdomain": "taskcluster-worker.net",
           "taskclusterProxyExecutable": "C:\\generic-worker\\taskcluster-proxy.exe",
           "taskclusterProxyPort": 80,
-          "tasksDir": "Z:\\"
+          "tasksDir": "Z:\\",
+          "workerType": "gecko-1-b-win2012-gamma"
         }
       }
     }
