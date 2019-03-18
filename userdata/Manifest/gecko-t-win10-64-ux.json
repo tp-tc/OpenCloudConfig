@@ -1165,8 +1165,8 @@
     {
       "ComponentName": "jqInstall",
       "ComponentType": "FileDownload",
-      "Source": "https://s3-us-west-2.amazonaws.com/occ-package/jq-win64.exe",
-      "sha512": "0fc326228b61fdc64b88b9cd3b976bc4f3de542a1ae1818cb6acbc7b146b0a20ebbd935e07f1b2179e2a2ded614b309259ea944b5e217d3a137458cb5d165ccc",
+      "Source": "https://github.com/stedolan/jq/releases/download/jq-1.6/jq-win64.exe",
+      "sha512": "58127bae7b27d963cb4ec19779e5ab0938db69190ec66985694320af787e696a8acd490b967255a7fed4c28ec6a2c2bfcd6efbb5b85ec2a950b3e318113d5cde",
       "Target": "C:\\Windows\\System32\\jq.exe"
     },
     {
