@@ -47,6 +47,7 @@ function Run-MaintainSystem {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
+    Set-TaskFirewallExceptions
     Remove-OldTaskDirectories
     Disable-DesiredStateConfig
     Invoke-OccReset
@@ -83,6 +84,57 @@ function Remove-OldTaskDirectories {
       } else {
         Write-Log -message ('{0} :: no task directories detected matching pattern: {1}' -f$($MyInvocation.MyCommand.Name), $target) -severity 'DEBUG'
       }
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
+function Set-TaskFirewallExceptions {
+  param (
+    [string] $target = $(if (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue) { 'Z:\task_*' } else { 'C:\Users\task_*' }),
+    [hashtable] $childPaths = @{
+      'ssltunnel' = 'build\tests\bin\ssltunnel.exe';
+      'python' = 'build\venv\scripts\python.exe'
+    }
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    $all_task_paths = @(Get-ChildItem -Path $target | Sort-Object -Property { $_.LastWriteTime } -Descending)
+    if ($all_task_paths.Length) {
+      $newest_task_path = $all_task_paths[0]
+      foreach ($key in $childPaths.Keys) {
+        $childPath = $childPaths.Item($key)
+        $program = (Join-Path -Path $newest_task_path -ChildPath $childPath)
+        foreach ($direction in @('in', 'out')) {
+          $ruleName = ('task-{0}-{1}' -f $key, $direction)
+          try {
+            if ((Get-Command 'Get-NetFirewallRule' -ErrorAction 'SilentlyContinue') -and (Get-Command 'Set-NetFirewallRule' -ErrorAction 'SilentlyContinue') -and (Get-Command 'New-NetFirewallRule' -ErrorAction 'SilentlyContinue')) {
+              if (Get-NetFirewallRule -DisplayName $ruleName -ErrorAction 'SilentlyContinue') {
+                Set-NetFirewallRule -DisplayName $ruleName -Program $program
+                Write-Log -message ('{0} :: firewall rule: {1} updated with program: {2}' -f $($MyInvocation.MyCommand.Name), $ruleName, $program) -severity 'DEBUG'
+              } else {
+                New-NetFirewallRule -DisplayName $ruleName -Program $program -Direction ('{0}bound' -f $direction) -Action Allow
+                Write-Log -message ('{0} :: firewall rule: {1} created with program: {2}' -f $($MyInvocation.MyCommand.Name), $ruleName, $program) -severity 'INFO'
+              }
+            } else {
+              if ((& 'netsh.exe' @('advfirewall', 'firewall', 'show', 'rule', ('name={0}' -f $ruleName)))[1] -ne 'No rules match the specified criteria.') {
+                & 'netsh.exe' @('advfirewall', 'firewall', 'set', 'rule', ('name={0}' -f $ruleName), ('program={0}' -f $program))
+                Write-Log -message ('{0} :: firewall rule: {1} updated with program: {2}' -f $($MyInvocation.MyCommand.Name), $ruleName, $program) -severity 'DEBUG'
+              } else {
+                & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name={0}' -f $ruleName), ('program={0}' -f $program), ('dir={0}' -f $direction), 'action=allow')
+                Write-Log -message ('{0} :: firewall rule: {1} created with program: {2}' -f $($MyInvocation.MyCommand.Name), $ruleName, $program) -severity 'INFO'
+              }
+            }
+          } catch {
+            Write-Log -message ('{0} :: error setting firewall rule: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $ruleName, $_.Exception.Message) -severity 'ERROR'
+          }
+        }
+      }
+    } else {
+      Write-Log -message ('{0} :: no task directories detected matching pattern: {1}' -f$($MyInvocation.MyCommand.Name), $target) -severity 'DEBUG'
     }
   }
   end {
