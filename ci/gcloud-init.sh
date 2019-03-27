@@ -31,7 +31,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   accessToken=`pass Mozilla/TaskCluster/project/releng/generic-worker/${workerType}/production`
 
   instanceCpuCount=32
-  instanceType=n1-highcpu-${instanceCpuCount}
+  instanceType=n1-standard-${instanceCpuCount}
 
 
   echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deployment id: $(tput bold)${deploymentId}$(tput sgr0)"
