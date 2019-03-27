@@ -20,7 +20,7 @@ GITHUB_HEAD_SHA=`git rev-parse HEAD`
 deploymentId=${GITHUB_HEAD_SHA:0:12}
 
 
-if [[ "$1" == "--open-in-browser" ]] && which xdg-open > /dev/null; then
+if [[ $@ == *"--open-in-browser"* ]] && which xdg-open > /dev/null; then
   xdg-open "https://console.cloud.google.com/compute/instances?authuser=1&folder&organizationId&project=windows-workers&instancessize=50&duration=PT1H&pli=1&instancessort=zoneForFilter%252Cname"
 fi
 
@@ -31,9 +31,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   accessToken=`pass Mozilla/TaskCluster/project/releng/generic-worker/${workerType}/production`
 
   instanceCpuCount=32
-  instanceType=n1-standard-${instanceCpuCount}
-
-
+  machineTypes=(highcpu standard)
   echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deployment id: $(tput bold)${deploymentId}$(tput sgr0)"
 
   # determine the number of instances to spawn by checking the pending count for the worker type
@@ -43,6 +41,8 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   if [ ${pendingTaskCount} -gt 0 ]; then
     # spawn some instances
     for i in $(seq 1 ${pendingTaskCount}); do
+      # pick a random machine type
+      instanceType=n1-${machineTypes[$[$RANDOM % ${#machineTypes[@]}]]}-${instanceCpuCount}
       # pick a random zone that has region cpu quota (minus usage) higher than required instanceCpuCount
       zone_name=${zone_name_list[$[$RANDOM % ${#zone_name_list[@]}]]}
       region=${zone_name::-2}
@@ -90,18 +90,18 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       gcloud beta compute disks create ${instance_name}-disk-1 --size 120 --type pd-ssd --physical-block-size 4096 --zone ${zone_name}
       gcloud compute instances attach-disk ${instance_name} --disk ${instance_name}-disk-1 --zone ${zone_name}
     done
-  else
+  #else
     # delete instances that have never taken a task
-    for instance in $(curl -s "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers" | jq -r '.workers[] | select(.latestTask == null) | @base64'); do
-      _jq() {
-        echo ${instance} | base64 --decode | jq -r ${1}
-      }
-      zoneUrl=$(gcloud compute instances list --filter="name:$(_jq '.workerId') AND zone~$(_jq '.workerGroup')" --format=json | jq -r '.[0].zone')
-      zone=${zoneUrl##*/}
-      if [ -n "${zoneUrl}" ] && [ -n "${zone}" ] && [[ "${zone}" != "null" ]] && gcloud compute instances delete $(_jq '.workerId') --zone ${zone} --delete-disks all --quiet; then
-        echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deleted: $(tput bold)${zone}/$(_jq '.workerId')$(tput sgr0)"
-      fi
-    done
+    #for instance in $(curl -s "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers" | jq -r '.workers[] | select(.latestTask == null) | @base64'); do
+    #  _jq() {
+    #    echo ${instance} | base64 --decode | jq -r ${1}
+    #  }
+    #  zoneUrl=$(gcloud compute instances list --filter="name:$(_jq '.workerId') AND zone~$(_jq '.workerGroup')" --format=json | jq -r '.[0].zone')
+    #  zone=${zoneUrl##*/}
+    #  if [ -n "${zoneUrl}" ] && [ -n "${zone}" ] && [[ "${zone}" != "null" ]] && gcloud compute instances delete $(_jq '.workerId') --zone ${zone} --delete-disks all --quiet; then
+    #    echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deleted: $(tput bold)${zone}/$(_jq '.workerId')$(tput sgr0)"
+    #  fi
+    #done
   fi
 done
 
