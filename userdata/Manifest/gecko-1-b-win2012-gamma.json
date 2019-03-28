@@ -1600,7 +1600,7 @@
           "runAfterUserCreation": "C:\\generic-worker\\task-user-init.cmd",
           "runTasksAsCurrentUser": false,
           "sentryProject": "generic-worker",
-          "shutdownMachineOnIdle": false,
+          "shutdownMachineOnIdle": true,
           "shutdownMachineOnInternalError": true,
           "subdomain": "taskcluster-worker.net",
           "taskclusterProxyExecutable": "C:\\generic-worker\\taskcluster-proxy.exe",
