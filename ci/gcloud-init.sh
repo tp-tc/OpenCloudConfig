@@ -104,6 +104,15 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
     #done
   fi
 done
-
+# delete orphaned disks
+for disk in $(gcloud compute disks list --filter=-users:* --format json | jq -r '.[] | @base64'); do
+  _jq() {
+    echo ${disk} | base64 --decode | jq -r ${1}
+  }
+  zoneUrl=$(_jq '.zone')
+  zone=${zoneUrl##*/}
+  gcloud compute disks delete $(_jq '.name') --zone ${zone}
+  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deleted orphaned disk: $(tput bold)$(_jq '.name') (${zone})$(tput sgr0)"
+done
 # open the firewall to livelog traffic
 # gcloud compute firewall-rules create livelog-direct --allow tcp:60023 --description "allows connections to livelog GET interface, running on taskcluster worker instances"
