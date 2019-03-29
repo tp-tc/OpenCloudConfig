@@ -130,7 +130,7 @@ for disk in $(gcloud compute disks list --filter=-users:* --format json | jq -r 
   }
   zoneUrl=$(_jq '.zone')
   zone=${zoneUrl##*/}
-  gcloud compute disks delete $(_jq '.name') --zone ${zone}
+  gcloud compute disks delete $(_jq '.name') --zone ${zone} --quiet
   echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deleted orphaned disk: $(tput bold)$(_jq '.name') (${zone})$(tput sgr0)"
 done
 # open the firewall to livelog traffic
