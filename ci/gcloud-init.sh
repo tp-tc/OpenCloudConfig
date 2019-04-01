@@ -9,12 +9,24 @@ names_last=(`jq -r '.unicorn.last[]' ${script_dir}/names.json`)
 zone_uri_list=(`gcloud compute zones list --uri`)
 zone_name_list=("${zone_uri_list[@]##*/}")
 
-livelogSecret=`pass Mozilla/TaskCluster/livelogSecret`
-livelogcrt=`pass Mozilla/TaskCluster/livelogCert`
-livelogkey=`pass Mozilla/TaskCluster/livelogKey`
-pgpKey=`pass Mozilla/OpenCloudConfig/rootGpgKey`
-relengapiToken=`pass Mozilla/OpenCloudConfig/tooltool-relengapi-tok`
-occInstallersToken=`pass Mozilla/OpenCloudConfig/tooltool-occ-installers-tok`
+if command -v pass; then
+  livelogSecret=`pass Mozilla/TaskCluster/livelogSecret`
+  livelogcrt=`pass Mozilla/TaskCluster/livelogCert`
+  livelogkey=`pass Mozilla/TaskCluster/livelogKey`
+  pgpKey=`pass Mozilla/OpenCloudConfig/rootGpgKey`
+  relengapiToken=`pass Mozilla/OpenCloudConfig/tooltool-relengapi-tok`
+  occInstallersToken=`pass Mozilla/OpenCloudConfig/tooltool-occ-installers-tok`
+elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes; then
+  livelogSecret=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/livelogSecret")
+  livelogcrt=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/livelogcrt")
+  livelogkey=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/livelogkey")
+  pgpKey=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/pgpKey")
+  relengapiToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/relengapiToken")
+  occInstallersToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/occInstallersToken")
+else
+  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) failed to determine a source for secrets$(tput sgr0)"
+  exit 1
+fi
 provisionerId=releng-hardware
 GITHUB_HEAD_SHA=`git rev-parse HEAD`
 deploymentId=${GITHUB_HEAD_SHA:0:12}
@@ -26,7 +38,14 @@ echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deploy
 for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   workerType=$(basename ${manifest##*/} .json)
   echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) worker type: $(tput bold)${workerType}$(tput sgr0)"
-  accessToken=`pass Mozilla/TaskCluster/project/releng/generic-worker/${workerType}/production`
+  if command -v pass; then
+    accessToken=`pass Mozilla/TaskCluster/project/releng/generic-worker/${workerType}/production`
+  elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes; then
+    accessToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/access-token-${workerType}")
+  else
+    echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) failed to determine a source for secrets$(tput sgr0)"
+    exit 1
+  fi
   # determine the number of instances to spawn by checking the pending count for the worker type
   pendingTaskCount=$(curl -s "https://queue.taskcluster.net/v1/pending/${provisionerId}/${workerType}" | jq '.pendingTasks')
   echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) pending tasks: $(tput bold)${pendingTaskCount}$(tput sgr0)"
