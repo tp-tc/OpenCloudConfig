@@ -9,7 +9,7 @@ names_last=(`jq -r '.unicorn.last[]' ${script_dir}/names.json`)
 zone_uri_list=(`gcloud compute zones list --uri`)
 zone_name_list=("${zone_uri_list[@]##*/}")
 
-if command -v pass; then
+if command -v pass > /dev/null; then
   livelogSecret=`pass Mozilla/TaskCluster/livelogSecret`
   livelogcrt=`pass Mozilla/TaskCluster/livelogCert`
   livelogkey=`pass Mozilla/TaskCluster/livelogKey`
@@ -38,7 +38,7 @@ echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deploy
 for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   workerType=$(basename ${manifest##*/} .json)
   echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) worker type: $(tput bold)${workerType}$(tput sgr0)"
-  if command -v pass; then
+  if command -v pass > /dev/null; then
     accessToken=`pass Mozilla/TaskCluster/project/releng/generic-worker/${workerType}/production`
   elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes > /dev/null; then
     accessToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/access-token-${workerType}")
@@ -48,8 +48,28 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   fi
   # determine the number of instances to spawn by checking the pending count for the worker type
   pendingTaskCount=$(curl -s "https://queue.taskcluster.net/v1/pending/${provisionerId}/${workerType}" | jq '.pendingTasks')
-  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) pending tasks: $(tput bold)${pendingTaskCount}$(tput sgr0)"
-  if [ ${pendingTaskCount} -gt 0 ]; then
+  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} pending tasks: $(tput bold)${pendingTaskCount}$(tput sgr0)"
+
+  # determine the number of instances already spawned that have not yet claimed tasks
+  queue_registered_instance_count=0
+  queue_unregistered_instance_count=0
+  for running_instance_uri in $(gcloud compute instances list --uri --filter="labels.worker-type:${workerType}" 2> /dev/null); do
+    running_instance_name=${running_instance_uri##*/}
+    #running_instance_zone_uri=${running_instance_uri/\/instances\/${running_instance_name}/}
+    #running_instance_zone=${running_instance_zone_uri##*/}
+    if [ $(curl -s "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers" | jq --arg workerId ${running_instance_name} '[.workers[] | select(.workerId == $workerId)] | length') -gt 0 ]; then
+      #((queue_registered_instance_count++))
+      echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} working instance detected: $(tput bold)${running_instance_name}$(tput sgr0)"
+      (( queue_registered_instance_count = queue_registered_instance_count + 1 ))
+    else
+      #((queue_unregistered_instance_count++))
+      echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} pending instance detected: $(tput bold)${running_instance_name}$(tput sgr0)"
+      (( queue_unregistered_instance_count = queue_unregistered_instance_count + 1 ))
+    fi
+  done
+  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} pending instances: $(tput bold)${queue_unregistered_instance_count}$(tput sgr0)"
+  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} working instances: $(tput bold)${queue_registered_instance_count}$(tput sgr0)"
+  if [ ${pendingTaskCount} -gt 0 ] && [ ${pendingTaskCount} -gt ${queue_unregistered_instance_count} ]; then
     # spawn some instances
     for i in $(seq 1 ${pendingTaskCount}); do
       # pick a random machine type from the list of machine types in the provisioner configuration of the manifest
@@ -100,6 +120,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       gcloud compute instances add-metadata ${instance_name} --zone ${zone_name} --metadata "^;^gwConfig=${gwConfig}"
       gcloud beta compute disks create ${instance_name}-disk-1 --size 120 --type pd-ssd --physical-block-size 4096 --zone ${zone_name}
       gcloud compute instances attach-disk ${instance_name} --disk ${instance_name}-disk-1 --zone ${zone_name}
+      gcloud compute instances add-labels ${instance_name} --zone ${zone_name} --labels=worker-type=${workerType}
     done
   #else
     # delete instances that have never taken a task
@@ -131,7 +152,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
         latestResolvedTaskTimeInUtc=$(curl -s "https://queue.taskcluster.net/v1/task/$(_jq_idle_instance '.latestTask.taskId')/status" | jq --arg runId $(_jq_idle_instance '.latestTask.runId') -r '.status.runs[] | select(.runId == ($runId | tonumber)) | .resolved')
         if [ -n "${latestResolvedTaskTimeInUtc}" ] && [[ "${latestResolvedTaskTimeInUtc}" != "null" ]]; then
           latestResolvedTaskTime=$(date --date "${latestResolvedTaskTimeInUtc}" +%s)
-          echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${zone}/$(_jq_idle_instance '.workerId') last resolved task: $(tput bold)${latestResolvedTaskTimeInUtc}$(tput sgr0) ($(( ($(date +%s) - $latestResolvedTaskTime) / 60)) minutes ago)"
+          echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType}/${zone}/$(_jq_idle_instance '.workerId') last resolved task: $(tput bold)${latestResolvedTaskTimeInUtc}$(tput sgr0) ($(( ($(date +%s) - $latestResolvedTaskTime) / 60)) minutes ago)"
           if [ ${latestResolvedTaskTime} -lt ${idleThreshold} ] && gcloud compute instances delete $(_jq_idle_instance '.workerId') --zone ${zone} --delete-disks all --quiet; then
             echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deleted: $(tput bold)${zone}/$(_jq_idle_instance '.workerId')$(tput sgr0)"
           fi
