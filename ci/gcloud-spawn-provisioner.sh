@@ -20,12 +20,7 @@ livelogkey=`pass Mozilla/TaskCluster/livelogKey`
 pgpKey=`pass Mozilla/OpenCloudConfig/rootGpgKey`
 relengapiToken=`pass Mozilla/OpenCloudConfig/tooltool-relengapi-tok`
 occInstallersToken=`pass Mozilla/OpenCloudConfig/tooltool-occ-installers-tok`
-gcloud compute instances add-metadata ${provisioner_instance_name} --zone ${provisioner_instance_zone} --metadata "^;^livelogSecret=${livelogSecret}"
-gcloud compute instances add-metadata ${provisioner_instance_name} --zone ${provisioner_instance_zone} --metadata "^;^livelogcrt=${livelogcrt}"
-gcloud compute instances add-metadata ${provisioner_instance_name} --zone ${provisioner_instance_zone} --metadata "^;^livelogkey=${livelogkey}"
-gcloud compute instances add-metadata ${provisioner_instance_name} --zone ${provisioner_instance_zone} --metadata "^;^pgpKey=${pgpKey}"
-gcloud compute instances add-metadata ${provisioner_instance_name} --zone ${provisioner_instance_zone} --metadata "^;^relengapiToken=${relengapiToken}"
-gcloud compute instances add-metadata ${provisioner_instance_name} --zone ${provisioner_instance_zone} --metadata "^;^occInstallersToken=${occInstallersToken}"
+gcloud compute instances add-metadata ${provisioner_instance_name} --zone ${provisioner_instance_zone} --metadata "^;^livelogSecret=${livelogSecret};livelogcrt=${livelogcrt};livelogkey=${livelogkey};pgpKey=${pgpKey};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken}"
 for manifest in $(ls $HOME/git/mozilla-releng/OpenCloudConfig/userdata/Manifest/*-gamma.json); do
   workerType=$(basename ${manifest##*/} .json)
   accessToken=`pass Mozilla/TaskCluster/project/releng/generic-worker/${workerType}/production`
