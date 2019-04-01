@@ -16,7 +16,7 @@ if command -v pass; then
   pgpKey=`pass Mozilla/OpenCloudConfig/rootGpgKey`
   relengapiToken=`pass Mozilla/OpenCloudConfig/tooltool-relengapi-tok`
   occInstallersToken=`pass Mozilla/OpenCloudConfig/tooltool-occ-installers-tok`
-elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes; then
+elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes > /dev/null; then
   livelogSecret=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/livelogSecret")
   livelogcrt=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/livelogcrt")
   livelogkey=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/livelogkey")
@@ -40,7 +40,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) worker type: $(tput bold)${workerType}$(tput sgr0)"
   if command -v pass; then
     accessToken=`pass Mozilla/TaskCluster/project/releng/generic-worker/${workerType}/production`
-  elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes; then
+  elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes > /dev/null; then
     accessToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/access-token-${workerType}")
   else
     echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) failed to determine a source for secrets$(tput sgr0)"
