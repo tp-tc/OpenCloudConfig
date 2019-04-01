@@ -55,15 +55,15 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   queue_unregistered_instance_count=0
   for running_instance_uri in $(gcloud compute instances list --uri --filter="labels.worker-type:${workerType}" 2> /dev/null); do
     running_instance_name=${running_instance_uri##*/}
-    #running_instance_zone_uri=${running_instance_uri/\/instances\/${running_instance_name}/}
-    #running_instance_zone=${running_instance_zone_uri##*/}
+    running_instance_zone_uri=${running_instance_uri/\/instances\/${running_instance_name}/}
+    running_instance_zone=${running_instance_zone_uri##*/}
     if [ $(curl -s "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers" | jq --arg workerId ${running_instance_name} '[.workers[] | select(.workerId == $workerId)] | length') -gt 0 ]; then
       #((queue_registered_instance_count++))
-      echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} working instance detected: $(tput bold)${running_instance_name}$(tput sgr0)"
+      echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} working instance detected: $(tput bold)${running_instance_name}$(tput sgr0) in $(tput bold)${running_instance_zone}$(tput sgr0)"
       (( queue_registered_instance_count = queue_registered_instance_count + 1 ))
     else
       #((queue_unregistered_instance_count++))
-      echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} pending instance detected: $(tput bold)${running_instance_name}$(tput sgr0)"
+      echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} pending instance detected: $(tput bold)${running_instance_name}$(tput sgr0) in $(tput bold)${running_instance_zone}$(tput sgr0)"
       (( queue_unregistered_instance_count = queue_unregistered_instance_count + 1 ))
     fi
   done
