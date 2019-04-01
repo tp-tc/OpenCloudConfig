@@ -69,9 +69,14 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   done
   echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} pending instances: $(tput bold)${queue_unregistered_instance_count}$(tput sgr0)"
   echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} working instances: $(tput bold)${queue_registered_instance_count}$(tput sgr0)"
-  if [ ${pendingTaskCount} -gt 0 ] && [ ${pendingTaskCount} -gt ${queue_unregistered_instance_count} ]; then
+  required_instance_count=0
+  if [ ${queue_unregistered_instance_count} -lt ${pendingTaskCount} ]; then
+    (( required_instance_count = pendingTaskCount - queue_unregistered_instance_count ))
+  fi
+  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} required instances: $(tput bold)${required_instance_count}$(tput sgr0)"
+  if [ ${required_instance_count} -gt 0 ]; then
     # spawn some instances
-    for i in $(seq 1 ${pendingTaskCount}); do
+    for i in $(seq 1 ${required_instance_count}); do
       # pick a random machine type from the list of machine types in the provisioner configuration of the manifest
       instanceTypes=(`jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.machine_types[]' ${manifest}`)
       instanceType=${instanceTypes[$[$RANDOM % ${#instanceTypes[@]}]]}
