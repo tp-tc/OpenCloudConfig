@@ -19,30 +19,24 @@ provisionerId=releng-hardware
 GITHUB_HEAD_SHA=`git rev-parse HEAD`
 deploymentId=${GITHUB_HEAD_SHA:0:12}
 
-
 if [[ $@ == *"--open-in-browser"* ]] && which xdg-open > /dev/null; then
   xdg-open "https://console.cloud.google.com/compute/instances?authuser=1&folder&organizationId&project=windows-workers&instancessize=50&duration=PT1H&pli=1&instancessort=zoneForFilter%252Cname"
 fi
-
+echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deployment id: $(tput bold)${deploymentId}$(tput sgr0)"
 for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   workerType=$(basename ${manifest##*/} .json)
   echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) worker type: $(tput bold)${workerType}$(tput sgr0)"
-
   accessToken=`pass Mozilla/TaskCluster/project/releng/generic-worker/${workerType}/production`
-
-  instanceCpuCount=32
-  machineTypes=(highcpu standard)
-  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deployment id: $(tput bold)${deploymentId}$(tput sgr0)"
-
   # determine the number of instances to spawn by checking the pending count for the worker type
   pendingTaskCount=$(curl -s "https://queue.taskcluster.net/v1/pending/${provisionerId}/${workerType}" | jq '.pendingTasks')
   echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) pending tasks: $(tput bold)${pendingTaskCount}$(tput sgr0)"
-
   if [ ${pendingTaskCount} -gt 0 ]; then
     # spawn some instances
     for i in $(seq 1 ${pendingTaskCount}); do
-      # pick a random machine type
-      instanceType=n1-${machineTypes[$[$RANDOM % ${#machineTypes[@]}]]}-${instanceCpuCount}
+      # pick a random machine type from the list of machine types in the provisioner configuration of the manifest
+      instanceTypes=(`jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.machine_types[]' ${manifest}`)
+      instanceType=${instanceTypes[$[$RANDOM % ${#instanceTypes[@]}]]}
+      instanceCpuCount=${instanceType##*-}
       # pick a random zone that has region cpu quota (minus usage) higher than required instanceCpuCount
       zone_name=${zone_name_list[$[$RANDOM % ${#zone_name_list[@]}]]}
       region=${zone_name::-2}
@@ -62,13 +56,11 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       while [[ " ${existing_instance_name_list[@]} " =~ " ${instance_name} " ]]; do
         instance_name=${names_first[$[$RANDOM % ${#names_first[@]}]]}-${names_middle[$[$RANDOM % ${#names_middle[@]}]]}-${names_last[$[$RANDOM % ${#names_last[@]}]]}
       done
-
       echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) instance name: $(tput bold)${instance_name}$(tput sgr0)"
       echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) zone name: $(tput bold)${zone_name}$(tput sgr0)"
       echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) region: $(tput bold)${region}$(tput sgr0)"
       echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) instance type: $(tput bold)${instanceType}$(tput sgr0)"
       echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) worker group: $(tput bold)${region}$(tput sgr0)"
-
       gcloud compute instances create ${instance_name} \
         --image-project windows-cloud \
         --image-family windows-2012-r2 \
@@ -93,45 +85,51 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   #else
     # delete instances that have never taken a task
     #for instance in $(curl -s "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers" | jq -r '.workers[] | select(.latestTask == null) | @base64'); do
-    #  _jq() {
+    #  _jq_zombie_instance() {
     #    echo ${instance} | base64 --decode | jq -r ${1}
     #  }
-    #  zoneUrl=$(gcloud compute instances list --filter="name:$(_jq '.workerId') AND zone~$(_jq '.workerGroup')" --format=json | jq -r '.[0].zone')
+    #  zoneUrl=$(gcloud compute instances list --filter="name:$(_jq_zombie_instance '.workerId') AND zone~$(_jq_zombie_instance '.workerGroup')" --format=json | jq -r '.[0].zone')
     #  zone=${zoneUrl##*/}
-    #  if [ -n "${zoneUrl}" ] && [ -n "${zone}" ] && [[ "${zone}" != "null" ]] && gcloud compute instances delete $(_jq '.workerId') --zone ${zone} --delete-disks all --quiet; then
-    #    echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deleted: $(tput bold)${zone}/$(_jq '.workerId')$(tput sgr0)"
+    #  if [ -n "${zoneUrl}" ] && [ -n "${zone}" ] && [[ "${zone}" != "null" ]] && gcloud compute instances delete $(_jq_zombie_instance '.workerId') --zone ${zone} --delete-disks all --quiet; then
+    #    echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deleted: $(tput bold)${zone}/$(_jq_zombie_instance '.workerId')$(tput sgr0)"
     #  fi
     #done
   fi
-  # delete instances that have not taken a task within the idle threshold. note that the tc queue may return instances that have long since terminated
-  idleThreshold=$(date --date "120 minutes ago" +%s)
-  for instance in $(curl -s "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers" | jq -r '.workers[] | select(.latestTask != null) | @base64'); do
-    _jq() {
-      echo ${instance} | base64 --decode | jq -r ${1}
-    }
-    zoneUrl=$(gcloud compute instances list --filter="name:$(_jq '.workerId') AND zone~$(_jq '.workerGroup')" --format=json | jq -r '.[0].zone')
-    if [ -n "${zoneUrl}" ] && [[ "${zoneUrl}" != "null" ]]; then
-      zone=${zoneUrl##*/}
-      latestResolvedTaskTimeInUtc=$(curl -s "https://queue.taskcluster.net/v1/task/$(_jq '.latestTask.taskId')/status" | jq --arg runId $(_jq '.latestTask.runId') -r '.status.runs[] | select(.runId == ($runId | tonumber)) | .resolved')
-      if [ -n "${latestResolvedTaskTimeInUtc}" ] && [[ "${latestResolvedTaskTimeInUtc}" != "null" ]]; then
-        latestResolvedTaskTime=$(date --date "${latestResolvedTaskTimeInUtc}" +%s)
-        echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${zone}/$(_jq '.workerId') last resolved task: $(tput bold)${latestResolvedTaskTimeInUtc}$(tput sgr0) ($(( ($(date +%s) - $latestResolvedTaskTime) / 60)) minutes ago)"
-        if [ ${latestResolvedTaskTime} -lt ${idleThreshold} ] && gcloud compute instances delete $(_jq '.workerId') --zone ${zone} --delete-disks all --quiet; then
-          echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deleted: $(tput bold)${zone}/$(_jq '.workerId')$(tput sgr0)"
+  if [[ "$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.idle_termination_threshold' ${manifest})" == "null" ]]; then
+    echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")] idle threshold not configured for worker type ${workerType}$(tput sgr0)"
+  else
+    # delete instances that have not taken a task within the idle threshold. note that the tc queue may return instances that have long since terminated
+    idlePeriod=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.idle_termination_threshold.period' ${manifest})
+    idleInterval=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.idle_termination_threshold.interval' ${manifest})
+    idleThreshold=$(date --date "${idleInterval} ${idlePeriod} ago" +%s)
+    for instance in $(curl -s "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers" | jq -r '.workers[] | select(.latestTask != null) | @base64'); do
+      _jq_idle_instance() {
+        echo ${instance} | base64 --decode | jq -r ${1}
+      }
+      zoneUrl=$(gcloud compute instances list --filter="name:$(_jq_idle_instance '.workerId') AND zone~$(_jq_idle_instance '.workerGroup')" --format=json | jq -r '.[0].zone')
+      if [ -n "${zoneUrl}" ] && [[ "${zoneUrl}" != "null" ]]; then
+        zone=${zoneUrl##*/}
+        latestResolvedTaskTimeInUtc=$(curl -s "https://queue.taskcluster.net/v1/task/$(_jq_idle_instance '.latestTask.taskId')/status" | jq --arg runId $(_jq_idle_instance '.latestTask.runId') -r '.status.runs[] | select(.runId == ($runId | tonumber)) | .resolved')
+        if [ -n "${latestResolvedTaskTimeInUtc}" ] && [[ "${latestResolvedTaskTimeInUtc}" != "null" ]]; then
+          latestResolvedTaskTime=$(date --date "${latestResolvedTaskTimeInUtc}" +%s)
+          echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${zone}/$(_jq_idle_instance '.workerId') last resolved task: $(tput bold)${latestResolvedTaskTimeInUtc}$(tput sgr0) ($(( ($(date +%s) - $latestResolvedTaskTime) / 60)) minutes ago)"
+          if [ ${latestResolvedTaskTime} -lt ${idleThreshold} ] && gcloud compute instances delete $(_jq_idle_instance '.workerId') --zone ${zone} --delete-disks all --quiet; then
+            echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deleted: $(tput bold)${zone}/$(_jq_idle_instance '.workerId')$(tput sgr0)"
+          fi
         fi
       fi
-    fi
-  done
+    done
+  fi
 done
 # delete orphaned disks
 for disk in $(gcloud compute disks list --filter=-users:* --format json | jq -r '.[] | @base64'); do
-  _jq() {
+  _jq_orphaned_disk() {
     echo ${disk} | base64 --decode | jq -r ${1}
   }
-  zoneUrl=$(_jq '.zone')
+  zoneUrl=$(_jq_orphaned_disk '.zone')
   zone=${zoneUrl##*/}
-  gcloud compute disks delete $(_jq '.name') --zone ${zone} --quiet
-  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deleted orphaned disk: $(tput bold)$(_jq '.name') (${zone})$(tput sgr0)"
+  gcloud compute disks delete $(_jq_orphaned_disk '.name') --zone ${zone} --quiet
+  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deleted orphaned disk: $(tput bold)$(_jq_orphaned_disk '.name') (${zone})$(tput sgr0)"
 done
 # open the firewall to livelog traffic
 # gcloud compute firewall-rules create livelog-direct --allow tcp:60023 --description "allows connections to livelog GET interface, running on taskcluster worker instances"

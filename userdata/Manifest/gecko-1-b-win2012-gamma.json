@@ -1609,6 +1609,16 @@
           "workerType": "gecko-1-b-win2012-gamma"
         }
       }
+    },
+    "releng_gcp_provisioner": {
+      "machine_types": [
+        "n1-standard-32",
+        "n1-highcpu-32"
+      ],
+      "idle_termination_threshold": {
+        "period": "minutes",
+        "interval": 120
+      }
     }
   }
 }
