@@ -1,13 +1,28 @@
 #!/bin/bash -e
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-script_name=$(basename ${0##*/} .sh)
+
 names_first=(`jq -r '.unicorn.first[]' ${script_dir}/names.json`)
 names_middle=(`jq -r '.unicorn.middle[]' ${script_dir}/names.json`)
 names_last=(`jq -r '.unicorn.last[]' ${script_dir}/names.json`)
 
 zone_uri_list=(`gcloud compute zones list --uri`)
 zone_name_list=("${zone_uri_list[@]##*/}")
+
+_echo() {
+  if [ -z ${TERM+x} ]; then
+    message=${1//_bold_/}
+    message=${message//_dim_/}
+    message=${message//_reset_/}
+    echo ${message}
+  else
+    script_name=$(basename ${0##*/} .sh)
+    message=${1//_bold_/$(tput bold)}
+    message=${message//_dim_/$(tput dim)}
+    message=${message//_reset_/$(tput sgr0)}
+    echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${message}"
+  fi
+}
 
 if command -v pass > /dev/null; then
   livelogSecret=`pass Mozilla/TaskCluster/livelogSecret`
@@ -24,7 +39,7 @@ elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/comput
   relengapiToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/relengapiToken")
   occInstallersToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/occInstallersToken")
 else
-  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) failed to determine a source for secrets$(tput sgr0)"
+  _echo "failed to determine a source for secrets_reset_"
   exit 1
 fi
 provisionerId=releng-hardware
@@ -34,21 +49,21 @@ deploymentId=${GITHUB_HEAD_SHA:0:12}
 if [[ $@ == *"--open-in-browser"* ]] && which xdg-open > /dev/null; then
   xdg-open "https://console.cloud.google.com/compute/instances?authuser=1&folder&organizationId&project=windows-workers&instancessize=50&duration=PT1H&pli=1&instancessort=zoneForFilter%252Cname"
 fi
-echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deployment id: $(tput bold)${deploymentId}$(tput sgr0)"
+_echo "deployment id: _bold_${deploymentId}_reset_"
 for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   workerType=$(basename ${manifest##*/} .json)
-  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) worker type: $(tput bold)${workerType}$(tput sgr0)"
+  _echo "worker type: _bold_${workerType}_reset_"
   if command -v pass > /dev/null; then
     accessToken=`pass Mozilla/TaskCluster/project/releng/generic-worker/${workerType}/production`
   elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes > /dev/null; then
     accessToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/access-token-${workerType}")
   else
-    echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) failed to determine a source for secrets$(tput sgr0)"
+    _echo "failed to determine a source for secrets_reset_"
     exit 1
   fi
   # determine the number of instances to spawn by checking the pending count for the worker type
   pendingTaskCount=$(curl -s "https://queue.taskcluster.net/v1/pending/${provisionerId}/${workerType}" | jq '.pendingTasks')
-  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} pending tasks: $(tput bold)${pendingTaskCount}$(tput sgr0)"
+  _echo "${workerType} pending tasks: _bold_${pendingTaskCount}_reset_"
 
   # determine the number of instances already spawned that have not yet claimed tasks
   queue_registered_instance_count=0
@@ -59,21 +74,21 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
     running_instance_zone=${running_instance_zone_uri##*/}
     if [ $(curl -s "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers" | jq --arg workerId ${running_instance_name} '[.workers[] | select(.workerId == $workerId)] | length') -gt 0 ]; then
       #((queue_registered_instance_count++))
-      echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} working instance detected: $(tput bold)${running_instance_name}$(tput sgr0) in $(tput bold)${running_instance_zone}$(tput sgr0)"
+      _echo "${workerType} working instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_"
       (( queue_registered_instance_count = queue_registered_instance_count + 1 ))
     else
       #((queue_unregistered_instance_count++))
-      echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} pending instance detected: $(tput bold)${running_instance_name}$(tput sgr0) in $(tput bold)${running_instance_zone}$(tput sgr0)"
+      _echo "${workerType} pending instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_"
       (( queue_unregistered_instance_count = queue_unregistered_instance_count + 1 ))
     fi
   done
-  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} pending instances: $(tput bold)${queue_unregistered_instance_count}$(tput sgr0)"
-  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} working instances: $(tput bold)${queue_registered_instance_count}$(tput sgr0)"
+  _echo "${workerType} pending instances: _bold_${queue_unregistered_instance_count}_reset_"
+  _echo "${workerType} working instances: _bold_${queue_registered_instance_count}_reset_"
   required_instance_count=0
   if [ ${queue_unregistered_instance_count} -lt ${pendingTaskCount} ]; then
     (( required_instance_count = pendingTaskCount - queue_unregistered_instance_count ))
   fi
-  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType} required instances: $(tput bold)${required_instance_count}$(tput sgr0)"
+  _echo "${workerType} required instances: _bold_${required_instance_count}_reset_"
   if [ ${required_instance_count} -gt 0 ]; then
     # spawn some instances
     for i in $(seq 1 ${required_instance_count}); do
@@ -87,7 +102,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       cpuQuota=$(gcloud compute regions describe ${region} --project windows-workers --format json | jq '.quotas[] | select(.metric == "CPUS").limit')
       cpuUsage=$(gcloud compute regions describe ${region} --project windows-workers --format json | jq '.quotas[] | select(.metric == "CPUS").usage')
       while (( (cpuQuota - cpuUsage) < instanceCpuCount )); do
-        echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")] skipping region: ${region} (cpu quota: ${cpuQuota}, cpu usage: ${cpuUsage})$(tput sgr0)"
+        _echo "skipping region: ${region} (cpu quota: ${cpuQuota}, cpu usage: ${cpuUsage})_reset_"
         zone_name=${zone_name_list[$[$RANDOM % ${#zone_name_list[@]}]]}
         region=${zone_name::-2}
         cpuQuota=$(gcloud compute regions describe ${region} --project windows-workers --format json | jq '.quotas[] | select(.metric == "CPUS").limit')
@@ -100,11 +115,11 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       while [[ " ${existing_instance_name_list[@]} " =~ " ${instance_name} " ]]; do
         instance_name=${names_first[$[$RANDOM % ${#names_first[@]}]]}-${names_middle[$[$RANDOM % ${#names_middle[@]}]]}-${names_last[$[$RANDOM % ${#names_last[@]}]]}
       done
-      echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) instance name: $(tput bold)${instance_name}$(tput sgr0)"
-      echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) zone name: $(tput bold)${zone_name}$(tput sgr0)"
-      echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) region: $(tput bold)${region}$(tput sgr0)"
-      echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) instance type: $(tput bold)${instanceType}$(tput sgr0)"
-      echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) worker group: $(tput bold)${region}$(tput sgr0)"
+      _echo "instance name: _bold_${instance_name}_reset_"
+      _echo "zone name: _bold_${zone_name}_reset_"
+      _echo "region: _bold_${region}_reset_"
+      _echo "instance type: _bold_${instanceType}_reset_"
+      _echo "worker group: _bold_${region}_reset_"
       gcloud compute instances create ${instance_name} \
         --image-project windows-cloud \
         --image-family windows-2012-r2 \
@@ -116,11 +131,11 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
         --zone ${zone_name} \
         --preemptible
       publicIP=$(gcloud compute instances describe ${instance_name} --zone ${zone_name} --format json | jq -r '.networkInterfaces[0].accessConfigs[0].natIP')
-      echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) public ip: $(tput bold)${publicIP}$(tput sgr0)"
+      _echo "public ip: _bold_${publicIP}_reset_"
       privateIP=$(gcloud compute instances describe ${instance_name} --zone ${zone_name} --format json | jq -r '.networkInterfaces[0].networkIP')
-      echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) private ip: $(tput bold)${privateIP}$(tput sgr0)"
+      _echo "private ip: _bold_${privateIP}_reset_"
       instanceId=$(gcloud compute instances describe ${instance_name} --zone ${zone_name} --format json | jq -r '.id')
-      echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) instance id: $(tput bold)${instanceId}$(tput sgr0)"
+      _echo "instance id: _bold_${instanceId}_reset_"
       gwConfig="`curl -s https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/gamma/userdata/Manifest/${workerType}.json | jq --arg accessToken ${accessToken} --arg livelogSecret ${livelogSecret} --arg publicIP ${publicIP} --arg privateIP ${privateIP} --arg workerId ${instance_name} --arg provisionerId ${provisionerId} --arg region ${region} --arg deploymentId ${deploymentId} --arg availabilityZone ${zone_name} --arg instanceId ${instanceId} --arg instanceType ${instanceType} -c '.ProvisionerConfiguration.userData.genericWorker.config | .accessToken = $accessToken | .livelogSecret = $livelogSecret | .publicIP = $publicIP | .privateIP = $privateIP | .workerId = $workerId | .instanceId = $instanceId | .instanceType = $instanceType | .availabilityZone = $availabilityZone | .region = $region | .provisionerId = $provisionerId | .workerGroup = $region | .deploymentId = $deploymentId' | sed 's/\"/\\\"/g'`"
       gcloud compute instances add-metadata ${instance_name} --zone ${zone_name} --metadata "^;^gwConfig=${gwConfig}"
       gcloud beta compute disks create ${instance_name}-disk-1 --size 120 --type pd-ssd --physical-block-size 4096 --zone ${zone_name}
@@ -136,12 +151,12 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
     #  zoneUrl=$(gcloud compute instances list --filter="name:$(_jq_zombie_instance '.workerId') AND zone~$(_jq_zombie_instance '.workerGroup')" --format=json | jq -r '.[0].zone')
     #  zone=${zoneUrl##*/}
     #  if [ -n "${zoneUrl}" ] && [ -n "${zone}" ] && [[ "${zone}" != "null" ]] && gcloud compute instances delete $(_jq_zombie_instance '.workerId') --zone ${zone} --delete-disks all --quiet; then
-    #    echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deleted: $(tput bold)${zone}/$(_jq_zombie_instance '.workerId')$(tput sgr0)"
+    #    _echo "deleted: _bold_${zone}/$(_jq_zombie_instance '.workerId')_reset_"
     #  fi
     #done
   fi
   if [[ "$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.idle_termination_threshold' ${manifest})" == "null" ]]; then
-    echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")] idle threshold not configured for worker type ${workerType}$(tput sgr0)"
+    _echo "idle threshold not configured for worker type ${workerType}_reset_"
   else
     # delete instances that have not taken a task within the idle threshold. note that the tc queue may return instances that have long since terminated
     idlePeriod=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.idle_termination_threshold.period' ${manifest})
@@ -157,9 +172,9 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
         latestResolvedTaskTimeInUtc=$(curl -s "https://queue.taskcluster.net/v1/task/$(_jq_idle_instance '.latestTask.taskId')/status" | jq --arg runId $(_jq_idle_instance '.latestTask.runId') -r '.status.runs[] | select(.runId == ($runId | tonumber)) | .resolved')
         if [ -n "${latestResolvedTaskTimeInUtc}" ] && [[ "${latestResolvedTaskTimeInUtc}" != "null" ]]; then
           latestResolvedTaskTime=$(date --date "${latestResolvedTaskTimeInUtc}" +%s)
-          echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${workerType}/${zone}/$(_jq_idle_instance '.workerId') last resolved task: $(tput bold)${latestResolvedTaskTimeInUtc}$(tput sgr0) ($(( ($(date +%s) - $latestResolvedTaskTime) / 60)) minutes ago)"
+          _echo "${workerType}/${zone}/$(_jq_idle_instance '.workerId') last resolved task: _bold_${latestResolvedTaskTimeInUtc}_reset_ ($(( ($(date +%s) - $latestResolvedTaskTime) / 60)) minutes ago)"
           if [ ${latestResolvedTaskTime} -lt ${idleThreshold} ] && gcloud compute instances delete $(_jq_idle_instance '.workerId') --zone ${zone} --delete-disks all --quiet; then
-            echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deleted: $(tput bold)${zone}/$(_jq_idle_instance '.workerId')$(tput sgr0)"
+            _echo "deleted: _bold_${zone}/$(_jq_idle_instance '.workerId')_reset_"
           fi
         fi
       fi
@@ -174,7 +189,7 @@ for disk in $(gcloud compute disks list --filter=-users:* --format json | jq -r 
   zoneUrl=$(_jq_orphaned_disk '.zone')
   zone=${zoneUrl##*/}
   gcloud compute disks delete $(_jq_orphaned_disk '.name') --zone ${zone} --quiet
-  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) deleted orphaned disk: $(tput bold)$(_jq_orphaned_disk '.name') (${zone})$(tput sgr0)"
+  _echo "deleted orphaned disk: _bold_$(_jq_orphaned_disk '.name') (${zone})_reset_"
 done
 # open the firewall to livelog traffic
 # gcloud compute firewall-rules create livelog-direct --allow tcp:60023 --description "allows connections to livelog GET interface, running on taskcluster worker instances"

@@ -1,11 +1,26 @@
 #!/bin/bash
 
-apt-get install -y git jq
+log_dir=/var/log/releng-gcp-provisioner
+
+# set up papertrail log forwarding
+sudo mkdir ${log_dir}
+sudo chown ${USER}:${USER} ${log_dir}
+#sudo chmod -R o+r ${log_dir}/
+sudo curl -sL -o /etc/log_files.yml https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/gamma/ci/gcloud-provisioner-log-config.yml
+curl -sLO https://github.com/papertrail/remote_syslog2/releases/download/v0.20/remote-syslog2_0.20_amd64.deb
+sudo dpkg -i remote-syslog2_0.20_amd64.deb
+sudo remote_syslog
+
+# install provisioner and dependencies
+sudo apt-get install -y git jq
 git clone https://github.com/mozilla-releng/OpenCloudConfig.git
 cd OpenCloudConfig
 git checkout gamma
+
+# run latest provisioner script while logging to ${log_dir}
 while true; do
-  git pull > /dev/null
-  ci/gcloud-init.sh
+  git pull > ${log_dir}/git-stdout.log 2> ${log_dir}/git-stderr.log
+  ci/gcloud-init.sh > ${log_dir}/provisioner-stdout.log 2> ${log_dir}/provisioner-stderr.log
   sleep 60
+  rm -f ${log_dir}/*.log
 done
