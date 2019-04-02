@@ -10,17 +10,17 @@ zone_uri_list=(`gcloud compute zones list --uri`)
 zone_name_list=("${zone_uri_list[@]##*/}")
 
 _echo() {
-  if [ -n "$TERM" ]; then
+  if [ -z "$TERM" ] || [[ "${HOSTNAME}" == "releng-gcp-provisioner-"* ]]; then
+    message=${1//_bold_/}
+    message=${message//_dim_/}
+    message=${message//_reset_/}
+    echo ${message}
+  else
     script_name=$(basename ${0##*/} .sh)
     message=${1//_bold_/$(tput bold)}
     message=${message//_dim_/$(tput dim)}
     message=${message//_reset_/$(tput sgr0)}
     echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${message}"
-  else
-    message=${1//_bold_/}
-    message=${message//_dim_/}
-    message=${message//_reset_/}
-    echo ${message}
   fi
 }
 
