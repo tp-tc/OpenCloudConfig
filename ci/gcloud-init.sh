@@ -10,7 +10,7 @@ zone_uri_list=(`gcloud compute zones list --uri`)
 zone_name_list=("${zone_uri_list[@]##*/}")
 
 _echo() {
-  if [ -z ${TERM+x} ]; then
+  if [ -z ${TERM} ]; then
     message=${1//_bold_/}
     message=${message//_dim_/}
     message=${message//_reset_/}
