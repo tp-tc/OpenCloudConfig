@@ -19,8 +19,8 @@ git checkout gamma
 
 # run latest provisioner script while logging to ${log_dir}
 while true; do
-  git pull > ${log_dir}/git-stdout.log 2> ${log_dir}/git-stderr.log
-  ci/gcloud-init.sh > ${log_dir}/provisioner-stdout.log 2> ${log_dir}/provisioner-stderr.log
+  git pull > ${log_dir}/git-stdout 2> ${log_dir}/git-stderr
+  ci/gcloud-init.sh > ${log_dir}/provisioner-stdout 2> ${log_dir}/provisioner-stderr
   sleep 60
-  rm -f ${log_dir}/*.log
+  rm -f ${log_dir}/*
 done
