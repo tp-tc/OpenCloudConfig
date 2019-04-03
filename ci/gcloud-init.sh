@@ -142,18 +142,6 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       gcloud compute instances attach-disk ${instance_name} --disk ${instance_name}-disk-1 --zone ${zone_name}
       gcloud compute instances add-labels ${instance_name} --zone ${zone_name} --labels=worker-type=${workerType}
     done
-  #else
-    # delete instances that have never taken a task
-    #for instance in $(curl -s "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers" | jq -r '.workers[] | select(.latestTask == null) | @base64'); do
-    #  _jq_zombie_instance() {
-    #    echo ${instance} | base64 --decode | jq -r ${1}
-    #  }
-    #  zoneUrl=$(gcloud compute instances list --filter="name:$(_jq_zombie_instance '.workerId') AND zone~$(_jq_zombie_instance '.workerGroup')" --format=json | jq -r '.[0].zone')
-    #  zone=${zoneUrl##*/}
-    #  if [ -n "${zoneUrl}" ] && [ -n "${zone}" ] && [[ "${zone}" != "null" ]] && gcloud compute instances delete $(_jq_zombie_instance '.workerId') --zone ${zone} --delete-disks all --quiet; then
-    #    _echo "deleted: _bold_${zone}/$(_jq_zombie_instance '.workerId')_reset_"
-    #  fi
-    #done
   fi
   if [[ "$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.idle_termination_threshold' ${manifest})" == "null" ]]; then
     _echo "idle threshold not configured for worker type ${workerType}_reset_"
@@ -190,6 +178,15 @@ for disk in $(gcloud compute disks list --filter=-users:* --format json | jq -r 
   zone=${zoneUrl##*/}
   gcloud compute disks delete $(_jq_orphaned_disk '.name') --zone ${zone} --quiet
   _echo "deleted orphaned disk: _bold_$(_jq_orphaned_disk '.name') (${zone})_reset_"
+done
+# delete instances that have been terminated
+for terminated_instance_uri in $(gcloud compute instances list --uri --filter="status:TERMINATED" 2> /dev/null); do
+  terminated_instance_name=${terminated_instance_uri##*/}
+  terminated_instance_zone_uri=${terminated_instance_uri/\/instances\/${terminated_instance_name}/}
+  terminated_instance_zone=${terminated_instance_zone_uri##*/}
+  if [ -n "${terminated_instance_zone_uri}" ] && [ -n "${terminated_instance_zone}" ] && [[ "${terminated_instance_zone}" != "null" ]] && gcloud compute instances delete ${terminated_instance_name} --zone ${terminated_instance_zone} --delete-disks all --quiet; then
+    _echo "deleted: _bold_${terminated_instance_zone}/${terminated_instance_name}_reset_"
+  fi
 done
 # open the firewall to livelog traffic
 # gcloud compute firewall-rules create livelog-direct --allow tcp:60023 --description "allows connections to livelog GET interface, running on taskcluster worker instances"
