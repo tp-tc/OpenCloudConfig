@@ -163,9 +163,10 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
         minutesElapsedSinceLatestTaskResolved=$(( ($(date +%s) - $latestResolvedTaskTime) / 60))
         _echo "${workerType}/${worker_instance_region}/${worker_instance_name} last resolved task: _bold_${latestResolvedTaskTimeInUtc}_reset_ (${minutesElapsedSinceLatestTaskResolved} minutes ago)"
         if [ "${minutesElapsedSinceLatestTaskResolved}" -gt "${idleInterval}" ]; then
-          _echo "attempting delete of: _bold_${zone}/${worker_instance_name}_reset_ due to ${minutesElapsedSinceLatestTaskResolved} ${idlePeriod} elapsing since latest task resolved"
+          _echo "attempting delete of: _bold_${worker_instance_region}/${worker_instance_name}_reset_ due to ${minutesElapsedSinceLatestTaskResolved} ${idlePeriod} elapsing since latest task resolved"
           #zoneUrl=$(gcloud compute instances list --filter="name:${worker_instance_name} AND zone~${worker_instance_region}" --format=json | jq -r '.[0].zone')
           zoneUrl=$(gcloud compute instances list --filter="name:${worker_instance_name}" --format=json | jq -r '.[0].zone')
+          _echo "zone url: _bold_${zoneUrl}_reset_"
           if [ -n "${zoneUrl}" ] && [[ "${zoneUrl}" != "null" ]]; then
             zone=${zoneUrl##*/}
             if gcloud compute instances delete ${worker_instance_name} --zone ${zone} --delete-disks all --quiet; then
