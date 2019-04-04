@@ -160,7 +160,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       if [ -n "${latestResolvedTaskTimeInUtc}" ] && [[ "${latestResolvedTaskTimeInUtc}" != "null" ]]; then
         latestResolvedTaskTime=$(date --date "${latestResolvedTaskTimeInUtc}" +%s)
         _echo "${workerType}/${worker_instance_region}/${worker_instance_name} last resolved task: _bold_${latestResolvedTaskTimeInUtc}_reset_ ($(( ($(date +%s) - $latestResolvedTaskTime) / 60)) minutes ago)"
-        if [ $(( ($(date +%s) - $latestResolvedTaskTime) / 60)) -gt ${idleInterval} ]; then
+        if [ ( $(( ($(date +%s) - $latestResolvedTaskTime) / 60)) ) -gt ( ${idleInterval} ) ]; then
           zoneUrl=$(gcloud compute instances list --filter="name:${worker_instance_name} AND zone~${worker_instance_region}" --format=json | jq -r '.[0].zone')
           if [ -n "${zoneUrl}" ] && [[ "${zoneUrl}" != "null" ]]; then
             zone=${zoneUrl##*/}
