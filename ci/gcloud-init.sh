@@ -161,7 +161,8 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
         if [ -n "${latestResolvedTaskTimeInUtc}" ] && [[ "${latestResolvedTaskTimeInUtc}" != "null" ]]; then
           latestResolvedTaskTime=$(date --date "${latestResolvedTaskTimeInUtc}" +%s)
           _echo "${workerType}/${zone}/$(_jq_idle_instance '.workerId') last resolved task: _bold_${latestResolvedTaskTimeInUtc}_reset_ ($(( ($(date +%s) - $latestResolvedTaskTime) / 60)) minutes ago)"
-          if [ ${latestResolvedTaskTime} -lt ${idleThreshold} ] && gcloud compute instances delete $(_jq_idle_instance '.workerId') --zone ${zone} --delete-disks all --quiet; then
+          #if [ ${latestResolvedTaskTime} -lt ${idleThreshold} ] && gcloud compute instances delete $(_jq_idle_instance '.workerId') --zone ${zone} --delete-disks all --quiet; then
+          if [ $(( ($(date +%s) - $latestResolvedTaskTime) / 60)) -gt ${idleInterval} ] && gcloud compute instances delete $(_jq_idle_instance '.workerId') --zone ${zone} --delete-disks all --quiet; then
             _echo "deleted: _bold_${zone}/$(_jq_idle_instance '.workerId')_reset_"
           fi
         fi
