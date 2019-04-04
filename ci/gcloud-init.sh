@@ -162,7 +162,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
         latestResolvedTaskTime=$(date --date "${latestResolvedTaskTimeInUtc}" +%s)
         minutesElapsedSinceLatestTaskResolved=$(( ($(date +%s) - $latestResolvedTaskTime) / 60))
         _echo "${workerType}/${worker_instance_region}/${worker_instance_name} last resolved task: _bold_${latestResolvedTaskTimeInUtc}_reset_ (${minutesElapsedSinceLatestTaskResolved} minutes ago)"
-        if [ ${minutesElapsedSinceLatestTaskResolved} -gt ${idleInterval} ]; then
+        if [ "${minutesElapsedSinceLatestTaskResolved}" -gt "${idleInterval}" ]; then
           zoneUrl=$(gcloud compute instances list --filter="name:${worker_instance_name} AND zone~${worker_instance_region}" --format=json | jq -r '.[0].zone')
           if [ -n "${zoneUrl}" ] && [[ "${zoneUrl}" != "null" ]]; then
             zone=${zoneUrl##*/}
