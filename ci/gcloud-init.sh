@@ -169,23 +169,22 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
     done
   fi
 done
-# delete orphaned disks
-for disk in $(gcloud compute disks list --filter=-users:* --format json | jq -r '.[] | @base64'); do
-  _jq_orphaned_disk() {
-    echo ${disk} | base64 --decode | jq -r ${1}
-  }
-  zoneUrl=$(_jq_orphaned_disk '.zone')
-  zone=${zoneUrl##*/}
-  gcloud compute disks delete $(_jq_orphaned_disk '.name') --zone ${zone} --quiet
-  _echo "deleted orphaned disk: _bold_$(_jq_orphaned_disk '.name') (${zone})_reset_"
-done
 # delete instances that have been terminated
 for terminated_instance_uri in $(gcloud compute instances list --uri --filter="status:TERMINATED" 2> /dev/null); do
   terminated_instance_name=${terminated_instance_uri##*/}
   terminated_instance_zone_uri=${terminated_instance_uri/\/instances\/${terminated_instance_name}/}
   terminated_instance_zone=${terminated_instance_zone_uri##*/}
-  if [ -n "${terminated_instance_zone_uri}" ] && [ -n "${terminated_instance_zone}" ] && [[ "${terminated_instance_zone}" != "null" ]] && gcloud compute instances delete ${terminated_instance_name} --zone ${terminated_instance_zone} --delete-disks all --quiet; then
+  if [ -n "${terminated_instance_name}" ] && [ -n "${terminated_instance_zone}" ] && gcloud compute instances delete ${terminated_instance_name} --zone ${terminated_instance_zone} --delete-disks all --quiet; then
     _echo "deleted: _bold_${terminated_instance_zone}/${terminated_instance_name}_reset_"
+  fi
+done
+# delete orphaned disks
+for orphaned_disk_uri in $(gcloud compute disks list --uri --filter="-users:*" 2> /dev/null); do
+  orphaned_disk_name=${orphaned_disk_uri##*/}
+  orphaned_disk_zone_uri=${orphaned_disk_uri/\/disks\/${orphaned_disk_name}/}
+  orphaned_disk_zone=${orphaned_disk_zone_uri##*/}
+  if [ -n "${orphaned_disk_name}" ] && [ -n "${orphaned_disk_zone}" ] && gcloud compute disks delete ${orphaned_disk_name} --zone ${orphaned_disk_zone} --quiet; then
+    _echo "deleted: _bold_${orphaned_disk_zone}/${orphaned_disk_name}_reset_"
   fi
 done
 # open the firewall to livelog traffic
