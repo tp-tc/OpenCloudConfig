@@ -188,4 +188,6 @@ for orphaned_disk_uri in $(gcloud compute disks list --uri --filter="-users:*" 2
   fi
 done
 # open the firewall to livelog traffic
-# gcloud compute firewall-rules create livelog-direct --allow tcp:60023 --description "allows connections to livelog GET interface, running on taskcluster worker instances"
+if [[ "$(gcloud compute firewall-rules list --filter=name:livelog-direct --format json)" == "[]" ]]; then
+  gcloud compute firewall-rules create livelog-direct --allow tcp:60023 --description "allows connections to livelog GET interface, running on taskcluster worker instances"
+fi
