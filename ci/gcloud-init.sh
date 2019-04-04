@@ -154,16 +154,19 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       _jq_idle_instance() {
         echo ${instance} | base64 --decode | jq -r ${1}
       }
-      zoneUrl=$(gcloud compute instances list --filter="name:$(_jq_idle_instance '.workerId') AND zone~$(_jq_idle_instance '.workerGroup')" --format=json | jq -r '.[0].zone')
-      if [ -n "${zoneUrl}" ] && [[ "${zoneUrl}" != "null" ]]; then
-        zone=${zoneUrl##*/}
-        latestResolvedTaskTimeInUtc=$(curl -s "https://queue.taskcluster.net/v1/task/$(_jq_idle_instance '.latestTask.taskId')/status" | jq --arg runId $(_jq_idle_instance '.latestTask.runId') -r '.status.runs[] | select(.runId == ($runId | tonumber)) | .resolved')
-        if [ -n "${latestResolvedTaskTimeInUtc}" ] && [[ "${latestResolvedTaskTimeInUtc}" != "null" ]]; then
-          latestResolvedTaskTime=$(date --date "${latestResolvedTaskTimeInUtc}" +%s)
-          _echo "${workerType}/${zone}/$(_jq_idle_instance '.workerId') last resolved task: _bold_${latestResolvedTaskTimeInUtc}_reset_ ($(( ($(date +%s) - $latestResolvedTaskTime) / 60)) minutes ago)"
-          #if [ ${latestResolvedTaskTime} -lt ${idleThreshold} ] && gcloud compute instances delete $(_jq_idle_instance '.workerId') --zone ${zone} --delete-disks all --quiet; then
-          if [ $(( ($(date +%s) - $latestResolvedTaskTime) / 60)) -gt ${idleInterval} ] && gcloud compute instances delete $(_jq_idle_instance '.workerId') --zone ${zone} --delete-disks all --quiet; then
-            _echo "deleted: _bold_${zone}/$(_jq_idle_instance '.workerId')_reset_"
+      worker_instance_name=$(_jq_idle_instance '.workerId')
+      worker_instance_region=$(_jq_idle_instance '.workerGroup')
+      latestResolvedTaskTimeInUtc=$(curl -s "https://queue.taskcluster.net/v1/task/$(_jq_idle_instance '.latestTask.taskId')/status" | jq --arg runId $(_jq_idle_instance '.latestTask.runId') -r '.status.runs[] | select(.runId == ($runId | tonumber)) | .resolved')
+      if [ -n "${latestResolvedTaskTimeInUtc}" ] && [[ "${latestResolvedTaskTimeInUtc}" != "null" ]]; then
+        latestResolvedTaskTime=$(date --date "${latestResolvedTaskTimeInUtc}" +%s)
+        _echo "${workerType}/${worker_instance_region}/${worker_instance_name} last resolved task: _bold_${latestResolvedTaskTimeInUtc}_reset_ ($(( ($(date +%s) - $latestResolvedTaskTime) / 60)) minutes ago)"
+        if [ $(( ($(date +%s) - $latestResolvedTaskTime) / 60)) -gt ${idleInterval} ]; then
+          zoneUrl=$(gcloud compute instances list --filter="name:${worker_instance_name} AND zone~${worker_instance_region}" --format=json | jq -r '.[0].zone')
+          if [ -n "${zoneUrl}" ] && [[ "${zoneUrl}" != "null" ]]; then
+            zone=${zoneUrl##*/}
+            if gcloud compute instances delete ${worker_instance_name} --zone ${zone} --delete-disks all --quiet; then
+              _echo "deleted: _bold_${zone}/${worker_instance_name}_reset_"
+            fi
           fi
         fi
       fi
