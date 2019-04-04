@@ -150,6 +150,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
     idlePeriod=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.idle_termination_threshold.period' ${manifest})
     idleInterval=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.idle_termination_threshold.interval' ${manifest})
     idleThreshold=$(date --date "${idleInterval} ${idlePeriod} ago" +%s)
+    _echo "configured max idle time in ${idlePeriod} for ${workerType}: _bold_${idleInterval}_reset_"
     for instance in $(curl -s "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers" | jq -r '.workers[] | select(.latestTask != null) | @base64'); do
       _jq_idle_instance() {
         echo ${instance} | base64 --decode | jq -r ${1}
