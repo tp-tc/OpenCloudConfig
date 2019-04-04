@@ -170,7 +170,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
               _echo "deleted: _bold_${zone}/${worker_instance_name}_reset_ due to ${minutesElapsedSinceLatestTaskResolved} ${idlePeriod} elapsing since latest task resolved"
             fi
           else
-            _echo "_bold_${zone}/${worker_instance_name}_reset_ was previously deleted"
+            _echo "_bold_${worker_instance_region}/${worker_instance_name}_reset_ was previously deleted"
           fi
         fi
       fi
