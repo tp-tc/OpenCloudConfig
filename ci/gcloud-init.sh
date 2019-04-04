@@ -159,8 +159,9 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       latestResolvedTaskTimeInUtc=$(curl -s "https://queue.taskcluster.net/v1/task/$(_jq_idle_instance '.latestTask.taskId')/status" | jq --arg runId $(_jq_idle_instance '.latestTask.runId') -r '.status.runs[] | select(.runId == ($runId | tonumber)) | .resolved')
       if [ -n "${latestResolvedTaskTimeInUtc}" ] && [[ "${latestResolvedTaskTimeInUtc}" != "null" ]]; then
         latestResolvedTaskTime=$(date --date "${latestResolvedTaskTimeInUtc}" +%s)
-        _echo "${workerType}/${worker_instance_region}/${worker_instance_name} last resolved task: _bold_${latestResolvedTaskTimeInUtc}_reset_ ($(( ($(date +%s) - $latestResolvedTaskTime) / 60)) minutes ago)"
-        if [ ( $(( ($(date +%s) - $latestResolvedTaskTime) / 60)) ) -gt ( ${idleInterval} ) ]; then
+        minutesElapsedSinceLatestTaskResolved=$(( ($(date +%s) - $latestResolvedTaskTime) / 60))
+        _echo "${workerType}/${worker_instance_region}/${worker_instance_name} last resolved task: _bold_${latestResolvedTaskTimeInUtc}_reset_ (${minutesElapsedSinceLatestTaskResolved} minutes ago)"
+        if [ ${minutesElapsedSinceLatestTaskResolved} -gt ${idleInterval} ]; then
           zoneUrl=$(gcloud compute instances list --filter="name:${worker_instance_name} AND zone~${worker_instance_region}" --format=json | jq -r '.[0].zone')
           if [ -n "${zoneUrl}" ] && [[ "${zoneUrl}" != "null" ]]; then
             zone=${zoneUrl##*/}
