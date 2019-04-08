@@ -172,7 +172,6 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
     # delete instances that have not taken a task within the idle threshold. note that the tc queue may return instances that have long since terminated
     idlePeriod=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.idle_termination_threshold.period' ${manifest})
     idleInterval=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.idle_termination_threshold.interval' ${manifest})
-    idleThreshold=$(date --date "${idleInterval} ${idlePeriod} ago" +%s)
     _echo "configured max idle time in ${idlePeriod} for ${workerType}: _bold_${idleInterval}_reset_"
     for instance in $(curl -s "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers" | jq -r '.workers[] | select(.latestTask != null) | @base64'); do
       _jq_idle_instance() {
@@ -185,7 +184,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
         latestResolvedTaskTime=$(date --date "${latestResolvedTaskTimeInUtc}" +%s)
         minutesElapsedSinceLatestTaskResolved=$(( ($(date +%s) - $latestResolvedTaskTime) / 60))
         _echo "${workerType}/${worker_instance_region}/${worker_instance_name} last resolved task: _bold_${latestResolvedTaskTimeInUtc}_reset_ (${minutesElapsedSinceLatestTaskResolved} minutes ago)"
-        if [ "${minutesElapsedSinceLatestTaskResolved}" -gt "${idleInterval}" ]; then
+        if [ "${minutesElapsedSinceLatestTaskResolved}" -gt "${idleInterval}" ] && [ "${minutesElapsedSinceLatestTaskResolved}" -lt "$((2 * idleInterval))" ]; then
           zoneUrl=$(gcloud compute instances list --filter="name:${worker_instance_name} AND zone~${worker_instance_region}" --format=json | jq -r '.[0].zone')
           if [ -n "${zoneUrl}" ] && [[ "${zoneUrl}" != "null" ]]; then
             zone=${zoneUrl##*/}
