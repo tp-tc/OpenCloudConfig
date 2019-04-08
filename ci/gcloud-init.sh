@@ -195,7 +195,9 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
             _echo "_bold_${worker_instance_region}/${worker_instance_name}_reset_ was previously deleted"
           fi
         else
-          _echo "_bold_${worker_instance_region}/${worker_instance_name}_reset_ was ignored"
+          if [ "${minutesElapsedSinceLatestTaskResolved}" -gt "$((2 * idleInterval))" ]; then
+            _echo "_bold_${worker_instance_region}/${worker_instance_name}_reset_ was ignored"
+          fi
         fi
       fi
     done
