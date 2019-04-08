@@ -1615,6 +1615,18 @@
         "n1-standard-32",
         "n1-highcpu-32"
       ],
+      "disks": {
+        "boot": {
+          "type": "pd-ssd",
+          "size": 50
+        },
+        "supplementary": [
+          {
+            "type": "local-ssd",
+            "interface": "scsi"
+          }
+        ]
+      },
       "idle_termination_threshold": {
         "period": "minutes",
         "interval": 120
