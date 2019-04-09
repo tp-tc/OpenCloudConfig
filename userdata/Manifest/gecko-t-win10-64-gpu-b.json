@@ -1790,7 +1790,6 @@
           "livelogKey": "C:\\generic-worker\\livelog.key",
           "livelogPUTPort": 60022,
           "numberOfTasksToRun": 0,
-          "openpgpSigningKeyLocation": "C:\\generic-worker\\openpgp-private.key",
           "runAfterUserCreation": "C:\\generic-worker\\task-user-init.cmd",
           "runTasksAsCurrentUser": false,
           "sentryProject": "generic-worker",
