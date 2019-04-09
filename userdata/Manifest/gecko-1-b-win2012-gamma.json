@@ -1571,6 +1571,47 @@
       "Target": "C:\\builds\\occ-installers.tok"
     },
     {
+      "ComponentName": "SCCACHE_GCS_KEY",
+      "ComponentType": "FileDownload",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1543026",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "dir_Builds"
+        }
+      ],
+      "Source": "http://169.254.169.254/computeMetadata/v1beta1/instance/attributes/SCCACHE_GCS_KEY",
+      "Target": "C:\\builds\\sccache-gcs.json"
+    },
+    {
+      "ComponentName": "env_SCCACHE_GCS_KEY_PATH",
+      "ComponentType": "EnvironmentVariableSet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1543026",
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "SCCACHE_GCS_KEY"
+        }
+      ],
+      "Name": "SCCACHE_GCS_KEY_PATH",
+      "Value": "C:\\builds\\sccache-gcs.json",
+      "Target": "Machine"
+    },
+    {
+      "ComponentName": "env_SCCACHE_GCS_RW_MODE",
+      "ComponentType": "EnvironmentVariableSet",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1543026",
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "SCCACHE_GCS_KEY"
+        }
+      ],
+      "Name": "SCCACHE_GCS_RW_MODE",
+      "Value": "READ_WRITE",
+      "Target": "Machine"
+    },
+    {
       "ComponentName": "EnablePerformanceCounters",
       "ComponentType": "CommandRun",
       "Command": "diskperf.exe",

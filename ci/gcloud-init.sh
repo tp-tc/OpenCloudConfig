@@ -6,9 +6,6 @@ names_first=(`jq -r '.unicorn.first[]' ${script_dir}/names.json`)
 names_middle=(`jq -r '.unicorn.middle[]' ${script_dir}/names.json`)
 names_last=(`jq -r '.unicorn.last[]' ${script_dir}/names.json`)
 
-region_uri_list=(`gcloud compute regions list --uri`)
-region_name_list=("${region_uri_list[@]##*/}")
-
 zone_uri_list=(`gcloud compute zones list --uri`)
 zone_name_list=("${zone_uri_list[@]##*/}")
 
@@ -26,18 +23,6 @@ _echo() {
     echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${message}"
   fi
 }
-
-# create regional sccache buckets
-for region_name in "${region_name_list[@]}"; do
-  for scm_level in {1..3}; do
-    if gsutil du -s gs://taskcluster-level-${scm_level}-sccache-${region_name}/; then
-      _echo "detected bucket: _bold_gs://taskcluster-level-${scm_level}-sccache-${region_name}/_reset_"
-    else
-      gsutil mb -p windows-workers -c regional -l ${region_name} gs://taskcluster-level-${scm_level}-sccache-${region_name}/
-      _echo "created bucket: _bold_gs://taskcluster-level-${scm_level}-sccache-${region_name}/_reset_"
-    fi
-  done
-done
 
 if command -v pass > /dev/null; then
   livelogSecret=`pass Mozilla/TaskCluster/livelogSecret`
@@ -123,6 +108,13 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
         cpuQuota=$(gcloud compute regions describe ${region} --project windows-workers --format json | jq '.quotas[] | select(.metric == "CPUS").limit')
         cpuUsage=$(gcloud compute regions describe ${region} --project windows-workers --format json | jq '.quotas[] | select(.metric == "CPUS").usage')
       done
+      # set sccache configuration
+      if [[ ${workerType} =~ ^[a-zA-Z]*-([1-3])-.*$ ]]; then
+        SCM_LEVEL=${BASH_REMATCH[1]}
+      else
+        SCM_LEVEL=0
+      fi
+      SCCACHE_GCS_BUCKET=taskcluster-level-${SCM_LEVEL}-sccache-${region}
       # generate a random instance name which does not pre-exist
       existing_instance_uri_list=(`gcloud compute instances list --uri`)
       existing_instance_name_list=("${existing_instance_uri_list[@]##*/}")
@@ -151,7 +143,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
           --boot-disk-type ${disk_zero_type} \
           --local-ssd interface=${disk_one_interface} \
           --scopes storage-rw \
-          --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken}" \
+          --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_BUCKET=${SCCACHE_GCS_BUCKET}" \
           --zone ${zone_name} \
           --preemptible
       else
@@ -162,7 +154,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
           --boot-disk-size ${disk_zero_size} \
           --boot-disk-type ${disk_zero_type} \
           --scopes storage-rw \
-          --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken}" \
+          --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_BUCKET=${SCCACHE_GCS_BUCKET}" \
           --zone ${zone_name} \
           --preemptible
         disk_one_size=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.supplementary[0].size' ${manifest})
