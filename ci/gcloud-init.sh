@@ -4,7 +4,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 names_first=(`jq -r '.unicorn.first[]' ${script_dir}/names.json`)
 names_middle=(`jq -r '.unicorn.middle[]' ${script_dir}/names.json`)
-names_last=(`jq -r '.unicorn.last[]' ${script_dir}/names.json`)_dir}/names.json`)
+names_last=(`jq -r '.unicorn.last[]' ${script_dir}/names.json`)
 
 region_uri_list=(`gcloud compute regions list --uri`)
 region_name_list=("${region_uri_list[@]##*/}")
