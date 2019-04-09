@@ -155,7 +155,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
           --boot-disk-size ${disk_zero_size} \
           --boot-disk-type ${disk_zero_type} \
           --scopes storage-ro \
-          --service-account taskcluster-level-${SCM_LEVEL}-sccache \
+          --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
           --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_BUCKET=${SCCACHE_GCS_BUCKET}" \
           --zone ${zone_name} \
           --preemptible
