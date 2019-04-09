@@ -1622,8 +1622,8 @@
         },
         "supplementary": [
           {
-            "type": "pd-ssd",
-            "size": 120
+            "type": "local-ssd",
+            "interface": "scsi"
           }
         ]
       },
