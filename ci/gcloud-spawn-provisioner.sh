@@ -18,7 +18,10 @@ fi
 # grant role allowing assignment of service accounts to provisioned instances
 # note that the user running this script needs the role: roles/iam.serviceAccountUser. eg:
 # gcloud iam service-accounts add-iam-policy-binding releng-gcp-provisioner@windows-workers.iam.gserviceaccount.com --member user:someuser@mozilla.com --role roles/iam.serviceAccountUser
-gcloud projects add-iam-policy-binding ${project_name} --member serviceAccount:${service_account_name}@${project_name}.iam.gserviceaccount.com --role roles/iam.serviceAccountUser
+for scm_level in {1..3}; do
+  gcloud iam service-accounts add-iam-policy-binding taskcluster-level-${scm_level}-sccache@${project_name}.iam.gserviceaccount.com --member serviceAccount:${service_account_name}@${project_name}.iam.gserviceaccount.com --role roles/iam.serviceAccountUser
+done
+#gcloud projects add-iam-policy-binding ${project_name} --member serviceAccount:${service_account_name}@${project_name}.iam.gserviceaccount.com --role roles/iam.serviceAccountUser
 
 # generate a new provisioner instance name which does not pre-exist
 existing_provisioner_instance_uri_list=(`gcloud compute instances list --uri`)
