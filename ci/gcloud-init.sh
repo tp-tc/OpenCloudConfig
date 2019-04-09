@@ -175,42 +175,6 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       gcloud compute instances add-labels ${instance_name} --zone ${zone_name} --labels=worker-type=${workerType}
     done
   fi
-  if [[ "$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.idle_termination_threshold' ${manifest})" == "null" ]]; then
-    _echo "idle threshold not configured for worker type ${workerType}_reset_"
-  else
-    # delete instances that have not taken a task within the idle threshold. note that the tc queue may return instances that have long since terminated
-    idlePeriod=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.idle_termination_threshold.period' ${manifest})
-    idleInterval=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.idle_termination_threshold.interval' ${manifest})
-    _echo "configured max idle time in ${idlePeriod} for ${workerType}: _bold_${idleInterval}_reset_"
-    for instance in $(curl -s "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers" | jq -r '.workers[] | select(.latestTask != null) | @base64'); do
-      _jq_idle_instance() {
-        echo ${instance} | base64 --decode | jq -r ${1}
-      }
-      worker_instance_name=$(_jq_idle_instance '.workerId')
-      worker_instance_region=$(_jq_idle_instance '.workerGroup')
-      latestResolvedTaskTimeInUtc=$(curl -s "https://queue.taskcluster.net/v1/task/$(_jq_idle_instance '.latestTask.taskId')/status" | jq --arg runId $(_jq_idle_instance '.latestTask.runId') -r '.status.runs[] | select(.runId == ($runId | tonumber)) | .resolved')
-      if [ -n "${latestResolvedTaskTimeInUtc}" ] && [[ "${latestResolvedTaskTimeInUtc}" != "null" ]]; then
-        latestResolvedTaskTime=$(date --date "${latestResolvedTaskTimeInUtc}" +%s)
-        minutesElapsedSinceLatestTaskResolved=$(( ($(date +%s) - $latestResolvedTaskTime) / 60))
-        _echo "${workerType}/${worker_instance_region}/${worker_instance_name} last resolved task: _bold_${latestResolvedTaskTimeInUtc}_reset_ (${minutesElapsedSinceLatestTaskResolved} minutes ago)"
-        if [ "${minutesElapsedSinceLatestTaskResolved}" -gt "${idleInterval}" ] && [ "${minutesElapsedSinceLatestTaskResolved}" -lt "$((2 * idleInterval))" ]; then
-          zoneUrl=$(gcloud compute instances list --filter="name:${worker_instance_name} AND zone~${worker_instance_region}" --format=json | jq -r '.[0].zone')
-          if [ -n "${zoneUrl}" ] && [[ "${zoneUrl}" != "null" ]]; then
-            zone=${zoneUrl##*/}
-            if gcloud compute instances delete ${worker_instance_name} --zone ${zone} --delete-disks all --quiet; then
-              _echo "deleted: _bold_${zone}/${worker_instance_name}_reset_ due to ${minutesElapsedSinceLatestTaskResolved} ${idlePeriod} elapsing since latest task resolved"
-            fi
-          else
-            _echo "_bold_${worker_instance_region}/${worker_instance_name}_reset_ was previously deleted"
-          fi
-        else
-          if [ "${minutesElapsedSinceLatestTaskResolved}" -gt "$((2 * idleInterval))" ]; then
-            _echo "_bold_${worker_instance_region}/${worker_instance_name}_reset_ was ignored (assuming previously deleted)"
-          fi
-        fi
-      fi
-    done
-  fi
 done
 # delete instances that have been terminated
 for terminated_instance_uri in $(gcloud compute instances list --uri --filter="status:TERMINATED" 2> /dev/null); do
