@@ -21,6 +21,9 @@ fi
 for scm_level in {1..3}; do
   gcloud iam service-accounts add-iam-policy-binding taskcluster-level-${scm_level}-sccache@${project_name}.iam.gserviceaccount.com --member serviceAccount:${service_account_name}@${project_name}.iam.gserviceaccount.com --role roles/iam.serviceAccountUser
 done
+# grant role allowing management of compute instances
+gcloud projects add-iam-policy-binding ${project_name} --member serviceAccount:${service_account_name}@${project_name}.iam.gserviceaccount.com --role roles/compute.admin
+#gcloud projects add-iam-policy-binding windows-workers --member serviceAccount:releng-gcp-provisioner@windows-workers.iam.gserviceaccount.com --role roles/compute.admin
 #gcloud projects add-iam-policy-binding ${project_name} --member serviceAccount:${service_account_name}@${project_name}.iam.gserviceaccount.com --role roles/iam.serviceAccountUser
 
 # generate a new provisioner instance name which does not pre-exist
