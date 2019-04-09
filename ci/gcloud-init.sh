@@ -42,12 +42,13 @@ else
   _echo "failed to determine a source for secrets_reset_"
   exit 1
 fi
+project_name=windows-workers
 provisionerId=releng-hardware
 GITHUB_HEAD_SHA=`git rev-parse HEAD`
 deploymentId=${GITHUB_HEAD_SHA:0:12}
 
 if [[ $@ == *"--open-in-browser"* ]] && which xdg-open > /dev/null; then
-  xdg-open "https://console.cloud.google.com/compute/instances?authuser=1&folder&organizationId&project=windows-workers&instancessize=50&duration=PT1H&pli=1&instancessort=zoneForFilter%252Cname"
+  xdg-open "https://console.cloud.google.com/compute/instances?authuser=1&folder&organizationId&project=${project_name}&instancessize=50&duration=PT1H&pli=1&instancessort=zoneForFilter%252Cname"
 fi
 _echo "deployment id: _bold_${deploymentId}_reset_"
 for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
@@ -99,14 +100,14 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       # pick a random zone that has region cpu quota (minus usage) higher than required instanceCpuCount
       zone_name=${zone_name_list[$[$RANDOM % ${#zone_name_list[@]}]]}
       region=${zone_name::-2}
-      cpuQuota=$(gcloud compute regions describe ${region} --project windows-workers --format json | jq '.quotas[] | select(.metric == "CPUS").limit')
-      cpuUsage=$(gcloud compute regions describe ${region} --project windows-workers --format json | jq '.quotas[] | select(.metric == "CPUS").usage')
+      cpuQuota=$(gcloud compute regions describe ${region} --project ${project_name} --format json | jq '.quotas[] | select(.metric == "CPUS").limit')
+      cpuUsage=$(gcloud compute regions describe ${region} --project ${project_name} --format json | jq '.quotas[] | select(.metric == "CPUS").usage')
       while (( (cpuQuota - cpuUsage) < instanceCpuCount )); do
         _echo "skipping region: ${region} (cpu quota: ${cpuQuota}, cpu usage: ${cpuUsage})_reset_"
         zone_name=${zone_name_list[$[$RANDOM % ${#zone_name_list[@]}]]}
         region=${zone_name::-2}
-        cpuQuota=$(gcloud compute regions describe ${region} --project windows-workers --format json | jq '.quotas[] | select(.metric == "CPUS").limit')
-        cpuUsage=$(gcloud compute regions describe ${region} --project windows-workers --format json | jq '.quotas[] | select(.metric == "CPUS").usage')
+        cpuQuota=$(gcloud compute regions describe ${region} --project ${project_name} --format json | jq '.quotas[] | select(.metric == "CPUS").limit')
+        cpuUsage=$(gcloud compute regions describe ${region} --project ${project_name} --format json | jq '.quotas[] | select(.metric == "CPUS").usage')
       done
       # set sccache configuration
       if [[ ${workerType} =~ ^[a-zA-Z]*-([1-3])-.*$ ]]; then
