@@ -4,7 +4,10 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 names_first=(`jq -r '.unicorn.first[]' ${script_dir}/names.json`)
 names_middle=(`jq -r '.unicorn.middle[]' ${script_dir}/names.json`)
-names_last=(`jq -r '.unicorn.last[]' ${script_dir}/names.json`)
+names_last=(`jq -r '.unicorn.last[]' ${script_dir}/names.json`)_dir}/names.json`)
+
+region_uri_list=(`gcloud compute regions list --uri`)
+region_name_list=("${region_uri_list[@]##*/}")
 
 zone_uri_list=(`gcloud compute zones list --uri`)
 zone_name_list=("${zone_uri_list[@]##*/}")
@@ -23,6 +26,18 @@ _echo() {
     echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) ${message}"
   fi
 }
+
+# create regional sccache buckets
+for region_name in "${region_name_list[@]}"; do
+  for scm_level in {1..3}; do
+    if gsutil du -s gs://taskcluster-level-${scm_level}-sccache-${region_name}/; then
+      _echo "detected bucket: _bold_gs://taskcluster-level-${scm_level}-sccache-${region_name}/_reset_"
+    else
+      gsutil mb -p windows-workers -c regional -l ${region_name} gs://taskcluster-level-${scm_level}-sccache-${region_name}/
+      _echo "created bucket: _bold_gs://taskcluster-level-${scm_level}-sccache-${region_name}/_reset_"
+    fi
+  done
+done
 
 if command -v pass > /dev/null; then
   livelogSecret=`pass Mozilla/TaskCluster/livelogSecret`
@@ -135,7 +150,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
           --boot-disk-size ${disk_zero_size} \
           --boot-disk-type ${disk_zero_type} \
           --local-ssd interface=${disk_one_interface} \
-          --scopes storage-ro \
+          --scopes storage-rw \
           --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken}" \
           --zone ${zone_name} \
           --preemptible
@@ -146,7 +161,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
           --machine-type ${instanceType} \
           --boot-disk-size ${disk_zero_size} \
           --boot-disk-type ${disk_zero_type} \
-          --scopes storage-ro \
+          --scopes storage-rw \
           --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken}" \
           --zone ${zone_name} \
           --preemptible

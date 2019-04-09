@@ -34,7 +34,7 @@ echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) provis
 gcloud compute instances create ${provisioner_instance_name} \
   --zone ${provisioner_instance_zone} \
   --machine-type ${provisioner_instance_machine_type} \
-  --scopes compute-rw,service-management,storage-ro \
+  --scopes compute-rw,service-management,storage-rw \
   --metadata "^;^startup-script-url=gs://open-cloud-config/gcloud-init-provisioner.sh;livelogSecret=${livelogSecret};livelogcrt=${livelogcrt};livelogkey=${livelogkey};pgpKey=${pgpKey};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken}"
 echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) provisioner: ${provisioner_instance_name} created as ${provisioner_instance_machine_type} in ${provisioner_instance_zone}$(tput sgr0)"
 
