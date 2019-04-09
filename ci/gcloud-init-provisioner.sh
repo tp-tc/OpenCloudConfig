@@ -13,9 +13,9 @@ sudo remote_syslog
 
 # install provisioner and dependencies
 sudo apt-get install -y git jq
-git clone https://github.com/mozilla-releng/OpenCloudConfig.git
+git clone https://github.com/mozilla-releng/OpenCloudConfig.git > ${log_dir}/git-stdout 2> ${log_dir}/git-stderr
 cd OpenCloudConfig
-git checkout gamma
+git checkout gamma > ${log_dir}/git-stdout 2> ${log_dir}/git-stderr
 
 # run latest provisioner script while logging to ${log_dir}
 while true; do
