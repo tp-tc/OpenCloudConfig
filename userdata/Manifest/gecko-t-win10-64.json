@@ -439,9 +439,9 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v13.0.2/generic-worker-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v14.0.2/generic-worker-nativeEngine-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe",
-      "sha512": "e9cb9b8d69d9800b90733b2ac45d36f714f237d29e58f3eb250084ab09d547027fdc824ce6d2178e1d3269b8e32ab078d7c9c091e90f5ec72a39febe2e566019"
+      "sha512": "274346cc7232b801b3b2447272ec84a14532ff1b745549b28d42caed85a5693bdb5d6a6f09d7a2194d5da90c1871caf2a5310f984688f9d1eecd763c3e14bf00"
     },
     {
       "ComponentName": "LiveLogDownload",
@@ -564,7 +564,7 @@
             "Arguments": [
               "--version"
             ],
-            "Like": "generic-worker 13.0.2 *"
+            "Like": "generic-worker 14.0.2 *"
           }
         ]
       }
@@ -1750,7 +1750,6 @@
           "livelogKey": "C:\\generic-worker\\livelog.key",
           "livelogPUTPort": 60022,
           "numberOfTasksToRun": 0,
-          "openpgpSigningKeyLocation": "C:\\generic-worker\\openpgp-private.key",
           "runAfterUserCreation": "C:\\generic-worker\\task-user-init.cmd",
           "runTasksAsCurrentUser": false,
           "sentryProject": "generic-worker",
