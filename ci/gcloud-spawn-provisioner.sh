@@ -23,6 +23,9 @@ for scm_level in {1..3}; do
 done
 # grant role allowing management of compute instances
 gcloud projects add-iam-policy-binding ${project_name} --member serviceAccount:${service_account_name}@${project_name}.iam.gserviceaccount.com --role roles/compute.admin
+
+# grant role allowing management of occ bucket
+gsutil iam ch serviceAccount:${service_account_name}@${project_name}.iam.gserviceaccount.com:objectAdmin gs://open-cloud-config/
 #gcloud projects add-iam-policy-binding windows-workers --member serviceAccount:releng-gcp-provisioner@windows-workers.iam.gserviceaccount.com --role roles/compute.admin
 #gcloud projects add-iam-policy-binding ${project_name} --member serviceAccount:${service_account_name}@${project_name}.iam.gserviceaccount.com --role roles/iam.serviceAccountUser
 
