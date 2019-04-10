@@ -86,8 +86,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
     running_instance_creation_timestamp=$(gcloud compute instances describe ${running_instance_name} --zone ${running_instance_zone} --format json | jq -r '.creationTimestamp')
     running_instance_uptime_minutes=$(( ($(date +%s) - $(date -d ${running_instance_creation_timestamp} +%s)) / 60))
     if [ "${running_instance_uptime_minutes}" -gt "60" ]; then
-      running_instance_uptime_hours=(running_instance_uptime_minutes / 60)
-      running_instance_uptime="${running_instance_uptime_hours} hours"
+      running_instance_uptime="$((${running_instance_uptime_minutes} / 60)) hours, $((${running_instance_uptime_minutes} % 60)) minutes"
     else
       running_instance_uptime="${running_instance_uptime_minutes} minutes"
     fi
