@@ -76,20 +76,30 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   # determine the number of instances already spawned that have not yet claimed tasks
   queue_registered_instance_count=0
   queue_unregistered_instance_count=0
+  queue_zombied_instance_count=0
   running_instance_uri_list=(`gcloud compute instances list --uri --filter="labels.worker-type:${workerType}" 2> /dev/null`)
   _echo "${workerType} running instances: _bold_${#running_instance_uri_list[@]}_reset_"
   for running_instance_uri in ${running_instance_uri_list}; do
     running_instance_name=${running_instance_uri##*/}
     running_instance_zone_uri=${running_instance_uri/\/instances\/${running_instance_name}/}
     running_instance_zone=${running_instance_zone_uri##*/}
-    if [ $(curl -s "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers" | jq --arg workerId ${running_instance_name} '[.workers[] | select(.workerId == $workerId)] | length') -gt 0 ]; then
-      #((queue_registered_instance_count++))
-      _echo "${workerType} working instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_"
-      (( queue_registered_instance_count = queue_registered_instance_count + 1 ))
+    running_instance_creation_timestamp=$(gcloud compute instances describe ${running_instance_name} --zone ${running_instance_zone} --format json | jq -r '.creationTimestamp')
+    running_instance_uptime_minutes=$(( ($(date +%s) - ${running_instance_creation_timestamp}) / 60))
+    if [ "${running_instance_uptime_minutes}" -gt "60" ]; then
+      running_instance_uptime_hours=(running_instance_uptime_minutes / 60)
+      running_instance_uptime="${running_instance_uptime_hours} hours"
     else
-      #((queue_unregistered_instance_count++))
-      _echo "${workerType} pending instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_"
+      running_instance_uptime="${running_instance_uptime_minutes} minutes"
+    fi
+    if [ $(curl -s "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers" | jq --arg workerId ${running_instance_name} '[.workers[] | select(.workerId == $workerId)] | length') -gt 0 ]; then
+      _echo "${workerType} working instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
+      (( queue_registered_instance_count = queue_registered_instance_count + 1 ))
+    elif [ "${running_instance_uptime_minutes}" -lt "30" ]; then
+      _echo "${workerType} pending instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
       (( queue_unregistered_instance_count = queue_unregistered_instance_count + 1 ))
+    else
+      _echo "${workerType} idle instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
+      (( queue_zombied_instance_count = queue_zombied_instance_count + 1 ))
     fi
   done
   _echo "${workerType} pending instances: _bold_${queue_unregistered_instance_count}_reset_"
