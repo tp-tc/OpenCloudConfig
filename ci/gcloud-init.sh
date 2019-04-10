@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+temp_dir=$(mktemp -d "${TMPDIR:-/tmp/}$(basename ${0##*/} .sh).XXXXXXXXXXXX")
 
 names_first=(`jq -r '.unicorn.first[]' ${script_dir}/names.json`)
 names_middle=(`jq -r '.unicorn.middle[]' ${script_dir}/names.json`)
@@ -24,6 +25,8 @@ _echo() {
   fi
 }
 
+_echo "temp_dir: _bold_${temp_dir}_reset_"
+
 if command -v pass > /dev/null; then
   livelogSecret=`pass Mozilla/TaskCluster/livelogSecret`
   livelogcrt=`pass Mozilla/TaskCluster/livelogCert`
@@ -39,7 +42,7 @@ elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/comput
   relengapiToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/relengapiToken")
   occInstallersToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/occInstallersToken")
 else
-  _echo "failed to determine a source for secrets_reset_"
+  _echo "failed to determine a source for secrets"
   exit 1
 fi
 project_name=windows-workers
@@ -74,12 +77,13 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   _echo "${workerType} pending tasks: _bold_${pendingTaskCount}_reset_"
 
   # determine the number of instances already spawned that have not yet claimed tasks
-  queue_registered_instance_count=0
-  queue_unregistered_instance_count=0
+  queue_working_instance_count=0
+  queue_waiting_instance_count=0
+  queue_pending_instance_count=0
   queue_zombied_instance_count=0
-  running_instance_uri_list=(`gcloud compute instances list --uri --filter="labels.worker-type:${workerType}" 2> /dev/null`)
+  running_instance_uri_list=(`gcloud compute instances list --uri --filter=labels.worker-type:${workerType} 2> /dev/null`)
   _echo "${workerType} running instances: _bold_${#running_instance_uri_list[@]}_reset_"
-  for running_instance_uri in $(gcloud compute instances list --uri --filter="labels.worker-type:${workerType}" 2> /dev/null); do
+  for running_instance_uri in $(gcloud compute instances list --uri --filter=labels.worker-type:${workerType} 2> /dev/null); do
     running_instance_name=${running_instance_uri##*/}
     running_instance_zone_uri=${running_instance_uri/\/instances\/${running_instance_name}/}
     running_instance_zone=${running_instance_zone_uri##*/}
@@ -90,12 +94,35 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
     else
       running_instance_uptime="${running_instance_uptime_minutes} minutes"
     fi
-    if [ $(curl -s "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers" | jq --arg workerId ${running_instance_name} '[.workers[] | select(.workerId == $workerId)] | length') -gt 0 ]; then
-      _echo "${workerType} working instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
-      (( queue_registered_instance_count = queue_registered_instance_count + 1 ))
+    curl -s -o ${temp_dir}/${workerType}.json "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers"
+    if [ $(cat ${temp_dir}/${workerType}.json | jq --arg workerId ${running_instance_name} '[.workers[] | select(.workerId == $workerId)] | length') -gt 0 ]; then
+      lastTaskId=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId) | .latestTask.taskId')
+      lastTaskRunId=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId) | .latestTask.runId')
+      curl -s -o ${temp_dir}/${lastTaskId}.json "https://queue.taskcluster.net/v1/task/${lastTaskId}/status"
+      lastTaskResolvedTime=$(cat ${temp_dir}/${lastTaskId}.json | jq --arg runId ${lastTaskRunId} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .resolved')
+      if [ -n "${lastTaskResolvedTime}" ] && [[ "${lastTaskResolvedTime}" != "null" ]]; then
+        wait_time_minutes=$(( ($(date +%s) - $(date -d ${lastTaskResolvedTime} +%s)) / 60))
+        if [ "${wait_time_minutes}" -gt "60" ]; then
+          wait_time="$((${wait_time_minutes} / 60)) hours, $((${wait_time_minutes} % 60)) minutes"
+        else
+          wait_time="${wait_time_minutes} minutes"
+        fi
+        _echo "${workerType} waiting instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
+        (( queue_waiting_instance_count = queue_waiting_instance_count + 1 ))
+      else
+        lastTaskStartedTime=$(cat ${temp_dir}/${lastTaskId}.json | jq --arg runId ${lastTaskRunId} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .started')
+        work_time_minutes=$(( ($(date +%s) - $(date -d ${lastTaskStartedTime} +%s)) / 60))
+        if [ "${work_time_minutes}" -gt "60" ]; then
+          work_time="$((${work_time_minutes} / 60)) hours, $((${work_time_minutes} % 60)) minutes"
+        else
+          work_time="${work_time_minutes} minutes"
+        fi
+        _echo "${workerType} working instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). running task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, for ${work_time} (since ${lastTaskStartedTime})"
+        (( queue_working_instance_count = queue_working_instance_count + 1 ))
+      fi
     elif [ "${running_instance_uptime_minutes}" -lt "30" ]; then
       _echo "${workerType} pending instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
-      (( queue_unregistered_instance_count = queue_unregistered_instance_count + 1 ))
+      (( queue_pending_instance_count = queue_pending_instance_count + 1 ))
     elif gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet; then
       _echo "${workerType} zombied instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
       (( queue_zombied_instance_count = queue_zombied_instance_count + 1 ))
@@ -104,12 +131,13 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       (( queue_zombied_instance_count = queue_zombied_instance_count + 1 ))
     fi
   done
-  _echo "${workerType} pending instances: _bold_${queue_unregistered_instance_count}_reset_"
-  _echo "${workerType} working instances: _bold_${queue_registered_instance_count}_reset_"
+  _echo "${workerType} waiting instances: _bold_${queue_waiting_instance_count}_reset_"
+  _echo "${workerType} working instances: _bold_${queue_working_instance_count}_reset_"
+  _echo "${workerType} pending instances: _bold_${queue_pending_instance_count}_reset_"
   _echo "${workerType} zombied instances: _bold_${queue_zombied_instance_count}_reset_"
   required_instance_count=0
-  if [ ${queue_unregistered_instance_count} -lt ${pendingTaskCount} ]; then
-    (( required_instance_count = pendingTaskCount - queue_unregistered_instance_count ))
+  if [ ${queue_pending_instance_count} -lt ${pendingTaskCount} ]; then
+    (( required_instance_count = pendingTaskCount - queue_pending_instance_count ))
   fi
   _echo "${workerType} required instances: _bold_${required_instance_count}_reset_"
   if [ ${required_instance_count} -gt 0 ]; then
@@ -217,3 +245,5 @@ done
 if [[ "$(gcloud compute firewall-rules list --filter=name:livelog-direct --format json)" == "[]" ]]; then
   gcloud compute firewall-rules create livelog-direct --allow tcp:60023 --description "allows connections to livelog GET interface, running on taskcluster worker instances"
 fi
+
+rm -rf ${temp_dir}
