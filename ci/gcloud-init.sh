@@ -97,12 +97,13 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       _echo "${workerType} pending instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
       (( queue_unregistered_instance_count = queue_unregistered_instance_count + 1 ))
     else
-      _echo "${workerType} idle instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
+      _echo "${workerType} zombie instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
       (( queue_zombied_instance_count = queue_zombied_instance_count + 1 ))
     fi
   done
   _echo "${workerType} pending instances: _bold_${queue_unregistered_instance_count}_reset_"
   _echo "${workerType} working instances: _bold_${queue_registered_instance_count}_reset_"
+  _echo "${workerType} zombie instances: _bold_${queue_zombied_instance_count}_reset_"
   required_instance_count=0
   if [ ${queue_unregistered_instance_count} -lt ${pendingTaskCount} ]; then
     (( required_instance_count = pendingTaskCount - queue_unregistered_instance_count ))
