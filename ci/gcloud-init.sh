@@ -54,10 +54,17 @@ _echo "deployment id: _bold_${deploymentId}_reset_"
 for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   workerType=$(basename ${manifest##*/} .json)
   _echo "worker type: _bold_${workerType}_reset_"
+  if [[ ${workerType} =~ ^[a-zA-Z]*-([1-3])-.*$ ]]; then
+    SCM_LEVEL=${BASH_REMATCH[1]}
+  else
+    SCM_LEVEL=0
+  fi
   if command -v pass > /dev/null; then
     accessToken=`pass Mozilla/TaskCluster/project/releng/generic-worker/${workerType}/production`
+    #SCCACHE_GCS_KEY=`pass Mozilla/TaskCluster/gcp-service-account/taskcluster-level-${SCM_LEVEL}-sccache@${project_name}`
   elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes > /dev/null; then
     accessToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/access-token-${workerType}")
+    #SCCACHE_GCS_KEY=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/access-token-${workerType}")
   else
     _echo "failed to determine a source for secrets_reset_"
     exit 1
@@ -69,7 +76,9 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   # determine the number of instances already spawned that have not yet claimed tasks
   queue_registered_instance_count=0
   queue_unregistered_instance_count=0
-  for running_instance_uri in $(gcloud compute instances list --uri --filter="labels.worker-type:${workerType}" 2> /dev/null); do
+  running_instance_uri_list=(`gcloud compute instances list --uri --filter="labels.worker-type:${workerType}" 2> /dev/null`)
+  _echo "${workerType} running instances: _bold_${#running_instance_uri_list[@]}_reset_"
+  for running_instance_uri in ${running_instance_uri_list}; do
     running_instance_name=${running_instance_uri##*/}
     running_instance_zone_uri=${running_instance_uri/\/instances\/${running_instance_name}/}
     running_instance_zone=${running_instance_zone_uri##*/}
@@ -110,11 +119,6 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
         cpuUsage=$(gcloud compute regions describe ${region} --project ${project_name} --format json | jq '.quotas[] | select(.metric == "CPUS").usage')
       done
       # set sccache configuration
-      if [[ ${workerType} =~ ^[a-zA-Z]*-([1-3])-.*$ ]]; then
-        SCM_LEVEL=${BASH_REMATCH[1]}
-      else
-        SCM_LEVEL=0
-      fi
       SCCACHE_GCS_BUCKET=taskcluster-level-${SCM_LEVEL}-sccache-${region}
       # generate a random instance name which does not pre-exist
       existing_instance_uri_list=(`gcloud compute instances list --uri`)
