@@ -142,6 +142,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       _echo "region: _bold_${region}_reset_"
       _echo "instance type: _bold_${instanceType}_reset_"
       _echo "worker group: _bold_${region}_reset_"
+      _echo "worker type: _bold_${workerType}_reset_"
 
       disk_zero_size=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.boot.size' ${manifest})
       disk_zero_type=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.boot.type' ${manifest})
