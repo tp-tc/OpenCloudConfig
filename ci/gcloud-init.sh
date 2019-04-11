@@ -64,10 +64,10 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   fi
   if command -v pass > /dev/null; then
     accessToken=`pass Mozilla/TaskCluster/project/releng/generic-worker/${workerType}/production`
-    #SCCACHE_GCS_KEY=`pass Mozilla/TaskCluster/gcp-service-account/taskcluster-level-${SCM_LEVEL}-sccache@${project_name}`
+    SCCACHE_GCS_KEY=`pass Mozilla/TaskCluster/gcp-service-account/taskcluster-level-${SCM_LEVEL}-sccache@${project_name}`
   elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes > /dev/null; then
     accessToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/access-token-${workerType}")
-    #SCCACHE_GCS_KEY=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/access-token-${workerType}")
+    SCCACHE_GCS_KEY=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/SCCACHE_GCS_KEY_${SCM_LEVEL}")
   else
     _echo "failed to determine a source for secrets_reset_"
     exit 1
@@ -233,7 +233,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
           --local-ssd interface=${disk_one_interface} \
           --scopes storage-ro \
           --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
-          --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_BUCKET=${SCCACHE_GCS_BUCKET}" \
+          --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_BUCKET=${SCCACHE_GCS_BUCKET};SCCACHE_GCS_KEY=${SCCACHE_GCS_KEY}" \
           --zone ${zone_name} \
           --preemptible
       else
@@ -245,7 +245,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
           --boot-disk-type ${disk_zero_type} \
           --scopes storage-ro \
           --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
-          --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_BUCKET=${SCCACHE_GCS_BUCKET}" \
+          --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_BUCKET=${SCCACHE_GCS_BUCKET};SCCACHE_GCS_KEY=${SCCACHE_GCS_KEY}" \
           --zone ${zone_name} \
           --preemptible
         disk_one_size=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.supplementary[0].size' ${manifest})
