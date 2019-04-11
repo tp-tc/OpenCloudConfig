@@ -159,30 +159,30 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       (( deleted_instance_count = deleted_instance_count + 1 ))
     fi
   done
-  if [ ${waiting_instance_count} -gt 0 ]; then
+  if [ "${waiting_instance_count}" -gt "0" ]; then
     _echo "${workerType} waiting instances: _bold_${waiting_instance_count}_reset_"
   fi
-  if [ ${working_instance_count} -gt 0 ]; then
+  if [ "${working_instance_count}" -gt "0" ]; then
     _echo "${workerType} working instances: _bold_${working_instance_count}_reset_"
   fi
-  if [ ${pending_instance_count} -gt 0 ]; then
+  if [ "${pending_instance_count}" -gt "0" ]; then
     _echo "${workerType} pending instances: _bold_${pending_instance_count}_reset_"
   fi
-  if [ ${zombied_instance_count} -gt 0 ]; then
+  if [ "${zombied_instance_count}" -gt "0" ]; then
     _echo "${workerType} zombied instances: _bold_${zombied_instance_count}_reset_"
   fi
-  if [ ${goofing_instance_count} -gt 0 ]; then
+  if [ "${goofing_instance_count}" -gt "0" ]; then
     _echo "${workerType} goofing instances: _bold_${goofing_instance_count}_reset_"
   fi
-  if [ ${deleted_instance_count} -gt 0 ]; then
+  if [ "${deleted_instance_count}" -gt "0" ]; then
     _echo "${workerType} deleted instances: _bold_${deleted_instance_count}_reset_"
   fi
   required_instance_count=0
-  if [ ${pending_instance_count} -lt ${pendingTaskCount} ]; then
+  if [ "${pending_instance_count}" -lt "${pendingTaskCount}" ]; then
     (( required_instance_count = pendingTaskCount - pending_instance_count ))
   fi
   _echo "${workerType} required instances: _bold_${required_instance_count}_reset_"
-  if [ ${required_instance_count} -gt 0 ]; then
+  if [ "${required_instance_count}" -gt "0" ]; then
     # spawn some instances
     for i in $(seq 1 ${required_instance_count}); do
       # pick a random machine type from the list of machine types in the provisioner configuration of the manifest
