@@ -60,7 +60,7 @@ echo Deleting C:\dsc\task-claim-state.valid file >> C:\generic-worker\generic-wo
 del /Q /F C:\dsc\task-claim-state.valid >> C:\generic-worker\generic-worker-wrapper.log 
 pushd %~dp0
 set errorlevel=
-C:\generic-worker\generic-worker.exe run --config C:\generic-worker\gen_worker.config >> C:\generic-worker\generic-worker-wrapper.log
+C:\generic-worker\generic-worker.exe run --config C:\generic-worker\gen_worker.config >> C:\generic-worker\generic-worker.log
 set GW_EXIT_CODE=%errorlevel%
 
 if %GW_EXIT_CODE% EQU 69 goto ErrorReboot
