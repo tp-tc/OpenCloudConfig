@@ -82,67 +82,75 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   pending_instance_count=0
   zombied_instance_count=0
   goofing_instance_count=0
-  running_instance_uri_list=(`gcloud compute instances list --uri --filter=labels.worker-type:${workerType} 2> /dev/null`)
+  deleted_instance_count=0
+  running_instance_uri_list=(`gcloud compute instances list --uri --filter "labels.worker-type:${workerType} status:RUNNING" 2> /dev/null`)
   _echo "${workerType} running instances: _bold_${#running_instance_uri_list[@]}_reset_"
-  for running_instance_uri in $(gcloud compute instances list --uri --filter=labels.worker-type:${workerType} 2> /dev/null); do
+  for running_instance_uri in $(gcloud compute instances list --uri --filter "labels.worker-type:${workerType} status:RUNNING" 2> /dev/null); do
     running_instance_name=${running_instance_uri##*/}
     running_instance_zone_uri=${running_instance_uri/\/instances\/${running_instance_name}/}
     running_instance_zone=${running_instance_zone_uri##*/}
     running_instance_creation_timestamp=$(gcloud compute instances describe ${running_instance_name} --zone ${running_instance_zone} --format json | jq -r '.creationTimestamp')
-    running_instance_uptime_minutes=$(( ($(date +%s) - $(date -d ${running_instance_creation_timestamp} +%s)) / 60))
-    if [ "${running_instance_uptime_minutes}" -gt "60" ]; then
-      running_instance_uptime="$((${running_instance_uptime_minutes} / 60)) hours, $((${running_instance_uptime_minutes} % 60)) minutes"
-    else
-      running_instance_uptime="${running_instance_uptime_minutes} minutes"
-    fi
-    curl -s -o ${temp_dir}/${workerType}.json "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers"
-    if [ $(cat ${temp_dir}/${workerType}.json | jq --arg workerId ${running_instance_name} '[.workers[] | select(.workerId == $workerId)] | length') -gt 0 ]; then
-      lastTaskId=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId) | .latestTask.taskId')
-      lastTaskRunId=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId) | .latestTask.runId')
-      curl -s -o ${temp_dir}/${lastTaskId}.json "https://queue.taskcluster.net/v1/task/${lastTaskId}/status"
-      lastTaskResolvedTime=$(cat ${temp_dir}/${lastTaskId}.json | jq --arg runId ${lastTaskRunId} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .resolved')
-      lastTaskStartedTime=$(cat ${temp_dir}/${lastTaskId}.json | jq --arg runId ${lastTaskRunId} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .started')
-      if [ -n "${lastTaskResolvedTime}" ] && [[ "${lastTaskResolvedTime}" != "null" ]]; then
-        wait_time_minutes=$(( ($(date +%s) - $(date -d ${lastTaskResolvedTime} +%s)) / 60))
-        if [ "${wait_time_minutes}" -gt "60" ]; then
-          wait_time="$((${wait_time_minutes} / 60)) hours, $((${wait_time_minutes} % 60)) minutes"
-        else
-          wait_time="${wait_time_minutes} minutes"
-        fi
-        if [ "${wait_time_minutes}" -gt "60" ] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
-          _echo "${workerType} waiting instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
-        else
-          _echo "${workerType} waiting instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
-        fi
-        (( waiting_instance_count = waiting_instance_count + 1 ))
-      elif [ -n "${lastTaskStartedTime}" ] && [[ "${lastTaskStartedTime}" != "null" ]]; then
-        work_time_minutes=$(( ($(date +%s) - $(date -d ${lastTaskStartedTime} +%s)) / 60))
-        if [ "${work_time_minutes}" -gt "60" ]; then
-          work_time="$((${work_time_minutes} / 60)) hours, $((${work_time_minutes} % 60)) minutes"
-        else
-          work_time="${work_time_minutes} minutes"
-        fi
-        _echo "${workerType} working instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). running task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, for ${work_time} (since ${lastTaskStartedTime})"
-        (( working_instance_count = working_instance_count + 1 ))
+    if [ -n "${running_instance_creation_timestamp}" ] && [[ "${running_instance_creation_timestamp}" != "null" ]]; then
+      running_instance_uptime_minutes=$(( ($(date +%s) - $(date -d ${running_instance_creation_timestamp} +%s)) / 60))
+      if [ "${running_instance_uptime_minutes}" -gt "60" ]; then
+        running_instance_uptime="$((${running_instance_uptime_minutes} / 60)) hours, $((${running_instance_uptime_minutes} % 60)) minutes"
       else
-        _echo "${workerType} goofing instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). $(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId)')"
-        (( goofing_instance_count = goofing_instance_count + 1 ))
+        running_instance_uptime="${running_instance_uptime_minutes} minutes"
       fi
-    elif [ "${running_instance_uptime_minutes}" -lt "30" ]; then
-      _echo "${workerType} pending instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
-      (( pending_instance_count = pending_instance_count + 1 ))
-    elif gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
-      _echo "${workerType} zombied instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
-      (( zombied_instance_count = zombied_instance_count + 1 ))
+      curl -s -o ${temp_dir}/${workerType}.json "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers"
+      if [ $(cat ${temp_dir}/${workerType}.json | jq --arg workerId ${running_instance_name} '[.workers[] | select(.workerId == $workerId)] | length') -gt 0 ]; then
+        lastTaskId=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId) | .latestTask.taskId')
+        lastTaskRunId=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId) | .latestTask.runId')
+        curl -s -o ${temp_dir}/${lastTaskId}.json "https://queue.taskcluster.net/v1/task/${lastTaskId}/status"
+        lastTaskResolvedTime=$(cat ${temp_dir}/${lastTaskId}.json | jq --arg runId ${lastTaskRunId} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .resolved')
+        lastTaskStartedTime=$(cat ${temp_dir}/${lastTaskId}.json | jq --arg runId ${lastTaskRunId} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .started')
+        if [ -n "${lastTaskResolvedTime}" ] && [[ "${lastTaskResolvedTime}" != "null" ]]; then
+          wait_time_minutes=$(( ($(date +%s) - $(date -d ${lastTaskResolvedTime} +%s)) / 60))
+          if [ "${wait_time_minutes}" -gt "60" ]; then
+            wait_time="$((${wait_time_minutes} / 60)) hours, $((${wait_time_minutes} % 60)) minutes"
+          else
+            wait_time="${wait_time_minutes} minutes"
+          fi
+          if [ "${wait_time_minutes}" -gt "60" ] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
+            _echo "${workerType} waiting instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
+          else
+            _echo "${workerType} waiting instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
+          fi
+          (( waiting_instance_count = waiting_instance_count + 1 ))
+        elif [ -n "${lastTaskStartedTime}" ] && [[ "${lastTaskStartedTime}" != "null" ]]; then
+          work_time_minutes=$(( ($(date +%s) - $(date -d ${lastTaskStartedTime} +%s)) / 60))
+          if [ "${work_time_minutes}" -gt "60" ]; then
+            work_time="$((${work_time_minutes} / 60)) hours, $((${work_time_minutes} % 60)) minutes"
+          else
+            work_time="${work_time_minutes} minutes"
+          fi
+          _echo "${workerType} working instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). running task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, for ${work_time} (since ${lastTaskStartedTime})"
+          (( working_instance_count = working_instance_count + 1 ))
+        else
+          _echo "${workerType} goofing instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). $(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId)')"
+          (( goofing_instance_count = goofing_instance_count + 1 ))
+        fi
+      elif [ "${running_instance_uptime_minutes}" -lt "30" ]; then
+        _echo "${workerType} pending instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
+        (( pending_instance_count = pending_instance_count + 1 ))
+      elif gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
+        _echo "${workerType} zombied instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
+        (( zombied_instance_count = zombied_instance_count + 1 ))
+      else
+        _echo "${workerType} zombied instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
+        (( zombied_instance_count = zombied_instance_count + 1 ))
+      fi
     else
-      _echo "${workerType} zombied instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
-      (( zombied_instance_count = zombied_instance_count + 1 ))
+      _echo "${workerType} deleted instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: unknown"
+      (( deleted_instance_count = deleted_instance_count + 1 ))
     fi
   done
   _echo "${workerType} waiting instances: _bold_${waiting_instance_count}_reset_"
   _echo "${workerType} working instances: _bold_${working_instance_count}_reset_"
   _echo "${workerType} pending instances: _bold_${pending_instance_count}_reset_"
   _echo "${workerType} zombied instances: _bold_${zombied_instance_count}_reset_"
+  _echo "${workerType} goofing instances: _bold_${goofing_instance_count}_reset_"
+  _echo "${workerType} deleted instances: _bold_${deleted_instance_count}_reset_"
   required_instance_count=0
   if [ ${pending_instance_count} -lt ${pendingTaskCount} ]; then
     (( required_instance_count = pendingTaskCount - pending_instance_count ))
@@ -232,7 +240,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   fi
 done
 # delete instances that have been terminated
-for terminated_instance_uri in $(gcloud compute instances list --uri --filter="status:TERMINATED" 2> /dev/null); do
+for terminated_instance_uri in $(gcloud compute instances list --uri --filter status:TERMINATED 2> /dev/null); do
   terminated_instance_name=${terminated_instance_uri##*/}
   terminated_instance_zone_uri=${terminated_instance_uri/\/instances\/${terminated_instance_name}/}
   terminated_instance_zone=${terminated_instance_zone_uri##*/}
@@ -241,7 +249,7 @@ for terminated_instance_uri in $(gcloud compute instances list --uri --filter="s
   fi
 done
 # delete orphaned disks
-for orphaned_disk_uri in $(gcloud compute disks list --uri --filter="-users:*" 2> /dev/null); do
+for orphaned_disk_uri in $(gcloud compute disks list --uri --filter "-users:*" 2> /dev/null); do
   orphaned_disk_name=${orphaned_disk_uri##*/}
   orphaned_disk_zone_uri=${orphaned_disk_uri/\/disks\/${orphaned_disk_name}/}
   orphaned_disk_zone=${orphaned_disk_zone_uri##*/}
@@ -250,7 +258,7 @@ for orphaned_disk_uri in $(gcloud compute disks list --uri --filter="-users:*" 2
   fi
 done
 # open the firewall to livelog traffic
-if [[ "$(gcloud compute firewall-rules list --filter=name:livelog-direct --format json)" == "[]" ]]; then
+if [[ "$(gcloud compute firewall-rules list --filter name:livelog-direct --format json)" == "[]" ]]; then
   gcloud compute firewall-rules create livelog-direct --allow tcp:60023 --description "allows connections to livelog GET interface, running on taskcluster worker instances"
 fi
 
