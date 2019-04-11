@@ -64,10 +64,16 @@ function Remove-OldTaskDirectories {
   }
   process {
     foreach ($target in ($targets | ? { (Test-Path -Path ('{0}:\' -f $_[0]) -ErrorAction SilentlyContinue) })) {
-      $all_task_paths = @(Get-ChildItem -Path $target | Sort-Object -Property { $_.LastWriteTime })
-      if ($all_task_paths.length -gt 1) {
+      $all_task_paths = @(Get-ChildItem -Path $target | Sort-Object -Property { $_.CreationTime })
+      # https://bugzil.la/1543490
+      # Retain the _two_ most recently created task folders, since one is for
+      # the currently running task, and one is already prepared for the
+      # subsequent task after the next reboot.
+      if ($all_task_paths.length -gt 2) {
         Write-Log -message ('{0} :: {1} task directories detected matching pattern: {2}' -f $($MyInvocation.MyCommand.Name), $all_task_paths.length, $target) -severity 'INFO'
-        $old_task_paths = $all_task_paths[0..($all_task_paths.Length-2)]
+        # Note, arrays are zero-based, so the last entry for deletion when
+        # keeping two folders is actually $all_task_paths.Length-3.
+        $old_task_paths = $all_task_paths[0..($all_task_paths.Length-3)]
         foreach ($old_task_path in $old_task_paths) {
           try {
             & takeown.exe @('/a', '/f', $old_task_path, '/r', '/d', 'Y')
