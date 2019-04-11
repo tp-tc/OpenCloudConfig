@@ -77,10 +77,11 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   _echo "${workerType} pending tasks: _bold_${pendingTaskCount}_reset_"
 
   # determine the number of instances already spawned that have not yet claimed tasks
-  queue_working_instance_count=0
-  queue_waiting_instance_count=0
-  queue_pending_instance_count=0
-  queue_zombied_instance_count=0
+  working_instance_count=0
+  waiting_instance_count=0
+  pending_instance_count=0
+  zombied_instance_count=0
+  goofing_instance_count=0
   running_instance_uri_list=(`gcloud compute instances list --uri --filter=labels.worker-type:${workerType} 2> /dev/null`)
   _echo "${workerType} running instances: _bold_${#running_instance_uri_list[@]}_reset_"
   for running_instance_uri in $(gcloud compute instances list --uri --filter=labels.worker-type:${workerType} 2> /dev/null); do
@@ -100,6 +101,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       lastTaskRunId=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId) | .latestTask.runId')
       curl -s -o ${temp_dir}/${lastTaskId}.json "https://queue.taskcluster.net/v1/task/${lastTaskId}/status"
       lastTaskResolvedTime=$(cat ${temp_dir}/${lastTaskId}.json | jq --arg runId ${lastTaskRunId} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .resolved')
+      lastTaskStartedTime=$(cat ${temp_dir}/${lastTaskId}.json | jq --arg runId ${lastTaskRunId} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .started')
       if [ -n "${lastTaskResolvedTime}" ] && [[ "${lastTaskResolvedTime}" != "null" ]]; then
         wait_time_minutes=$(( ($(date +%s) - $(date -d ${lastTaskResolvedTime} +%s)) / 60))
         if [ "${wait_time_minutes}" -gt "60" ]; then
@@ -112,9 +114,8 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
         else
           _echo "${workerType} waiting instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
         fi
-        (( queue_waiting_instance_count = queue_waiting_instance_count + 1 ))
-      else
-        lastTaskStartedTime=$(cat ${temp_dir}/${lastTaskId}.json | jq --arg runId ${lastTaskRunId} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .started')
+        (( waiting_instance_count = waiting_instance_count + 1 ))
+      elif [ -n "${lastTaskStartedTime}" ] && [[ "${lastTaskStartedTime}" != "null" ]]; then
         work_time_minutes=$(( ($(date +%s) - $(date -d ${lastTaskStartedTime} +%s)) / 60))
         if [ "${work_time_minutes}" -gt "60" ]; then
           work_time="$((${work_time_minutes} / 60)) hours, $((${work_time_minutes} % 60)) minutes"
@@ -122,26 +123,29 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
           work_time="${work_time_minutes} minutes"
         fi
         _echo "${workerType} working instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). running task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, for ${work_time} (since ${lastTaskStartedTime})"
-        (( queue_working_instance_count = queue_working_instance_count + 1 ))
+        (( working_instance_count = working_instance_count + 1 ))
+      else
+        _echo "${workerType} goofing instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). $(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId)')"
+        (( goofing_instance_count = goofing_instance_count + 1 ))
       fi
     elif [ "${running_instance_uptime_minutes}" -lt "30" ]; then
       _echo "${workerType} pending instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
-      (( queue_pending_instance_count = queue_pending_instance_count + 1 ))
+      (( pending_instance_count = pending_instance_count + 1 ))
     elif gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet; then
       _echo "${workerType} zombied instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
-      (( queue_zombied_instance_count = queue_zombied_instance_count + 1 ))
+      (( zombied_instance_count = zombied_instance_count + 1 ))
     else
       _echo "${workerType} zombied instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
-      (( queue_zombied_instance_count = queue_zombied_instance_count + 1 ))
+      (( zombied_instance_count = zombied_instance_count + 1 ))
     fi
   done
-  _echo "${workerType} waiting instances: _bold_${queue_waiting_instance_count}_reset_"
-  _echo "${workerType} working instances: _bold_${queue_working_instance_count}_reset_"
-  _echo "${workerType} pending instances: _bold_${queue_pending_instance_count}_reset_"
-  _echo "${workerType} zombied instances: _bold_${queue_zombied_instance_count}_reset_"
+  _echo "${workerType} waiting instances: _bold_${waiting_instance_count}_reset_"
+  _echo "${workerType} working instances: _bold_${working_instance_count}_reset_"
+  _echo "${workerType} pending instances: _bold_${pending_instance_count}_reset_"
+  _echo "${workerType} zombied instances: _bold_${zombied_instance_count}_reset_"
   required_instance_count=0
-  if [ ${queue_pending_instance_count} -lt ${pendingTaskCount} ]; then
-    (( required_instance_count = pendingTaskCount - queue_pending_instance_count ))
+  if [ ${pending_instance_count} -lt ${pendingTaskCount} ]; then
+    (( required_instance_count = pendingTaskCount - pending_instance_count ))
   fi
   _echo "${workerType} required instances: _bold_${required_instance_count}_reset_"
   if [ ${required_instance_count} -gt 0 ]; then
