@@ -99,6 +99,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       fi
       curl -s -o ${temp_dir}/${workerType}.json "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers"
       if [ $(cat ${temp_dir}/${workerType}.json | jq --arg workerId ${running_instance_name} '[.workers[] | select(.workerId == $workerId)] | length') -gt 0 ]; then
+        firstClaim=$(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId) | .firstClaim')
         lastTaskId=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId) | .latestTask.taskId')
         lastTaskRunId=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId) | .latestTask.runId')
         curl -s -o ${temp_dir}/${lastTaskId}.json "https://queue.taskcluster.net/v1/task/${lastTaskId}/status"
@@ -140,6 +141,19 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
         _echo "${workerType} zombied instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
         (( zombied_instance_count = zombied_instance_count + 1 ))
       fi
+    elif [ -n "${firstClaim}" ] && [[ "${firstClaim}" != "null" ]]; then
+      wait_time_minutes=$(( ($(date +%s) - $(date -d ${firstClaim} +%s)) / 60))
+      if [ "${wait_time_minutes}" -gt "60" ]; then
+        wait_time="$((${wait_time_minutes} / 60)) hours, $((${wait_time_minutes} % 60)) minutes"
+      else
+        wait_time="${wait_time_minutes} minutes"
+      fi
+      if [ "${wait_time_minutes}" -gt "60" ] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
+        _echo "${workerType} virgin instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). first claim: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${firstClaim})"
+      else
+        _echo "${workerType} virgin instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). first claim: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${firstClaim})"
+      fi
+      (( waiting_instance_count = waiting_instance_count + 1 ))
     else
       _echo "${workerType} deleted instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: unknown"
       (( deleted_instance_count = deleted_instance_count + 1 ))
