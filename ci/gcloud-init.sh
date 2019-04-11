@@ -159,12 +159,24 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
       (( deleted_instance_count = deleted_instance_count + 1 ))
     fi
   done
-  _echo "${workerType} waiting instances: _bold_${waiting_instance_count}_reset_"
-  _echo "${workerType} working instances: _bold_${working_instance_count}_reset_"
-  _echo "${workerType} pending instances: _bold_${pending_instance_count}_reset_"
-  _echo "${workerType} zombied instances: _bold_${zombied_instance_count}_reset_"
-  _echo "${workerType} goofing instances: _bold_${goofing_instance_count}_reset_"
-  _echo "${workerType} deleted instances: _bold_${deleted_instance_count}_reset_"
+  if [ ${waiting_instance_count} -gt 0 ]; then
+    _echo "${workerType} waiting instances: _bold_${waiting_instance_count}_reset_"
+  fi
+  if [ ${working_instance_count} -gt 0 ]; then
+    _echo "${workerType} waiting instances: _bold_${working_instance_count}_reset_"
+  fi
+  if [ ${pending_instance_count} -gt 0 ]; then
+    _echo "${workerType} waiting instances: _bold_${pending_instance_count}_reset_"
+  fi
+  if [ ${zombied_instance_count} -gt 0 ]; then
+    _echo "${workerType} waiting instances: _bold_${zombied_instance_count}_reset_"
+  fi
+  if [ ${goofing_instance_count} -gt 0 ]; then
+    _echo "${workerType} waiting instances: _bold_${goofing_instance_count}_reset_"
+  fi
+  if [ ${deleted_instance_count} -gt 0 ]; then
+    _echo "${workerType} waiting instances: _bold_${deleted_instance_count}_reset_"
+  fi
   required_instance_count=0
   if [ ${pending_instance_count} -lt ${pendingTaskCount} ]; then
     (( required_instance_count = pendingTaskCount - pending_instance_count ))
