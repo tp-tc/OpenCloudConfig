@@ -109,7 +109,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
         else
           wait_time="${wait_time_minutes} minutes"
         fi
-        if [ "${wait_time_minutes}" -gt "60" ] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet; then
+        if [ "${wait_time_minutes}" -gt "60" ] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
           _echo "${workerType} waiting instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
         else
           _echo "${workerType} waiting instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
@@ -131,7 +131,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
     elif [ "${running_instance_uptime_minutes}" -lt "30" ]; then
       _echo "${workerType} pending instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
       (( pending_instance_count = pending_instance_count + 1 ))
-    elif gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet; then
+    elif gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
       _echo "${workerType} zombied instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
       (( zombied_instance_count = zombied_instance_count + 1 ))
     else
@@ -236,7 +236,7 @@ for terminated_instance_uri in $(gcloud compute instances list --uri --filter="s
   terminated_instance_name=${terminated_instance_uri##*/}
   terminated_instance_zone_uri=${terminated_instance_uri/\/instances\/${terminated_instance_name}/}
   terminated_instance_zone=${terminated_instance_zone_uri##*/}
-  if [ -n "${terminated_instance_name}" ] && [ -n "${terminated_instance_zone}" ] && gcloud compute instances delete ${terminated_instance_name} --zone ${terminated_instance_zone} --delete-disks all --quiet; then
+  if [ -n "${terminated_instance_name}" ] && [ -n "${terminated_instance_zone}" ] && gcloud compute instances delete ${terminated_instance_name} --zone ${terminated_instance_zone} --delete-disks all --quiet 2> /dev/null; then
     _echo "deleted: _bold_${terminated_instance_zone}/${terminated_instance_name}_reset_"
   fi
 done
@@ -245,7 +245,7 @@ for orphaned_disk_uri in $(gcloud compute disks list --uri --filter="-users:*" 2
   orphaned_disk_name=${orphaned_disk_uri##*/}
   orphaned_disk_zone_uri=${orphaned_disk_uri/\/disks\/${orphaned_disk_name}/}
   orphaned_disk_zone=${orphaned_disk_zone_uri##*/}
-  if [ -n "${orphaned_disk_name}" ] && [ -n "${orphaned_disk_zone}" ] && gcloud compute disks delete ${orphaned_disk_name} --zone ${orphaned_disk_zone} --quiet; then
+  if [ -n "${orphaned_disk_name}" ] && [ -n "${orphaned_disk_zone}" ] && gcloud compute disks delete ${orphaned_disk_name} --zone ${orphaned_disk_zone} --quiet 2> /dev/null; then
     _echo "deleted: _bold_${orphaned_disk_zone}/${orphaned_disk_name}_reset_"
   fi
 done
