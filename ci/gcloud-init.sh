@@ -90,6 +90,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
     running_instance_zone_uri=${running_instance_uri/\/instances\/${running_instance_name}/}
     running_instance_zone=${running_instance_zone_uri##*/}
     running_instance_creation_timestamp=$(gcloud compute instances describe ${running_instance_name} --zone ${running_instance_zone} --format json | jq -r '.creationTimestamp')
+    running_instance_deployment_id=$(gcloud compute instances describe ${running_instance_name} --zone ${running_instance_zone} --format='value[](metadata.items.gwConfig)' | jq '.deploymentId')
     if [ -n "${running_instance_creation_timestamp}" ] && [[ "${running_instance_creation_timestamp}" != "null" ]]; then
       running_instance_uptime_minutes=$(( ($(date +%s) - $(date -d ${running_instance_creation_timestamp} +%s)) / 60))
       if [ "${running_instance_uptime_minutes}" -gt "60" ]; then
@@ -113,9 +114,11 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
             wait_time="${wait_time_minutes} minutes"
           fi
           if [ "${wait_time_minutes}" -gt "60" ] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
-            _echo "${workerType} waiting instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
+            _echo "${workerType} waiting instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
+          elif [[ "${running_instance_deployment_id}" != "${deploymentId}" ]] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
+            _echo "${workerType} expired instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from expired sha: ${running_instance_deployment_id}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
           else
-            _echo "${workerType} waiting instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
+            _echo "${workerType} waiting instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
           fi
           (( waiting_instance_count = waiting_instance_count + 1 ))
         elif [ -n "${lastTaskStartedTime}" ] && [[ "${lastTaskStartedTime}" != "null" ]]; then
@@ -125,20 +128,20 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
           else
             work_time="${work_time_minutes} minutes"
           fi
-          _echo "${workerType} working instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). running task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, for ${work_time} (since ${lastTaskStartedTime})"
+          _echo "${workerType} working instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). running task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, for ${work_time} (since ${lastTaskStartedTime})"
           (( working_instance_count = working_instance_count + 1 ))
         else
-          _echo "${workerType} goofing instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). $(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId)')"
+          _echo "${workerType} goofing instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). $(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId)')"
           (( goofing_instance_count = goofing_instance_count + 1 ))
         fi
       elif [ "${running_instance_uptime_minutes}" -lt "30" ]; then
-        _echo "${workerType} pending instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
+        _echo "${workerType} pending instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
         (( pending_instance_count = pending_instance_count + 1 ))
       elif gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
-        _echo "${workerType} zombied instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
+        _echo "${workerType} zombied instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
         (( zombied_instance_count = zombied_instance_count + 1 ))
       else
-        _echo "${workerType} zombied instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp})"
+        _echo "${workerType} zombied instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
         (( zombied_instance_count = zombied_instance_count + 1 ))
       fi
     elif [ -n "${firstClaim}" ] && [[ "${firstClaim}" != "null" ]]; then
@@ -149,9 +152,11 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
         wait_time="${wait_time_minutes} minutes"
       fi
       if [ "${wait_time_minutes}" -gt "60" ] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
-        _echo "${workerType} virgin instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). first claim: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${firstClaim})"
+        _echo "${workerType} virgin instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). first claim: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${firstClaim})"
+      elif [[ "${running_instance_deployment_id}" != "${deploymentId}" ]] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
+        _echo "${workerType} expired virgin instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from expired sha: ${running_instance_deployment_id}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
       else
-        _echo "${workerType} virgin instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp}). first claim: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${firstClaim})"
+        _echo "${workerType} virgin instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). first claim: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${firstClaim})"
       fi
       (( waiting_instance_count = waiting_instance_count + 1 ))
     else
