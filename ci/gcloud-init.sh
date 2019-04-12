@@ -130,7 +130,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
       fi
       curl -s -o ${temp_dir}/${workerType}.json "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers"
       if [ $(cat ${temp_dir}/${workerType}.json | jq --arg workerId ${running_instance_name} '[.workers[] | select(.workerId == $workerId)] | length') -gt 0 ]; then
-        firstClaim=$(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId) | .firstClaim')
+        first_claim=$(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId) | .firstClaim')
         last_task_id=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId) | .latestTask.taskId')
         last_task_run_id=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId) | .latestTask.runId')
         curl -s -o ${temp_dir}/${last_task_id}.json "https://queue.taskcluster.net/v1/task/${last_task_id}/status"
@@ -166,6 +166,15 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
           fi
           _echo "${workerType} working instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). running ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_, for ${work_time} (since ${last_task_run_started_time})"
           (( working_instance_count = working_instance_count + 1 ))
+        elif [ -n "${first_claim}" ]; then
+          wait_time_minutes=$(( ($(date +%s) - $(date -d ${first_claim} +%s)) / 60))
+          if [ "${wait_time_minutes}" -gt "60" ]; then
+            wait_time="$((${wait_time_minutes} / 60)) hours, $((${wait_time_minutes} % 60)) minutes"
+          else
+            wait_time="${wait_time_minutes} minutes"
+          fi
+          _echo "${workerType} waiting instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). first claim ${wait_time} ago (at ${first_claim})"
+          (( waiting_instance_count = waiting_instance_count + 1 ))
         else
           _echo "${workerType} goofing instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). worker: $(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId)'); task run: $(cat ${temp_dir}/${last_task_id}.json | jq -c --arg runId ${last_task_run_id} -r '.status.runs[]? | select(.runId == ($runId | tonumber))')"
           (( goofing_instance_count = goofing_instance_count + 1 ))
