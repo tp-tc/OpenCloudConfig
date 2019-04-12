@@ -63,7 +63,7 @@ fi
 _echo "deployment id: _bold_${deploymentId}_reset_"
 
 # iterate through each worker type containing a "-gamma" suffix in the occ manifest directory
-for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
+for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
   workerType=$(basename ${manifest##*/} .json)
   _echo "worker type: _bold_${workerType}_reset_"
 
@@ -113,7 +113,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   # iterate all instances of the current worker type which are in a runiing state
   running_instance_uri_list=(`gcloud compute instances list --uri --filter "labels.worker-type:${workerType} status:RUNNING" 2> /dev/null`)
   _echo "${workerType} running instances: _bold_${#running_instance_uri_list[@]}_reset_"
-  for running_instance_uri in $(gcloud compute instances list --uri --filter "labels.worker-type:${workerType} status:RUNNING" 2> /dev/null); do
+  for running_instance_uri in $(gcloud compute instances list --uri --filter "labels.worker-type:${workerType} status:RUNNING" 2> /dev/null | shuf); do
     running_instance_name=${running_instance_uri##*/}
     running_instance_zone_uri=${running_instance_uri/\/instances\/${running_instance_name}/}
     running_instance_zone=${running_instance_zone_uri##*/}
