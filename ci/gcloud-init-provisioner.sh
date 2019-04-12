@@ -22,6 +22,7 @@ git checkout gamma >> ${log_dir}/git-stdout 2>> ${log_dir}/git-stderr
 while true; do
   git pull >> ${log_dir}/git-stdout 2>> ${log_dir}/git-stderr
   ci/gcloud-init.sh >> ${log_dir}/provisioner-stdout 2>> ${log_dir}/provisioner-stderr
-  sleep 60
+  # sleep for a random number of seconds between 1 and 60 inclusive
+  sleep $(shuf -i 1-60 -n 1)
   rm -f ${log_dir}/*
 done
