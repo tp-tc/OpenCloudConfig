@@ -167,7 +167,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
           _echo "${workerType} working instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). running ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_, for ${work_time} (since ${last_task_run_started_time})"
           (( working_instance_count = working_instance_count + 1 ))
         else
-          _echo "${workerType} goofing instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). $(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId)')"
+          _echo "${workerType} goofing instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). worker: $(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId)'); task run: $(cat ${temp_dir}/${last_task_id}.json | jq --arg runId ${last_task_run_id} -r '.status.runs[]? | select(.runId == ($runId | tonumber))')"
           (( goofing_instance_count = goofing_instance_count + 1 ))
         fi
       elif [ "${running_instance_uptime_minutes}" -lt "30" ]; then
