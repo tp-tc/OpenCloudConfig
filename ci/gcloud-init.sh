@@ -3,13 +3,7 @@
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 temp_dir=$(mktemp -d "${TMPDIR:-/tmp/}$(basename ${0##*/} .sh).XXXXXXXXXXXX")
 
-names_first=(`jq -r '.unicorn.first[]' ${script_dir}/names.json`)
-names_middle=(`jq -r '.unicorn.middle[]' ${script_dir}/names.json`)
-names_last=(`jq -r '.unicorn.last[]' ${script_dir}/names.json`)
-
-zone_uri_list=(`gcloud compute zones list --uri`)
-zone_name_list=("${zone_uri_list[@]##*/}")
-
+# create a logging function that outputs easily readable console messages but strips formatting when logging to papertrail
 _echo() {
   if [ -z "$TERM" ] || [[ "${HOSTNAME}" == "releng-gcp-provisioner-"* ]]; then
     message=${1//_bold_/}
@@ -25,8 +19,18 @@ _echo() {
   fi
 }
 
+# set up the random instance unicorn name generator
+names_first=(`jq -r '.unicorn.first[]' ${script_dir}/names.json`)
+names_middle=(`jq -r '.unicorn.middle[]' ${script_dir}/names.json`)
+names_last=(`jq -r '.unicorn.last[]' ${script_dir}/names.json`)
+
+# set up the list of google cloud zones we will instantiate and manage instances within
+zone_uri_list=(`gcloud compute zones list --uri`)
+zone_name_list=("${zone_uri_list[@]##*/}")
+
 _echo "temp_dir: _bold_${temp_dir}_reset_"
 
+# obtain secrets from the local password store when running on a workstation and obtain them from google cloud metadata server when running on provisioners
 if command -v pass > /dev/null; then
   livelogSecret=`pass Mozilla/TaskCluster/livelogSecret`
   livelogcrt=`pass Mozilla/TaskCluster/livelogCert`
@@ -45,23 +49,32 @@ else
   _echo "failed to determine a source for secrets"
   exit 1
 fi
+
+# set up some configuration data
 project_name=windows-workers
 provisionerId=releng-hardware
 GITHUB_HEAD_SHA=`git rev-parse HEAD`
 deploymentId=${GITHUB_HEAD_SHA:0:12}
 
+# open a local browser tab to the gcloud vm instance list for the current project if the run command has the appropriate arg
 if [[ $@ == *"--open-in-browser"* ]] && which xdg-open > /dev/null; then
   xdg-open "https://console.cloud.google.com/compute/instances?authuser=1&folder&organizationId&project=${project_name}&instancessize=50&duration=PT1H&pli=1&instancessort=zoneForFilter%252Cname"
 fi
 _echo "deployment id: _bold_${deploymentId}_reset_"
+
+# iterate through each worker type containing a "-gamma" suffix in the occ manifest directory
 for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   workerType=$(basename ${manifest##*/} .json)
   _echo "worker type: _bold_${workerType}_reset_"
+
+  # determine the scm level from the worker type name
   if [[ ${workerType} =~ ^[a-zA-Z]*-([1-3])-.*$ ]]; then
     SCM_LEVEL=${BASH_REMATCH[1]}
   else
     SCM_LEVEL=0
   fi
+
+  # obtain worker type specific secrets from the local password store when running on a workstation and obtain them from google cloud metadata server when running on provisioners
   if command -v pass > /dev/null; then
     accessToken=`pass Mozilla/TaskCluster/project/releng/generic-worker/${workerType}/production`
     SCCACHE_GCS_KEY=`pass Mozilla/TaskCluster/gcp-service-account/taskcluster-level-${SCM_LEVEL}-sccache@${project_name}`
@@ -72,17 +85,32 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
     _echo "failed to determine a source for secrets_reset_"
     exit 1
   fi
-  # determine the number of instances to spawn by checking the pending count for the worker type
+
+  # determine the pending task count specific to the worker type
   pendingTaskCount=$(curl -s "https://queue.taskcluster.net/v1/pending/${provisionerId}/${workerType}" | jq '.pendingTasks')
   _echo "${workerType} pending tasks: _bold_${pendingTaskCount}_reset_"
 
-  # determine the number of instances already spawned that have not yet claimed tasks
+  # determine the number of instances already running and what state they are in
+
+  # count of instances currently processing a task
   working_instance_count=0
+
+  # count of instances currently waiting for a task to process
   waiting_instance_count=0
+
+  # count of instances currently initialising or booting up for the first time
   pending_instance_count=0
+
+  # count of instances which have not registered a first claim with the taskcluster queue but have been running long enough to have done so
   zombied_instance_count=0
+
+  # count of instances in an unknown state
   goofing_instance_count=0
+
+  # count of instances that have already been deleted (probably by another provisioner instance) by the time we attempt state discovery
   deleted_instance_count=0
+
+  # iterate all instances of the current worker type which are in a runiing state
   running_instance_uri_list=(`gcloud compute instances list --uri --filter "labels.worker-type:${workerType} status:RUNNING" 2> /dev/null`)
   _echo "${workerType} running instances: _bold_${#running_instance_uri_list[@]}_reset_"
   for running_instance_uri in $(gcloud compute instances list --uri --filter "labels.worker-type:${workerType} status:RUNNING" 2> /dev/null); do
@@ -91,6 +119,8 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
     running_instance_zone=${running_instance_zone_uri##*/}
     running_instance_creation_timestamp=$(gcloud compute instances describe ${running_instance_name} --zone ${running_instance_zone} --format json | jq -r '.creationTimestamp')
     running_instance_deployment_id=$(gcloud compute instances describe ${running_instance_name} --zone ${running_instance_zone} --format='value[](metadata.items.gwConfig)' | jq '.deploymentId')
+
+    # calculate uptime based on gcloud creation timestamp
     if [ -n "${running_instance_creation_timestamp}" ] && [[ "${running_instance_creation_timestamp}" != "null" ]]; then
       running_instance_uptime_minutes=$(( ($(date +%s) - $(date -d ${running_instance_creation_timestamp} +%s)) / 60))
       if [ "${running_instance_uptime_minutes}" -gt "60" ]; then
@@ -114,10 +144,13 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
             wait_time="${wait_time_minutes} minutes"
           fi
           if [ "$(date -d ${lastTaskStartedTime} +%s)" -lt "$(date -d ${lastTaskResolvedTime} +%s)" ] && [ "${wait_time_minutes}" -gt "120" ] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
+            # reaching here indicates the instance has been waiting for work to do for more than 120 minutes, so we've killed it
             _echo "${workerType} waiting instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
           elif [ "$(date -d ${lastTaskStartedTime} +%s)" -lt "$(date -d ${lastTaskResolvedTime} +%s)" ] && [[ "${running_instance_deployment_id}" != "${deploymentId}" ]] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
+            # reaching here indicates the instance has been waiting for work to do however the occ repo has changed since this instance was deployed, so we've killed it
             _echo "${workerType} expired instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from expired sha: ${running_instance_deployment_id}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
           else
+            # reaching here indicates another provisioner has beaten us to killing this instance or the instance has been waiting for work for less than 120 minutes and can be left to continue waiting for work
             _echo "${workerType} waiting instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
           fi
           (( waiting_instance_count = waiting_instance_count + 1 ))
@@ -133,33 +166,21 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
         else
           _echo "${workerType} goofing instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). $(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId)')"
           (( goofing_instance_count = goofing_instance_count + 1 ))
-        fi
       elif [ "${running_instance_uptime_minutes}" -lt "30" ]; then
+        # reaching here indicates the instance is not known to the queue (no first claim registered), however the instance has been running for less than 30 minutes
         _echo "${workerType} pending instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
         (( pending_instance_count = pending_instance_count + 1 ))
       elif gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
+        # reaching here indicates the instance is not known to the queue (no first claim registered), however the instance has been running for more than 30 minutes and can be considered defective, hence deleted
         _echo "${workerType} zombied instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
         (( zombied_instance_count = zombied_instance_count + 1 ))
       else
+        # reaching here indicates the instance is not known to the queue (no first claim registered), however the instance has been running for more than 30 minutes and can be considered defective. our delete attempt failed probably due to another provisioner making a successful delete earlier
         _echo "${workerType} zombied instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
         (( zombied_instance_count = zombied_instance_count + 1 ))
       fi
-    elif [ -n "${firstClaim}" ] && [[ "${firstClaim}" != "null" ]]; then
-      wait_time_minutes=$(( ($(date +%s) - $(date -d ${firstClaim} +%s)) / 60))
-      if [ "${wait_time_minutes}" -gt "60" ]; then
-        wait_time="$((${wait_time_minutes} / 60)) hours, $((${wait_time_minutes} % 60)) minutes"
-      else
-        wait_time="${wait_time_minutes} minutes"
-      fi
-      if [ "${wait_time_minutes}" -gt "60" ] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
-        _echo "${workerType} virgin instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). first claim: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${firstClaim})"
-      #elif [[ "${running_instance_deployment_id}" != "${deploymentId}" ]] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
-      #  _echo "${workerType} expired virgin instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from expired sha: ${running_instance_deployment_id}). resolved task: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${lastTaskResolvedTime})"
-      else
-        _echo "${workerType} virgin instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). first claim: _bold_${lastTaskId}/${lastTaskRunId}_reset_, ${wait_time} ago (at ${firstClaim})"
-      fi
-      (( waiting_instance_count = waiting_instance_count + 1 ))
     else
+      # reaching here indicates the instance has already been deleted (probably by another provisioner) because the describe instance query has failed
       _echo "${workerType} deleted instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: unknown"
       (( deleted_instance_count = deleted_instance_count + 1 ))
     fi
@@ -182,6 +203,8 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
   if [ "${deleted_instance_count}" -gt "0" ]; then
     _echo "${workerType} deleted instances: _bold_${deleted_instance_count}_reset_"
   fi
+
+  # spawn enough instances to deal with the pending task count, taking into account the number of instances already spawned and in the pending state
   required_instance_count=0
   if [ "${pending_instance_count}" -lt "${pendingTaskCount}" ]; then
     (( required_instance_count = pendingTaskCount - pending_instance_count ))
@@ -224,7 +247,6 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
 
       disk_zero_size=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.boot.size' ${manifest})
       disk_zero_type=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.boot.type' ${manifest})
-
       disk_one_type=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.supplementary[0].type' ${manifest})
 
       if [[ "${disk_one_type}" == "local-ssd" ]]; then
