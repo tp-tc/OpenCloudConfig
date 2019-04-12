@@ -163,11 +163,7 @@ function Set-OpenCloudConfigSource {
                 $sourceItemValue = 'OpenCloudConfig'
               }
               'Revision' {
-                if (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') {
-                  $sourceItemValue = 'aarch64'
-                } else {
-                  $sourceItemValue = 'master'
-                }
+                $sourceItemValue = 'master'
               }
             }
             if ($sourceItemValue) {
