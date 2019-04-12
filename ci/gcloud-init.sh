@@ -137,7 +137,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
         last_task_run_state=$(cat ${temp_dir}/${last_task_id}.json | jq --arg runId ${last_task_run_id} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .state')
         last_task_run_started_time=$(cat ${temp_dir}/${last_task_id}.json | jq --arg runId ${last_task_run_id} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .started')
         last_task_run_created_reason=$(cat ${temp_dir}/${last_task_id}.json | jq --arg runId ${last_task_run_id} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .reasonCreated')
-        if [ -n "${last_task_run_state}" ] && [[ "${last_task_run_state}" != "running" ]] && [ -n "${last_task_run_resolved_time}" ]; then
+        if [ -n "${last_task_run_state}" ] && [[ "${last_task_run_state}" != "running" ]]; then
           last_task_run_resolved_time=$(cat ${temp_dir}/${last_task_id}.json | jq --arg runId ${last_task_run_id} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .resolved')
           last_task_run_resolved_reason=$(cat ${temp_dir}/${last_task_id}.json | jq --arg runId ${last_task_run_id} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .reasonResolved')
           wait_time_minutes=$(( ($(date +%s) - $(date -d ${last_task_run_resolved_time} +%s)) / 60))
