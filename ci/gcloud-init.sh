@@ -117,11 +117,12 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
     running_instance_name=${running_instance_uri##*/}
     running_instance_zone_uri=${running_instance_uri/\/instances\/${running_instance_name}/}
     running_instance_zone=${running_instance_zone_uri##*/}
-    running_instance_creation_timestamp=$(gcloud compute instances describe ${running_instance_name} --zone ${running_instance_zone} --format json | jq -r '.creationTimestamp')
-    running_instance_deployment_id=$(gcloud compute instances describe ${running_instance_name} --zone ${running_instance_zone} --format='value[](metadata.items.gwConfig)' | jq '.deploymentId')
 
-    # calculate uptime based on gcloud creation timestamp
-    if [ -n "${running_instance_creation_timestamp}" ] && [[ "${running_instance_creation_timestamp}" != "null" ]]; then
+    if gcloud compute instances describe ${running_instance_name} --zone ${running_instance_zone} --format json > ${temp_dir}/${running_instance_zone}-${running_instance_name}.json 2> /dev/null; then
+      running_instance_creation_timestamp=$(cat ${temp_dir}/${running_instance_zone}-${running_instance_name}.json | jq -r '.creationTimestamp')
+      running_instance_deployment_id=$(cat ${temp_dir}/${running_instance_zone}-${running_instance_name}.json | jq -r '.metadata.items[] | select(.key == "gwConfig") | .value' | jq -r '.deploymentId')
+
+      # calculate uptime based on gcloud creation timestamp
       running_instance_uptime_minutes=$(( ($(date +%s) - $(date -d ${running_instance_creation_timestamp} +%s)) / 60))
       if [ "${running_instance_uptime_minutes}" -gt "60" ]; then
         running_instance_uptime="$((${running_instance_uptime_minutes} / 60)) hours, $((${running_instance_uptime_minutes} % 60)) minutes"
