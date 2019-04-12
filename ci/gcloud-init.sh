@@ -166,7 +166,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
           fi
           _echo "${workerType} working instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). running ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_, for ${work_time} (since ${last_task_run_started_time})"
           (( working_instance_count = working_instance_count + 1 ))
-        elif [ -n "${first_claim}" ]; then
+        elif [ -n "${first_claim}" ] && date -d ${first_claim} +%s &> /dev/null; then
           wait_time_minutes=$(( ($(date +%s) - $(date -d ${first_claim} +%s)) / 60))
           if [ "${wait_time_minutes}" -gt "60" ]; then
             wait_time="$((${wait_time_minutes} / 60)) hours, $((${wait_time_minutes} % 60)) minutes"
