@@ -166,6 +166,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json); do
         else
           _echo "${workerType} goofing instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). $(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId)')"
           (( goofing_instance_count = goofing_instance_count + 1 ))
+        fi
       elif [ "${running_instance_uptime_minutes}" -lt "30" ]; then
         # reaching here indicates the instance is not known to the queue (no first claim registered), however the instance has been running for less than 30 minutes
         _echo "${workerType} pending instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
