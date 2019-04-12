@@ -119,7 +119,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
     running_instance_zone=${running_instance_zone_uri##*/}
 
     if gcloud compute instances describe ${running_instance_name} --zone ${running_instance_zone} --format json > ${temp_dir}/${running_instance_zone}-${running_instance_name}.json 2> /dev/null; then
-      running_instance_creation_timestamp=$(cat ${temp_dir}/${running_instance_zone}-${running_instance_name}.json | jq -r '.creationTimestamp')
+      running_instance_creation_timestamp=$(date --utc -d $(cat ${temp_dir}/${running_instance_zone}-${running_instance_name}.json | jq -r '.creationTimestamp') +%FT%T.%3NZ)
       running_instance_deployment_id=$(cat ${temp_dir}/${running_instance_zone}-${running_instance_name}.json | jq -r '.metadata.items[] | select(.key == "gwConfig") | .value' | jq -r '.deploymentId')
 
       # calculate uptime based on gcloud creation timestamp
