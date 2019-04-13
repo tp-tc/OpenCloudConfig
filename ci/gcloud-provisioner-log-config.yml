@@ -1,6 +1,6 @@
 files: 
   - /var/log/releng-gcp-provisioner/*
 destination:
-  host: logs3.papertrailapp.com
-  port: 49853
+  host: logs.papertrailapp.com
+  port: 52806
   protocol: tls
