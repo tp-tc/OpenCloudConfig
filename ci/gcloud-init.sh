@@ -263,7 +263,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
       SCCACHE_GCS_BUCKET=taskcluster-level-${SCM_LEVEL}-sccache-${region}
       # generate a random instance name which does not pre-exist
       random_name=$(basename $(mktemp ${temp_dir}/XXXXXXXXXXXXXXXXX))
-      instance_name=${random_name,,}
+      instance_name=vm-${random_name,,}
       #existing_instance_uri_list=(`gcloud compute instances list --uri`)
       #existing_instance_name_list=("${existing_instance_uri_list[@]##*/}")
       #instance_name=${names_first[$[$RANDOM % ${#names_first[@]}]]}-${names_middle[$[$RANDOM % ${#names_middle[@]}]]}-${names_last[$[$RANDOM % ${#names_last[@]}]]}
