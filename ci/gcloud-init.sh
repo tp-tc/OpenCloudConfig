@@ -279,46 +279,50 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
       disk_zero_type=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.boot.type' ${manifest})
       disk_one_type=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.supplementary[0].type' ${manifest})
 
-      if [[ "${disk_one_type}" == "local-ssd" ]]; then
-        disk_one_interface=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.supplementary[0].interface' ${manifest})
-        gcloud compute instances create ${instance_name} \
-          --image-project windows-cloud \
-          --image-family windows-2012-r2 \
-          --machine-type ${instanceType} \
-          --boot-disk-size ${disk_zero_size} \
-          --boot-disk-type ${disk_zero_type} \
-          --local-ssd interface=${disk_one_interface} \
-          --scopes storage-ro \
-          --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
-          --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_BUCKET=${SCCACHE_GCS_BUCKET};SCCACHE_GCS_KEY=${SCCACHE_GCS_KEY}" \
-          --zone ${zone_name} \
-          --preemptible
-      else
-        gcloud compute instances create ${instance_name} \
-          --image-project windows-cloud \
-          --image-family windows-2012-r2 \
-          --machine-type ${instanceType} \
-          --boot-disk-size ${disk_zero_size} \
-          --boot-disk-type ${disk_zero_type} \
-          --scopes storage-ro \
-          --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
-          --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_BUCKET=${SCCACHE_GCS_BUCKET};SCCACHE_GCS_KEY=${SCCACHE_GCS_KEY}" \
-          --zone ${zone_name} \
-          --preemptible
-        disk_one_size=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.supplementary[0].size' ${manifest})
-        gcloud beta compute disks create ${instance_name}-disk-1 --type ${disk_one_type} --size ${disk_one_size} --zone ${zone_name}
-        gcloud compute instances attach-disk ${instance_name} --disk ${instance_name}-disk-1 --zone ${zone_name}
-      fi
+      running_instance_uri_list=(`gcloud compute instances list --uri --filter "labels.worker-type:${workerType} status:RUNNING" 2> /dev/null`)
+      running_instance_count=${#running_instance_uri_list[@]}
+      if [ "${required_instance_count}" -lt "${running_instance_count}" ] && [ "${running_instance_count}" -lt "${capacity_maximum}" ]; then
+        if [[ "${disk_one_type}" == "local-ssd" ]]; then
+          disk_one_interface=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.supplementary[0].interface' ${manifest})
+          gcloud compute instances create ${instance_name} \
+            --image-project windows-cloud \
+            --image-family windows-2012-r2 \
+            --machine-type ${instanceType} \
+            --boot-disk-size ${disk_zero_size} \
+            --boot-disk-type ${disk_zero_type} \
+            --local-ssd interface=${disk_one_interface} \
+            --scopes storage-ro \
+            --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
+            --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_BUCKET=${SCCACHE_GCS_BUCKET};SCCACHE_GCS_KEY=${SCCACHE_GCS_KEY}" \
+            --zone ${zone_name} \
+            --preemptible
+        else
+          gcloud compute instances create ${instance_name} \
+            --image-project windows-cloud \
+            --image-family windows-2012-r2 \
+            --machine-type ${instanceType} \
+            --boot-disk-size ${disk_zero_size} \
+            --boot-disk-type ${disk_zero_type} \
+            --scopes storage-ro \
+            --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
+            --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_BUCKET=${SCCACHE_GCS_BUCKET};SCCACHE_GCS_KEY=${SCCACHE_GCS_KEY}" \
+            --zone ${zone_name} \
+            --preemptible
+          disk_one_size=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.supplementary[0].size' ${manifest})
+          gcloud beta compute disks create ${instance_name}-disk-1 --type ${disk_one_type} --size ${disk_one_size} --zone ${zone_name}
+          gcloud compute instances attach-disk ${instance_name} --disk ${instance_name}-disk-1 --zone ${zone_name}
+        fi
 
-      publicIP=$(gcloud compute instances describe ${instance_name} --zone ${zone_name} --format json | jq -r '.networkInterfaces[0].accessConfigs[0].natIP')
-      _echo "public ip: _bold_${publicIP}_reset_"
-      privateIP=$(gcloud compute instances describe ${instance_name} --zone ${zone_name} --format json | jq -r '.networkInterfaces[0].networkIP')
-      _echo "private ip: _bold_${privateIP}_reset_"
-      instanceId=$(gcloud compute instances describe ${instance_name} --zone ${zone_name} --format json | jq -r '.id')
-      _echo "instance id: _bold_${instanceId}_reset_"
-      gwConfig="`curl -s https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/gamma/userdata/Manifest/${workerType}.json | jq --arg accessToken ${accessToken} --arg livelogSecret ${livelogSecret} --arg publicIP ${publicIP} --arg privateIP ${privateIP} --arg workerId ${instance_name} --arg provisionerId ${provisionerId} --arg region ${region} --arg deploymentId ${deploymentId} --arg availabilityZone ${zone_name} --arg instanceId ${instanceId} --arg instanceType ${instanceType} -c '.ProvisionerConfiguration.userData.genericWorker.config | .accessToken = $accessToken | .livelogSecret = $livelogSecret | .publicIP = $publicIP | .privateIP = $privateIP | .workerId = $workerId | .instanceId = $instanceId | .instanceType = $instanceType | .availabilityZone = $availabilityZone | .region = $region | .provisionerId = $provisionerId | .workerGroup = $region | .deploymentId = $deploymentId' | sed 's/\"/\\\"/g'`"
-      gcloud compute instances add-metadata ${instance_name} --zone ${zone_name} --metadata "^;^gwConfig=${gwConfig}"
-      gcloud compute instances add-labels ${instance_name} --zone ${zone_name} --labels=worker-type=${workerType}
+        publicIP=$(gcloud compute instances describe ${instance_name} --zone ${zone_name} --format json | jq -r '.networkInterfaces[0].accessConfigs[0].natIP')
+        _echo "public ip: _bold_${publicIP}_reset_"
+        privateIP=$(gcloud compute instances describe ${instance_name} --zone ${zone_name} --format json | jq -r '.networkInterfaces[0].networkIP')
+        _echo "private ip: _bold_${privateIP}_reset_"
+        instanceId=$(gcloud compute instances describe ${instance_name} --zone ${zone_name} --format json | jq -r '.id')
+        _echo "instance id: _bold_${instanceId}_reset_"
+        gwConfig="`curl -s https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/gamma/userdata/Manifest/${workerType}.json | jq --arg accessToken ${accessToken} --arg livelogSecret ${livelogSecret} --arg publicIP ${publicIP} --arg privateIP ${privateIP} --arg workerId ${instance_name} --arg provisionerId ${provisionerId} --arg region ${region} --arg deploymentId ${deploymentId} --arg availabilityZone ${zone_name} --arg instanceId ${instanceId} --arg instanceType ${instanceType} -c '.ProvisionerConfiguration.userData.genericWorker.config | .accessToken = $accessToken | .livelogSecret = $livelogSecret | .publicIP = $publicIP | .privateIP = $privateIP | .workerId = $workerId | .instanceId = $instanceId | .instanceType = $instanceType | .availabilityZone = $availabilityZone | .region = $region | .provisionerId = $provisionerId | .workerGroup = $region | .deploymentId = $deploymentId' | sed 's/\"/\\\"/g'`"
+        gcloud compute instances add-metadata ${instance_name} --zone ${zone_name} --metadata "^;^gwConfig=${gwConfig}"
+        gcloud compute instances add-labels ${instance_name} --zone ${zone_name} --labels=worker-type=${workerType}
+      fi
     done
   fi
 done
