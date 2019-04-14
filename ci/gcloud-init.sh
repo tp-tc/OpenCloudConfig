@@ -279,8 +279,9 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
       disk_zero_type=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.boot.type' ${manifest})
       disk_one_type=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.supplementary[0].type' ${manifest})
 
-      running_instance_uri_list=(`gcloud compute instances list --uri --filter "labels.worker-type:${workerType} status:RUNNING" 2> /dev/null`)
-      running_instance_count=${#running_instance_uri_list[@]}
+      # we need to check the count of running instances, however this call is rate limited and fails frequently, so we need to think of something smarter here
+      #running_instance_uri_list=(`gcloud compute instances list --uri --filter "labels.worker-type:${workerType} status:RUNNING" 2> /dev/null`)
+      #running_instance_count=${#running_instance_uri_list[@]}
       if [ "${required_instance_count}" -lt "${running_instance_count}" ] && [ "${running_instance_count}" -lt "${capacity_maximum}" ]; then
         if [[ "${disk_one_type}" == "local-ssd" ]]; then
           disk_one_interface=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.supplementary[0].interface' ${manifest})
