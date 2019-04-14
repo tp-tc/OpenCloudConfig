@@ -86,10 +86,6 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
     exit 1
   fi
 
-  # determine the pending task count specific to the worker type
-  pendingTaskCount=$(curl -s "https://queue.taskcluster.net/v1/pending/${provisionerId}/${workerType}" | jq '.pendingTasks')
-  _echo "${workerType} pending tasks: _bold_${pendingTaskCount}_reset_"
-
   # determine the number of instances already running and what state they are in
 
   # count of instances currently processing a task
@@ -110,9 +106,10 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
   # count of instances that have already been deleted (probably by another provisioner instance) by the time we attempt state discovery
   deleted_instance_count=0
 
+  idle_termination_interval=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.idle_termination_threshold.interval' ${manifest})
+  _echo "${workerType} idle termination after: _bold_${idle_termination_interval} minutes_reset_"
+
   # iterate all instances of the current worker type which are in a runiing state
-  running_instance_uri_list=(`gcloud compute instances list --uri --filter "labels.worker-type:${workerType} status:RUNNING" 2> /dev/null`)
-  _echo "${workerType} running instances: _bold_${#running_instance_uri_list[@]}_reset_"
   for running_instance_uri in $(gcloud compute instances list --uri --filter "labels.worker-type:${workerType} status:RUNNING" 2> /dev/null | shuf); do
     running_instance_name=${running_instance_uri##*/}
     running_instance_zone_uri=${running_instance_uri/\/instances\/${running_instance_name}/}
@@ -147,14 +144,14 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
           else
             wait_time="${wait_time_minutes} minutes"
           fi
-          if [ "$(date -d ${last_task_run_started_time} +%s)" -lt "$(date -d ${last_task_run_resolved_time} +%s)" ] && [ "${wait_time_minutes}" -gt "120" ] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
-            # reaching here indicates the instance has been waiting for work to do for more than 120 minutes, so we've killed it
+          if [ "$(date -d ${last_task_run_started_time} +%s)" -lt "$(date -d ${last_task_run_resolved_time} +%s)" ] && [ "${wait_time_minutes}" -gt "${idle_termination_interval}" ] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
+            # reaching here indicates the instance has been waiting for work to do for more than ${idle_termination_interval} minutes, so we've killed it
             _echo "${workerType} waiting instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). resolved ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_ with status: ${last_task_run_resolved_reason}, ${wait_time} ago (at ${last_task_run_resolved_time})"
           elif [ "$(date -d ${last_task_run_started_time} +%s)" -lt "$(date -d ${last_task_run_resolved_time} +%s)" ] && [[ "${running_instance_deployment_id}" != "${deploymentId}" ]] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
             # reaching here indicates the instance has been waiting for work to do however the occ repo has changed since this instance was deployed, so we've killed it
             _echo "${workerType} expired instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from expired sha: ${running_instance_deployment_id}). resolved ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_ with status: ${last_task_run_resolved_reason}, ${wait_time} ago (at ${last_task_run_resolved_time})"
           else
-            # reaching here indicates another provisioner has beaten us to killing this instance or the instance has been waiting for work for less than 120 minutes and can be left to continue waiting for work
+            # reaching here indicates another provisioner has beaten us to killing this instance or the instance has been waiting for work for less than ${idle_termination_interval} minutes and can be left to continue waiting for work
             _echo "${workerType} waiting instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). resolved ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_ with status: ${last_task_run_resolved_reason}, ${wait_time} ago (at ${last_task_run_resolved_time})"
           fi
           (( waiting_instance_count = waiting_instance_count + 1 ))
@@ -218,11 +215,30 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
     _echo "${workerType} deleted instances: _bold_${deleted_instance_count}_reset_"
   fi
 
-  # spawn enough instances to deal with the pending task count, taking into account the number of instances already spawned and in the pending state
+  capacity_minimum=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.capacity.minimum' ${manifest})
+  _echo "${workerType} minimum capacity: _bold_${capacity_minimum}_reset_"
+  capacity_maximum=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.capacity.maximum' ${manifest})
+  _echo "${workerType} maximum capacity: _bold_${capacity_maximum}_reset_"
+
+  running_instance_uri_list=(`gcloud compute instances list --uri --filter "labels.worker-type:${workerType} status:RUNNING" 2> /dev/null`)
+  running_instance_count=${#running_instance_uri_list[@]}
+  _echo "${workerType} running instances: _bold_${running_instance_count}_reset_"
+
+  # determine the pending task count specific to the worker type
+  pending_task_count=$(curl -s "https://queue.taskcluster.net/v1/pending/${provisionerId}/${workerType}" | jq '.pendingTasks')
+  _echo "${workerType} pending tasks: _bold_${pending_task_count}_reset_"
+
+  # spawn enough instances to deal with the pending task count, taking into account:
+  # - the number of instances already spawned and in the pending state
+  # - the configured minimum capacity for the worker type
+  # - the configured maximum capacity for the worker type
   required_instance_count=0
-  if [ "${pending_instance_count}" -lt "${pendingTaskCount}" ]; then
-    (( required_instance_count = pendingTaskCount - pending_instance_count ))
+  if [ "${pending_instance_count}" -lt "${pending_task_count}" ]; then
+    (( required_instance_count = pending_task_count - pending_instance_count ))
   fi
+  while (( (running_instance_count + required_instance_count) < capacity_minimum )) && (( (running_instance_count + required_instance_count) < capacity_maximum )); do
+    (( required_instance_count = required_instance_count + 1 ))
+  done
   _echo "${workerType} required instances: _bold_${required_instance_count}_reset_"
   if [ "${required_instance_count}" -gt "0" ]; then
     # spawn some instances

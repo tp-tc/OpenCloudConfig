@@ -1649,6 +1649,10 @@
       "idle_termination_threshold": {
         "period": "minutes",
         "interval": 120
+      },
+      "capacity": {
+        "minimum": 0,
+        "maximum": 32
       }
     }
   }
