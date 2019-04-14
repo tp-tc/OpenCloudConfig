@@ -262,12 +262,14 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
       # set sccache configuration
       SCCACHE_GCS_BUCKET=taskcluster-level-${SCM_LEVEL}-sccache-${region}
       # generate a random instance name which does not pre-exist
-      existing_instance_uri_list=(`gcloud compute instances list --uri`)
-      existing_instance_name_list=("${existing_instance_uri_list[@]##*/}")
-      instance_name=${names_first[$[$RANDOM % ${#names_first[@]}]]}-${names_middle[$[$RANDOM % ${#names_middle[@]}]]}-${names_last[$[$RANDOM % ${#names_last[@]}]]}
-      while [[ " ${existing_instance_name_list[@]} " =~ " ${instance_name} " ]]; do
-        instance_name=${names_first[$[$RANDOM % ${#names_first[@]}]]}-${names_middle[$[$RANDOM % ${#names_middle[@]}]]}-${names_last[$[$RANDOM % ${#names_last[@]}]]}
-      done
+      random_name=$(basename $(mktemp ${temp_dir}/XXXXXXXXXXXXXXXXX))
+      instance_name=${random_name,,}
+      #existing_instance_uri_list=(`gcloud compute instances list --uri`)
+      #existing_instance_name_list=("${existing_instance_uri_list[@]##*/}")
+      #instance_name=${names_first[$[$RANDOM % ${#names_first[@]}]]}-${names_middle[$[$RANDOM % ${#names_middle[@]}]]}-${names_last[$[$RANDOM % ${#names_last[@]}]]}
+      #while [[ " ${existing_instance_name_list[@]} " =~ " ${instance_name} " ]]; do
+      #  instance_name=${names_first[$[$RANDOM % ${#names_first[@]}]]}-${names_middle[$[$RANDOM % ${#names_middle[@]}]]}-${names_last[$[$RANDOM % ${#names_last[@]}]]}
+      #done
       _echo "instance name: _bold_${instance_name}_reset_"
       _echo "zone name: _bold_${zone_name}_reset_"
       _echo "region: _bold_${region}_reset_"
