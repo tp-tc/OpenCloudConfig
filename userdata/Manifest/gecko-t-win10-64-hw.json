@@ -34,7 +34,7 @@
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/hw-win10.conf",
       "Target": "C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf",
-      "sha512": "60d9f48d88fb686cb0c7b502cd6b96d4b055e251da958d82208006c98bee631eb0634c97f7d45b0f654923262e7c2c8f0afb0e70a290856cd6994692b19a1f7e",
+      "sha512": "c2a21a37aae85dc977956369f6f3babed75d9c764035d1c5eab35a9250aacad032c45e92116072462f091b93014e3f72adf9599fb1cdc0191fde7d7d6c9e079a",
       "DependsOn": [
         {
           "ComponentType": "ChecksumFileDownload",
