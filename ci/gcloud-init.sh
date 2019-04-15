@@ -152,7 +152,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
             _echo "${workerType} expired instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from expired sha: ${running_instance_deployment_id}). resolved ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_ with status: ${last_task_run_resolved_reason}, ${wait_time} ago (at ${last_task_run_resolved_time})"
           else
             # reaching here indicates another provisioner has beaten us to killing this instance or the instance has been waiting for work for less than ${idle_termination_interval} minutes and can be left to continue waiting for work
-            _echo "${workerType} waiting instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). resolved ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_ with status: ${last_task_run_resolved_reason}, ${wait_time} ago (at ${last_task_run_resolved_time})"
+            _echo "${workerType} waiting instance observed: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). resolved ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_ with status: ${last_task_run_resolved_reason}, ${wait_time} ago (at ${last_task_run_resolved_time})"
           fi
           (( waiting_instance_count = waiting_instance_count + 1 ))
         elif [[ "${last_task_run_state}" == "running" ]]; then
@@ -162,7 +162,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
           else
             work_time="${work_time_minutes} minutes"
           fi
-          _echo "${workerType} working instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). running ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_, for ${work_time} (since ${last_task_run_started_time})"
+          _echo "${workerType} working instance observed: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). running ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_, for ${work_time} (since ${last_task_run_started_time})"
           (( working_instance_count = working_instance_count + 1 ))
         elif [ -n "${first_claim}" ] && date -d ${first_claim} +%s &> /dev/null; then
           wait_time_minutes=$(( ($(date +%s) - $(date -d ${first_claim} +%s)) / 60))
@@ -175,16 +175,16 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
             # reaching here indicates the instance has been waiting for work to do for more than ${idle_termination_interval} minutes, without ever taking a task, so we've killed it
             _echo "${workerType} waiting instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). first claim ${wait_time} ago (at ${first_claim})"
           else
-            _echo "${workerType} waiting instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). first claim ${wait_time} ago (at ${first_claim})"
+            _echo "${workerType} waiting instance observed: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). first claim ${wait_time} ago (at ${first_claim})"
             (( waiting_instance_count = waiting_instance_count + 1 ))
           fi
         else
-          _echo "${workerType} goofing instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). worker: $(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId)'); task run: $(cat ${temp_dir}/${last_task_id}.json | jq -c --arg runId ${last_task_run_id} -r '.status.runs[]? | select(.runId == ($runId | tonumber))')"
+          _echo "${workerType} goofing instance observed: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). worker: $(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId)'); task run: $(cat ${temp_dir}/${last_task_id}.json | jq -c --arg runId ${last_task_run_id} -r '.status.runs[]? | select(.runId == ($runId | tonumber))')"
           (( goofing_instance_count = goofing_instance_count + 1 ))
         fi
       elif [ "${running_instance_uptime_minutes}" -lt "30" ]; then
         # reaching here indicates the instance is not known to the queue (no first claim registered), however the instance has been running for less than 30 minutes
-        _echo "${workerType} pending instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
+        _echo "${workerType} pending instance observed: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
         (( pending_instance_count = pending_instance_count + 1 ))
       elif gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
         # reaching here indicates the instance is not known to the queue (no first claim registered), however the instance has been running for more than 30 minutes and can be considered defective, hence deleted
@@ -192,12 +192,12 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
         (( zombied_instance_count = zombied_instance_count + 1 ))
       else
         # reaching here indicates the instance is not known to the queue (no first claim registered), however the instance has been running for more than 30 minutes and can be considered defective. our delete attempt failed probably due to another provisioner making a successful delete earlier
-        _echo "${workerType} zombied instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
+        _echo "${workerType} zombied instance observed: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
         (( zombied_instance_count = zombied_instance_count + 1 ))
       fi
     else
       # reaching here indicates the instance has already been deleted (probably by another provisioner) because the describe instance query has failed
-      _echo "${workerType} deleted instance detected: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: unknown"
+      _echo "${workerType} deleted instance observed: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: unknown"
       (( deleted_instance_count = deleted_instance_count + 1 ))
     fi
   done
