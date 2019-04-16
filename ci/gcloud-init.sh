@@ -287,9 +287,9 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
       disk_zero_type=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.boot.type' ${manifest})
       disk_one_type=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.supplementary[0].type' ${manifest})
 
-      if [[ "${workerType}" =~ ^gecko-[1-3]-win2012.*$ ]]; then
+      if [[ "${workerType}" =~ ^gecko-[1-3]-b-win2012.*$ ]]; then
         pre_boot_metadata="^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_BUCKET=${SCCACHE_GCS_BUCKET};SCCACHE_GCS_KEY=${SCCACHE_GCS_KEY}"
-      elif [[ "${workerType}" =~ ^gecko-[1-3]-linux.*$ ]]; then
+      elif [[ "${workerType}" =~ ^gecko-[1-3]-b-linux.*$ ]]; then
         pre_boot_metadata="^;^statelessHostname=${instance_name};relengApiToken=${relengapiToken};clientId=project/releng/docker-worker/${workerType}/production;accessToken=${accessToken};capacity=2;workerType=${workerType};provisionerId=${provisionerId};rootUrl=https://taskcluster.net;secretsPath=project/taskcluster/docker-worker:secrets"
       fi
 
@@ -315,7 +315,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
             --local-ssd interface=${disk_one_interface} \
             --scopes storage-ro \
             --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
-            --metadata "${pre_boot_metadata}" \
+            --metadata ${pre_boot_metadata} \
             --labels worker-type=${workerType},worker-implementation=${workerImplementation} \
             --zone ${zone_name} \
             --preemptible
@@ -330,7 +330,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
             --boot-disk-auto-delete true \
             --scopes storage-ro \
             --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
-            --metadata "${pre_boot_metadata}" \
+            --metadata ${pre_boot_metadata} \
             --labels worker-type=${workerType},worker-implementation=${workerImplementation} \
             --zone ${zone_name} \
             --preemptible
