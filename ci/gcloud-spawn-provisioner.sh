@@ -66,9 +66,10 @@ gcloud compute instances create ${provisioner_instance_name} \
 echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) provisioner: ${provisioner_instance_name} created as ${provisioner_instance_machine_type} in ${provisioner_instance_zone}$(tput sgr0)"
 
 # add worker-type specific access tokens to secrets metadata
-for manifest in $(ls $HOME/git/mozilla-releng/OpenCloudConfig/userdata/Manifest/*-gamma.json); do
+for manifest in $(ls $HOME/git/mozilla-releng/OpenCloudConfig/userdata/Manifest/*-gamma.json $HOME/git/mozilla-releng/OpenCloudConfig/userdata/Manifest/*-linux.json); do
   workerType=$(basename ${manifest##*/} .json)
-  accessToken=`pass Mozilla/TaskCluster/project/releng/generic-worker/${workerType}/production`
+  workerImplementation=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.worker_implementation' ${manifest})
+  accessToken=`pass Mozilla/TaskCluster/project/releng/${workerImplementation}/${workerType}/production`
   gcloud compute instances add-metadata ${provisioner_instance_name} --zone ${provisioner_instance_zone} --metadata "^;^access-token-${workerType}=${accessToken}"
   echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) access-token-${workerType} added to metadata$(tput sgr0)"
 done
