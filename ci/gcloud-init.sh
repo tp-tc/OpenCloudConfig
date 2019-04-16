@@ -52,7 +52,6 @@ fi
 
 # set up some configuration data
 project_name=windows-workers
-provisionerId=releng-hardware
 GITHUB_HEAD_SHA=`git rev-parse HEAD`
 deploymentId=${GITHUB_HEAD_SHA:0:12}
 
@@ -62,9 +61,11 @@ if [[ $@ == *"--open-in-browser"* ]] && which xdg-open > /dev/null; then
 fi
 _echo "deployment id: _bold_${deploymentId}_reset_"
 
-# iterate through each worker type containing a "-gamma" suffix in the occ manifest directory
-for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
+# iterate through each worker type containing a "-gamma" or "-linux" suffix in the occ manifest directory
+for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_dir}/../userdata/Manifest/*-linux.json | shuf); do
   workerType=$(basename ${manifest##*/} .json)
+  workerImplementation=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.worker_implementation' ${manifest})
+  provisionerId=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.provisioner_id' ${manifest})
   _echo "worker type: _bold_${workerType}_reset_"
 
   # determine the scm level from the worker type name
@@ -76,7 +77,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
 
   # obtain worker type specific secrets from the local password store when running on a workstation and obtain them from google cloud metadata server when running on provisioners
   if command -v pass > /dev/null; then
-    accessToken=`pass Mozilla/TaskCluster/project/releng/generic-worker/${workerType}/production`
+    accessToken=`pass Mozilla/TaskCluster/project/releng/${workerImplementation}/${workerType}/production`
     SCCACHE_GCS_KEY=`pass Mozilla/TaskCluster/gcp-service-account/taskcluster-level-${SCM_LEVEL}-sccache@${project_name}`
   elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes > /dev/null; then
     accessToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/access-token-${workerType}")
@@ -286,51 +287,71 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json | shuf); do
       disk_zero_type=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.boot.type' ${manifest})
       disk_one_type=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.supplementary[0].type' ${manifest})
 
+      if [[ "${workerType}" =~ ^gecko-[1-3]-win2012.*$ ]]; then
+        pre_boot_metadata="^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_BUCKET=${SCCACHE_GCS_BUCKET};SCCACHE_GCS_KEY=${SCCACHE_GCS_KEY}"
+      elif [[ "${workerType}" =~ ^gecko-[1-3]-linux.*$ ]]; then
+        pre_boot_metadata="^;^statelessHostname=${instance_name};relengApiToken=${relengapiToken};clientId=project/releng/docker-worker/${workerType}/production;accessToken=${accessToken};capacity=2;workerType=${workerType};provisionerId=${provisionerId};rootUrl=https://taskcluster.net;secretsPath=project/taskcluster/docker-worker:secrets"
+      fi
+
       # we need to check the count of running instances, however this call is rate limited and fails frequently, so we need to think of something smarter here
       #running_instance_uri_list=(`gcloud compute instances list --uri --filter "labels.worker-type:${workerType} status:RUNNING" 2> /dev/null`)
       #running_instance_count=${#running_instance_uri_list[@]}
       #if [ "${required_instance_count}" -lt "${running_instance_count}" ] && [ "${running_instance_count}" -lt "${capacity_maximum}" ]; then
       if true; then
+        image_project=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.image.project' ${manifest})
+        image_family=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.image.family' ${manifest})
+        image_version=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.image.version' ${manifest})
+        if [ -n "${image_family}" ]; then image_selector=image-family; else image_selector=image; fi
         if [[ "${disk_one_type}" == "local-ssd" ]]; then
           disk_one_interface=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.supplementary[0].interface' ${manifest})
           gcloud compute instances create ${instance_name} \
-            --image-project windows-cloud \
-            --image-family windows-2012-r2 \
+            --description "${workerImplementation} ${workerType}" \
+            --image-project ${image_project} \
+            --${image_selector} ${image_family}${image_version} \
             --machine-type ${instanceType} \
             --boot-disk-size ${disk_zero_size} \
             --boot-disk-type ${disk_zero_type} \
+            --boot-disk-auto-delete true \
             --local-ssd interface=${disk_one_interface} \
             --scopes storage-ro \
             --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
-            --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_BUCKET=${SCCACHE_GCS_BUCKET};SCCACHE_GCS_KEY=${SCCACHE_GCS_KEY}" \
+            --metadata ${pre_boot_metadata} \
+            --labels worker-type=${workerType},worker-implementation=${workerImplementation} \
             --zone ${zone_name} \
             --preemptible
         else
           gcloud compute instances create ${instance_name} \
-            --image-project windows-cloud \
-            --image-family windows-2012-r2 \
+            --description "${workerImplementation} ${workerType}" \
+            --image-project ${image_project} \
+            --${image_selector} ${image_family}${image_version} \
             --machine-type ${instanceType} \
             --boot-disk-size ${disk_zero_size} \
             --boot-disk-type ${disk_zero_type} \
+            --boot-disk-auto-delete true \
             --scopes storage-ro \
             --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
-            --metadata "^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_BUCKET=${SCCACHE_GCS_BUCKET};SCCACHE_GCS_KEY=${SCCACHE_GCS_KEY}" \
+            --metadata ${pre_boot_metadata} \
+            --labels worker-type=${workerType},worker-implementation=${workerImplementation} \
             --zone ${zone_name} \
             --preemptible
           disk_one_size=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.supplementary[0].size' ${manifest})
           gcloud beta compute disks create ${instance_name}-disk-1 --type ${disk_one_type} --size ${disk_one_size} --zone ${zone_name}
           gcloud compute instances attach-disk ${instance_name} --disk ${instance_name}-disk-1 --zone ${zone_name}
         fi
-
         publicIP=$(gcloud compute instances describe ${instance_name} --zone ${zone_name} --format json | jq -r '.networkInterfaces[0].accessConfigs[0].natIP')
         _echo "public ip: _bold_${publicIP}_reset_"
         privateIP=$(gcloud compute instances describe ${instance_name} --zone ${zone_name} --format json | jq -r '.networkInterfaces[0].networkIP')
         _echo "private ip: _bold_${privateIP}_reset_"
         instanceId=$(gcloud compute instances describe ${instance_name} --zone ${zone_name} --format json | jq -r '.id')
         _echo "instance id: _bold_${instanceId}_reset_"
-        gwConfig="`curl -s https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/gamma/userdata/Manifest/${workerType}.json | jq --arg accessToken ${accessToken} --arg livelogSecret ${livelogSecret} --arg publicIP ${publicIP} --arg privateIP ${privateIP} --arg workerId ${instance_name} --arg provisionerId ${provisionerId} --arg region ${region} --arg deploymentId ${deploymentId} --arg availabilityZone ${zone_name} --arg instanceId ${instanceId} --arg instanceType ${instanceType} -c '.ProvisionerConfiguration.userData.genericWorker.config | .accessToken = $accessToken | .livelogSecret = $livelogSecret | .publicIP = $publicIP | .privateIP = $privateIP | .workerId = $workerId | .instanceId = $instanceId | .instanceType = $instanceType | .availabilityZone = $availabilityZone | .region = $region | .provisionerId = $provisionerId | .workerGroup = $region | .deploymentId = $deploymentId' | sed 's/\"/\\\"/g'`"
-        gcloud compute instances add-metadata ${instance_name} --zone ${zone_name} --metadata "^;^gwConfig=${gwConfig}"
-        gcloud compute instances add-labels ${instance_name} --zone ${zone_name} --labels=worker-type=${workerType}
+        if [[ "${workerImplementation}" == "generic-worker" ]]; then
+          gwConfig="`curl -s https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/gamma/userdata/Manifest/${workerType}.json | jq --arg accessToken ${accessToken} --arg livelogSecret ${livelogSecret} --arg publicIP ${publicIP} --arg privateIP ${privateIP} --arg workerId ${instance_name} --arg provisionerId ${provisionerId} --arg region ${region} --arg deploymentId ${deploymentId} --arg availabilityZone ${zone_name} --arg instanceId ${instanceId} --arg instanceType ${instanceType} -c '.ProvisionerConfiguration.userData.genericWorker.config | .accessToken = $accessToken | .livelogSecret = $livelogSecret | .publicIP = $publicIP | .privateIP = $privateIP | .workerId = $workerId | .instanceId = $instanceId | .instanceType = $instanceType | .availabilityZone = $availabilityZone | .region = $region | .provisionerId = $provisionerId | .workerGroup = $region | .deploymentId = $deploymentId' | sed 's/\"/\\\"/g'`"
+          post_boot_metadata="^;^gwConfig=${gwConfig}"
+        fi
+        if [ -n "${post_boot_metadata}" ]; then
+          gcloud compute instances add-metadata ${instance_name} --zone ${zone_name} --metadata ${post_boot_metadata}
+          unset post_boot_metadata
+        fi
       fi
     done
   fi

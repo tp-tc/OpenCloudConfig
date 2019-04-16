@@ -1,0 +1,35 @@
+{
+  "ProvisionerConfiguration": {
+    "releng_gcp_provisioner": {
+      "machine_types": [
+        "n1-highcpu-64"
+      ],
+      "disks": {
+        "boot": {
+          "type": "pd-ssd",
+          "size": 50
+        },
+        "supplementary": [
+          {
+            "type": "local-ssd",
+            "interface": "nvme"
+          }
+        ]
+      },
+      "idle_termination_threshold": {
+        "period": "minutes",
+        "interval": 120
+      },
+      "capacity": {
+        "minimum": 0,
+        "maximum": 100
+      },
+      "worker_implementation": "docker-worker",
+      "provisioner_id": "gce",
+      "image": {
+        "project": "linux64-builds",
+        "version": "docker-worker-app-1549466107"
+      }
+    }
+  }
+}

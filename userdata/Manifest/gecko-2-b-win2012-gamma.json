@@ -1653,6 +1653,12 @@
       "capacity": {
         "minimum": 0,
         "maximum": 32
+      },
+      "worker_implementation": "generic-worker",
+      "provisioner_id": "releng-hardware",
+      "image": {
+        "project": "windows-cloud",
+        "family": "windows-2012-r2"
       }
     }
   }
