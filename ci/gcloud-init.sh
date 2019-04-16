@@ -350,7 +350,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
           post_boot_metadata="^;^gwConfig=${gwConfig}"
         fi
         if [ -n "${post_boot_metadata}" ]; then
-          gcloud compute instances add-metadata ${instance_name} --zone ${zone_name} --metadata ${post_boot_metadata}
+          gcloud compute instances add-metadata ${instance_name} --zone ${zone_name} --metadata "${post_boot_metadata}"
           unset post_boot_metadata
         fi
       fi
