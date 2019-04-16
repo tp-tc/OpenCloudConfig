@@ -118,8 +118,10 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
 
     if gcloud compute instances describe ${running_instance_name} --zone ${running_instance_zone} --format json > ${temp_dir}/${running_instance_zone}-${running_instance_name}.json 2> /dev/null; then
       running_instance_creation_timestamp=$(date --utc -d $(cat ${temp_dir}/${running_instance_zone}-${running_instance_name}.json | jq -r '.creationTimestamp') +%FT%T.%3NZ)
-      running_instance_deployment_id=$(cat ${temp_dir}/${running_instance_zone}-${running_instance_name}.json | jq -r '.metadata.items[] | select(.key == "gwConfig") | .value' | jq -r '.deploymentId')
-
+      running_instance_deployment_id=$(cat ${temp_dir}/${running_instance_zone}-${running_instance_name}.json | jq -r '.labels."deployment-id" // empty')
+      if [ -z "${running_instance_deployment_id}" ] && [[ "${workerImplementation}" == "generic-worker" ]]; then
+        running_instance_deployment_id=$(cat ${temp_dir}/${running_instance_zone}-${running_instance_name}.json | jq -r '.metadata.items[] | select(.key == "gwConfig") | .value' | jq -r '.deploymentId')
+      fi
       # calculate uptime based on gcloud creation timestamp
       running_instance_uptime_minutes=$(( ($(date +%s) - $(date -d ${running_instance_creation_timestamp} +%s)) / 60))
       if [ "${running_instance_uptime_minutes}" -gt "60" ]; then
@@ -316,7 +318,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
             --scopes storage-ro \
             --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
             --metadata "${pre_boot_metadata}" \
-            --labels "worker-type=${workerType},worker-implementation=${workerImplementation}" \
+            --labels "worker-type=${workerType},worker-implementation=${workerImplementation},deployment-id=${deploymentId}" \
             --zone ${zone_name} \
             --preemptible
         else
@@ -331,7 +333,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
             --scopes storage-ro \
             --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
             --metadata "${pre_boot_metadata}" \
-            --labels "worker-type=${workerType},worker-implementation=${workerImplementation}" \
+            --labels "worker-type=${workerType},worker-implementation=${workerImplementation},deployment-id=${deploymentId}" \
             --zone ${zone_name} \
             --preemptible
           disk_one_size=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.supplementary[0].size' ${manifest})
