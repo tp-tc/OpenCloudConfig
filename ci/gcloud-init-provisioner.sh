@@ -18,6 +18,15 @@ git clone https://github.com/mozilla-releng/OpenCloudConfig.git >> ${log_dir}/gi
 cd OpenCloudConfig
 git checkout gamma >> ${log_dir}/git-stdout 2>> ${log_dir}/git-stderr
 
+# wait for all access tokens to be available in metadata
+for manifest in $(ls ./userdata/Manifest/*-gamma.json ./userdata/Manifest/*-linux.json); do
+  workerType=$(basename ${manifest##*/} .json)
+  until curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/access-token-${workerType}" >> /dev/null 2>> ${log_dir}/curl-stderr; do
+    echo "waiting for metadata (access-token-${workerType})" >> ${log_dir}/gcloud-init-provisioner-stdout
+    sleep 1
+  done
+done
+
 # run latest provisioner script while logging to ${log_dir}
 while true; do
   git pull >> ${log_dir}/git-stdout 2>> ${log_dir}/git-stderr
