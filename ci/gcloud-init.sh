@@ -299,8 +299,8 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
       #if [ "${required_instance_count}" -lt "${running_instance_count}" ] && [ "${running_instance_count}" -lt "${capacity_maximum}" ]; then
       if true; then
         image_project=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.image.project' ${manifest})
-        image_family=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.image.family' ${manifest})
-        image_version=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.image.version' ${manifest})
+        image_family=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.image.family // empty' ${manifest})
+        image_version=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.image.version // empty' ${manifest})
         if [ -n "${image_family}" ]; then image_selector=image-family; else image_selector=image; fi
         if [[ "${disk_one_type}" == "local-ssd" ]]; then
           disk_one_interface=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.supplementary[0].interface' ${manifest})
@@ -337,6 +337,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
           disk_one_size=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.disks.supplementary[0].size' ${manifest})
           gcloud beta compute disks create ${instance_name}-disk-1 --type ${disk_one_type} --size ${disk_one_size} --zone ${zone_name}
           gcloud compute instances attach-disk ${instance_name} --disk ${instance_name}-disk-1 --zone ${zone_name}
+          gcloud compute instances set-disk-auto-delete ${instance_name} --auto-delete --disk ${instance_name}-disk-1 --zone ${zone_name}
         fi
         publicIP=$(gcloud compute instances describe ${instance_name} --zone ${zone_name} --format json | jq -r '.networkInterfaces[0].accessConfigs[0].natIP')
         _echo "public ip: _bold_${publicIP}_reset_"
