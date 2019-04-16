@@ -348,7 +348,6 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
         if [[ "${workerImplementation}" == "generic-worker" ]]; then
           gwConfig="`curl -s https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/gamma/userdata/Manifest/${workerType}.json | jq --arg accessToken ${accessToken} --arg livelogSecret ${livelogSecret} --arg publicIP ${publicIP} --arg privateIP ${privateIP} --arg workerId ${instance_name} --arg provisionerId ${provisionerId} --arg region ${region} --arg deploymentId ${deploymentId} --arg availabilityZone ${zone_name} --arg instanceId ${instanceId} --arg instanceType ${instanceType} -c '.ProvisionerConfiguration.userData.genericWorker.config | .accessToken = $accessToken | .livelogSecret = $livelogSecret | .publicIP = $publicIP | .privateIP = $privateIP | .workerId = $workerId | .instanceId = $instanceId | .instanceType = $instanceType | .availabilityZone = $availabilityZone | .region = $region | .provisionerId = $provisionerId | .workerGroup = $region | .deploymentId = $deploymentId' | sed 's/\"/\\\"/g'`"
           post_boot_metadata="^;^gwConfig=${gwConfig}"
-          echo ${gwConfig} | jq '.'
         fi
         if [ -n "${post_boot_metadata}" ]; then
           gcloud compute instances add-metadata ${instance_name} --zone ${zone_name} --metadata "${post_boot_metadata}"
