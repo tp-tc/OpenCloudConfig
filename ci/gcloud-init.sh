@@ -315,7 +315,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
             --local-ssd interface=${disk_one_interface} \
             --scopes storage-ro \
             --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
-            --metadata ${pre_boot_metadata} \
+            --metadata "${pre_boot_metadata}" \
             --labels worker-type=${workerType},worker-implementation=${workerImplementation} \
             --zone ${zone_name} \
             --preemptible
@@ -330,7 +330,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
             --boot-disk-auto-delete true \
             --scopes storage-ro \
             --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
-            --metadata ${pre_boot_metadata} \
+            --metadata "${pre_boot_metadata}" \
             --labels worker-type=${workerType},worker-implementation=${workerImplementation} \
             --zone ${zone_name} \
             --preemptible
