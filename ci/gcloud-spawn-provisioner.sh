@@ -56,20 +56,23 @@ done
 gsutil cp ${script_dir}/gcloud-init-provisioner.sh gs://open-cloud-config/
 echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) provisioner startup script updated in bucket$(tput sgr0)"
 
+# add worker-type specific access tokens to secrets metadata
+accessTokens=()
+ARRAY+=('foo')
+ARRAY+=('bar')
+for manifest in $(ls $HOME/git/mozilla-releng/OpenCloudConfig/userdata/Manifest/*-gamma.json $HOME/git/mozilla-releng/OpenCloudConfig/userdata/Manifest/*-linux.json); do
+  workerType=$(basename ${manifest##*/} .json)
+  workerImplementation=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.worker_implementation' ${manifest})
+  accessTokens+=("access-token-${workerType}=`pass Mozilla/TaskCluster/project/releng/${workerImplementation}/${workerType}/production`")
+done
+function join_by { local IFS="$1"; shift; echo "$*"; }
+metadataAccessTokens=`join_by ';' "${accessTokens[@]}"`
+
 # spawn a provisioner with startup script and secrets in metadata
 gcloud compute instances create ${provisioner_instance_name} \
   --zone ${provisioner_instance_zone} \
   --machine-type ${provisioner_instance_machine_type} \
   --scopes compute-rw,service-management,storage-rw \
   --service-account ${service_account_name}@${project_name}.iam.gserviceaccount.com \
-  --metadata "^;^startup-script-url=gs://open-cloud-config/gcloud-init-provisioner.sh;livelogSecret=${livelogSecret};livelogcrt=${livelogcrt};livelogkey=${livelogkey};pgpKey=${pgpKey};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_KEY_1=${SCCACHE_GCS_KEY[1]};SCCACHE_GCS_KEY_2=${SCCACHE_GCS_KEY[2]};SCCACHE_GCS_KEY_3=${SCCACHE_GCS_KEY[3]}"
+  --metadata "^;^startup-script-url=gs://open-cloud-config/gcloud-init-provisioner.sh;livelogSecret=${livelogSecret};livelogcrt=${livelogcrt};livelogkey=${livelogkey};pgpKey=${pgpKey};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_KEY_1=${SCCACHE_GCS_KEY[1]};SCCACHE_GCS_KEY_2=${SCCACHE_GCS_KEY[2]};SCCACHE_GCS_KEY_3=${SCCACHE_GCS_KEY[3]};${metadataAccessTokens}"
 echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) provisioner: ${provisioner_instance_name} created as ${provisioner_instance_machine_type} in ${provisioner_instance_zone}$(tput sgr0)"
-
-# add worker-type specific access tokens to secrets metadata
-for manifest in $(ls $HOME/git/mozilla-releng/OpenCloudConfig/userdata/Manifest/*-gamma.json $HOME/git/mozilla-releng/OpenCloudConfig/userdata/Manifest/*-linux.json); do
-  workerType=$(basename ${manifest##*/} .json)
-  workerImplementation=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.worker_implementation' ${manifest})
-  accessToken=`pass Mozilla/TaskCluster/project/releng/${workerImplementation}/${workerType}/production`
-  gcloud compute instances add-metadata ${provisioner_instance_name} --zone ${provisioner_instance_zone} --metadata "^;^access-token-${workerType}=${accessToken}"
-  echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) access-token-${workerType} added to metadata$(tput sgr0)"
-done
