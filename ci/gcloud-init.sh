@@ -311,7 +311,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
             --machine-type ${instanceType} \
             --boot-disk-size ${disk_zero_size} \
             --boot-disk-type ${disk_zero_type} \
-            --boot-disk-auto-delete true \
+            --boot-disk-auto-delete \
             --local-ssd interface=${disk_one_interface} \
             --scopes storage-ro \
             --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
@@ -327,7 +327,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
             --machine-type ${instanceType} \
             --boot-disk-size ${disk_zero_size} \
             --boot-disk-type ${disk_zero_type} \
-            --boot-disk-auto-delete true \
+            --boot-disk-auto-delete \
             --scopes storage-ro \
             --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
             --metadata "${pre_boot_metadata}" \
