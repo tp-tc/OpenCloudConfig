@@ -7,7 +7,7 @@
       "disks": {
         "boot": {
           "type": "pd-ssd",
-          "size": 50
+          "size": 10
         },
         "supplementary": [
           {
