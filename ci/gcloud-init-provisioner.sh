@@ -14,6 +14,9 @@ sudo remote_syslog >> ${log_dir}/remote_syslog-stdout 2>> ${log_dir}/remote_sysl
 # install provisioner and dependencies
 sudo apt-get install -y jq >> ${log_dir}/apt-stdout 2>> ${log_dir}/apt-stderr
 sudo apt-get install -y git >> ${log_dir}/apt-stdout 2>> ${log_dir}/apt-stderr
+sudo apt-get install -y rubygems >> ${log_dir}/apt-stdout 2>> ${log_dir}/apt-stderr
+gem install papertrail >> ${log_dir}/gem-stdout 2>> ${log_dir}/gem-stderr
+echo "token: $(curl -s http://169.254.169.254/computeMetadata/v1beta1/instance/attributes/papertrailToken)" > ~/.papertrail.yml
 git clone https://github.com/mozilla-releng/OpenCloudConfig.git >> ${log_dir}/git-stdout 2>> ${log_dir}/git-stderr
 cd OpenCloudConfig
 git checkout gamma >> ${log_dir}/git-stdout 2>> ${log_dir}/git-stderr

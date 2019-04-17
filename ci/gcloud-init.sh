@@ -2,6 +2,7 @@
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 temp_dir=$(mktemp -d "${TMPDIR:-/tmp/}$(basename ${0##*/} .sh).XXXXXXXXXXXX")
+docker_worker_id_map_cache=${script_dir}/../../docker_worker_id_map_cache.json
 
 # create a logging function that outputs easily readable console messages but strips formatting when logging to papertrail
 _echo() {
@@ -19,10 +20,17 @@ _echo() {
   fi
 }
 
-# set up the random instance unicorn name generator
-names_first=(`jq -r '.unicorn.first[]' ${script_dir}/names.json`)
-names_middle=(`jq -r '.unicorn.middle[]' ${script_dir}/names.json`)
-names_last=(`jq -r '.unicorn.last[]' ${script_dir}/names.json`)
+# prepopulate the hostname to workerid map cache if it doesn't yet exist
+if [ -f ${docker_worker_id_map_cache} ]; then
+  _echo "found: _bold_$(jq '.[] | length')_reset_ cached hostname to worker id mappings"
+else
+  if papertrail --color off --min-time $(date --utc -d "-24 hour" +%FT%T.%3NZ) --max-time $(date --utc +%FT%T.%3NZ) "Writing /var/lib/cloud/instances/ /sem/config_ssh_import_id -/var/lib/cloud/instances/i-" | cut -d ' ' -f 4,10 | cut -d / -f 1,6 | sed 's/\///' | jq --raw-input --slurp '[split("\n")[] | (split(" ") | { hostname:.[0],workerid:.[1] })]' > ${docker_worker_id_map_cache}; then
+    _echo "papertrail provided: _bold_$(jq '.[] | length')_reset_ hostname to worker id mappings"
+  else
+    echo '[]' | jq '.' > ${docker_worker_id_map_cache}
+    _echo "failed to obtain hostname to worker id mappings from papertrail"
+  fi
+fi
 
 # set up the list of google cloud zones we will instantiate and manage instances within
 zone_uri_list=(`gcloud compute zones list --uri`)
@@ -130,10 +138,22 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
         running_instance_uptime="${running_instance_uptime_minutes} minutes"
       fi
       curl -s -o ${temp_dir}/${workerType}.json "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers"
-      if [ $(cat ${temp_dir}/${workerType}.json | jq --arg workerId ${running_instance_name} '[.workers[] | select(.workerId == $workerId)] | length') -gt 0 ]; then
-        first_claim=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId) | .firstClaim')
-        last_task_id=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId) | .latestTask.taskId')
-        last_task_run_id=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId) | .latestTask.runId')
+      if [[ "${workerImplementation}" == "docker-worker" ]]; then
+        worker_id=$(jq -r --arg hostname ${running_instance_name} '.[] | select(.hostname == $hostname) | .workerid // empty' ${docker_worker_id_map_cache})
+        if [ -z "${worker_id}" ]; then
+          worker_id=$(papertrail --system ${running_instance_name} --min-time ${running_instance_creation_timestamp} --max-time $(date --utc -d "${running_instance_creation_timestamp} +10 min" +%FT%T.%3NZ) "Writing /var/lib/cloud/instances/ /sem/config_ssh_import_id" | grep --color=never -oP "\K\d{16,22}")
+          if [ -n "${worker_id}" ]; then
+            jq --arg hostname ${running_instance_name} --arg workerid ${worker_id} '.[] |= {hostname:$hostname,workerid:$workerid}' ${docker_worker_id_map_cache} > ${temp_dir}/updated_docker_worker_id_map_cache.json
+            mv -uvf ${temp_dir}/updated_docker_worker_id_map_cache.json ${docker_worker_id_map_cache}
+          fi
+        fi
+      else
+        worker_id=${running_instance_name}
+      fi
+      if [ $(cat ${temp_dir}/${workerType}.json | jq --arg workerId ${worker_id} '[.workers[] | select(.workerId == $workerId)] | length') -gt 0 ]; then
+        first_claim=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${worker_id} '.workers[] | select(.workerId == $workerId) | .firstClaim')
+        last_task_id=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${worker_id} '.workers[] | select(.workerId == $workerId) | .latestTask.taskId')
+        last_task_run_id=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${worker_id} '.workers[] | select(.workerId == $workerId) | .latestTask.runId')
         curl -s -o ${temp_dir}/${last_task_id}.json "https://queue.taskcluster.net/v1/task/${last_task_id}/status"
         last_task_run_state=$(cat ${temp_dir}/${last_task_id}.json | jq --arg runId ${last_task_run_id} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .state')
         last_task_run_started_time=$(cat ${temp_dir}/${last_task_id}.json | jq --arg runId ${last_task_run_id} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .started')
@@ -149,13 +169,13 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
           fi
           if [ "$(date -d ${last_task_run_started_time} +%s)" -lt "$(date -d ${last_task_run_resolved_time} +%s)" ] && [ "${wait_time_minutes}" -gt "${idle_termination_interval}" ] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
             # reaching here indicates the instance has been waiting for work to do for more than ${idle_termination_interval} minutes, so we've killed it
-            _echo "${workerType} waiting instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). resolved ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_ with status: ${last_task_run_resolved_reason}, ${wait_time} ago (at ${last_task_run_resolved_time})"
+            _echo "${workerType} waiting instance deleted: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). resolved ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_ with status: ${last_task_run_resolved_reason}, ${wait_time} ago (at ${last_task_run_resolved_time})"
           elif [ "$(date -d ${last_task_run_started_time} +%s)" -lt "$(date -d ${last_task_run_resolved_time} +%s)" ] && [[ "${running_instance_deployment_id}" != "${deploymentId}" ]] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
             # reaching here indicates the instance has been waiting for work to do however the occ repo has changed since this instance was deployed, so we've killed it
-            _echo "${workerType} expired instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from expired sha: ${running_instance_deployment_id}). resolved ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_ with status: ${last_task_run_resolved_reason}, ${wait_time} ago (at ${last_task_run_resolved_time})"
+            _echo "${workerType} expired instance deleted: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from expired sha: ${running_instance_deployment_id}). resolved ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_ with status: ${last_task_run_resolved_reason}, ${wait_time} ago (at ${last_task_run_resolved_time})"
           else
             # reaching here indicates another provisioner has beaten us to killing this instance or the instance has been waiting for work for less than ${idle_termination_interval} minutes and can be left to continue waiting for work
-            _echo "${workerType} waiting instance observed: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). resolved ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_ with status: ${last_task_run_resolved_reason}, ${wait_time} ago (at ${last_task_run_resolved_time})"
+            _echo "${workerType} waiting instance observed: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). resolved ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_ with status: ${last_task_run_resolved_reason}, ${wait_time} ago (at ${last_task_run_resolved_time})"
           fi
           (( waiting_instance_count = waiting_instance_count + 1 ))
         elif [[ "${last_task_run_state}" == "running" ]]; then
@@ -165,7 +185,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
           else
             work_time="${work_time_minutes} minutes"
           fi
-          _echo "${workerType} working instance observed: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). running ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_, for ${work_time} (since ${last_task_run_started_time})"
+          _echo "${workerType} working instance observed: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). running ${last_task_run_created_reason} task: _bold_${last_task_id}/${last_task_run_id}_reset_, for ${work_time} (since ${last_task_run_started_time})"
           (( working_instance_count = working_instance_count + 1 ))
         elif [ -n "${first_claim}" ] && date -d ${first_claim} +%s &> /dev/null; then
           wait_time_minutes=$(( ($(date +%s) - $(date -d ${first_claim} +%s)) / 60))
@@ -176,39 +196,38 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
           fi
           if [ "${wait_time_minutes}" -gt "${idle_termination_interval}" ] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
             # reaching here indicates the instance has been waiting for work to do for more than ${idle_termination_interval} minutes, without ever taking a task, so we've killed it
-            _echo "${workerType} waiting instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). first claim ${wait_time} ago (at ${first_claim})"
+            _echo "${workerType} waiting instance deleted: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). first claim ${wait_time} ago (at ${first_claim})"
           else
-            _echo "${workerType} waiting instance observed: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). first claim ${wait_time} ago (at ${first_claim})"
+            _echo "${workerType} waiting instance observed: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). first claim ${wait_time} ago (at ${first_claim})"
             (( waiting_instance_count = waiting_instance_count + 1 ))
           fi
         else
-          _echo "${workerType} goofing instance observed: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). worker: $(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId)'); task run: $(cat ${temp_dir}/${last_task_id}.json | jq -c --arg runId ${last_task_run_id} -r '.status.runs[]? | select(.runId == ($runId | tonumber))')"
+          _echo "${workerType} goofing instance observed: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). worker: $(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId)'); task run: $(cat ${temp_dir}/${last_task_id}.json | jq -c --arg runId ${last_task_run_id} -r '.status.runs[]? | select(.runId == ($runId | tonumber))')"
           (( goofing_instance_count = goofing_instance_count + 1 ))
         fi
       elif [ "${running_instance_uptime_minutes}" -lt "30" ]; then
         # reaching here indicates the instance is not known to the queue (no first claim registered), however the instance has been running for less than 30 minutes
-        _echo "${workerType} pending instance observed: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
+        _echo "${workerType} pending instance observed: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
         (( pending_instance_count = pending_instance_count + 1 ))
-      elif [[ "${workerImplementation}" == "generic-worker" ]] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
+      elif gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
         # reaching here indicates the instance is not known to the queue (no first claim registered), however the instance has been running for more than 30 minutes and can be considered defective, hence deleted
-        _echo "${workerType} zombied instance deleted: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
+        _echo "${workerType} zombied instance deleted: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
         (( zombied_instance_count = zombied_instance_count + 1 ))
       elif [[ "${workerImplementation}" == "generic-worker" ]]; then
         # reaching here indicates the instance is not known to the queue (no first claim registered), however the instance has been running for more than 30 minutes and can be considered defective. our delete attempt failed probably due to another provisioner making a successful delete earlier
-        _echo "${workerType} zombied instance observed: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
+        _echo "${workerType} zombied instance observed: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
         (( zombied_instance_count = zombied_instance_count + 1 ))
       elif [[ "${workerImplementation}" == "docker-worker" ]]; then
-        # reaching here indicates the instance is a docker-worker
-        # todo: figure out how to map workerId to the docker-worker hostname
-        _echo "${workerType} docker instance observed: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
+        # reaching here indicates the instance is a docker-worker and we haven't mapped it's worker id to its hostname
+        _echo "${workerType} docker instance observed: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
       else
         # reaching here indicates the instance is not known to the queue (no first claim registered), however the instance has been running for more than 30 minutes and can be considered defective. our delete attempt failed probably due to another provisioner making a successful delete earlier
-        _echo "${workerType} zombied instance observed: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
+        _echo "${workerType} zombied instance observed: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
         (( zombied_instance_count = zombied_instance_count + 1 ))
       fi
     else
       # reaching here indicates the instance has already been deleted (probably by another provisioner) because the describe instance query has failed
-      _echo "${workerType} deleted instance observed: _bold_${running_instance_name}_reset_ in _bold_${running_instance_zone}_reset_ with uptime: unknown"
+      _echo "${workerType} deleted instance observed: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: unknown"
       (( deleted_instance_count = deleted_instance_count + 1 ))
     fi
   done
