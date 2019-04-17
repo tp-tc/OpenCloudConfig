@@ -46,7 +46,7 @@ livelogkey=`pass Mozilla/TaskCluster/livelogKey`
 pgpKey=`pass Mozilla/OpenCloudConfig/rootGpgKey`
 relengapiToken=`pass Mozilla/OpenCloudConfig/tooltool-relengapi-tok`
 occInstallersToken=`pass Mozilla/OpenCloudConfig/tooltool-occ-installers-tok`
-papertrailToken=`pass Mozilla/papertrail/grenade-token`
+papertrailToken=`pass Mozilla/papertrail/treeherder-token`
 SCCACHE_GCS_KEY=("")
 for scm_level in {1..3}; do
   SCCACHE_GCS_KEY[${scm_level}]=`pass Mozilla/TaskCluster/gcp-service-account/taskcluster-level-${scm_level}-sccache@${project_name}`

@@ -34,7 +34,7 @@ if command -v pass > /dev/null; then
   pgpKey=`pass Mozilla/OpenCloudConfig/rootGpgKey`
   relengapiToken=`pass Mozilla/OpenCloudConfig/tooltool-relengapi-tok`
   occInstallersToken=`pass Mozilla/OpenCloudConfig/tooltool-occ-installers-tok`
-  export PAPERTRAIL_API_TOKEN=`pass Mozilla/papertrail/grenade-token`
+  export PAPERTRAIL_API_TOKEN=`pass Mozilla/papertrail/treeherder-token`
 elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes > /dev/null; then
   livelogSecret=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/livelogSecret")
   livelogcrt=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/livelogcrt")
@@ -121,19 +121,14 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
 
   idle_termination_interval=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.idle_termination_threshold.interval' ${manifest})
   _echo "${workerType} idle termination after: _bold_${idle_termination_interval} minutes_reset_"
-
-  # iterate all instances of the current worker type which are in a runiing state
+  # iterate all instances of the current worker type which are in a running state
   for running_instance_uri in $(gcloud compute instances list --uri --filter "labels.worker-type:${workerType} status:RUNNING" 2> /dev/null | shuf); do
     running_instance_name=${running_instance_uri##*/}
     running_instance_zone_uri=${running_instance_uri/\/instances\/${running_instance_name}/}
     running_instance_zone=${running_instance_zone_uri##*/}
-
     if gcloud compute instances describe ${running_instance_name} --zone ${running_instance_zone} --format json > ${temp_dir}/${running_instance_zone}-${running_instance_name}.json 2> /dev/null; then
       running_instance_creation_timestamp=$(date --utc -d $(cat ${temp_dir}/${running_instance_zone}-${running_instance_name}.json | jq -r '.creationTimestamp') +%FT%T.%3NZ)
       running_instance_deployment_id=$(cat ${temp_dir}/${running_instance_zone}-${running_instance_name}.json | jq -r '.labels."deployment-id" // empty')
-      if [ -z "${running_instance_deployment_id}" ] && [[ "${workerImplementation}" == "generic-worker" ]]; then
-        running_instance_deployment_id=$(cat ${temp_dir}/${running_instance_zone}-${running_instance_name}.json | jq -r '.metadata.items[] | select(.key == "gwConfig") | .value' | jq -r '.deploymentId')
-      fi
       # calculate uptime based on gcloud creation timestamp
       running_instance_uptime_minutes=$(( ($(date +%s) - $(date -d ${running_instance_creation_timestamp} +%s)) / 60))
       if [ "${running_instance_uptime_minutes}" -gt "60" ]; then
