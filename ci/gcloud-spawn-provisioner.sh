@@ -7,7 +7,7 @@ script_name=$(basename ${0##*/} .sh)
 project_name=windows-workers
 provisioner_instance_name_prefix=releng-gcp-provisioner
 provisioner_instance_zone=us-east1-b
-provisioner_instance_machine_type=f1-micro
+provisioner_instance_machine_type=g1-small
 
 # create a service account for the provisioners if it doesn't exist
 service_account_name=releng-gcp-provisioner
