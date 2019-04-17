@@ -121,14 +121,15 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
       fi
       curl -s -o ${temp_dir}/${workerType}.json "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers"
       if [[ "${workerImplementation}" == "docker-worker" ]]; then
-        worker_id=$(cat ${temp_dir}/${running_instance_zone}-${running_instance_name}.json | jq -r '.id')
+        instance_id=$(cat ${temp_dir}/${running_instance_zone}-${running_instance_name}.json | jq -r '.id')
+        worker_id=${instance_id::-4}
       else
         worker_id=${running_instance_name}
       fi
-      if [ $(cat ${temp_dir}/${workerType}.json | jq --arg workerId ${worker_id} '[.workers[] | select(.workerId == $workerId)] | length') -gt 0 ]; then
-        first_claim=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${worker_id} '.workers[] | select(.workerId == $workerId) | .firstClaim')
-        last_task_id=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${worker_id} '.workers[] | select(.workerId == $workerId) | .latestTask.taskId')
-        last_task_run_id=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${worker_id} '.workers[] | select(.workerId == $workerId) | .latestTask.runId')
+      if [ $(cat ${temp_dir}/${workerType}.json | jq --arg workerId ${worker_id} '[.workers[] | select(.workerId | startswith($workerId))] | length') -gt 0 ]; then
+        first_claim=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${worker_id} '.workers[] | select(.workerId | startswith($workerId)) | .firstClaim')
+        last_task_id=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${worker_id} '.workers[] | select(.workerId | startswith($workerId)) | .latestTask.taskId')
+        last_task_run_id=$(cat ${temp_dir}/${workerType}.json | jq -r --arg workerId ${worker_id} '.workers[] | select(.workerId | startswith($workerId)) | .latestTask.runId')
         curl -s -o ${temp_dir}/${last_task_id}.json "https://queue.taskcluster.net/v1/task/${last_task_id}/status"
         last_task_run_state=$(cat ${temp_dir}/${last_task_id}.json | jq --arg runId ${last_task_run_id} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .state')
         last_task_run_started_time=$(cat ${temp_dir}/${last_task_id}.json | jq --arg runId ${last_task_run_id} -r '.status.runs[]? | select(.runId == ($runId | tonumber)) | .started')
@@ -177,7 +178,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
             (( waiting_instance_count = waiting_instance_count + 1 ))
           fi
         else
-          _echo "${workerType} goofing instance observed: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). worker: $(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId == $workerId)'); task run: $(cat ${temp_dir}/${last_task_id}.json | jq -c --arg runId ${last_task_run_id} -r '.status.runs[]? | select(.runId == ($runId | tonumber))')"
+          _echo "${workerType} goofing instance observed: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). worker: $(cat ${temp_dir}/${workerType}.json | jq -c --arg workerId ${running_instance_name} '.workers[] | select(.workerId | startswith($workerId))'); task run: $(cat ${temp_dir}/${last_task_id}.json | jq -c --arg runId ${last_task_run_id} -r '.status.runs[]? | select(.runId == ($runId | tonumber))')"
           (( goofing_instance_count = goofing_instance_count + 1 ))
         fi
       elif [ "${running_instance_uptime_minutes}" -lt "30" ]; then
