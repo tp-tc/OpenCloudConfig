@@ -34,7 +34,7 @@ if command -v pass > /dev/null; then
   pgpKey=`pass Mozilla/OpenCloudConfig/rootGpgKey`
   relengapiToken=`pass Mozilla/OpenCloudConfig/tooltool-relengapi-tok`
   occInstallersToken=`pass Mozilla/OpenCloudConfig/tooltool-occ-installers-tok`
-  PAPERTRAIL_API_TOKEN=`pass Mozilla/papertrail/grenade-token`
+  export PAPERTRAIL_API_TOKEN=`pass Mozilla/papertrail/grenade-token`
 elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes > /dev/null; then
   livelogSecret=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/livelogSecret")
   livelogcrt=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/livelogcrt")
@@ -42,7 +42,7 @@ elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/comput
   pgpKey=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/pgpKey")
   relengapiToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/relengapiToken")
   occInstallersToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/occInstallersToken")
-  PAPERTRAIL_API_TOKEN=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/papertrailToken")
+  export PAPERTRAIL_API_TOKEN=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/papertrailToken")
 else
   _echo "failed to determine a source for secrets"
   exit 1
