@@ -46,7 +46,6 @@ livelogkey=`pass Mozilla/TaskCluster/livelogKey`
 pgpKey=`pass Mozilla/OpenCloudConfig/rootGpgKey`
 relengapiToken=`pass Mozilla/OpenCloudConfig/tooltool-relengapi-tok`
 occInstallersToken=`pass Mozilla/OpenCloudConfig/tooltool-occ-installers-tok`
-papertrailToken=`pass Mozilla/papertrail/treeherder-token`
 SCCACHE_GCS_KEY=("")
 for scm_level in {1..3}; do
   SCCACHE_GCS_KEY[${scm_level}]=`pass Mozilla/TaskCluster/gcp-service-account/taskcluster-level-${scm_level}-sccache@${project_name}`
@@ -75,5 +74,5 @@ gcloud compute instances create ${provisioner_instance_name} \
   --machine-type ${provisioner_instance_machine_type} \
   --scopes compute-rw,service-management,storage-rw \
   --service-account ${service_account_name}@${project_name}.iam.gserviceaccount.com \
-  --metadata "^;^startup-script-url=gs://open-cloud-config/gcloud-init-provisioner.sh;livelogSecret=${livelogSecret};livelogcrt=${livelogcrt};livelogkey=${livelogkey};pgpKey=${pgpKey};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};papertrailToken=${papertrailToken};SCCACHE_GCS_KEY_1=${SCCACHE_GCS_KEY[1]};SCCACHE_GCS_KEY_2=${SCCACHE_GCS_KEY[2]};SCCACHE_GCS_KEY_3=${SCCACHE_GCS_KEY[3]};${metadataAccessTokens}"
+  --metadata "^;^startup-script-url=gs://open-cloud-config/gcloud-init-provisioner.sh;livelogSecret=${livelogSecret};livelogcrt=${livelogcrt};livelogkey=${livelogkey};pgpKey=${pgpKey};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_KEY_1=${SCCACHE_GCS_KEY[1]};SCCACHE_GCS_KEY_2=${SCCACHE_GCS_KEY[2]};SCCACHE_GCS_KEY_3=${SCCACHE_GCS_KEY[3]};${metadataAccessTokens}"
 echo "$(tput dim)[${script_name} $(date --utc +"%F %T.%3NZ")]$(tput sgr0) provisioner: ${provisioner_instance_name} created as ${provisioner_instance_machine_type} in ${provisioner_instance_zone}$(tput sgr0)"

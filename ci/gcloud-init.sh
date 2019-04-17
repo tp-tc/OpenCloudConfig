@@ -2,7 +2,6 @@
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 temp_dir=$(mktemp -d "${TMPDIR:-/tmp/}$(basename ${0##*/} .sh).XXXXXXXXXXXX")
-docker_worker_id_map_cache=${script_dir}/../../docker_worker_id_map_cache.json
 
 # create a logging function that outputs easily readable console messages but strips formatting when logging to papertrail
 _echo() {
@@ -34,7 +33,6 @@ if command -v pass > /dev/null; then
   pgpKey=`pass Mozilla/OpenCloudConfig/rootGpgKey`
   relengapiToken=`pass Mozilla/OpenCloudConfig/tooltool-relengapi-tok`
   occInstallersToken=`pass Mozilla/OpenCloudConfig/tooltool-occ-installers-tok`
-  export PAPERTRAIL_API_TOKEN=`pass Mozilla/papertrail/treeherder-token`
 elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes > /dev/null; then
   livelogSecret=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/livelogSecret")
   livelogcrt=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/livelogcrt")
@@ -42,24 +40,9 @@ elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/comput
   pgpKey=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/pgpKey")
   relengapiToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/relengapiToken")
   occInstallersToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/occInstallersToken")
-  export PAPERTRAIL_API_TOKEN=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/papertrailToken")
 else
   _echo "failed to determine a source for secrets"
   exit 1
-fi
-
-# prepopulate the hostname to workerid map cache if it doesn't yet exist
-if [ -f ${docker_worker_id_map_cache} ] && [ "$(jq '. | length' ${docker_worker_id_map_cache})" -gt "0" ]; then
-  _echo "found: _bold_$(jq '. | length' ${docker_worker_id_map_cache})_reset_ cached hostname to worker id mappings"
-else
-  if papertrail --color off --min-time $(date --utc -d "-24 hour" +%FT%T.%3NZ) --max-time $(date --utc +%FT%T.%3NZ) "Writing /var/lib/cloud/instances/ /sem/config_ssh_import_id -/var/lib/cloud/instances/i-" | cut -d ' ' -f 4,10 | cut -d / -f 1,6 | sed 's/\///' | jq --raw-input --slurp '[split("\n")[] | (split(" ") | { hostname:.[0],workerid:.[1] }) | select(.hostname!=null and .workerid!=null)]' > ${docker_worker_id_map_cache}; then
-    _echo ${docker_worker_id_map_cache}
-    cat ${docker_worker_id_map_cache}
-    _echo "papertrail provided: _bold_$(jq '. | length' ${docker_worker_id_map_cache})_reset_ hostname to worker id mappings"
-  else
-    echo '[]' | jq '.' > ${docker_worker_id_map_cache}
-    _echo "failed to obtain hostname to worker id mappings from papertrail"
-  fi
 fi
 
 # set up some configuration data
@@ -138,14 +121,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
       fi
       curl -s -o ${temp_dir}/${workerType}.json "https://queue.taskcluster.net/v1/provisioners/${provisionerId}/worker-types/${workerType}/workers"
       if [[ "${workerImplementation}" == "docker-worker" ]]; then
-        worker_id=$(jq -r --arg hostname ${running_instance_name} '.[] | select(.hostname == $hostname) | .workerid // empty' ${docker_worker_id_map_cache})
-        if [ -z "${worker_id}" ]; then
-          worker_id=$(papertrail --system ${running_instance_name} --min-time ${running_instance_creation_timestamp} --max-time $(date --utc -d "${running_instance_creation_timestamp} +10 min" +%FT%T.%3NZ) "Writing /var/lib/cloud/instances/ /sem/config_ssh_import_id" | grep --color=never -oP "\K\d{16,22}")
-          if [ -n "${worker_id}" ]; then
-            jq --arg hostname ${running_instance_name} --arg workerid ${worker_id} '.[] |= {hostname:$hostname,workerid:$workerid}' ${docker_worker_id_map_cache} > ${temp_dir}/updated_docker_worker_id_map_cache.json
-            mv -uvf ${temp_dir}/updated_docker_worker_id_map_cache.json ${docker_worker_id_map_cache}
-          fi
-        fi
+        worker_id=$(cat ${temp_dir}/${running_instance_zone}-${running_instance_name}.json | jq -r '.id')
       else
         worker_id=${running_instance_name}
       fi
