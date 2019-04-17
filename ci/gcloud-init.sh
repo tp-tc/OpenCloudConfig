@@ -20,18 +20,6 @@ _echo() {
   fi
 }
 
-# prepopulate the hostname to workerid map cache if it doesn't yet exist
-if [ -f ${docker_worker_id_map_cache} ]; then
-  _echo "found: _bold_$(jq '.[] | length')_reset_ cached hostname to worker id mappings"
-else
-  if papertrail --color off --min-time $(date --utc -d "-24 hour" +%FT%T.%3NZ) --max-time $(date --utc +%FT%T.%3NZ) "Writing /var/lib/cloud/instances/ /sem/config_ssh_import_id -/var/lib/cloud/instances/i-" | cut -d ' ' -f 4,10 | cut -d / -f 1,6 | sed 's/\///' | jq --raw-input --slurp '[split("\n")[] | (split(" ") | { hostname:.[0],workerid:.[1] })]' > ${docker_worker_id_map_cache}; then
-    _echo "papertrail provided: _bold_$(jq '.[] | length')_reset_ hostname to worker id mappings"
-  else
-    echo '[]' | jq '.' > ${docker_worker_id_map_cache}
-    _echo "failed to obtain hostname to worker id mappings from papertrail"
-  fi
-fi
-
 # set up the list of google cloud zones we will instantiate and manage instances within
 zone_uri_list=(`gcloud compute zones list --uri`)
 zone_name_list=("${zone_uri_list[@]##*/}")
@@ -46,6 +34,7 @@ if command -v pass > /dev/null; then
   pgpKey=`pass Mozilla/OpenCloudConfig/rootGpgKey`
   relengapiToken=`pass Mozilla/OpenCloudConfig/tooltool-relengapi-tok`
   occInstallersToken=`pass Mozilla/OpenCloudConfig/tooltool-occ-installers-tok`
+  PAPERTRAIL_API_TOKEN=`pass Mozilla/papertrail/grenade-token`
 elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes > /dev/null; then
   livelogSecret=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/livelogSecret")
   livelogcrt=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/livelogcrt")
@@ -53,9 +42,22 @@ elif curl -s -H "Metadata-Flavor: Google" http://metadata.google.internal/comput
   pgpKey=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/pgpKey")
   relengapiToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/relengapiToken")
   occInstallersToken=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/occInstallersToken")
+  PAPERTRAIL_API_TOKEN=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/papertrailToken")
 else
   _echo "failed to determine a source for secrets"
   exit 1
+fi
+
+# prepopulate the hostname to workerid map cache if it doesn't yet exist
+if [ -f ${docker_worker_id_map_cache} ]; then
+  _echo "found: _bold_$(jq '.[] | length')_reset_ cached hostname to worker id mappings"
+else
+  if papertrail --color off --min-time $(date --utc -d "-24 hour" +%FT%T.%3NZ) --max-time $(date --utc +%FT%T.%3NZ) "Writing /var/lib/cloud/instances/ /sem/config_ssh_import_id -/var/lib/cloud/instances/i-" | cut -d ' ' -f 4,10 | cut -d / -f 1,6 | sed 's/\///' | jq --raw-input --slurp '[split("\n")[] | (split(" ") | { hostname:.[0],workerid:.[1] })]' > ${docker_worker_id_map_cache}; then
+    _echo "papertrail provided: _bold_$(jq '.[] | length')_reset_ hostname to worker id mappings"
+  else
+    echo '[]' | jq '.' > ${docker_worker_id_map_cache}
+    _echo "failed to obtain hostname to worker id mappings from papertrail"
+  fi
 fi
 
 # set up some configuration data
