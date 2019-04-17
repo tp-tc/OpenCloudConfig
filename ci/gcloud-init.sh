@@ -53,7 +53,7 @@ if [ -f ${docker_worker_id_map_cache} ]; then
   _echo "found: _bold_$(jq '.[] | length')_reset_ cached hostname to worker id mappings"
 else
   if papertrail --color off --min-time $(date --utc -d "-24 hour" +%FT%T.%3NZ) --max-time $(date --utc +%FT%T.%3NZ) "Writing /var/lib/cloud/instances/ /sem/config_ssh_import_id -/var/lib/cloud/instances/i-" | cut -d ' ' -f 4,10 | cut -d / -f 1,6 | sed 's/\///' | jq --raw-input --slurp '[split("\n")[] | (split(" ") | { hostname:.[0],workerid:.[1] })]' > ${docker_worker_id_map_cache}; then
-    _echo "papertrail provided: _bold_$(jq '.[] | length')_reset_ hostname to worker id mappings"
+    _echo "papertrail provided: _bold_$(jq '.[] | length' ${docker_worker_id_map_cache})_reset_ hostname to worker id mappings"
   else
     echo '[]' | jq '.' > ${docker_worker_id_map_cache}
     _echo "failed to obtain hostname to worker id mappings from papertrail"
