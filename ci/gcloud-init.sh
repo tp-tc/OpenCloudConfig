@@ -193,7 +193,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
           else
             wait_time="${wait_time_minutes} minutes"
           fi
-          if [ "${wait_time_minutes}" -gt "${idle_termination_interval}" ] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
+          if [[ "${workerImplementation}" == "generic-worker" ]] && [ "${wait_time_minutes}" -gt "${idle_termination_interval}" ] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
             # reaching here indicates the instance has been waiting for work to do for more than ${idle_termination_interval} minutes, without ever taking a task, so we've killed it
             _echo "${workerType} waiting instance deleted: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id}). first claim ${wait_time} ago (at ${first_claim})"
           else
@@ -208,7 +208,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_di
         # reaching here indicates the instance is not known to the queue (no first claim registered), however the instance has been running for less than 30 minutes
         _echo "${workerType} pending instance observed: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
         (( pending_instance_count = pending_instance_count + 1 ))
-      elif gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
+      elif [[ "${workerImplementation}" == "generic-worker" ]] && gcloud compute instances delete ${running_instance_name} --zone ${running_instance_zone} --delete-disks all --quiet 2> /dev/null; then
         # reaching here indicates the instance is not known to the queue (no first claim registered), however the instance has been running for more than 30 minutes and can be considered defective, hence deleted
         _echo "${workerType} zombied instance deleted: _bold_${running_instance_name}_reset_ (${worker_id}) in _bold_${running_instance_zone}_reset_ with uptime: _bold_${running_instance_uptime}_reset_ (created: ${running_instance_creation_timestamp} from sha: ${running_instance_deployment_id})"
         (( zombied_instance_count = zombied_instance_count + 1 ))
