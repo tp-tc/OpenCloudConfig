@@ -2286,8 +2286,11 @@ function Invoke-OpenCloudConfig {
       }
       # end post dsc teardown #######################################################################################################################################
 
-      # create a scheduled task to run dsc at startup
-      New-PowershellScheduledTask -taskName 'RunDesiredStateConfigurationAtStartup' -scriptUrl ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/rundsc.ps1?{3}' -f $sourceOrg, $sourceRepo, $sourceRev, [Guid]::NewGuid()) -scriptPath 'C:\dsc\rundsc.ps1' -sc 'onstart'
+      # GCP instances run the windows startup script at each boot and have no need for the scheduled task below
+      if ($locationType -ne 'GCP') {
+        # create a scheduled task to run dsc at startup
+        New-PowershellScheduledTask -taskName 'RunDesiredStateConfigurationAtStartup' -scriptUrl ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/rundsc.ps1?{3}' -f $sourceOrg, $sourceRepo, $sourceRev, [Guid]::NewGuid()) -scriptPath 'C:\dsc\rundsc.ps1' -sc 'onstart'
+      }
       if ((-not ($isWorker)) -and ($locationType -eq 'AWS')) {
         # ensure that Ec2HandleUserData is disabled after the RunDesiredStateConfigurationAtStartup scheduled task has been created
         Set-Ec2ConfigSettings
