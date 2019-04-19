@@ -4,7 +4,7 @@ secrets_url="taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCl
 curl -s -N ${secrets_url} | jq -r '.secret.tooltool.upload.internal' > ./.tooltool.token
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] tooltool token downloaded"
 
-curl -O https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py
+curl -O https://raw.githubusercontent.com/mozilla/release-services/master/src/tooltool/client/tooltool.py
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] tooltool client downloaded"
 
 mkdir ./tooltool
