@@ -7,6 +7,25 @@
       "Path": "C:\\log"
     },
     {
+      "ComponentName": "StackdriverLogging",
+      "ComponentType": "ExeInstall",
+      "Url": "https://dl.google.com/cloudagents/windows/StackdriverLogging-v1-9.exe",
+      "Arguments": [
+        "/S"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files (x86)\\Stackdriver\\LoggingAgent"
+        ],
+        "ServiceStatus": [
+          {
+            "Name": "StackdriverLogging",
+            "Status": "running"
+          }
+        ]
+      }
+    },
+    {
       "ComponentName": "NxLog",
       "ComponentType": "MsiInstall",
       "Comment": "Maintenance Toolchain - forwards event logs to papertrail",
