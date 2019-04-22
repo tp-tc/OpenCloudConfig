@@ -57,7 +57,7 @@ fi
 _echo "deployment id: _bold_${deploymentId}_reset_"
 
 # iterate through each worker type containing a "-gamma" or "-linux" suffix in the occ manifest directory
-for manifest in $(ls ${script_dir}/../userdata/Manifest/*-gamma.json ${script_dir}/../userdata/Manifest/*-linux.json | shuf); do
+for manifest in $(ls ${script_dir}/../userdata/Manifest/*{gamma,linux}.json | shuf); do
   workerType=$(basename ${manifest##*/} .json)
   workerImplementation=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.worker_implementation' ${manifest})
   provisionerId=$(jq -r '.ProvisionerConfiguration.releng_gcp_provisioner.provisioner_id' ${manifest})

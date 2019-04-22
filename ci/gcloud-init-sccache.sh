@@ -32,9 +32,9 @@ for scm_level in {1..3}; do
   fi
 done
 
-# create grant open-cloud-config bucket viewer access to each service account so that workers can read their startup scripts
 for scm_level in {1..3}; do
   service_account_name=taskcluster-level-${scm_level}-sccache
+  # grant open-cloud-config bucket viewer access to each service account so that workers can read their startup scripts
   gsutil iam ch serviceAccount:${service_account_name}@${project_name}.iam.gserviceaccount.com:objectViewer gs://open-cloud-config/
   _echo "added viewer access for: _bold_${service_account_name}@${project_name}_reset_ to bucket: _bold_gs://open-cloud-config/_reset_"
 done
