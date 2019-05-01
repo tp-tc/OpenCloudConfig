@@ -2,6 +2,7 @@
 
 tooltool_token_path=${HOME}/.tooltool.token
 tooltool_url=https://tooltool.mozilla-releng.net
+tooltool_client_url=https://raw.githubusercontent.com/mozilla/release-services/master/src/tooltool/client/tooltool.py
 wrk_dir=$(pwd)
 tmp_dir=$(mktemp -d)
 
@@ -16,9 +17,11 @@ fg_white=`tput setaf 7`
 reset=`tput sgr0`
 
 cd ${tmp_dir}
-if [ ! -f "${tmp_dir}/tooltool.py" ]; then
-  curl -s -o ${tmp_dir}/tooltool.py https://raw.githubusercontent.com/mozilla/release-services/master/src/tooltool/client/tooltool.py
-  echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} tooltool client downloaded to ${tmp_dir}/tooltool.py"
+if curl -s -o ${tmp_dir}/tooltool.py ${tooltool_client_url}; then
+  echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} tooltool client downloaded from ${tooltool_client_url} to ${tmp_dir}/tooltool.py"
+else
+  echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} failed to download tooltool client from ${tooltool_client_url} to ${tmp_dir}/tooltool.py"
+  exit 1
 fi
 
 curl -sL https://gist.githubusercontent.com/grenade/109bfd61a663902236e1d3f6530dec55/raw/manifest.json?$(uuidgen) | jq -r '.[] | @base64' | while read item; do
@@ -27,13 +30,22 @@ curl -sL https://gist.githubusercontent.com/grenade/109bfd61a663902236e1d3f6530d
   }
   url=$(_jq_decode '.url')
   filename=$(_jq_decode '.filename')
-  curl -sL -o ${tmp_dir}/${filename} ${url}
-  computed_sha512=$(sha512sum "${tmp_dir}/${filename}" | { read sha512 _; echo ${sha512}; })
-  if curl --header "Authorization: Bearer $(cat ${tooltool_token_path})" --output /dev/null --silent --head --fail ${tooltool_url}/sha512/${computed_sha512}; then
-    echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} found ${filename} in tooltool with sha ${computed_sha512}"
+  if curl -sL -o ${tmp_dir}/${filename} ${url} && [ -f "${tmp_dir}/${filename}" ]; then
+    echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} downloaded ${tmp_dir}/${filename} from ${url}"
+    computed_sha512=$(sha512sum "${tmp_dir}/${filename}" | { read sha512 _; echo ${sha512}; })
+    echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} computed sha512 for ${tmp_dir}/${filename} as ${computed_sha512}"
+    if curl --header "Authorization: Bearer $(cat ${tooltool_token_path})" --output /dev/null --silent --head --fail ${tooltool_url}/sha512/${computed_sha512} 2> /dev/null; then
+      echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} found ${filename} in tooltool with sha ${computed_sha512}"
+    else
+      echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} failed to find ${filename} in tooltool with sha ${computed_sha512}"
+      if python ${tmp_dir}/tooltool.py add --visibility internal "${tmp_dir}/${filename}" -m ${tmp_dir}/manifest.tt; then
+        echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} added ${tmp_dir}/${filename} to ${tmp_dir}/manifest.tt"
+      else
+        echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} failed to add ${tmp_dir}/${filename} to ${tmp_dir}/manifest.tt"
+      fi
+    fi
   else
-    python ${tmp_dir}/tooltool.py add --visibility internal "${tmp_dir}/${filename}" -m ${tmp_dir}/manifest.tt
-    echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} failed to find ${filename} in tooltool with sha ${computed_sha512}"
+    echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} failed to download ${tmp_dir}/${filename} from ${url}"
   fi
 done
 
