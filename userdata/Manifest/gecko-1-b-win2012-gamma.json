@@ -573,8 +573,8 @@
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1490703",
       "Url": "https://www.mercurial-scm.org/release/windows/mercurial-4.9.1-x64.msi",
       "Name": "Mercurial 4.9.1 (x64)",
-      "ProductId": "2FBCF780-DC99-40F3-A0E5-55A8B3151058",
-      "sha512": "6d57f5508410e0d59520202ec9e8982debc1e68b04927633c4b0b6599582a3d73248230f889d25d684ccf80e63f663465aab918476bea3ee88e129b253919da7"
+      "ProductId": "131C4241-D3E5-4FF4-80F8-50A779085459",
+      "sha512": "3375bb4fa2045f4f54482ff208daffd43d0c2fded9e03c1f1f8719b5e8eb229fe2017d88599618de30407b7dbc38061cbbd5aa91b221677ccfbda5da60a03ebe"
     },
     {
       "ComponentName": "MercurialConfig",
