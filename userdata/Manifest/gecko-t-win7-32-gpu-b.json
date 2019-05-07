@@ -341,7 +341,6 @@
       "Validate": {
         "PathsExist": [
           "C:\\mozilla-build\\python3\\python3.dll",
-          "C:\\mozilla-build\\python3\\python3.exe",
           "C:\\mozilla-build\\python3\\python36.dll",
           "C:\\mozilla-build\\python3\\pythonw.exe",
           "C:\\mozilla-build\\python3\\vcruntime140.dll"
@@ -351,6 +350,8 @@
             "Command": "C:\\mozilla-build\\python3\\python.exe",
             "Arguments": [
               "--version",
+              "2>",
+              "nul",
               "||",
               "C:\\mozilla-build\\python3\\python3.exe",
               "--version"
