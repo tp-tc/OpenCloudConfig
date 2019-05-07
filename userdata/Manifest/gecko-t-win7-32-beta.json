@@ -340,10 +340,19 @@
       ],
       "Validate": {
         "PathsExist": [
+          "C:\\mozilla-build\\python3\\DLLs",
+          "C:\\mozilla-build\\python3\\Doc",
+          "C:\\mozilla-build\\python3\\include",
+          "C:\\mozilla-build\\python3\\Lib",
+          "C:\\mozilla-build\\python3\\libs",
           "C:\\mozilla-build\\python3\\python3.dll",
           "C:\\mozilla-build\\python3\\python36.dll",
           "C:\\mozilla-build\\python3\\pythonw.exe",
-          "C:\\mozilla-build\\python3\\vcruntime140.dll"
+          "C:\\mozilla-build\\python3\\vcruntime140.dll",
+          "C:\\mozilla-build\\python3\\Scripts\\pip.exe",
+          "C:\\mozilla-build\\python3\\Scripts\\easy-install.exe",
+          "C:\\mozilla-build\\python3\\tcl",
+          "C:\\mozilla-build\\python3\\Tools"
         ],
         "CommandsReturn": [
           {
@@ -391,6 +400,15 @@
         ],
         "PathsNotExist": [
           "C:\\mozilla-build\\python3\\python.exe"
+        ],
+        "CommandsReturn": [
+          {
+            "Command": "C:\\mozilla-build\\python3\\python3.exe",
+            "Arguments": [
+              "--version"
+            ],
+            "Match": "Python 3.6.3"
+          }
         ]
       }
     },
