@@ -340,7 +340,11 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\mozilla-build\\python3"
+          "C:\\mozilla-build\\python3\\python3.dll",
+          "C:\\mozilla-build\\python3\\python3.exe",
+          "C:\\mozilla-build\\python3\\python36.dll",
+          "C:\\mozilla-build\\python3\\pythonw.exe",
+          "C:\\mozilla-build\\python3\\vcruntime140.dll"
         ],
         "CommandsReturn": [
           {
@@ -506,7 +510,8 @@
         "C:\\mozilla-build\\python3",
         "C:\\mozilla-build\\upx391w",
         "C:\\mozilla-build\\wget",
-        "C:\\mozilla-build\\yasm"
+        "C:\\mozilla-build\\yasm",
+        "C:\\Program Files\\Microsoft Windows Performance Toolkit"
       ],
       "Target": "Machine"
     },
@@ -1470,7 +1475,7 @@
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1494048",
       "Command": "icacls.exe",
       "Arguments": [
-        "C:\\ProgramData\\Mozilla",
+        "c:\\ProgramData\\Mozilla",
         "/grant",
         "Everyone:(OI)(CI)F"
       ],
@@ -1479,19 +1484,7 @@
           "ComponentType": "CommandRun",
           "ComponentName": "maintenanceservice_install"
         }
-      ],
-      "Validate": {
-        "CommandsReturn": [
-          {
-            "Command": "icacls.exe",
-            "Arguments": [
-              "C:\\ProgramData\\Mozilla",
-              "/T"
-            ],
-            "Match": "Everyone:(OI)(CI)(F)"
-          }
-        ]
-      }
+      ]
     },
     {
       "ComponentName": "HostsFile",
@@ -1518,45 +1511,40 @@
   "ProvisionerConfiguration": {
     "instanceTypes": [
       {
-        "capacity": 1,
         "instanceType": "c4.2xlarge",
+        "capacity": 1,
+        "utility": 1,
+        "secrets": {},
+        "scopes": [],
+        "userData": {},
         "launchSpec": {
-          "SecurityGroups": [
-            "ssh-only",
-            "rdp-only",
-            "livelog-direct"
-          ],
           "BlockDeviceMappings": [
             {
               "DeviceName": "/dev/sda1",
               "Ebs": {
-                "DeleteOnTermination": true,
+                "VolumeType": "gp2",
                 "VolumeSize": 30,
-                "VolumeType": "gp2"
+                "DeleteOnTermination": true
               }
             },
             {
               "DeviceName": "/dev/sdb",
               "Ebs": {
-                "DeleteOnTermination": true,
+                "VolumeType": "gp2",
                 "VolumeSize": 120,
-                "VolumeType": "gp2"
+                "DeleteOnTermination": true
               }
             },
             {
               "DeviceName": "/dev/sdc",
               "Ebs": {
-                "DeleteOnTermination": true,
+                "VolumeType": "gp2",
                 "VolumeSize": 120,
-                "VolumeType": "gp2"
+                "DeleteOnTermination": true
               }
             }
           ]
-        },
-        "scopes": [],
-        "secrets": {},
-        "userData": {},
-        "utility": 1
+        }
       }
     ],
     "userData": {
