@@ -140,10 +140,9 @@ function Get-TooltoolResource {
       $headers = @{
         'Authorization' = ('Bearer {0}' -f $bearerToken)
       }
-      return (Get-RemoteResource -url $url -headers $headers -localPath $localPath -eventLogName $eventLogName -eventLogSource $eventLogSource)
-    } else {
-      return $false
+      return ((Get-RemoteResource -url $url -headers $headers -localPath $localPath -eventLogName $eventLogName -eventLogSource $eventLogSource) -and ((Get-FileHash -Path $localPath -Algorithm 'SHA512').Hash -ne $sha512))
     }
+    return $false
   }
   end {
     Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
@@ -196,7 +195,7 @@ function Get-RemoteResource {
         return $false
       }
     }
-    return (Test-Path -Path $localPath -ErrorAction SilentlyContinue)
+    return ((Test-Path -Path $localPath -ErrorAction SilentlyContinue) -and ((Get-Item -Path $localPath -ErrorAction 'SilentlyContinue').Length -gt 0))
   }
   end {
     Write-Log -logName $eventLogName -source $eventLogSource -severity 'debug' -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime())
