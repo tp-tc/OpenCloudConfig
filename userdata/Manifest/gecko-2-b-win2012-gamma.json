@@ -32,6 +32,12 @@
       "Url": "https://nxlog.co/system/files/products/files/348/nxlog-ce-2.10.2150.msi",
       "Name": "NXLog-CE",
       "ProductId": "D5F06971-73E1-4B19-928F-50707ABCCC6E",
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
+        }
+      ],
       "sha512": "41e052f8d08099eeccca9f8a78d72ba2a2ef88c67f2e046b3f33af6809c0271baf82c2819609acc7020dc8420cde337c096f7e12a9b4ae555645dfb5b3c961c5"
     },
     {
@@ -85,6 +91,12 @@
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Url": "https://s3.amazonaws.com/windows-opencloudconfig-packages/ProcessExplorer/ProcessExplorer.zip",
       "Destination": "C:\\ProcessExplorer",
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
+        }
+      ],
       "sha512": "85ffa57d9736ba94bc528ed6e3fccff564b45dfcc5234f8de318f41905ac982fcb39eee3bdb09c3e37f1eb9de72f78312024caa75cc08610421dfeab2a0fb26f"
     },
     {
@@ -93,6 +105,12 @@
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Url": "https://s3.amazonaws.com/windows-opencloudconfig-packages/ProcessMonitor/ProcessMonitor.zip",
       "Destination": "C:\\ProcessMonitor",
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
+        }
+      ],
       "sha512": "3db4ad44652c2dbf7bdd03c88339cbd19d672f6363e3a3b6a5a45adbd62c6b4131e491d2fa8f31fb2a60c7555e202c25bc8088d9bdf0896dcb7e3366782e204f"
     },
     {
@@ -116,6 +134,12 @@
           }
         ]
       },
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
+        }
+      ],
       "sha512": "b1c48d84d041055db3d3e3cbd22ef2f3300728b06c76660b9b78ececf56b7ccbc80addb39a64c0a4eb68bf3463ceb6d254dedda047049ce680e9d543dd8a9af9"
     },
     {
@@ -132,6 +156,12 @@
           "C:\\Program Files\\7-Zip\\7z.dll"
         ]
       },
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
+        }
+      ],
       "sha512": "4df02ab139b087c8d6e689a99afb58e1ab3d4c0722daa11f6a070cddb2506d079a7d9ff55341baa5b7fd1dc7593225eb9d7fdbfb9ac91e0d8db61f9fda85cbb3"
     },
     {
@@ -150,6 +180,12 @@
           "C:\\Program Files\\Sublime Text 3\\sublime_text.exe"
         ]
       },
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
+        }
+      ],
       "sha512": "d3e71b28567ddd1b486aa3dcc9814818d91c322bc20ec203018d74bc465835f9ddd34d78f674172d00e66b39443070eb45e9799e3801b0ac410c958b2cf21098"
     },
     {
@@ -311,6 +347,10 @@
         {
           "ComponentType": "CommandRun",
           "ComponentName": "VisualC2010RedistributablePackageX86_64Uninstall"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
         }
       ],
       "Validate": {
@@ -339,6 +379,10 @@
         {
           "ComponentType": "ExeInstall",
           "ComponentName": "DXSDK_Jun10"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
         }
       ],
       "Validate": {
@@ -390,6 +434,12 @@
           "C:\\Windows\\SysWOW64\\msvcr120.dll"
         ]
       },
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
+        }
+      ],
       "sha512": "729251371ed208898430040fe48cabd286a5671bd7f472a30e9021b68f73b2d49d85a0879920232426b139520f7e21321ba92646985216bf2f733c64e014a71d"
     },
     {
@@ -409,6 +459,12 @@
           "C:\\Windows\\System32\\msvcr120.dll"
         ]
       },
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
+        }
+      ],
       "sha512": "3a55dce14bbd455808bd939a5008b67c9c7111cab61b1339528308022e587726954f8c55a597c6974dc543964bdb6532fe433556fbeeaf9f8cb4d95f2bbffc12"
     },
     {
@@ -428,6 +484,12 @@
           "C:\\Windows\\SysWOW64\\vcruntime140.dll"
         ]
       },
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
+        }
+      ],
       "sha512": "c0eac71b95d1c0232ce1457561a66e24d3ef687ba8012f072d28f89df9dd409584b262b7bac9977f500ec99c0c31138c36f0da48972b818bacba2bc601d5f3a4"
     },
     {
@@ -447,6 +509,12 @@
           "C:\\Windows\\System32\\vcruntime140.dll"
         ]
       },
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
+        }
+      ],
       "sha512": "729b1e37aefdf708df6a787b2eecd0e4e186c4e8a6d6f3028b0134f81c4216f889e67645d9279cb0ae60079a8f6f68ac88ec5d1fe27ee54f8de563b5209698f3"
     },
     {
@@ -469,6 +537,12 @@
           "C:\\Program Files (x86)\\Windows Kits\\10\\Debuggers\\x64\\srcsrv\\pdbstr.exe"
         ]
       },
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
+        }
+      ],
       "sha512": "89ce9cb241ee33cc0642f93ea7d96ff148de6b54e27075398f8f2de31272e1c32865c43e5a9e89da8ce0317f586802bb21bb6247a643d5d201a79a5cd2648d09"
     },
     {
@@ -478,6 +552,12 @@
       "Url": "https://s3.amazonaws.com/windows-opencloudconfig-packages/binscope/BinScope_x64.msi",
       "Name": "Microsoft BinScope 2014",
       "ProductId": "C7F11A71-09AA-43CC-9DFC-8CB12E678F21",
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
+        }
+      ],
       "sha512": "3a36ed88690112d5ae1fc67d4af16973727e987a744a982c2357d72c955e21fcd20abc1ed48a23c376340d320463d91b2dd828454303075276a403f30d1d01aa"
     },
     {
@@ -507,6 +587,12 @@
           }
         ]
       },
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
+        }
+      ],
       "sha512": "db77e882de30f5050489852353d6c171c09b3e70bfd3285d7cda4ea3fc8e7b8df9537ba6430f605c68a1a8c3f33e4763a03d353f915fd755df2a7e26409974c2"
     },
     {
@@ -574,6 +660,12 @@
       "Url": "https://www.mercurial-scm.org/release/windows/mercurial-4.9.1-x64.msi",
       "Name": "Mercurial 4.9.1 (x64)",
       "ProductId": "131C4241-D3E5-4FF4-80F8-50A779085459",
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
+        }
+      ],
       "sha512": "3375bb4fa2045f4f54482ff208daffd43d0c2fded9e03c1f1f8719b5e8eb229fe2017d88599618de30407b7dbc38061cbbd5aa91b221677ccfbda5da60a03ebe"
     },
     {
@@ -997,6 +1089,10 @@
         {
           "ComponentType": "DirectoryCreate",
           "ComponentName": "GenericWorkerDirectory"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
         }
       ],
       "Source": "https://github.com/taskcluster/generic-worker/releases/download/v14.1.0/generic-worker-nativeEngine-windows-amd64.exe",
@@ -1010,6 +1106,10 @@
         {
           "ComponentType": "DirectoryCreate",
           "ComponentName": "GenericWorkerDirectory"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
         }
       ],
       "Source": "https://github.com/taskcluster/livelog/releases/download/v1.1.0/livelog-windows-amd64.exe",
@@ -1047,6 +1147,10 @@
         {
           "ComponentType": "DirectoryCreate",
           "ComponentName": "GenericWorkerDirectory"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
         }
       ],
       "Source": "https://github.com/taskcluster/taskcluster-proxy/releases/download/v5.1.0/taskcluster-proxy-windows-amd64.exe",
@@ -1073,8 +1177,14 @@
       "ComponentName": "NSSMDownload",
       "ComponentType": "FileDownload",
       "Source": "https://nssm.cc/ci/nssm-2.24-103-gdee49fc.zip",
-      "sha512": "05835a8b28fc3d8573c8fc6b627c885990468e29144d5523ce2c065835ff3f9341ced5e15fa246ab7af36cadfa0e96be854b9fafa24ab47cd11319d8a873681b",
-      "Target": "C:\\Windows\\Temp\\NSSMInstall.zip"
+      "Target": "C:\\Windows\\Temp\\NSSMInstall.zip",
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
+        }
+      ],
+      "sha512": "05835a8b28fc3d8573c8fc6b627c885990468e29144d5523ce2c065835ff3f9341ced5e15fa246ab7af36cadfa0e96be854b9fafa24ab47cd11319d8a873681b"
     },
     {
       "ComponentName": "NSSMInstall",
@@ -1379,6 +1489,12 @@
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
       "Source": "https://github.com/PowerShell/Win32-OpenSSH/releases/download/v7.6.1.0p1-Beta/OpenSSH-Win64.zip",
       "Target": "C:\\Windows\\Temp\\OpenSSH-Win64.zip",
+      "DependsOn": [
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "occ_installers_token"
+        }
+      ],
       "sha512": "340f2be8bbddf2552a1d2d55b17f06f09bc1bc6ff2bbba6c8653f8fc3b91f5d9e2bd47e57d537f81df69fca776bf6ecbd533a7ac8bcbb6012f03676530e6d9df"
     },
     {
@@ -1671,7 +1787,7 @@
       },
       "capacity": {
         "minimum": 0,
-        "maximum": 32
+        "maximum": 100
       },
       "worker_implementation": "generic-worker",
       "provisioner_id": "releng-hardware",
