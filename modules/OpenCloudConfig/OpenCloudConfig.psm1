@@ -140,7 +140,7 @@ function Get-TooltoolResource {
       $headers = @{
         'Authorization' = ('Bearer {0}' -f $bearerToken)
       }
-      return ((Get-RemoteResource -url $url -headers $headers -localPath $localPath -eventLogName $eventLogName -eventLogSource $eventLogSource) -and ((Get-FileHash -Path $localPath -Algorithm 'SHA512').Hash -ne $sha512))
+      return ((Get-RemoteResource -url $url -headers $headers -localPath $localPath -eventLogName $eventLogName -eventLogSource $eventLogSource) -and ((Get-FileHash -Path $localPath -Algorithm 'SHA512').Hash -eq $sha512))
     }
     return $false
   }
