@@ -639,14 +639,6 @@
           "ComponentName": "LiveLogDownload"
         },
         {
-          "ComponentType": "FirewallRule",
-          "ComponentName": "LiveLog_Get"
-        },
-        {
-          "ComponentType": "FirewallRule",
-          "ComponentName": "LiveLog_Put"
-        },
-        {
           "ComponentType": "CommandRun",
           "ComponentName": "NSSMInstall"
         }
