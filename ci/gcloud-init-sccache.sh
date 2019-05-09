@@ -29,11 +29,9 @@ for scm_level in {1..3}; do
     _echo "created pass secret: _bold_Mozilla/TaskCluster/gcp-service-account/${service_account_name}@${project_name}_reset_"
     rm -f /tmp/${project_name}_${service_account_name}.json
     _echo "deleted service account key: _bold_/tmp/${project_name}_${service_account_name}.json_reset_"
+  else
+    _echo "detected service account: _bold_${service_account_name}_reset_"
   fi
-done
-
-for scm_level in {1..3}; do
-  service_account_name=taskcluster-level-${scm_level}-sccache
   # grant open-cloud-config bucket viewer access to each service account so that workers can read their startup scripts
   gsutil iam ch serviceAccount:${service_account_name}@${project_name}.iam.gserviceaccount.com:objectViewer gs://open-cloud-config/
   _echo "added viewer access for: _bold_${service_account_name}@${project_name}_reset_ to bucket: _bold_gs://open-cloud-config/_reset_"
@@ -54,6 +52,11 @@ for region_name in "${region_name_list[@]}"; do
       _echo "created bucket: _bold_gs://${service_account_name}-${region_name}/_reset_"
       gsutil iam ch serviceAccount:${service_account_name}@${project_name}.iam.gserviceaccount.com:objectAdmin gs://${service_account_name}-${region_name}/
       _echo "added admin access for: _bold_${service_account_name}@${project_name}_reset_ to bucket: _bold_gs://${service_account_name}-${region_name}/_reset_"
+    fi
+    bucketpolicyonly=$(gsutil bucketpolicyonly get gs://${service_account_name}-${region_name}/)
+    _echo "detected bucket-policy-only setting for: _bold_gs://${service_account_name}-${region_name}/_reset_ as: _bold_${bucketpolicyonly##* }_reset_"
+    if [ "${bucketpolicyonly##* }" == "False" ] && gsutil bucketpolicyonly set on gs://${service_account_name}-${region_name}/; then
+      _echo "bucket-policy-only set to True for: _bold_gs://${service_account_name}-${region_name}/_reset_"
     fi
   done
 done
