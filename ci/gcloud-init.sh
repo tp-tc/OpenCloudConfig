@@ -318,7 +318,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*{gamma,linux}.json | sh
             --boot-disk-type ${disk_zero_type} \
             --boot-disk-auto-delete \
             --local-ssd interface=${disk_one_interface} \
-            --scopes storage-ro \
+            --scopes storage-rw \
             --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
             --metadata "${pre_boot_metadata}" \
             --labels "worker-type=${workerType},worker-implementation=${workerImplementation},deployment-id=${deploymentId}" \
@@ -333,7 +333,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*{gamma,linux}.json | sh
             --boot-disk-size ${disk_zero_size} \
             --boot-disk-type ${disk_zero_type} \
             --boot-disk-auto-delete \
-            --scopes storage-ro \
+            --scopes storage-rw \
             --service-account taskcluster-level-${SCM_LEVEL}-sccache@${project_name}.iam.gserviceaccount.com \
             --metadata "${pre_boot_metadata}" \
             --labels "worker-type=${workerType},worker-implementation=${workerImplementation},deployment-id=${deploymentId}" \
