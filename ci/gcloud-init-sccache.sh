@@ -50,9 +50,9 @@ for region_name in "${region_name_list[@]}"; do
     else
       gsutil mb -p ${project_name} -c regional -l ${region_name} gs://${service_account_name}-${region_name}/
       _echo "created bucket: _bold_gs://${service_account_name}-${region_name}/_reset_"
-      gsutil iam ch serviceAccount:${service_account_name}@${project_name}.iam.gserviceaccount.com:objectAdmin gs://${service_account_name}-${region_name}/
-      _echo "added admin access for: _bold_${service_account_name}@${project_name}_reset_ to bucket: _bold_gs://${service_account_name}-${region_name}/_reset_"
     fi
+    gsutil iam ch serviceAccount:${service_account_name}@${project_name}.iam.gserviceaccount.com:objectCreator,objectViewer gs://${service_account_name}-${region_name}/
+    _echo "added create,view access for: _bold_${service_account_name}@${project_name}_reset_ to bucket: _bold_gs://${service_account_name}-${region_name}/_reset_"
     bucketpolicyonly=$(gsutil bucketpolicyonly get gs://${service_account_name}-${region_name}/)
     _echo "detected bucket-policy-only setting for: _bold_gs://${service_account_name}-${region_name}/_reset_ as: _bold_${bucketpolicyonly##* }_reset_"
     if [ "${bucketpolicyonly##* }" == "False" ] && gsutil bucketpolicyonly set on gs://${service_account_name}-${region_name}/; then
