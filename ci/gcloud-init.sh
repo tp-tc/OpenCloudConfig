@@ -20,7 +20,7 @@ _echo() {
 }
 
 # set up the list of google cloud zones we will instantiate and manage instances within
-zone_uri_list=(`gcloud compute zones list --uri`)
+zone_uri_list=(`gcloud compute zones list --uri --filter name:us-*`)
 zone_name_list=("${zone_uri_list[@]##*/}")
 
 _echo "temp_dir: _bold_${temp_dir}_reset_"
