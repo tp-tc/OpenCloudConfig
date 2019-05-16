@@ -439,9 +439,9 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v14.1.1/generic-worker-nativeEngine-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v14.1.0/generic-worker-nativeEngine-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe",
-      "sha512": "59ad674396ee85105997009b2aaf357e7eac0f23b208438c2c992819f2d4a5968020259162261a6cd5b367861692fce845481126534f961c071d746f90ccbea6"
+      "sha512": "a0e5ef03c87b930bab0351f4911f0fbb61465eb0e7fd56170285dc8cc4ebf0bf65f3217a3e8b1dbecbc347954240266521fa41c9feb662ec38781fc5e16fbdee"
     },
     {
       "ComponentName": "LiveLogDownload",
@@ -540,7 +540,7 @@
             "Arguments": [
               "--version"
             ],
-            "Like": "generic-worker 14.1.1 *"
+            "Like": "generic-worker 14.1.0 *"
           }
         ]
       }
@@ -1121,41 +1121,6 @@
         "allprofiles",
         "state",
         "off"
-      ]
-    },
-    {
-      "ComponentName": "NvidiaK520DriverPackage",
-      "ComponentType": "ExeInstall",
-      "Comment": "Required for hardware acceleration on EC2 g2 (GPU) instances. http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/accelerated-computing-instances.html#install-nvidia-driver-windows",
-      "Url": "http://uk.download.nvidia.com/Windows/Quadro_Certified/GRID/369.95/369.95-quadro-grid-desktop-notebook-win10-64bit-international-whql.exe",
-      "Arguments": [
-        "/s"
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\NVIDIA\\369.95\\setup.exe"
-        ]
-      },
-      "sha512": "7fd87a38e5eb760e49bd136d238ec8983a9cdacc1dfc67334c1033f887aab3c8592156a7f876de7c8938279008848ff755ec478aab9c1218f7879ca6758e29f2"
-    },
-    {
-      "ComponentName": "NvidiaK520DriverInstall",
-      "ComponentType": "CommandRun",
-      "Comment": "Required for hardware acceleration on EC2 g2 (GPU) instances. http://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/accelerated-computing-instances.html#install-nvidia-driver-windows",
-      "Command": "C:\\NVIDIA\\369.95\\setup.exe",
-      "Arguments": [
-        "/s"
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Program Files\\NVIDIA Corporation\\license.txt"
-        ]
-      },
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "NvidiaK520DriverPackage"
-        }
       ]
     },
     {

@@ -34,6 +34,7 @@
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/hw-win10.conf",
       "Target": "C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf",
+      "sha512": "c2a21a37aae85dc977956369f6f3babed75d9c764035d1c5eab35a9250aacad032c45e92116072462f091b93014e3f72adf9599fb1cdc0191fde7d7d6c9e079a",
       "DependsOn": [
         {
           "ComponentType": "ChecksumFileDownload",
@@ -655,9 +656,9 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v14.1.1/generic-worker-nativeEngine-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v10.11.2/generic-worker-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe",
-      "sha512": "59ad674396ee85105997009b2aaf357e7eac0f23b208438c2c992819f2d4a5968020259162261a6cd5b367861692fce845481126534f961c071d746f90ccbea6"
+      "sha512": "c2c3b75ab638675998e108f4b9ba205f25c50d197faca32ed8a85bd060de06bd3735d9bc31092dcb7506b6e8132de58bf2b983c683442d9a3eb4221eb286e376"
     },
     {
       "ComponentName": "LiveLogDownload",
@@ -674,16 +675,16 @@
     },
     {
       "ComponentName": "TaskClusterProxyDownload",
-      "ComponentType": "FileDownload",
+      "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
         {
           "ComponentType": "DirectoryCreate",
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/taskcluster-proxy/releases/download/v5.1.0/taskcluster-proxy-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/taskcluster-proxy/releases/download/v4.1.0/taskcluster-proxy-windows-amd64.exe",
       "Target": "C:\\generic-worker\\taskcluster-proxy.exe",
-      "sha512": "66dc995d3950f92e4007e0d021ff66d7ce9e9c45e95dd1295b31dc01362f558df893d5db6cec85b2b3832172be454acc0ca079447e7b99fdddb47a58ea84f2f9"
+      "sha512": "83dd123441f6bc0336103b65716ad016715864840055e07ec1959f74cd68b7e9cf5fc6e7e1034d7d4802486f1cbddc342475a61e49da06a878c3f74b8652d193"
     },
     {
       "ComponentName": "NSSMDownload",
@@ -755,7 +756,7 @@
             "Arguments": [
               "--version"
             ],
-            "Like": "generic-worker 14.1.1 *"
+            "Like": "generic-worker 10.11.2 *"
           }
         ]
       }
@@ -798,7 +799,8 @@
         }
       ],
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-hw-generic-worker-10-and-reboot.bat",
-      "Target": "C:\\generic-worker\\run-generic-worker.bat"
+      "Target": "C:\\generic-worker\\run-generic-worker.bat",
+      "sha512": "b6a194bbc3b2332300907e55e22a3701520f083f30bda7193144d3fc8877e22ff380f962bc5577176659f4ccad0801d19ba5d18fd64e55585a2ed24cb2da61ee"
     },
     {
       "ComponentName": "TaskUserInitScript",
@@ -1217,15 +1219,6 @@
       "ValueType": "Dword",
       "ValueData": "0x00000002",
       "Hex": true
-    },
-    {
-      "ComponentName": "reg_Power_PreferredPlan_HighPerformance",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1362613",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\explorer\\ControlPanel\\NameSpace\\{025A5937-A6BE-4686-A844-36FE4BEC8B6D}",
-      "ValueName": "PreferredPlan",
-      "ValueType": "String",
-      "ValueData": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"
     },
     {
       "ComponentName": "reg_SystemRestore",
