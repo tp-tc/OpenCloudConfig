@@ -695,7 +695,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/taskcluster-proxy/releases/download/v4.1.0/taskcluster-proxy-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/taskcluster-proxy/releases/download/v5.1.0/taskcluster-proxy-windows-amd64.exe",
       "Target": "C:\\generic-worker\\taskcluster-proxy.exe",
       "sha512": "83dd123441f6bc0336103b65716ad016715864840055e07ec1959f74cd68b7e9cf5fc6e7e1034d7d4802486f1cbddc342475a61e49da06a878c3f74b8652d193"
     },
@@ -769,7 +769,7 @@
             "Arguments": [
               "--version"
             ],
-            "Like": "generic-worker 10.11.2 *"
+            "Like": "generic-worker 14.1.1 *"
           }
         ]
       }
