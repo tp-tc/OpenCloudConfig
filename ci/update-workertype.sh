@@ -88,7 +88,7 @@ echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] git sha: ${aws_client_token}
 
 case "${tc_worker_type}" in
   gecko-t-win7-32*)
-    aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win7-32-base-*'}
+    aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win7-32-kb4499175-20190516082500'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko test worker for Windows 7 32 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
     root_username=root
@@ -172,6 +172,7 @@ echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] latest base ami for: ${aws_b
 while [ -z "$aws_instance_id" ]; do
   aws_instance_id="$(aws ec2 run-instances --region ${aws_region} --image-id "${aws_base_ami_id}" --key-name ${aws_key_name} --security-group-ids "sg-3bd7bf41" --subnet-id "subnet-f94cb29f" --user-data "$(echo -e ${userdata})" --instance-type ${snapshot_aws_instance_type} --block-device-mappings "${snapshot_block_device_mappings}" --instance-initiated-shutdown-behavior stop --client-token "${tc_worker_type}-${aws_client_token}" | sed -n 's/^ *"InstanceId": "\(.*\)", */\1/p')"
   if [ -z "$aws_instance_id" ]; then
+    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Instances:instanceType='${snapshot_aws_instance_type}';lifecycle=normal;instanceState=!stopped,!terminated;sort=desc:launchTime"
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] create instance failed. retrying..."
   fi
 done

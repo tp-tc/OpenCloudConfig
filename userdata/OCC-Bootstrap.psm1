@@ -384,7 +384,20 @@ function Invoke-RemoteDesiredStateConfig {
     Remove-Item $mof -confirm:$false -recurse:$true -force -ErrorAction SilentlyContinue
     Invoke-Expression "$config -OutputPath $mof"
     Write-Log -message ('{0} :: compiled mof {1}, from {2}.' -f $($MyInvocation.MyCommand.Name), $mof, $config) -severity 'DEBUG'
-    Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
+    try {
+      $errorCount = $error.Count;
+      Start-DscConfiguration -Path "$mof" -Wait -Verbose -Force
+      if ($error.Count -gt $errorCount) {
+        $dscErrors = $error[$errorCount..($error.Count - 1)]
+        Write-Log -message ('{0} :: {1} errors encountered during dsc run.' -f $($MyInvocation.MyCommand.Name), $dscErrors.Count) -severity 'ERROR'
+        foreach ($dscError in $dscErrors) {
+          Write-Log -message ('{0} :: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $dscError.FullyQualifiedErrorId, $dscError.Exception.Message) -severity 'ERROR'
+        }
+      }
+    }
+    catch {
+      Write-Log -message ('{0} :: failed to run all or part of dsc configuration: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $mof, $_.Exception.Message) -severity 'ERROR'
+    }
   }
   end {
     Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
@@ -481,7 +494,9 @@ function Remove-LegacyStuff {
       ('{0}\Users\Administrator\Desktop\PyYAML-3.11' -f $env:SystemDrive),
       ('{0}\Users\Administrator\Desktop\PyYAML-3.11.zip' -f $env:SystemDrive),
       ('{0}\Users\Public\Desktop\*.lnk' -f $env:SystemDrive),
-      ('{0}\Users\root\Desktop\*.reg' -f $env:SystemDrive)
+      ('{0}\Users\root\Desktop\*.reg' -f $env:SystemDrive),
+      ('{0}\System32\config\systemprofile\AppData\LocalLow\Microsoft\CryptnetUrlCache\Content\*' -f $env:SystemRoot),
+      ('{0}\System32\config\systemprofile\AppData\LocalLow\Microsoft\CryptnetUrlCache\MetaData\*' -f $env:SystemRoot)
     ),
     [string[]] $services = @(
       'puppet',
@@ -505,7 +520,8 @@ function Remove-LegacyStuff {
       '"OneDrive Standalone Update task v2"'
     ),
     [string[]] $registryKeys = @(
-      'HKLM:\SOFTWARE\PuppetLabs'
+      'HKLM:\SOFTWARE\PuppetLabs',
+      'HKLM:\SOFTWARE\Microsoft\SystemCertificates\AuthRoot\Certificates\*'
     ),
     [hashtable] $registryEntries = @{
       # g-w won't set autologin password if these keys pre-exist
@@ -2151,6 +2167,7 @@ function Invoke-OpenCloudConfig {
           #if (-not ($isWorker)) {
           #  Set-DefaultProfileProperties
           #}
+          Set-WinrmConfig -settings @{'MaxEnvelopeSizekb'=8192;'MaxTimeoutms'=60000}
         }
         'Microsoft Windows 10*' {
           # set network interface to private (reverted after dsc run) http://www.hurryupandwait.io/blog/fixing-winrm-firewall-exception-rule-not-working-when-internet-connection-type-is-set-to-public
@@ -2164,6 +2181,7 @@ function Invoke-OpenCloudConfig {
           #if (-not ($isWorker)) {
           #  Set-DefaultProfileProperties
           #}
+          Set-WinrmConfig -settings @{'MaxEnvelopeSizekb'=32696;'MaxTimeoutms'=180000}
         }
         default {
           try {
@@ -2172,9 +2190,9 @@ function Invoke-OpenCloudConfig {
           } catch {
             Write-Log -message ('{0} :: error enabling powershell remoting. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
           }
+          Set-WinrmConfig -settings @{'MaxEnvelopeSizekb'=32696;'MaxTimeoutms'=180000}
         }
       }
-      Set-WinrmConfig -settings @{'MaxEnvelopeSizekb'=32696;'MaxTimeoutms'=180000}
       if (Test-Path -Path ('{0}\log\*.dsc-run.log' -f $env:SystemDrive) -ErrorAction SilentlyContinue) {
         try {
           Stop-Transcript
