@@ -47,8 +47,8 @@ function Run-MaintainSystem {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
-    Set-TaskFirewallExceptions
     Remove-OldTaskDirectories
+    Set-TaskFirewallExceptions
     Disable-DesiredStateConfig
     Invoke-OccReset
   }
@@ -104,37 +104,61 @@ function Set-TaskFirewallExceptions {
   process {
     $all_task_paths = @(Get-ChildItem -Path $target | Sort-Object -Property { $_.LastWriteTime } -Descending)
     if ($all_task_paths.Length) {
-      $newest_task_path = $all_task_paths[0]
-      foreach ($key in $childPaths.Keys) {
-        $childPath = $childPaths.Item($key)
-        $program = (Join-Path -Path $newest_task_path -ChildPath $childPath)
-        foreach ($direction in @('in', 'out')) {
-          $ruleName = ('task-{0}-{1}' -f $key, $direction)
-          try {
-            if ((Get-Command 'Get-NetFirewallRule' -ErrorAction 'SilentlyContinue') -and (Get-Command 'Set-NetFirewallRule' -ErrorAction 'SilentlyContinue') -and (Get-Command 'New-NetFirewallRule' -ErrorAction 'SilentlyContinue')) {
-              if (Get-NetFirewallRule -DisplayName $ruleName -ErrorAction 'SilentlyContinue') {
-                Set-NetFirewallRule -DisplayName $ruleName -Program $program
-                Write-Log -message ('{0} :: firewall rule: {1} updated with program: {2}' -f $($MyInvocation.MyCommand.Name), $ruleName, $program) -severity 'DEBUG'
+      foreach ($task_path in $all_task_paths) {
+        foreach ($key in $childPaths.Keys) {
+          $childPath = $childPaths.Item($key)
+          $program = (Join-Path -Path $task_path -ChildPath $childPath)
+          foreach ($direction in @('in', 'out')) {
+            $ruleName = ('generic-worker-{0}-{1}-{2}' -f (Get-Item -Path $task_path).Basename, $key, $direction)
+            try {
+              if ((Get-Command 'Get-NetFirewallRule' -ErrorAction 'SilentlyContinue') -and (Get-Command 'Set-NetFirewallRule' -ErrorAction 'SilentlyContinue') -and (Get-Command 'New-NetFirewallRule' -ErrorAction 'SilentlyContinue')) {
+                if (Get-NetFirewallRule -DisplayName $ruleName -ErrorAction 'SilentlyContinue') {
+                  Set-NetFirewallRule -DisplayName $ruleName -Program $program
+                  Write-Log -message ('{0} :: firewall rule: {1} updated with program: {2}' -f $($MyInvocation.MyCommand.Name), $ruleName, $program) -severity 'DEBUG'
+                } else {
+                  New-NetFirewallRule -DisplayName $ruleName -Program $program -Direction ('{0}bound' -f $direction) -Action Allow
+                  Write-Log -message ('{0} :: firewall rule: {1} created with program: {2}' -f $($MyInvocation.MyCommand.Name), $ruleName, $program) -severity 'INFO'
+                }
               } else {
-                New-NetFirewallRule -DisplayName $ruleName -Program $program -Direction ('{0}bound' -f $direction) -Action Allow
-                Write-Log -message ('{0} :: firewall rule: {1} created with program: {2}' -f $($MyInvocation.MyCommand.Name), $ruleName, $program) -severity 'INFO'
+                if ((& 'netsh.exe' @('advfirewall', 'firewall', 'show', 'rule', ('name={0}' -f $ruleName)))[1] -ne 'No rules match the specified criteria.') {
+                  & 'netsh.exe' @('advfirewall', 'firewall', 'set', 'rule', ('name={0}' -f $ruleName), ('program={0}' -f $program))
+                  Write-Log -message ('{0} :: firewall rule: {1} updated with program: {2}' -f $($MyInvocation.MyCommand.Name), $ruleName, $program) -severity 'DEBUG'
+                } else {
+                  & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name={0}' -f $ruleName), ('program={0}' -f $program), ('dir={0}' -f $direction), 'action=allow')
+                  Write-Log -message ('{0} :: firewall rule: {1} created with program: {2}' -f $($MyInvocation.MyCommand.Name), $ruleName, $program) -severity 'INFO'
+                }
               }
-            } else {
-              if ((& 'netsh.exe' @('advfirewall', 'firewall', 'show', 'rule', ('name={0}' -f $ruleName)))[1] -ne 'No rules match the specified criteria.') {
-                & 'netsh.exe' @('advfirewall', 'firewall', 'set', 'rule', ('name={0}' -f $ruleName), ('program={0}' -f $program))
-                Write-Log -message ('{0} :: firewall rule: {1} updated with program: {2}' -f $($MyInvocation.MyCommand.Name), $ruleName, $program) -severity 'DEBUG'
-              } else {
-                & 'netsh.exe' @('advfirewall', 'firewall', 'add', 'rule', ('name={0}' -f $ruleName), ('program={0}' -f $program), ('dir={0}' -f $direction), 'action=allow')
-                Write-Log -message ('{0} :: firewall rule: {1} created with program: {2}' -f $($MyInvocation.MyCommand.Name), $ruleName, $program) -severity 'INFO'
-              }
+            } catch {
+              Write-Log -message ('{0} :: error setting firewall rule: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $ruleName, $_.Exception.Message) -severity 'ERROR'
             }
-          } catch {
-            Write-Log -message ('{0} :: error setting firewall rule: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $ruleName, $_.Exception.Message) -severity 'ERROR'
           }
         }
       }
     } else {
       Write-Log -message ('{0} :: no task directories detected matching pattern: {1}' -f$($MyInvocation.MyCommand.Name), $target) -severity 'DEBUG'
+    }
+    # remove old firewall rules for completed tasks
+    $gwFirewallRuleNamePattern = 'generic-worker-task_*'
+    # $allTaskFirewallExceptions = (Get-NetFirewallRule -DisplayName $gwFirewallRuleNamePattern)
+    $allTaskFirewallExceptions = ((New-object -ComObject HNetCfg.FwPolicy2).Rules | ? { $_.Name -like $gwFirewallRuleNamePattern })
+    foreach ($taskFirewallException in $allTaskFirewallExceptions) {
+      # $ruleName = $taskFirewallException.DisplayName
+      $ruleName = $taskFirewallException.Name
+      $taskName = [regex]::Match($ruleName, '^generic-worker-(task_\d*)-.*$').Groups[1].Value
+      if ((Test-Path -Path ('Z:\{0}' -f $taskName) -ErrorAction SilentlyContinue) -or (Test-Path -Path ('C:\Users\{0}' -f $taskName) -ErrorAction SilentlyContinue)) {
+        Write-Log -message ('{0} :: skipping removal of firewall rule: {1} which corresponds to active or scheduled task' -f $($MyInvocation.MyCommand.Name), $ruleName) -severity 'DEBUG'
+      } else {
+        try {
+          if (Get-Command 'Remove-NetFirewallRule' -ErrorAction 'SilentlyContinue') {
+            Remove-NetFirewallRule -DisplayName $ruleName
+          } else {
+            & 'netsh.exe' @('advfirewall', 'firewall', 'delete', 'rule', ('name={0}' -f $ruleName))
+          }
+          Write-Log -message ('{0} :: expired firewall rule: {1} removed' -f $($MyInvocation.MyCommand.Name), $ruleName) -severity 'INFO'
+        } catch {
+          Write-Log -message ('{0} :: error removing expired firewall rule: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $ruleName, $_.Exception.Message) -severity 'ERROR'
+        }
+      }
     }
   }
   end {
