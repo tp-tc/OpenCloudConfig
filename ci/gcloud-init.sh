@@ -295,7 +295,7 @@ for manifest in $(ls ${script_dir}/../userdata/Manifest/*{gamma,linux}.json | sh
       if [[ "${workerType}" =~ ^gecko-[1-3]-b-win2012.*$ ]]; then
         pre_boot_metadata="^;^windows-startup-script-url=gs://open-cloud-config/gcloud-startup.ps1;workerType=${workerType};sourceOrg=mozilla-releng;sourceRepo=OpenCloudConfig;sourceRevision=gamma;pgpKey=${pgpKey};livelogkey=${livelogkey};livelogcrt=${livelogcrt};relengapiToken=${relengapiToken};occInstallersToken=${occInstallersToken};SCCACHE_GCS_BUCKET=${SCCACHE_GCS_BUCKET};SCCACHE_GCS_KEY=${SCCACHE_GCS_KEY}"
       elif [[ "${workerType}" =~ ^gecko-[1-3]-b-linux.*$ ]]; then
-        pre_boot_metadata="^;^statelessHostname=${instance_name};relengApiToken=${relengapiToken};clientId=project/releng/docker-worker/${workerType}/production;accessToken=${accessToken};capacity=2;workerType=${workerType};provisionerId=${provisionerId};rootUrl=https://taskcluster.net;secretsPath=project/taskcluster/docker-worker:secrets"
+        pre_boot_metadata="^;^statelessHostname=${instance_name};relengApiToken=${relengapiToken};clientId=project/releng/docker-worker/${workerType}/production;accessToken=${accessToken};capacity=1;workerType=${workerType};provisionerId=${provisionerId};rootUrl=https://taskcluster.net;secretsPath=project/taskcluster/docker-worker:secrets"
       fi
 
       # we need to check the count of running instances, however this call is rate limited and fails frequently, so we need to think of something smarter here
