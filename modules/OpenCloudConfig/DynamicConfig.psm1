@@ -933,7 +933,7 @@ function Invoke-DownloadInstall {
       }
       'msi' {
         $command = ('{0}\system32\msiexec.exe' -f $env:WinDir)
-        $arguments = @('/i', $localPath, '/log', ('{0}\log\{1}-{2}.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $component.ComponentName), '/quiet', '/norestart')
+        $arguments = @('/i', $localPath, '/log', ('{0}\log\{1}-{2}.msi.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $component.ComponentName), '/quiet', '/norestart') + @($component.Arguments | % { $($_) })
       }
       'msu' {
         $command = ('{0}\system32\wusa.exe' -f $env:WinDir)
