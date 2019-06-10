@@ -101,28 +101,30 @@ function Invoke-OccReset {
   }
   process {
     try {
-      if (${env:COMPUTERNAME}.ToLower().StartsWith('t-w1064-')) {
-        $guid = [Guid]::NewGuid()
-        $scriptUrl = ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/rundsc.ps1?{0}' -f $guid)
-        $newScriptPath = ('C:\dsc\rundsc-{0}.ps1' -f $guid)
-        (New-Object Net.WebClient).DownloadFile($scriptUrl, $newScriptPath)
+      if (${env:COMPUTERNAME}.ToLower().StartsWith('t-w1064-') -or ${env:COMPUTERNAME}.ToLower().StartsWith('yoga-')) {
+        foreach ($script in @('rundsc', 'MaintainSystem')) {
+          $guid = [Guid]::NewGuid()
+          $scriptUrl = ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/{0}.ps1?{1}' -f $script, $guid)
+          $newScriptPath = ('C:\dsc\{0}-{1}.ps1' -f $script, $guid)
+          (New-Object Net.WebClient).DownloadFile($scriptUrl, $newScriptPath)
 
-        $oldScriptPath = 'C:\dsc\rundsc.ps1'
-        if (Test-Path -Path $oldScriptPath -ErrorAction SilentlyContinue) {
-          $newSha512Hash = (Get-FileHash -Path $newScriptPath -Algorithm 'SHA512').Hash
-          $oldSha512Hash = (Get-FileHash -Path $oldScriptPath -Algorithm 'SHA512').Hash
+          $oldScriptPath = ('C:\dsc\{0}.ps1' -f $script)
+          if (Test-Path -Path $oldScriptPath -ErrorAction SilentlyContinue) {
+            $newSha512Hash = (Get-FileHash -Path $newScriptPath -Algorithm 'SHA512').Hash
+            $oldSha512Hash = (Get-FileHash -Path $oldScriptPath -Algorithm 'SHA512').Hash
 
-          if ($newSha512Hash -ne $oldSha512Hash) {
-            Write-Log -message ('{0} :: rundsc hashes do not match (old: {1}, new: {2})' -f $($MyInvocation.MyCommand.Name), ('{0}...{1}' -f $oldSha512Hash.Substring(0, 9), $oldSha512Hash.Substring($oldSha512Hash.length - 9, 9)), ('{0}...{1}' -f $newSha512Hash.Substring(0, 9), $newSha512Hash.Substring($newSha512Hash.length - 9, 9))) -severity 'INFO'
-            Remove-Item -Path $oldScriptPath -force -ErrorAction SilentlyContinue
-            Move-item -LiteralPath $newScriptPath -Destination $oldScriptPath
+            if ($newSha512Hash -ne $oldSha512Hash) {
+              Write-Log -message ('{0} :: {1} hashes do not match (old: {2}, new: {3})' -f $($MyInvocation.MyCommand.Name), $script, ('{0}...{1}' -f $oldSha512Hash.Substring(0, 9), $oldSha512Hash.Substring($oldSha512Hash.length - 9, 9)), ('{0}...{1}' -f $newSha512Hash.Substring(0, 9), $newSha512Hash.Substring($newSha512Hash.length - 9, 9))) -severity 'INFO'
+              Remove-Item -Path $oldScriptPath -force -ErrorAction SilentlyContinue
+              Move-item -LiteralPath $newScriptPath -Destination $oldScriptPath
+            } else {
+              Write-Log -message ('{0} :: {1} hashes match (old: {2}, new: {3})' -f $($MyInvocation.MyCommand.Name), $script, ('{0}...{1}' -f $oldSha512Hash.Substring(0, 9), $oldSha512Hash.Substring($oldSha512Hash.length - 9, 9)), ('{0}...{1}' -f $newSha512Hash.Substring(0, 9), $newSha512Hash.Substring($newSha512Hash.length - 9, 9))) -severity 'DEBUG'
+              Remove-Item -Path $newScriptPath -force -ErrorAction SilentlyContinue
+            }
           } else {
-            Write-Log -message ('{0} :: rundsc hashes match (old: {1}, new: {2})' -f $($MyInvocation.MyCommand.Name), ('{0}...{1}' -f $oldSha512Hash.Substring(0, 9), $oldSha512Hash.Substring($oldSha512Hash.length - 9, 9)), ('{0}...{1}' -f $newSha512Hash.Substring(0, 9), $newSha512Hash.Substring($newSha512Hash.length - 9, 9))) -severity 'DEBUG'
-            Remove-Item -Path $newScriptPath -force -ErrorAction SilentlyContinue
+            Move-item -LiteralPath $newScriptPath -Destination $oldScriptPath
+            Write-Log -message ('{0} :: existing {1} not found. downloaded rundsc applied' -f $($MyInvocation.MyCommand.Name), $script) -severity 'INFO'
           }
-        } else {
-          Move-item -LiteralPath $newScriptPath -Destination $oldScriptPath
-          Write-Log -message ('{0} :: existing rundsc not found. downloaded rundsc applied' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
         }
       }
     } catch {
@@ -139,7 +141,7 @@ function Disable-DesiredStateConfig {
   }
   process {
     try {
-      if (${env:COMPUTERNAME}.ToLower().StartsWith('t-w1064-')) {
+      if (${env:COMPUTERNAME}.ToLower().StartsWith('t-w1064-') -or ${env:COMPUTERNAME}.ToLower().StartsWith('yoga-')) {
         # terminate any running dsc process
         $dscpid = (Get-WmiObject msft_providers | ? {$_.provider -like 'dsccore'} | Select-Object -ExpandProperty HostProcessIdentifier)
         if ($dscpid) {
