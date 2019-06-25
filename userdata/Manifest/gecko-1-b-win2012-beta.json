@@ -1065,7 +1065,7 @@
             "Arguments": [
               "--version"
             ],
-            "Like": "generic-worker (multiuser engine) 15.0.2 *"
+            "Like": "generic-worker (multiuser engine) 15.0.1 *"
           }
         ]
       }
