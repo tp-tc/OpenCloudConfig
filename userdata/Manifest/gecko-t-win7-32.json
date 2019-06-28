@@ -707,9 +707,9 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v14.1.0/generic-worker-nativeEngine-windows-386.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v15.1.0/generic-worker-multiuser-windows-386.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe",
-      "sha512": "d7f40095eb3ddd2bc6ed86ecee13e50cf2fe383afdb3cc2647c8071170daa0bd93aefe6734be9958a10df5a33e77c8d69a2c2079d1975457d76fb3d7c6176b75"
+      "sha512": "e2026cd40057b5b6ad93a419c0a90c78bcfbab5384d0bf3a76bd2bda51892ab518ac1eaa02dce722f6a45526c38ddf53fe7c8f4512bb763746b7bad74221a059"
     },
     {
       "ComponentName": "LiveLogDownload",
@@ -808,7 +808,7 @@
             "Arguments": [
               "--version"
             ],
-            "Like": "generic-worker 14.1.0 *"
+            "Like": "generic-worker (multiuser engine) 15.1.0 *"
           }
         ]
       }
