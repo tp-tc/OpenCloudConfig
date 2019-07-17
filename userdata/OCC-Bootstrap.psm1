@@ -2226,12 +2226,13 @@ function Invoke-OpenCloudConfig {
           Invoke-RemoteDesiredStateConfig -url ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/xDynamicConfig.ps1' -f $sourceOrg, $sourceRepo, $sourceRev)
         }
       }
-      
+
       Stop-Transcript
       # end run dsc #################################################################################################################################################
-      
+
       # post dsc teardown ###########################################################################################################################################
-      
+
+      Start-Sleep -Seconds 5
       if (((Get-Content $transcript) | % {(
           # a package installed by dsc requested a restart
           ($_ -match 'requires a reboot') -or
