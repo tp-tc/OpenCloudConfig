@@ -827,6 +827,38 @@
       }
     },
     {
+      "ComponentName": "pip_upgrade_zstandard",
+      "ComponentType": "CommandRun",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "pip_upgrade_pip"
+        }
+      ],
+      "Command": "C:\\mozilla-build\\python\\python.exe",
+      "Arguments": [
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        "zstandard==0.11.1"
+      ],
+      "Validate": {
+        "CommandsReturn": [
+          {
+            "Command": "C:\\mozilla-build\\python\\python.exe",
+            "Arguments": [
+              "-m",
+              "pip",
+              "show",
+              "zstandard"
+            ],
+            "Match": "Version: 0.11.1"
+          }
+        ]
+      }
+    },
+    {
       "ComponentName": "ToolToolInstall",
       "ComponentType": "FileDownload",
       "DependsOn": [
