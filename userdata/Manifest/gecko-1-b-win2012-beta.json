@@ -867,7 +867,7 @@
           "ComponentName": "pip_upgrade_pip"
         }
       ],
-      "Command": "C:\\mozilla-build\\python\\python3.exe",
+      "Command": "C:\\mozilla-build\\python3\\python3.exe",
       "Arguments": [
         "-m",
         "pip",
@@ -878,7 +878,7 @@
       "Validate": {
         "CommandsReturn": [
           {
-            "Command": "C:\\mozilla-build\\python\\python3.exe",
+            "Command": "C:\\mozilla-build\\python3\\python3.exe",
             "Arguments": [
               "-m",
               "pip",
