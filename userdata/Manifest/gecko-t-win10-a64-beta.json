@@ -1374,6 +1374,13 @@
       "Action": "Allow"
     },
     {
+      "ComponentName": "jqInstall",
+      "ComponentType": "FileDownload",
+      "Source": "https://github.com/stedolan/jq/releases/download/jq-1.6/jq-win32.exe",
+      "sha512": "cf4766baca9cf5f072ae15e2e3d91e974403ab933b892b8d506dc1c3235ca70271971be1af13896a4ef1c79f57518acb9497f0bfee1cb1d9ac10e97422c30f96",
+      "Target": "C:\\Windows\\System32\\jq.exe"
+    },
+    {
       "ComponentName": "nircmd",
       "ComponentType": "FileDownload",
       "Source": "https://s3.amazonaws.com/windows-opencloudconfig-packages/nircmd/nircmd.exe",
