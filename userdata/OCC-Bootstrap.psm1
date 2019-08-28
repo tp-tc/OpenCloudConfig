@@ -1722,8 +1722,8 @@ function Set-ChainOfTrustKey {
               } else {
                 Write-Log -message ('{0} :: gw signingKeyLocation not configured in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
               }
-            } elseif (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 13.0.2 *') {
-              Write-Log -message ('{0} :: gw 13.0.2 exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
+            } elseif (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 14.1.2 *') {
+              Write-Log -message ('{0} :: gw 14.1.2 exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
               foreach ($keyAlgorithm in @('ed25519', 'openpgp')) {
                 $privateKeyPath = ('C:\generic-worker\{0}-private.key' -f $keyAlgorithm)
                 $publicKeyPath = ('C:\generic-worker\{0}-public.key' -f $keyAlgorithm)

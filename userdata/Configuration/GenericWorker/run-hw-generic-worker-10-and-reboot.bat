@@ -17,12 +17,12 @@ GoTo ManifestCheck
 
 :key_pair
 del /Q /F C:\DSC\EndOfManifest.semaphore  >> C:\generic-worker\generic-worker-wrapper.log
-echo Checking for key pair >> C:\generic-worker\generic-worker-wrapper.log
-If exist C:\generic-worker\generic-worker-gpg-signing-key.key echo Key pair present >> C:\generic-worker\generic-worker-wrapper.log
-If not exist C:\generic-worker\generic-worker-gpg-signing-key.key echo Generating key pair >> C:\generic-worker\generic-worker-wrapper.log
-If not exist C:\generic-worker\generic-worker-gpg-signing-key.key C:\generic-worker\generic-worker.exe new-openpgp-keypair --file C:\generic-worker\generic-worker-gpg-signing-key.key
-If exist C:\generic-worker\generic-worker-gpg-signing-key.key echo Key pair created >> C:\generic-worker\generic-worker-wrapper.log
-If not exist C:\generic-worker\generic-worker-gpg-signing-key.key shutdown /r /t 0 /f /c "Rebooting as key generation failed"
+echo Checking for ed25519 key >> C:\generic-worker\generic-worker-wrapper.log
+If exist C:\generic-worker\ed25519-private.key echo ed25519 key present >> C:\generic-worker\generic-worker-wrapper.log
+If not exist C:\generic-worker\ed25519-private.key echo Generating ed25519 key >> C:\generic-worker\generic-worker-wrapper.log
+If not exist C:\generic-worker\ed25519-private.key C:\generic-worker\generic-worker.exe new-ed25519-keypair --file C:\generic-worker\ed25519-private.key
+If exist C:\generic-worker\ed25519-private.key echo ed25519 key created >> C:\generic-worker\generic-worker-wrapper.log
+If not exist C:\generic-worker\ed25519-private.key shutdown /r /t 0 /f /c "Rebooting as ed25519 key missing"
 
 
 echo Running generic-worker startup script (run-generic-worker.bat) ... >> C:\generic-worker\generic-worker-wrapper.log
