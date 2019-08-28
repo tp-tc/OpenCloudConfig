@@ -30,7 +30,7 @@ echo Running generic-worker startup script (run-generic-worker.bat) ... >> C:\ge
 echo Disk space stats of C:\ >> C:\generic-worker\generic-worker-wrapper.log
 fsutil volume diskfree c: >> C:\generic-worker\generic-worker-wrapper.log
 
-If exist C:\generic-worker\gen_worker.config GoTo PreWorker
+If exist C:\generic-worker\gen_worker.config for %%R in (C:\generic-worker\gen_worker.config) do if not %%~zR lss 1 GoTo PreWorker
 for /F "tokens=14" %%i in ('"ipconfig | findstr IPv4"') do SET LOCAL_IP=%%i
 cat C:\generic-worker\master-generic-worker.json | jq ".  | .workerId=\"%COMPUTERNAME%\"" > C:\generic-worker\gen_worker.json
 cat C:\generic-worker\gen_worker.json | jq ".  | .publicIP=\"%LOCAL_IP%\"" > C:\generic-worker\gen_worker.config
