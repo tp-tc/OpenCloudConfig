@@ -834,7 +834,8 @@
         }
       ],
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-hw-generic-worker-10-and-reboot.bat",
-      "Target": "C:\\generic-worker\\run-generic-worker.bat"
+      "Target": "C:\\generic-worker\\run-generic-worker.bat",
+      "sha512": "b6a194bbc3b2332300907e55e22a3701520f083f30bda7193144d3fc8877e22ff380f962bc5577176659f4ccad0801d19ba5d18fd64e55585a2ed24cb2da61ee"
     },
     {
       "ComponentName": "TaskUserInitScript",
