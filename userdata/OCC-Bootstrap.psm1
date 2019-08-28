@@ -1938,6 +1938,9 @@ function Initialize-Instance {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
+    if ($locationType -ne 'AWS') {
+      Set-NxlogConfig -sourceOrg $sourceOrg -sourceRepo $sourceRepo -sourceRev $sourceRev
+    }
     if ($locationType -eq 'AWS') {
       $rebootReasons = (Set-ComputerName)
       Set-DomainName
@@ -1950,8 +1953,6 @@ function Initialize-Instance {
         # ensure that Ec2HandleUserData is enabled before reboot (if the RunDesiredStateConfigurationAtStartup scheduled task doesn't yet exist)
         Set-Ec2ConfigSettings
         # ensure that an up to date nxlog configuration is used as early as possible
-        Set-NxlogConfig -sourceOrg $sourceOrg -sourceRepo $sourceRepo -sourceRev $sourceRev
-      } elseif ($locationType -ne 'AWS') {
         Set-NxlogConfig -sourceOrg $sourceOrg -sourceRepo $sourceRepo -sourceRev $sourceRev
       }
       Write-Log -message ('{0} :: reboot required: {1}' -f $($MyInvocation.MyCommand.Name), [string]::Join(', ', $rebootReasons)) -severity 'DEBUG'
