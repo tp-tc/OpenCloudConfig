@@ -1898,7 +1898,7 @@ function Set-NxlogConfig {
         $config = ('{0}\nxlog\conf\nxlog.conf' -f $env:ProgramFiles)
       }
       'Microsoft Windows 10*' {
-        $url = ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/Configuration/nxlog/win10.conf' -f $sourceOrg, $sourceRepo, $sourceRev)
+        $url = ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/Configuration/nxlog/{3}.conf' -f $sourceOrg, $sourceRepo, $sourceRev, $(if (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') { 'win10arm64' } else { 'win10' }))
         $config = ('{0}\nxlog\conf\nxlog.conf' -f ${env:ProgramFiles(x86)})
       }
       'Microsoft Windows Server 2012*' {
@@ -1950,6 +1950,8 @@ function Initialize-Instance {
         # ensure that Ec2HandleUserData is enabled before reboot (if the RunDesiredStateConfigurationAtStartup scheduled task doesn't yet exist)
         Set-Ec2ConfigSettings
         # ensure that an up to date nxlog configuration is used as early as possible
+        Set-NxlogConfig -sourceOrg $sourceOrg -sourceRepo $sourceRepo -sourceRev $sourceRev
+      } elseif ($locationType -ne 'AWS') {
         Set-NxlogConfig -sourceOrg $sourceOrg -sourceRepo $sourceRepo -sourceRev $sourceRev
       }
       Write-Log -message ('{0} :: reboot required: {1}' -f $($MyInvocation.MyCommand.Name), [string]::Join(', ', $rebootReasons)) -severity 'DEBUG'
