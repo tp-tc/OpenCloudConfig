@@ -14,7 +14,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 $rundsc = '{0}\\dsc\\rundsc.ps1'-f $env:SystemDrive
 
 if (!(Test-Path $rundsc ) -Or ((Get-Content $rundsc) -eq $Null) ) {
-  (New-Object Net.WebClient).DownloadFile("https://raw.githubusercontent.com/markcor/OpenCloudConfig/master/userdata/rundsc.ps1", "$rundsc")
+  (New-Object Net.WebClient).DownloadFile("https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/rundsc.ps1", "$rundsc")
   while (!(Test-Path $rundsc)){ Start-Sleep 10 }
   foreach ($flag in $flagss) {
     if (Test-Path -Path $flag -ErrorAction SilentlyContinue) {
