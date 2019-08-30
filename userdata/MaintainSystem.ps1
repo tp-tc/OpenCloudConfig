@@ -96,15 +96,20 @@ function Remove-OldTaskDirectories {
   }
 }
 function Invoke-OccReset {
+  param (
+    [string] $sourceOrg = $(if ((Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -ErrorAction SilentlyContinue) -and (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name 'Organisation' -ErrorAction SilentlyContinue)) { (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name 'Organisation').Organisation } else { 'mozilla-releng' }),
+    [string] $sourceRepo = $(if ((Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -ErrorAction SilentlyContinue) -and (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name 'Repository' -ErrorAction SilentlyContinue)) { (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name 'Repository').Repository } else { 'OpenCloudConfig' }),
+    [string] $sourceRev = $(if ((Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -ErrorAction SilentlyContinue) -and (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name 'Revision' -ErrorAction SilentlyContinue)) { (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name 'Revision').Revision } else { 'master' })
+  )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     try {
-      if (${env:COMPUTERNAME}.ToLower().StartsWith('t-w1064-') -or ${env:COMPUTERNAME}.ToLower().StartsWith('yoga-')) {
+      if (${env:COMPUTERNAME}.ToLower().StartsWith('t-w1064-') -or (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64')) {
         foreach ($script in @('rundsc', 'MaintainSystem')) {
           $guid = [Guid]::NewGuid()
-          $scriptUrl = ('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/{0}.ps1?{1}' -f $script, $guid)
+          $scriptUrl = ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/{3}.ps1?{4}' -f $sourceOrg, $sourceRepo, $sourceRev, $script, $guid)
           $newScriptPath = ('C:\dsc\{0}-{1}.ps1' -f $script, $guid)
           (New-Object Net.WebClient).DownloadFile($scriptUrl, $newScriptPath)
 
@@ -127,8 +132,79 @@ function Invoke-OccReset {
           }
         }
       }
+      if ((${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') -and (-not (Test-ScheduledTaskExists -TaskName 'RunDesiredStateConfigurationAtStartup'))) {
+        New-PowershellScheduledTask -taskName 'RunDesiredStateConfigurationAtStartup' -scriptUrl ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/rundsc.ps1?{3}' -f $sourceOrg, $sourceRepo, $sourceRev, [Guid]::NewGuid()) -scriptPath 'C:\dsc\rundsc.ps1' -sc 'onstart'
+      }
     } catch {
       Write-Log -message ('{0} :: exception - {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+    }
+  }
+  end {
+    Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+}
+function Test-ScheduledTaskExists {
+  param (
+    [string] $taskName
+  )
+  if (Get-Command 'Get-ScheduledTask' -ErrorAction 'SilentlyContinue') {
+    return [bool](Get-ScheduledTask -TaskName $taskName -ErrorAction 'SilentlyContinue')
+  }
+  # sceduled task commandlets are unavailable on windows 7, so we use com to access sceduled tasks here.
+  $scheduleService = (New-Object -ComObject Schedule.Service)
+  $scheduleService.Connect()
+  return (@($scheduleService.GetFolder("\").GetTasks(0) | ? { $_.Name -eq $taskName }).Length -gt 0)
+}
+function New-PowershellScheduledTask {
+  param (
+    [string] $taskName,
+    [string] $scriptUrl,
+    [string] $scriptPath,
+    [string] $sc,
+    [string] $mo = $null
+  )
+  begin {
+    Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+  }
+  process {
+    # delete scheduled task if it pre-exists
+    if ((Test-ScheduledTaskExists -TaskName $taskName)) {
+      try {
+        Start-Process 'schtasks.exe' -ArgumentList @('/delete', '/tn', $taskName, '/f') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-delete.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskName) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-delete.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskName)
+        Write-Log -message ('{0} :: scheduled task: {1} deleted.' -f $($MyInvocation.MyCommand.Name), $taskName) -severity 'INFO'
+      }
+      catch {
+        Write-Log -message ('{0} :: failed to delete scheduled task: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $taskName, $_.Exception.Message) -severity 'ERROR'
+      }
+    }
+    # delete script if it pre-exists
+    if (Test-Path -Path $scriptPath -ErrorAction SilentlyContinue) {
+      Remove-Item -Path $scriptPath -confirm:$false -force
+      Write-Log -message ('{0} :: {1} deleted.' -f $($MyInvocation.MyCommand.Name), $scriptPath) -severity 'INFO'
+    }
+    # download script
+    try {
+      (New-Object Net.WebClient).DownloadFile($scriptUrl, $scriptPath)
+      Write-Log -message ('{0} :: {1} downloaded from {2}.' -f $($MyInvocation.MyCommand.Name), $scriptPath, $scriptUrl) -severity 'INFO'
+    }
+    catch {
+      Write-Log -message ('{0} :: failed to download scheduled task script {1} from {2}. {3}' -f $($MyInvocation.MyCommand.Name), $scriptPath, $scriptUrl, $_.Exception.Message) -severity 'ERROR'
+    }
+    if (Test-Path -Path $scriptPath -ErrorAction SilentlyContinue) {
+      # create scheduled task
+      try {
+        if ($mo) {
+          Start-Process 'schtasks.exe' -ArgumentList @('/create', '/tn', $taskName, '/sc', $sc, '/mo', $mo, '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', ('"{0}\powershell.exe -NoLogo -NoProfile -WindowStyle Hidden -File \"{1}\" -ExecutionPolicy RemoteSigned -ConsoleOutputFile \"{2}\" "' -f $pshome, $scriptPath, $scriptPath.Replace('.ps1', '-run.log')), '/f') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-create.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskName) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-create.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskName)
+        } else {
+          Start-Process 'schtasks.exe' -ArgumentList @('/create', '/tn', $taskName, '/sc', $sc, '/ru', 'SYSTEM', '/rl', 'HIGHEST', '/tr', ('"{0}\powershell.exe -NoLogo -NoProfile -WindowStyle Hidden -File \"{1}\" -ExecutionPolicy RemoteSigned -ConsoleOutputFile \"{2}\" "' -f $pshome, $scriptPath, $scriptPath.Replace('.ps1', '-run.log')), '/f') -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.schtask-{2}-create.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskName) -RedirectStandardError ('{0}\log\{1}.schtask-{2}-create.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $taskName)
+        }
+        Write-Log -message ('{0} :: scheduled task: {1} created.' -f $($MyInvocation.MyCommand.Name), $taskName) -severity 'INFO'
+      }
+      catch {
+        Write-Log -message ('{0} :: failed to create scheduled task: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $taskName, $_.Exception.Message) -severity 'ERROR'
+      }
+    } else {
+      Write-Log -message ('{0} :: skipped creation of scheduled task: {1}. missing script: {2}' -f $($MyInvocation.MyCommand.Name), $taskName, $scriptPath) -severity 'ERROR'
     }
   }
   end {
