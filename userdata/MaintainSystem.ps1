@@ -138,6 +138,9 @@ function Invoke-OccReset {
       }
       if (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') {
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Type 'String' -Name 'Revision' -Value 'master'
+        if ((Test-Path -Path 'C:\generic-worker\generic-worker.config' -ErrorAction SilentlyContinue) -and (-not (Test-Path -Path 'C:\generic-worker\master-generic-worker.json' -ErrorAction SilentlyContinue))) {
+          Copy-Item -Path 'C:\generic-worker\generic-worker.config' -Destination 'C:\generic-worker\master-generic-worker.json'
+        }
       }
       if ((${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') -and (-not (Test-ScheduledTaskExists -TaskName 'RunDesiredStateConfigurationAtStartup'))) {
         New-PowershellScheduledTask -taskName 'RunDesiredStateConfigurationAtStartup' -scriptUrl ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/rundsc.ps1?{3}' -f $sourceOrg, $sourceRepo, $sourceRev, [Guid]::NewGuid()) -scriptPath 'C:\dsc\rundsc.ps1' -sc 'onstart'
