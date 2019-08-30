@@ -49,7 +49,11 @@ function Run-MaintainSystem {
   process {
     Remove-OldTaskDirectories
     Disable-DesiredStateConfig
-    Invoke-OccReset
+    if (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') {
+      Invoke-OccReset -sourceRev 'master'
+    } else {
+      Invoke-OccReset
+    }
   }
   end {
     Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
