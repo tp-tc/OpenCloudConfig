@@ -18,11 +18,11 @@ GoTo ManifestCheck
 :key_pair
 del /Q /F C:\DSC\EndOfManifest.semaphore  >> C:\generic-worker\generic-worker-wrapper.log
 echo Checking for ed25519 key >> C:\generic-worker\generic-worker-wrapper.log
-If exist C:\generic-worker\ed25519-private.key echo ed25519 key present >> C:\generic-worker\generic-worker-wrapper.log
-If not exist C:\generic-worker\ed25519-private.key echo Generating ed25519 key >> C:\generic-worker\generic-worker-wrapper.log
-If not exist C:\generic-worker\ed25519-private.key C:\generic-worker\generic-worker.exe new-ed25519-keypair --file C:\generic-worker\ed25519-private.key
-If exist C:\generic-worker\ed25519-private.key echo ed25519 key created >> C:\generic-worker\generic-worker-wrapper.log
-If not exist C:\generic-worker\ed25519-private.key shutdown /r /t 0 /f /c "Rebooting as ed25519 key missing"
+if exist C:\generic-worker\ed25519-private.key echo ed25519 key present >> C:\generic-worker\generic-worker-wrapper.log
+if not exist C:\generic-worker\ed25519-private.key echo Generating ed25519 key >> C:\generic-worker\generic-worker-wrapper.log
+if not exist C:\generic-worker\ed25519-private.key C:\generic-worker\generic-worker.exe new-ed25519-keypair --file C:\generic-worker\ed25519-private.key
+if exist C:\generic-worker\ed25519-private.key echo ed25519 key created >> C:\generic-worker\generic-worker-wrapper.log
+if not exist C:\generic-worker\ed25519-private.key shutdown /r /t 0 /f /c "Rebooting as ed25519 key missing"
 
 
 echo Running generic-worker startup script (run-generic-worker.bat) ... >> C:\generic-worker\generic-worker-wrapper.log
@@ -30,15 +30,15 @@ echo Running generic-worker startup script (run-generic-worker.bat) ... >> C:\ge
 echo Disk space stats of C:\ >> C:\generic-worker\generic-worker-wrapper.log
 fsutil volume diskfree c: >> C:\generic-worker\generic-worker-wrapper.log
 
-If exist C:\generic-worker\gen_worker.config for %%R in (C:\generic-worker\gen_worker.config) do if not %%~zR lss 1 GoTo PreWorker
+if exist C:\generic-worker\gw.config for %%R in (C:\generic-worker\gw.config) do if not %%~zR lss 1 GoTo PreWorker
 for /F "tokens=14" %%i in ('"ipconfig | findstr IPv4"') do SET LOCAL_IP=%%i
-cat C:\generic-worker\master-generic-worker.json | jq ".  | .workerId=\"%COMPUTERNAME%\"" > C:\generic-worker\gen_worker.json
-cat C:\generic-worker\gen_worker.json | jq ".  | .publicIP=\"%LOCAL_IP%\"" > C:\generic-worker\gen_worker.config
-
+set _workerId=%COMPUTERNAME%
+if "%_workerId:~0,5%"=="YOGA-" set _workerId=t-lenovoyogac630-%_workerId:~-3%
+cat C:\generic-worker\master-generic-worker.json | jq ".  | .workerId=\"%_workerId%\" | .publicIP=\"%LOCAL_IP%\" | .ed25519SigningKeyLocation=\"C:\\generic-worker\\ed25519-private.key\"" > C:\generic-worker\gw.config
 
 :PreWorker
 echo Checking config file contents >> C:\generic-worker\generic-worker-wrapper.log
-Type C:\generic-worker\gen_worker.config  >> C:\generic-worker\generic-worker-wrapper.log
+type C:\generic-worker\gw.config  >> C:\generic-worker\generic-worker-wrapper.log
 if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-worker\disable-desktop-interrupt.reg
 
 :CheckForStateFlag
@@ -60,7 +60,7 @@ echo Deleting C:\dsc\task-claim-state.valid file >> C:\generic-worker\generic-wo
 del /Q /F C:\dsc\task-claim-state.valid >> C:\generic-worker\generic-worker-wrapper.log 
 pushd %~dp0
 set errorlevel=
-C:\generic-worker\generic-worker.exe run --config C:\generic-worker\gen_worker.config >> C:\generic-worker\generic-worker-wrapper.log
+C:\generic-worker\generic-worker.exe run --config C:\generic-worker\gw.config >> C:\generic-worker\generic-worker-wrapper.log
 set GW_EXIT_CODE=%errorlevel%
 
 if %GW_EXIT_CODE% EQU 69 goto ErrorReboot
