@@ -142,11 +142,11 @@ function Invoke-OccReset {
           Copy-Item -Path 'C:\generic-worker\generic-worker.config' -Destination 'C:\generic-worker\master-generic-worker.json'
         }
 
-        if (${env:COMPUTERNAME}.ToLower().StartsWith('yoga-') -and (Test-Path -Path 'C:\generic-worker\master-generic-worker.json' -ErrorAction SilentlyContinue)) {
-          $gwMasterConfig = (Get-Content -Path 'C:\generic-worker\master-generic-worker.json' -raw | ConvertFrom-Json)
-          $gwMasterConfig.workerId = ('t-lenovoyogac630-{0}' -f ${env:COMPUTERNAME}.ToLower().Replace('yoga-', ''))
-          $gwMasterConfig | ConvertTo-Json -depth 32 | Set-Content -Path 'C:\generic-worker\master-generic-worker.json'
-        }
+        #if (${env:COMPUTERNAME}.ToLower().StartsWith('yoga-') -and (Test-Path -Path 'C:\generic-worker\master-generic-worker.json' -ErrorAction SilentlyContinue)) {
+        #  $gwMasterConfig = (Get-Content -Path 'C:\generic-worker\master-generic-worker.json' -raw | ConvertFrom-Json)
+        #  $gwMasterConfig.workerId = ('t-lenovoyogac630-{0}' -f ${env:COMPUTERNAME}.ToLower().Replace('yoga-', ''))
+        #  $gwMasterConfig | ConvertTo-Json -depth 32 | Set-Content -Path 'C:\generic-worker\master-generic-worker.json'
+        #}
       }
       if ((${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') -and (-not (Test-ScheduledTaskExists -TaskName 'RunDesiredStateConfigurationAtStartup'))) {
         New-PowershellScheduledTask -taskName 'RunDesiredStateConfigurationAtStartup' -scriptUrl ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/rundsc.ps1?{3}' -f $sourceOrg, $sourceRepo, $sourceRev, [Guid]::NewGuid()) -scriptPath 'C:\dsc\rundsc.ps1' -sc 'onstart'
