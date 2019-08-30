@@ -1703,7 +1703,7 @@ function Set-ChainOfTrustKey {
         }
       }
       '^gecko-t-win10-(a64-beta|64-(hw|ux)(-b)?)$' {
-        $gwConfigPath = 'C:\generic-worker\gen_worker.config'
+        $gwConfigPath = 'C:\generic-worker\gw.config'
         $gwExePath = 'C:\generic-worker\generic-worker.exe'
         if (Test-Path -Path $gwConfigPath -ErrorAction SilentlyContinue) {
           $gwConfig = (Get-Content $gwConfigPath -raw | ConvertFrom-Json)
