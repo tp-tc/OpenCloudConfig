@@ -7,6 +7,7 @@ function Invoke-InstanceHealthCheck {
   }
   process {
     Write-LogDirectoryContents -path 'C:\generic-worker'
+    Get-WorkerStatus
   }
   end {
     if (Get-Command -Name 'Write-Log' -ErrorAction 'SilentlyContinue') {
@@ -40,6 +41,38 @@ function Write-LogDirectoryContents {
         Write-Log -message ('{0} :: directory "{1}" not found' -f $($MyInvocation.MyCommand.Name), $path) -severity 'DEBUG'
       }
     }
+  }
+  end {
+    if (Get-Command -Name 'Write-Log' -ErrorAction 'SilentlyContinue') {
+      Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+    }
+  }
+}
+
+function Get-WorkerStatus {
+  param (
+    [string] $apiUrl = 'https://queue.taskcluster.net/v1',
+    [string] $gwConfigPath = $(if (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') {'C:\generic-worker\gw.config'} else {'C:\generic-worker\generic-worker.config'})
+  )
+  begin {
+    if (Get-Command -Name 'Write-Log' -ErrorAction 'SilentlyContinue') {
+      Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
+    }
+  }
+  process {
+    try {
+      if ((Get-Command -Name 'Write-Log' -ErrorAction 'SilentlyContinue') -and (Test-Path -Path $gwConfigPath -ErrorAction 'SilentlyContinue')) {
+        $gwConfig = (Get-Content -Path $gwConfigPath -raw | ConvertFrom-Json)
+        $workerStatusUri = ('{0}/provisioners/{1}/worker-types/{2}/workers/{3}/{4}' -f $apiUrl, $gwConfig.provisionerId, $gwConfig.workerType, $gwConfig.workerGroup, $gwConfig.workerId)
+        Write-Log -message ('{0} :: worker status api uri determined as: {1} from {2}' -f $($MyInvocation.MyCommand.Name), $workerStatusUri, $gwConfigPath) -severity 'DEBUG'
+        $workerStatus = ((Invoke-WebRequest -Uri $workerStatusUri -UseBasicParsing).Content | ConvertFrom-Json)
+        Write-Log -message ('{0} :: latest task determined as: {1}/{2}' -f $($MyInvocation.MyCommand.Name), $workerStatus.recentTasks[-1].taskId, $workerStatus.recentTasks[-1].runId) -severity 'DEBUG'
+        $taskStatusUri = ('{0}/task/{1}/status' -f $apiUrl, $workerStatus.recentTasks[-1].taskId)
+        Write-Log -message ('{0} :: task status api uri determined as: {1}' -f $($MyInvocation.MyCommand.Name), $taskStatusUri) -severity 'DEBUG'
+        $taskStatus = ((Invoke-WebRequest -Uri $taskStatusUri -UseBasicParsing).Content | ConvertFrom-Json)
+        Write-Log -message ('{0} :: task: {1}, run: {2}, started: {3}, state: {4}' -f $($MyInvocation.MyCommand.Name), $taskStatus.status.taskId, $taskStatus.status.runs[$workerStatus.recentTasks[-1].runId].started, $taskStatus.status.runs[$workerStatus.recentTasks[-1].runId].state) -severity 'DEBUG'
+      }
+    } catch {}
   }
   end {
     if (Get-Command -Name 'Write-Log' -ErrorAction 'SilentlyContinue') {
