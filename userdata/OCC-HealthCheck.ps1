@@ -72,7 +72,11 @@ function Get-WorkerStatus {
         $taskStatus = ((Invoke-WebRequest -Uri $taskStatusUri -UseBasicParsing).Content | ConvertFrom-Json)
         Write-Log -message ('{0} :: task: {1}, run: {2}, started: {3}, state: {4}' -f $($MyInvocation.MyCommand.Name), $taskStatus.status.taskId, $taskStatus.status.runs[$workerStatus.recentTasks[-1].runId].started, $taskStatus.status.runs[$workerStatus.recentTasks[-1].runId].state) -severity 'DEBUG'
       }
-    } catch {}
+    } catch {
+      if (Get-Command -Name 'Write-Log' -ErrorAction 'SilentlyContinue') {
+        Write-Log -message ('{0} :: exception: {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'DEBUG'
+      }
+    }
   }
   end {
     if (Get-Command -Name 'Write-Log' -ErrorAction 'SilentlyContinue') {
