@@ -52,7 +52,7 @@ function Write-LogDirectoryContents {
 function Get-WorkerStatus {
   param (
     [string] $apiUrl = 'https://queue.taskcluster.net/v1',
-    [string] $gwConfigPath = $(if (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') {'C:\generic-worker\gw.config'} else {'C:\generic-worker\generic-worker.config'})
+    [string] $gwConfigPath = $(if (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') { $(if (Test-Path -Path 'C:\generic-worker\gw.config' -ErrorAction 'SilentlyContinue') { 'C:\generic-worker\gw.config' } else { 'C:\generic-worker\gen_worker.config' }) } else { 'C:\generic-worker\generic-worker.config' })
   )
   begin {
     if (Get-Command -Name 'Write-Log' -ErrorAction 'SilentlyContinue') {
