@@ -13,6 +13,7 @@ echo Checking for manifest completion >> C:\generic-worker\generic-worker-wrappe
 if exist C:\DSC\EndOfManifest.semaphore GoTo key_pair
 tasklist /FI "IMAGENAME eq powershell.exe" | findstr "powershell.exe" >nul
 if %ERRORLEVEL% == 1 goto loop_reboot
+powershell -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString(('https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/OCC-HealthCheck.ps1?{0}' -f [Guid]::NewGuid())))"
 GoTo ManifestCheck
 
 :key_pair

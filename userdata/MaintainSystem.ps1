@@ -50,7 +50,7 @@ function Run-MaintainSystem {
     Remove-OldTaskDirectories
     Disable-DesiredStateConfig
     if (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') {
-      Invoke-OccReset -sourceRev 'master'
+      Invoke-OccReset -sourceOrg 'mozilla-releng' -sourceRepo 'OpenCloudConfig' -sourceRev 'master'
     } else {
       Invoke-OccReset
     }
