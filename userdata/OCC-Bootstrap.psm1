@@ -1674,7 +1674,7 @@ function Set-ChainOfTrustKey {
   process {
     switch -regex ($workerType) {
       # level 3 builder needs key added by user intervention and must already exist in cot repo
-      '^gecko-3-b-win2012(-c[45])?$' {
+      '^(gecko|mpd)-3-b-win2012(-c[45])?$' {
         while ((-not (Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue)) -or (-not (Test-Path -Path 'C:\generic-worker\openpgp-private.key' -ErrorAction SilentlyContinue))) {
           Write-Log -message ('{0} :: ed25519 and/or openpgp key missing. awaiting user intervention.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
           Sleep 60
