@@ -93,6 +93,26 @@
       "sha512": "b1c48d84d041055db3d3e3cbd22ef2f3300728b06c76660b9b78ececf56b7ccbc80addb39a64c0a4eb68bf3463ceb6d254dedda047049ce680e9d543dd8a9af9"
     },
     {
+      "ComponentName": "VisualStudio2019BuildTools",
+      "ComponentType": "ExeInstall",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1579174",
+      "Url": "https://download.visualstudio.microsoft.com/download/pr/c4fef23e-cc45-4836-9544-70e213134bc8/ca949157f8a5d9dcd4be11fb32cebc04c03fdf401a48bf36ae31c289d8335ffb/vs_BuildTools.exe",
+      "Arguments": [
+        "--allWorkload",
+        "--includeRecommended",
+        "--includeOptional",
+        "--quiet",
+        "--norestart",
+        "--wait"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe"
+        ]
+      },
+      "sha512": "f1a21a86cb7997fd88627566cd845217ef1af8d5993a54c1d3400ca720b0a5b1472e7ec5c4bf755d3d21c8d8027cff8661edbe6ced1fb1c63d656164ebdd8104"
+    },
+    {
       "ComponentName": "SevenZip",
       "ComponentType": "ExeInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
