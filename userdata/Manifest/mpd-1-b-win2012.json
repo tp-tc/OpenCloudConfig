@@ -98,7 +98,7 @@
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1579174",
       "Url": "https://download.visualstudio.microsoft.com/download/pr/c4fef23e-cc45-4836-9544-70e213134bc8/ca949157f8a5d9dcd4be11fb32cebc04c03fdf401a48bf36ae31c289d8335ffb/vs_BuildTools.exe",
       "Arguments": [
-        "--allWorkload",
+        "--allWorkloads",
         "--includeRecommended",
         "--includeOptional",
         "--quiet",
