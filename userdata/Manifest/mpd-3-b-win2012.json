@@ -105,9 +105,11 @@
         "--norestart",
         "--wait"
       ],
+      "Wait": 1200,
       "Validate": {
         "PathsExist": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe"
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vs_installer.exe"
         ]
       },
       "sha512": "f1a21a86cb7997fd88627566cd845217ef1af8d5993a54c1d3400ca720b0a5b1472e7ec5c4bf755d3d21c8d8027cff8661edbe6ced1fb1c63d656164ebdd8104"
