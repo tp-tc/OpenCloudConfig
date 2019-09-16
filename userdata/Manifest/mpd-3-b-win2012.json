@@ -95,7 +95,7 @@
     {
       "ComponentName": "VisualStudio2019BuildTools",
       "ComponentType": "ExeInstall",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1579174",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1579174, https://docs.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-visual-studio?view=vs-2019, https://docs.microsoft.com/en-us/visualstudio/install/workload-and-component-ids?view=vs-2019",
       "Url": "https://download.visualstudio.microsoft.com/download/pr/c4fef23e-cc45-4836-9544-70e213134bc8/ca949157f8a5d9dcd4be11fb32cebc04c03fdf401a48bf36ae31c289d8335ffb/vs_BuildTools.exe",
       "Arguments": [
         "--add",
@@ -106,7 +106,6 @@
         "--norestart",
         "--wait"
       ],
-      "Wait": 1200,
       "Validate": {
         "PathsExist": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe"

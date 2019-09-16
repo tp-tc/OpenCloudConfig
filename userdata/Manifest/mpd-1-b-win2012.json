@@ -106,7 +106,6 @@
         "--norestart",
         "--wait"
       ],
-      "Wait": 1200,
       "Validate": {
         "PathsExist": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe"
