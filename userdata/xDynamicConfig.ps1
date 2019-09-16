@@ -284,7 +284,7 @@ Configuration xDynamicConfig {
           DependsOn = ('[Script]ExeDownload_{0}' -f $item.ComponentName)
           GetScript = "@{ ExeInstall = $item.ComponentName }"
           SetScript = {
-            Invoke-LoggedCommandRun -verbose -componentName $using:item.ComponentName -command ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName })) -arguments @($using:item.Arguments | % { $($_) }) -eventLogSource 'occ-dsc'
+            Invoke-LoggedCommandRun -verbose -componentName $using:item.ComponentName -command ('{0}\Temp\{1}.exe' -f $env:SystemRoot, $(if ($using:item.sha512) { $using:item.sha512 } else { $using:item.ComponentName })) -arguments @($using:item.Arguments | % { $($_) }) -timeoutInSeconds $(if ($using:item.Timeout) { [int]$using:item.Timeout } else { 600 }) -waitInSeconds $(if ($using:item.Wait) { [int]$using:item.Wait } else { 0 }) -eventLogSource 'occ-dsc'
           }
           TestScript = {
             return Confirm-LogValidation -source 'occ-dsc' -satisfied (Confirm-All -verbose -source 'occ-dsc' -componentName $using:item.ComponentName -validations $using:item.Validate) -verbose
