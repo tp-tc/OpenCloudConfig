@@ -1536,6 +1536,39 @@
       "Name": "TASKCLUSTER_ROOT_URL",
       "Value": "https://taskcluster.net",
       "Target": "Machine"
+    },
+    {
+      "ComponentName": "CurlDownload",
+      "ComponentType": "FileDownload",
+      "Source": "https://curl.haxx.se/windows/dl-7.66.0_2/curl-7.66.0_2-win64-mingw.zip",
+      "Target": "C:\\Windows\\Temp\\curl.zip"
+    },
+    {
+      "ComponentName": "CurlInstall",
+      "ComponentType": "CommandRun",
+      "Comment": "Curl is needed for MPD, but installs via a zip file, so extract",
+      "Command": "C:\\Program Files\\7-Zip\\7z.exe",
+      "Arguments": [
+        "x",
+        "-oC:\\curl",
+        "C:\\Windows\\Temp\\curl.zip",
+        "curl-7.66.0-win64-mingw"
+      ],
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "SevenZip"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "CurlMDownload"
+        }
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\curl\\bin\\curl.exe"
+        ]
+      }
     }
   ],
   "ProvisionerConfiguration": {
