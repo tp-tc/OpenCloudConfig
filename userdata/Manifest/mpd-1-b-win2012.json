@@ -987,6 +987,10 @@
         {
           "ComponentType": "CommandRun",
           "ComponentName": "DeleteMozillaBuildPython3PythonExe"
+        },
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "CurlInstall"
         }
       ],
       "Name": "PATH",
@@ -1001,7 +1005,8 @@
         "C:\\mozilla-build\\nsis-3.01",
         "C:\\mozilla-build\\python",
         "C:\\mozilla-build\\python\\Scripts",
-        "C:\\mozilla-build\\python3"
+        "C:\\mozilla-build\\python3",
+        "C:\\curl\\curl-7.66.0-win64-mingw\\bin"
       ],
       "Target": "Machine"
     },
@@ -1547,7 +1552,7 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\curl\\bin\\curl.exe"
+          "C:\\curl\\curl-7.66.0-win64-mingw\\bin\\curl.exe"
         ]
       }
     }
