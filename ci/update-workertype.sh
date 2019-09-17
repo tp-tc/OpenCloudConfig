@@ -57,7 +57,7 @@ aws_region=${aws_region:='us-west-2'}
 aws_key_name="mozilla-taskcluster-worker-${tc_worker_type}"
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] aws_key_name: ${aws_key_name}"
 
-aws_client_token=${GITHUB_HEAD_SHA:0:12}
+short_sha=${GITHUB_HEAD_SHA:0:12}
 echo "{\"secret\":{\"latest\":{\"timestamp\":\"\",\"git-sha\":\"${GITHUB_HEAD_SHA:0:12}\"}}}" | jq '.' > ./workertype-secrets.json
 
 commit_message=$(curl --silent https://api.github.com/repos/mozilla-releng/OpenCloudConfig/git/commits/${GITHUB_HEAD_SHA} | jq -r '.message')
@@ -84,37 +84,37 @@ else
   exit
 fi
 
-echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] git sha: ${aws_client_token} used for aws client token"
+echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] git sha: ${short_sha} used for aws client token"
 
 case "${tc_worker_type}" in
   gecko-t-win7-32*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win7-32-kb4499175-20190516082500'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-    ami_description="Gecko test worker for Windows 7 32 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
+    ami_description="Gecko test worker for Windows 7 32 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${short_sha}, deploy: ${TASK_ID}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
     root_username=root
     ;;
   gecko-t-win10-64-alpha|gecko-t-win10-64-gpu-a)
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_10_Professional_1903_18362_239_en-US_x64-VAC-*'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-    ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
+    ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${short_sha}, deploy: ${TASK_ID}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
     root_username=Administrator
     ;;
   gecko-t-win10-64*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_10_Enterprise_1803_17134_285_en-US_x64_MBR-VAC-*'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-    ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
+    ami_description="Gecko tester for Windows 10 64 bit; TaskCluster worker type: ${tc_worker_type}, OCC version ${short_sha}, deploy: ${TASK_ID}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
     root_username=Administrator
     ;;
   mpd-[13]-b-win2012|gecko-[123]-b-win2012*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-ena-base-*'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-    ami_description="Gecko builder for Windows; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
+    ami_description="Gecko builder for Windows; TaskCluster worker type: ${tc_worker_type}, OCC version ${short_sha}, deploy: ${TASK_ID}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
     root_username=Administrator
     ;;
   relops-image-builder)
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_Server-2016-English-Full-Base-*'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners amazon --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
-    ami_description="RelOps image builder for Windows; TaskCluster worker type: ${tc_worker_type}, OCC version ${aws_client_token}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
+    ami_description="RelOps image builder for Windows; TaskCluster worker type: ${tc_worker_type}, OCC version ${short_sha}, deploy: ${TASK_ID}, ${GITHUB_HEAD_REPO_URL}/tree/${GITHUB_HEAD_SHA}"}
     root_username=Administrator
     ;;
   *)
@@ -169,14 +169,14 @@ fi
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] occ manifest set to: ${occ_manifest}"
 
 curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq '.' > ./${tc_worker_type}-pre.json
-cat ./${tc_worker_type}-pre.json | jq --arg occmanifest $occ_manifest --arg deploydate "$(date --utc +"%F %T.%3NZ")" --arg deploymentId $aws_client_token --argjson instanceTypes $provisioner_configuration_instance_types --argjson userData $provisioner_configuration_userdata -c 'del(.workerType, .lastModified, .userData, .secrets.files, .secrets."generic-worker") | .instanceTypes = $instanceTypes | .userData = $userData | .userData.genericWorker.config.deploymentId = $deploymentId | .userData.genericWorker.config.workerTypeMetadata."machine-setup".manifest = $occmanifest | .userData.genericWorker.config.workerTypeMetadata."machine-setup"."ami-created" = $deploydate' > ./${tc_worker_type}.json
+cat ./${tc_worker_type}-pre.json | jq --arg occmanifest $occ_manifest --arg deploydate "$(date --utc +"%F %T.%3NZ")" --arg deploymentId ${short_sha} --argjson instanceTypes ${provisioner_configuration_instance_types} --argjson userData $provisioner_configuration_userdata -c 'del(.workerType, .lastModified, .userData, .secrets.files, .secrets."generic-worker") | .instanceTypes = $instanceTypes | .userData = $userData | .userData.genericWorker.config.deploymentId = $deploymentId | .userData.genericWorker.config.workerTypeMetadata."machine-setup".manifest = $occmanifest | .userData.genericWorker.config.workerTypeMetadata."machine-setup"."ami-created" = $deploydate' > ./${tc_worker_type}.json
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] active amis (pre-update): $(cat ./${tc_worker_type}.json | jq -c '[.regions[] | {region: .region, ami: .launchSpec.ImageId}]')"
 
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] latest base ami for: ${aws_base_ami_search_term}, in region: ${aws_region}, is: ${aws_base_ami_id} (https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Images:visibility=owned-by-me;imageId=${aws_base_ami_id})"
 
 # create instance, apply user-data, filter output, get instance id, tag instance, wait for shutdown
 while [ -z "$aws_instance_id" ]; do
-  aws_instance_id="$(aws ec2 run-instances --region ${aws_region} --image-id "${aws_base_ami_id}" --key-name ${aws_key_name} --security-group-ids "sg-3bd7bf41" --subnet-id "subnet-f94cb29f" --user-data "$(echo -e ${userdata})" --instance-type ${snapshot_aws_instance_type} --block-device-mappings "${snapshot_block_device_mappings}" --instance-initiated-shutdown-behavior stop --client-token "${tc_worker_type}-${aws_client_token}" | sed -n 's/^ *"InstanceId": "\(.*\)", */\1/p')"
+  aws_instance_id="$(aws ec2 run-instances --region ${aws_region} --image-id "${aws_base_ami_id}" --key-name ${aws_key_name} --security-group-ids "sg-3bd7bf41" --subnet-id "subnet-f94cb29f" --user-data "$(echo -e ${userdata})" --instance-type ${snapshot_aws_instance_type} --block-device-mappings "${snapshot_block_device_mappings}" --instance-initiated-shutdown-behavior stop --client-token "${short_sha}-${TASK_ID}" | sed -n 's/^ *"InstanceId": "\(.*\)", */\1/p')"
   if [ -z "$aws_instance_id" ]; then
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Instances:instanceType='${snapshot_aws_instance_type}';lifecycle=normal;instanceState=!stopped,!terminated;sort=desc:launchTime"
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] create instance failed. retrying..."
@@ -234,7 +234,7 @@ while [ -z "$aws_ami_id" ]; do
     aws ec2 delete-volume --region ${aws_region} --volume-id ${xvdf_volume_id}
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${xvdf_volume_id} deleted"
   fi
-  aws_ami_id=`aws ec2 create-image --region ${aws_region} --instance-id ${aws_instance_id} --name "${tc_worker_type} version ${aws_client_token}" --description "${ami_description}" | sed -n 's/^ *"ImageId": *"\(.*\)" *$/\1/p'`
+  aws_ami_id=`aws ec2 create-image --region ${aws_region} --instance-id ${aws_instance_id} --name "${tc_worker_type} version ${short_sha}" --description "${ami_description}" | sed -n 's/^ *"ImageId": *"\(.*\)" *$/\1/p'`
   if [ -z "$aws_ami_id" ]; then
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] create image failed. retrying..."
   fi
@@ -271,7 +271,7 @@ done
 
 # copy ami to each configured region, get copied ami id, tag copied ami, wait for copied ami availability
 jq -c '[.regions[].region] | .[]' ./${tc_worker_type}.json | sed 's/"//g' | grep -Fvx "${aws_region}" | while read region; do
-  aws_copied_ami_id=`aws ec2 copy-image --region ${region} --source-region ${aws_region} --source-image-id ${aws_ami_id} --name "${tc_worker_type} version ${aws_client_token}" --description "${ami_description}" | sed -n 's/^ *"ImageId": *"\(.*\)" *$/\1/p'`
+  aws_copied_ami_id=`aws ec2 copy-image --region ${region} --source-region ${aws_region} --source-image-id ${aws_ami_id} --name "${tc_worker_type} version ${short_sha}" --description "${ami_description}" | sed -n 's/^ *"ImageId": *"\(.*\)" *$/\1/p'`
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ami: ${aws_region} ${aws_ami_id} copy to ${region} ${aws_copied_ami_id} in progress: https://${region}.console.aws.amazon.com/ec2/v2/home?region=${region}#Images:visibility=owned-by-me;search=${aws_copied_ami_id}"
   aws ec2 create-tags --region ${region} --resources "${aws_copied_ami_id}" --tags "Key=WorkerType,Value=${tc_worker_type}"
   sleep 30
