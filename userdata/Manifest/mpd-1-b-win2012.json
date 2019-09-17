@@ -114,25 +114,6 @@
       "sha512": "f1a21a86cb7997fd88627566cd845217ef1af8d5993a54c1d3400ca720b0a5b1472e7ec5c4bf755d3d21c8d8027cff8661edbe6ced1fb1c63d656164ebdd8104"
     },
     {
-      "ComponentName": "InstallVS2019BuildTools",
-      "ComponentType": "CommandRun",
-      "Comment": "Install Visual Studio 2019 Build Tools",
-      "Command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vs_installer.exe",
-      "Arguments": [
-        "--allWorkloads",
-        "--includeRecommended",
-        "--includeOptional",
-        "--quiet",
-        "--norestart",
-        "--wait"
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\MSBuild\\Current\\Bin\\amd64\\MSBuild.exe"
-        ]
-      }
-    },
-    {
       "ComponentName": "SevenZip",
       "ComponentType": "ExeInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
@@ -1561,7 +1542,7 @@
         },
         {
           "ComponentType": "FileDownload",
-          "ComponentName": "CurlMDownload"
+          "ComponentName": "CurlDownload"
         }
       ],
       "Validate": {
