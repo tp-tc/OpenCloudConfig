@@ -989,12 +989,12 @@
           "ComponentName": "DeleteMozillaBuildPython3PythonExe"
         },
         {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CurlInstall"
-        },
-        {
           "ComponentName": "Git",
           "ComponentType": "ExeInstall",
+        },
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "CurlInstall"
         }
       ],
       "Name": "PATH",
