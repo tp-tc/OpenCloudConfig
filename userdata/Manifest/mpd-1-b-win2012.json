@@ -990,7 +990,7 @@
         },
         {
           "ComponentName": "Git",
-          "ComponentType": "ExeInstall",
+          "ComponentType": "ExeInstall"
         },
         {
           "ComponentType": "CommandRun",
