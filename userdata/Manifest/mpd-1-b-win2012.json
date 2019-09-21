@@ -184,6 +184,13 @@
       "Target": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Microsoft.PowerShell_profile.ps1"
     },
     {
+      "ComponentName": "GetNuGet",
+      "ComponentType": "FileDownload",
+      "Comment": "Nuget.exe needed for MPD001",
+      "Source": "https://dist.nuget.org/win-x86-commandline/v5.2.0/nuget.exe",
+      "Target": "C:\\nuget\\nuget.exe"
+    },
+    {
       "ComponentName": "FsutilDisable8Dot3",
       "ComponentType": "CommandRun",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
@@ -1001,6 +1008,10 @@
         {
           "ComponentType": "CommandRun",
           "ComponentName": "CurlInstall"
+        },
+        {
+          "ComponentType": "FileDownload",
+          "ComponentName": "GetNuGet"
         }
       ],
       "Name": "PATH",
@@ -1017,7 +1028,8 @@
         "C:\\mozilla-build\\python\\Scripts",
         "C:\\mozilla-build\\python3",
         "C:\\Program Files\\Git\\bin",
-        "C:\\curl\\curl-7.66.0-win64-mingw\\bin"
+        "C:\\curl\\curl-7.66.0-win64-mingw\\bin",
+        "C:\\nuget\\"
       ],
       "Target": "Machine"
     },
