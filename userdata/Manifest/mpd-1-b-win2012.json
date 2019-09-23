@@ -1029,7 +1029,7 @@
         "C:\\mozilla-build\\python3",
         "C:\\Program Files\\Git\\bin",
         "C:\\curl\\curl-7.66.0-win64-mingw\\bin",
-        "C:\\nuget\\"
+        "C:\\nuget"
       ],
       "Target": "Machine"
     },
