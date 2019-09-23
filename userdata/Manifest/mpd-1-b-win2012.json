@@ -184,11 +184,23 @@
       "Target": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Microsoft.PowerShell_profile.ps1"
     },
     {
+      "ComponentName": "NuGetFolderCreate",
+      "ComponentType": "DirectoryCreate",
+      "Comment": "Need to create the nuget folder",
+      "Path": "C:\\nuget"
+    },
+    {
       "ComponentName": "GetNuGet",
       "ComponentType": "FileDownload",
       "Comment": "Nuget.exe needed for MPD001",
       "Source": "https://dist.nuget.org/win-x86-commandline/v5.2.0/nuget.exe",
-      "Target": "C:\\nuget\\nuget.exe"
+      "Target": "C:\\nuget\\nuget.exe",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "NuGetFolderCreate"
+        }
+      ]
     },
     {
       "ComponentName": "FsutilDisable8Dot3",
