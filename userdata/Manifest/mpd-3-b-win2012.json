@@ -100,12 +100,6 @@
       "Arguments": [
         "--add",
         "Microsoft.VisualStudio.Product.BuildTools",
-        "--add",
-        "Microsoft.Net.Component.4.7.2.TargetingPack",
-        "--add",
-        "Microsoft.Net.ComponentGroup.DevelopmentPrerequisites",
-        "--add",
-        "Microsoft.Net.Component.4.7.2.SDK",
         "--includeRecommended",
         "--includeOptional",
         "--quiet",
@@ -182,25 +176,6 @@
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/Microsoft.PowerShell_profile.ps1",
       "Target": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Microsoft.PowerShell_profile.ps1"
-    },
-    {
-      "ComponentName": "NuGetFolderCreate",
-      "ComponentType": "DirectoryCreate",
-      "Comment": "Need to create the nuget folder",
-      "Path": "C:\\nuget"
-    },
-    {
-      "ComponentName": "GetNuGet",
-      "ComponentType": "FileDownload",
-      "Comment": "Nuget.exe needed for MPD001",
-      "Source": "https://dist.nuget.org/win-x86-commandline/v5.2.0/nuget.exe",
-      "Target": "C:\\nuget\\nuget.exe",
-      "DependsOn": [
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "NuGetFolderCreate"
-        }
-      ]
     },
     {
       "ComponentName": "FsutilDisable8Dot3",
@@ -1012,18 +987,6 @@
         {
           "ComponentType": "CommandRun",
           "ComponentName": "DeleteMozillaBuildPython3PythonExe"
-        },
-        {
-          "ComponentName": "Git",
-          "ComponentType": "ExeInstall"
-        },
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "CurlInstall"
-        },
-        {
-          "ComponentType": "FileDownload",
-          "ComponentName": "GetNuGet"
         }
       ],
       "Name": "PATH",
@@ -1038,10 +1001,7 @@
         "C:\\mozilla-build\\nsis-3.01",
         "C:\\mozilla-build\\python",
         "C:\\mozilla-build\\python\\Scripts",
-        "C:\\mozilla-build\\python3",
-        "C:\\Program Files\\Git\\bin",
-        "C:\\curl\\curl-7.66.0-win64-mingw\\bin",
-        "C:\\nuget"
+        "C:\\mozilla-build\\python3"
       ],
       "Target": "Machine"
     },
@@ -1380,156 +1340,6 @@
       "ValueData": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"
     },
     {
-      "ComponentName": "OpenSshDownload",
-      "ComponentType": "FileDownload",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
-      "Source": "https://github.com/PowerShell/Win32-OpenSSH/releases/download/v7.6.1.0p1-Beta/OpenSSH-Win64.zip",
-      "Target": "C:\\Windows\\Temp\\OpenSSH-Win64.zip",
-      "sha512": "340f2be8bbddf2552a1d2d55b17f06f09bc1bc6ff2bbba6c8653f8fc3b91f5d9e2bd47e57d537f81df69fca776bf6ecbd533a7ac8bcbb6012f03676530e6d9df"
-    },
-    {
-      "ComponentName": "OpenSshUnzip",
-      "ComponentType": "CommandRun",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
-      "Command": "C:\\Program Files\\7-Zip\\7z.exe",
-      "Arguments": [
-        "x",
-        "-o\"C:\\Program Files\"",
-        "C:\\Windows\\Temp\\OpenSSH-Win64.zip"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "SevenZip"
-        },
-        {
-          "ComponentType": "FileDownload",
-          "ComponentName": "OpenSshDownload"
-        }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Program Files\\OpenSSH-Win64\\sshd.exe",
-          "C:\\Program Files\\OpenSSH-Win64\\ssh-agent.exe",
-          "C:\\Program Files\\OpenSSH-Win64\\install-sshd.ps1"
-        ]
-      }
-    },
-    {
-      "ComponentName": "SshIn",
-      "ComponentType": "FirewallRule",
-      "Protocol": "TCP",
-      "LocalPort": 22,
-      "Direction": "Inbound",
-      "Action": "Allow"
-    },
-    {
-      "ComponentName": "InstallOpenSSH",
-      "ComponentType": "CommandRun",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
-      "Command": "powershell.exe",
-      "Arguments": [
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "\"C:\\Program Files\\OpenSSH-Win64\\install-sshd.ps1\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "OpenSshUnzip"
-        }
-      ]
-    },
-    {
-      "ComponentName": "reg_OpenSSH_DefaultShell",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\OpenSSH",
-      "ValueName": "DefaultShell",
-      "ValueType": "String",
-      "ValueData": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
-    },
-    {
-      "ComponentName": "reg_OpenSSH_DefaultShellCommandOption",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\OpenSSH",
-      "ValueName": "DefaultShellCommandOption",
-      "ValueType": "String",
-      "ValueData": "/c"
-    },
-    {
-      "ComponentName": "AdministratorSshDir",
-      "ComponentType": "DirectoryCreate",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
-      "Path": "C:\\Users\\Administrator\\.ssh"
-    },
-    {
-      "ComponentName": "AdministratorSshAuthorisedKeys",
-      "ComponentType": "ChecksumFileDownload",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/ssh/authorized_keys",
-      "Target": "C:\\Users\\Administrator\\.ssh\\authorized_keys",
-      "DependsOn": [
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "AdministratorSshDir"
-        }
-      ]
-    },
-    {
-      "ComponentName": "ProgramDataSshDir",
-      "ComponentType": "DirectoryCreate",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
-      "Path": "C:\\ProgramData\\ssh"
-    },
-    {
-      "ComponentName": "sshd_config",
-      "ComponentType": "ChecksumFileDownload",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1464343",
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/ssh/sshd_config",
-      "Target": "C:\\ProgramData\\ssh\\sshd_config",
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "InstallOpenSSH"
-        },
-        {
-          "ComponentType": "DirectoryCreate",
-          "ComponentName": "ProgramDataSshDir"
-        }
-      ]
-    },
-    {
-      "ComponentName": "Start_sshd",
-      "ComponentType": "ServiceControl",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
-      "Name": "sshd",
-      "StartupType": "Automatic",
-      "State": "Running",
-      "DependsOn": [
-        {
-          "ComponentType": "ChecksumFileDownload",
-          "ComponentName": "sshd_config"
-        }
-      ]
-    },
-    {
-      "ComponentName": "Start_sshagent",
-      "ComponentType": "ServiceControl",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
-      "Name": "ssh-agent",
-      "StartupType": "Automatic",
-      "State": "Running",
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "InstallOpenSSH"
-        }
-      ]
-    },
-    {
       "ComponentName": "HostsFile",
       "ComponentType": "ChecksumFileDownload",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1497308",
@@ -1541,7 +1351,7 @@
       "ComponentType": "ReplaceInFile",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1497308",
       "Path": "C:\\Windows\\System32\\drivers\\etc\\hosts",
-      "Match": "127\\.0\\.0\\.1 (hostname|i-[a-f0-9]{17})\\.(workertype|mpd001-([1-3]-b-win2012(-alpha|-beta)?|t-win(7-32|10-64)(-gpu(-a|-b)?|-alpha|-beta|-cu)?))\\.(ec2region|(us|eu)[ewc][12])\\.mozilla\\.com",
+      "Match": "127\\.0\\.0\\.1 (hostname|i-[a-f0-9]{17})\\.(workertype|mpd-([1-3]-b-win2012(-alpha|-beta)?|t-win(7-32|10-64)(-gpu(-a|-b)?|-alpha|-beta|-cu)?))\\.(ec2region|(us|eu)[ewc][12])\\.mozilla\\.com",
       "Replace": "('127.0.0.1 {0}.{1}' -f ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/instance-id')), ((Get-ItemProperty -Path 'HKLM:SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters' -Name 'NV Domain').'NV Domain').Replace('wintest.releng.', ''))",
       "DependsOn": [
         {
@@ -1557,72 +1367,6 @@
       "Name": "TASKCLUSTER_ROOT_URL",
       "Value": "https://taskcluster.net",
       "Target": "Machine"
-    },
-    {
-      "ComponentName": "GitAndUnixToolsOnPath",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://superuser.com/a/966787/5483",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Git_is1",
-      "ValueName": "Inno Setup CodeFile: Path Option",
-      "ValueType": "String",
-      "ValueData": "CmdTools"
-    },
-    {
-      "ComponentName": "Git",
-      "ComponentType": "ExeInstall",
-      "Url": "https://github.com/git-for-windows/git/releases/download/v2.19.1.windows.1/Git-2.19.1-64-bit.exe",
-      "Arguments": [
-        "/VERYSILENT",
-        "/SUPPRESSMSGBOXES",
-        "/NORESTART",
-        "/NOCANCEL",
-        "/SP-",
-        "/COMPONENTS=\"icons,ext\\reg\\shellhere,assoc,assoc_sh\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "RegistryValueSet",
-          "ComponentName": "GitAndUnixToolsOnPath"
-        }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\Program Files\\Git\\bin\\git.exe"
-        ]
-      }
-    },
-    {
-      "ComponentName": "CurlDownload",
-      "ComponentType": "FileDownload",
-      "Source": "https://curl.haxx.se/windows/dl-7.66.0_2/curl-7.66.0_2-win64-mingw.zip",
-      "Target": "C:\\Windows\\Temp\\curl.zip"
-    },
-    {
-      "ComponentName": "CurlInstall",
-      "ComponentType": "CommandRun",
-      "Comment": "Curl is needed for MPD, but installs via a zip file, so extract",
-      "Command": "C:\\Program Files\\7-Zip\\7z.exe",
-      "Arguments": [
-        "x",
-        "-oC:\\curl",
-        "C:\\Windows\\Temp\\curl.zip",
-        "curl-7.66.0-win64-mingw"
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "SevenZip"
-        },
-        {
-          "ComponentType": "FileDownload",
-          "ComponentName": "CurlDownload"
-        }
-      ],
-      "Validate": {
-        "PathsExist": [
-          "C:\\curl\\curl-7.66.0-win64-mingw\\bin\\curl.exe"
-        ]
-      }
     }
   ],
   "ProvisionerConfiguration": {

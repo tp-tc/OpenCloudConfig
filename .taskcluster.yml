@@ -89,8 +89,8 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-2-b-win*
           - aws-provisioner:manage-worker-type:gecko-3-b-win*
           - aws-provisioner:manage-worker-type:gecko-t-win*
-          - aws-provisioner:manage-worker-type:mpd001-1-b-win*
-          - aws-provisioner:manage-worker-type:mpd001-3-b-win*
+          - aws-provisioner:manage-worker-type:mpd-1-b-win*
+          - aws-provisioner:manage-worker-type:mpd-3-b-win*
           - aws-provisioner:manage-worker-type:relops*
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.rollback'
@@ -1243,12 +1243,12 @@ tasks:
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
-          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-mpd001-1-b-win2012
-          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:mpd001-1-b-win2012
-          - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:mpd001-1-b-win2012
-          - aws-provisioner:manage-worker-type:mpd001-1-b-win2012
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-mpd-1-b-win2012
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:mpd-1-b-win2012
+          - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:mpd-1-b-win2012
+          - aws-provisioner:manage-worker-type:mpd-1-b-win2012
       routes:
-          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.mpd001-1-b-win2012'
+          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.mpd-1-b-win2012'
       workerType: '{{taskcluster.docker.workerType}}'
       extra:
           github:
@@ -1271,11 +1271,11 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh mpd001-1-b-win2012'
+              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh mpd-1-b-win2012'
           artifacts:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
-                  path: './mpd001-1-b-win2012.json'
+                  path: './mpd-1-b-win2012.json'
                   expires: "{{ '4 weeks' | $fromNow }}"
               'project/releng/opencloudconfig/update-response.json':
                   type: file
@@ -1285,12 +1285,12 @@ tasks:
                   type: file
                   path: './secret-update-response.json'
                   expires: "{{ '4 weeks' | $fromNow }}"
-              'project/releng/opencloudconfig/mpd001-1-b-win2012.diff':
+              'project/releng/opencloudconfig/mpd-1-b-win2012.diff':
                   type: file
-                  path: './mpd001-1-b-win2012.diff'
+                  path: './mpd-1-b-win2012.diff'
                   expires: "{{ '1 year' | $fromNow }}"
       metadata:
-          name: 'Update mpd001-1-b-win2012 AMIs'
+          name: 'Update mpd-1-b-win2012 AMIs'
           description: 'recreate MPD Windows prod build AMIs using OpenCloudConfig for configuration and dependency installation'
           owner: '{{event.head.user.email}}'
           source: '{{event.head.repo.url}}'
@@ -1299,12 +1299,12 @@ tasks:
       scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
-          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-mpd001-3-b-win2012
-          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:mpd001-3-b-win2012
-          - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:mpd001-3-b-win2012
-          - aws-provisioner:manage-worker-type:mpd001-3-b-win2012
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-mpd-3-b-win2012
+          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:mpd-3-b-win2012
+          - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:mpd-3-b-win2012
+          - aws-provisioner:manage-worker-type:mpd-3-b-win2012
       routes:
-          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.mpd001-3-b-win2012'
+          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.mpd-3-b-win2012'
       workerType: '{{taskcluster.docker.workerType}}'
       extra:
           github:
@@ -1327,11 +1327,11 @@ tasks:
               - '/bin/bash'
               - '--login'
               - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh mpd001-3-b-win2012'
+              - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh mpd-3-b-win2012'
           artifacts:
               'project/releng/opencloudconfig/update-request.json':
                   type: file
-                  path: './mpd001-3-b-win2012.json'
+                  path: './mpd-3-b-win2012.json'
                   expires: "{{ '4 weeks' | $fromNow }}"
               'project/releng/opencloudconfig/update-response.json':
                   type: file
@@ -1341,12 +1341,12 @@ tasks:
                   type: file
                   path: './secret-update-response.json'
                   expires: "{{ '4 weeks' | $fromNow }}"
-              'project/releng/opencloudconfig/mpd001-3-b-win2012.diff':
+              'project/releng/opencloudconfig/mpd-3-b-win2012.diff':
                   type: file
-                  path: './mpd001-3-b-win2012.diff'
+                  path: './mpd-3-b-win2012.diff'
                   expires: "{{ '1 year' | $fromNow }}"
       metadata:
-          name: 'Update mpd001-3-b-win2012 AMIs'
+          name: 'Update mpd-3-b-win2012 AMIs'
           description: 'recreate MPD Windows prod build AMIs using OpenCloudConfig for configuration and dependency installation'
           owner: '{{event.head.user.email}}'
           source: '{{event.head.repo.url}}'
