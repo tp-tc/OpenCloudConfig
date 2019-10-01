@@ -234,7 +234,7 @@ while [ -z "$aws_ami_id" ]; do
     aws ec2 delete-volume --region ${aws_region} --volume-id ${xvdf_volume_id}
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] volume: ${xvdf_volume_id} deleted"
   fi
-  aws_ami_id=`aws ec2 create-image --region ${aws_region} --instance-id ${aws_instance_id} --name "${tc_worker_type} version ${short_sha}" --description "${ami_description}" | sed -n 's/^ *"ImageId": *"\(.*\)" *$/\1/p'`
+  aws_ami_id=`aws ec2 create-image --region ${aws_region} --instance-id ${aws_instance_id} --name "${tc_worker_type} ${short_sha} ${TASK_ID}/${RUN_ID}" --description "${ami_description}" | sed -n 's/^ *"ImageId": *"\(.*\)" *$/\1/p'`
   if [ -z "$aws_ami_id" ]; then
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] create image failed. retrying..."
   fi
@@ -249,7 +249,7 @@ cat ./${tc_worker_type}.json | jq --arg ec2region $aws_region --arg amiid $aws_a
 cat ./workertype-secrets.json | jq --arg ec2region $aws_region --arg amiid $aws_ami_id -c '.secret.latest.amis |= . + [{region:$ec2region,"ami-id":$amiid}]' > ./.workertype-secrets.json && rm ./workertype-secrets.json && mv ./.workertype-secrets.json ./workertype-secrets.json
 
 # purge all but 10 newest workertype amis in region
-aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=name,Values=${tc_worker_type} version*" | jq '[ .Images[] | { ImageId, CreationDate, SnapshotId: .BlockDeviceMappings[0].Ebs.SnapshotId } ] | sort_by(.CreationDate) [ 0 : -10 ]' > ./delete-queue-${aws_region}.json
+aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=name,Values=${tc_worker_type} *" | jq '[ .Images[] | { ImageId, CreationDate, SnapshotId: .BlockDeviceMappings[0].Ebs.SnapshotId } ] | sort_by(.CreationDate) [ 0 : -10 ]' > ./delete-queue-${aws_region}.json
 jq '.|keys[]' ./delete-queue-${aws_region}.json | while read i; do
   old_ami=$(jq -r ".[$i].ImageId" ./delete-queue-${aws_region}.json)
   old_snap=$(jq -r ".[$i].SnapshotId" ./delete-queue-${aws_region}.json)
@@ -271,7 +271,7 @@ done
 
 # copy ami to each configured region, get copied ami id, tag copied ami, wait for copied ami availability
 jq -c '[.regions[].region] | .[]' ./${tc_worker_type}.json | sed 's/"//g' | grep -Fvx "${aws_region}" | while read region; do
-  aws_copied_ami_id=`aws ec2 copy-image --region ${region} --source-region ${aws_region} --source-image-id ${aws_ami_id} --name "${tc_worker_type} version ${short_sha}" --description "${ami_description}" | sed -n 's/^ *"ImageId": *"\(.*\)" *$/\1/p'`
+  aws_copied_ami_id=`aws ec2 copy-image --region ${region} --source-region ${aws_region} --source-image-id ${aws_ami_id} --name "${tc_worker_type} ${short_sha} ${TASK_ID}/${RUN_ID}" --description "${ami_description}" | sed -n 's/^ *"ImageId": *"\(.*\)" *$/\1/p'`
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ami: ${aws_region} ${aws_ami_id} copy to ${region} ${aws_copied_ami_id} in progress: https://${region}.console.aws.amazon.com/ec2/v2/home?region=${region}#Images:visibility=owned-by-me;search=${aws_copied_ami_id}"
   aws ec2 create-tags --region ${region} --resources "${aws_copied_ami_id}" --tags "Key=WorkerType,Value=${tc_worker_type}" "Key=source,Value=${GITHUB_HEAD_REPO_URL::-4}/commit/${GITHUB_HEAD_SHA:0:7}" "Key=build,Value=https://tools.taskcluster.net/tasks/${TASK_ID}"
   sleep 30
@@ -282,7 +282,7 @@ jq -c '[.regions[].region] | .[]' ./${tc_worker_type}.json | sed 's/"//g' | grep
   cat ./workertype-secrets.json | jq --arg ec2region $region --arg amiid $aws_copied_ami_id -c '.secret.latest.amis |= . + [{region:$ec2region,"ami-id":$amiid}]' > ./.workertype-secrets.json && rm ./workertype-secrets.json && mv ./.workertype-secrets.json ./workertype-secrets.json
 
   # purge all but 10 newest workertype amis in region
-  aws ec2 describe-images --region ${region} --owners self --filters "Name=name,Values=${tc_worker_type} version*" | jq '[ .Images[] | { ImageId, CreationDate, SnapshotId: .BlockDeviceMappings[0].Ebs.SnapshotId } ] | sort_by(.CreationDate) [ 0 : -10 ]' > ./delete-queue-${region}.json
+  aws ec2 describe-images --region ${region} --owners self --filters "Name=name,Values=${tc_worker_type} *" | jq '[ .Images[] | { ImageId, CreationDate, SnapshotId: .BlockDeviceMappings[0].Ebs.SnapshotId } ] | sort_by(.CreationDate) [ 0 : -10 ]' > ./delete-queue-${region}.json
   jq '.|keys[]' ./delete-queue-${region}.json | while read i; do
     old_ami=$(jq -r ".[$i].ImageId" ./delete-queue-${region}.json)
     old_snap=$(jq -r ".[$i].SnapshotId" ./delete-queue-${region}.json)
