@@ -617,7 +617,7 @@
         "pip",
         "install",
         "--upgrade",
-        "pip==8.1.2"
+        "pip==19.2.3"
       ],
       "Validate": {
         "CommandsReturn": [
@@ -629,7 +629,7 @@
               "show",
               "pip"
             ],
-            "Match": "Version: 8.1.2"
+            "Match": "Version: 19.2.3"
           }
         ]
       }
@@ -841,7 +841,7 @@
         "pip",
         "install",
         "--upgrade",
-        "pip==19.2.1"
+        "pip==19.2.3"
       ],
       "Validate": {
         "CommandsReturn": [
@@ -853,7 +853,7 @@
               "show",
               "pip"
             ],
-            "Match": "Version: 19.2.1"
+            "Match": "Version: 19.2.3"
           }
         ]
       }
@@ -889,6 +889,24 @@
           }
         ]
       }
+    },
+    {
+      "ComponentName": "pip3_upgrade_certifi",
+      "ComponentType": "CommandRun",
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "pip3_upgrade_pip"
+        }
+      ],
+      "Command": "C:\\mozilla-build\\python3\\python3.exe",
+      "Arguments": [
+        "-m",
+        "pip",
+        "install",
+        "--upgrade",
+        "certifi"
+      ]
     },
     {
       "ComponentName": "ToolToolInstall",
@@ -1028,9 +1046,9 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v15.1.5/generic-worker-multiuser-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v16.2.0/generic-worker-multiuser-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe",
-      "sha512": "9c0de3bf38cf584b9992a7487f0069cf759dd45541e36ab55aa7c40fc58baa3bb9ee34c12753d13a79676ed78d1bfad17a9725410cf1bc7efa4a122f83e88fdd"
+      "sha512": "ff498200e53ae486ca2a14b319abe51eadf0db45a9b5abc76b6389678bcbfc9f024edce12be8b7c4f36aa7d93bf1b872011b2ff3fa039385177fadfbdb4b055d"
     },
     {
       "ComponentName": "LiveLogDownload",
@@ -1129,7 +1147,7 @@
             "Arguments": [
               "--version"
             ],
-            "Like": "generic-worker (multiuser engine) 15.1.5 *"
+            "Like": "generic-worker (multiuser engine) 16.2.0 *"
           }
         ]
       }
@@ -1355,9 +1373,6 @@
         "capacity": 1,
         "utility": 0.9,
         "launchSpec": {
-          "IamInstanceProfile": {
-            "Arn": "arn:aws:iam::692406183521:instance-profile/taskcluster-level-3-sccache"
-          },
           "BlockDeviceMappings": [
             {
               "DeviceName": "/dev/sda1",
@@ -1386,9 +1401,6 @@
         "capacity": 1,
         "utility": 1,
         "launchSpec": {
-          "IamInstanceProfile": {
-            "Arn": "arn:aws:iam::692406183521:instance-profile/taskcluster-level-3-sccache"
-          },
           "BlockDeviceMappings": [
             {
               "DeviceName": "/dev/sda1",

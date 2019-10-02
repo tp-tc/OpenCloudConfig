@@ -105,7 +105,7 @@ case "${tc_worker_type}" in
     ami_description="Gecko tester for Windows 10 64 bit; worker-type: ${tc_worker_type}, source: ${GITHUB_HEAD_REPO_URL::-4}/commit/${GITHUB_HEAD_SHA:0:7}, deploy: https://tools.taskcluster.net/tasks/${TASK_ID}"
     root_username=Administrator
     ;;
-  mpd-[13]-b-win2012|gecko-[123]-b-win2012*)
+  mpd001-[13]-b-win2012|gecko-[123]-b-win2012*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-ena-base-*'}
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko builder for Windows; worker-type: ${tc_worker_type}, source: ${GITHUB_HEAD_REPO_URL::-4}/commit/${GITHUB_HEAD_SHA:0:7}, deploy: https://tools.taskcluster.net/tasks/${TASK_ID}"
@@ -176,7 +176,7 @@ echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] latest base ami for: ${aws_b
 
 # create instance, apply user-data, filter output, get instance id, tag instance, wait for shutdown
 while [ -z "$aws_instance_id" ]; do
-  aws_instance_id="$(aws ec2 run-instances --region ${aws_region} --image-id "${aws_base_ami_id}" --key-name ${aws_key_name} --security-group-ids "sg-3bd7bf41" --subnet-id "subnet-f94cb29f" --user-data "$(echo -e ${userdata})" --instance-type ${snapshot_aws_instance_type} --block-device-mappings "${snapshot_block_device_mappings}" --instance-initiated-shutdown-behavior stop --client-token "${short_sha}-${TASK_ID}" | sed -n 's/^ *"InstanceId": "\(.*\)", */\1/p')"
+  aws_instance_id="$(aws ec2 run-instances --region ${aws_region} --image-id "${aws_base_ami_id}" --key-name ${aws_key_name} --security-group-ids "sg-3bd7bf41" --subnet-id "subnet-f94cb29f" --user-data "$(echo -e ${userdata})" --instance-type ${snapshot_aws_instance_type} --block-device-mappings "${snapshot_block_device_mappings}" --instance-initiated-shutdown-behavior stop --client-token "${short_sha}-${TASK_ID}/${RUN_ID}" | sed -n 's/^ *"InstanceId": "\(.*\)", */\1/p')"
   if [ -z "$aws_instance_id" ]; then
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Instances:instanceType='${snapshot_aws_instance_type}';lifecycle=normal;instanceState=!stopped,!terminated;sort=desc:launchTime"
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] create instance failed. retrying..."
