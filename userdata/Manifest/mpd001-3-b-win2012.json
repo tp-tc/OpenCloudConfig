@@ -1641,6 +1641,29 @@
           "C:\\curl\\curl-7.66.0-win64-mingw\\bin\\curl.exe"
         ]
       }
+    },
+    {
+      "ComponentName": "programdata_google_auth",
+      "ComponentType": "DirectoryCreate",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1588757",
+      "Path": "C:\\ProgramData\\Google\\Auth"
+    },
+    {
+      "ComponentName": "stackdriver_key",
+      "ComponentType": "SymbolicLink",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1588757",
+      "Target": "C:\\builds\\taskcluster-worker-ec2@aws-stackdriver-log-1571127027.json",
+      "Link": "C:\\ProgramData\\Google\\Auth\\application_default_credentials.json",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "GpgForWin"
+        },
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "programdata_google_auth"
+        }
+      ]
     }
   ],
   "ProvisionerConfiguration": {
