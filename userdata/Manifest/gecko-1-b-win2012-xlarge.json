@@ -7,6 +7,77 @@
       "Path": "C:\\log"
     },
     {
+      "ComponentName": "StackdriverLogging",
+      "ComponentType": "ExeInstall",
+      "Url": "https://dl.google.com/cloudagents/windows/StackdriverLogging-v1-9.exe",
+      "Arguments": [
+        "/S"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files (x86)\\Stackdriver\\LoggingAgent\\config.d"
+        ],
+        "ServiceStatus": [
+          {
+            "Name": "StackdriverLogging",
+            "Status": "running"
+          }
+        ]
+      }
+    },
+    {
+      "ComponentName": "fluentd_genericworker",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fluentd/generic-worker.conf",
+      "Target": "C:\\Program Files (x86)\\Stackdriver\\LoggingAgent\\config.d\\generic-worker.conf",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "StackdriverLogging"
+        }
+      ]
+    },
+    {
+      "ComponentName": "fluentd_genericworkerservice",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fluentd/generic-worker-service.conf",
+      "Target": "C:\\Program Files (x86)\\Stackdriver\\LoggingAgent\\config.d\\generic-worker-service.conf",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "StackdriverLogging"
+        }
+      ]
+    },
+    {
+      "ComponentName": "fluentd_genericworkerwrapper",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fluentd/generic-worker-wrapper.conf",
+      "Target": "C:\\Program Files (x86)\\Stackdriver\\LoggingAgent\\config.d\\generic-worker-wrapper.conf",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "StackdriverLogging"
+        }
+      ]
+    },
+    {
+      "ComponentName": "fluentd_occ",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fluentd/occ.conf",
+      "Target": "C:\\Program Files (x86)\\Stackdriver\\LoggingAgent\\config.d\\occ.conf",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "StackdriverLogging"
+        }
+      ]
+    },
+    {
       "ComponentName": "NxLog",
       "ComponentType": "MsiInstall",
       "Comment": "Maintenance Toolchain - forwards event logs to papertrail",
