@@ -1675,33 +1675,32 @@ function Set-ChainOfTrustKey {
     switch -regex ($workerType) {
       # level 3 builder needs key added by user intervention and must already exist in cot repo
       '^(gecko|mpd001)-3-b-win2012(-c[45])?$' {
-        while ((-not (Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue)) -or (-not (Test-Path -Path 'C:\generic-worker\openpgp-private.key' -ErrorAction SilentlyContinue))) {
-          Write-Log -message ('{0} :: ed25519 and/or openpgp key missing. awaiting user intervention.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+        while (-not (Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue)) {
+          Write-Log -message ('{0} :: ed25519 key missing. awaiting user intervention.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
           Sleep 60
         }
-        while ((-not ((Get-Item -Path 'C:\generic-worker\ed25519-private.key').Length -gt 0)) -or (-not ((Get-Item -Path 'C:\generic-worker\openpgp-private.key').Length -gt 0))) {
-          Write-Log -message ('{0} :: ed25519 and/or openpgp key empty. awaiting user intervention.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+        while (-not ((Get-Item -Path 'C:\generic-worker\ed25519-private.key').Length -gt 0)) {
+          Write-Log -message ('{0} :: ed25519 key empty. awaiting user intervention.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
           Sleep 60
         }
         while (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).Length -gt 0) {
           Write-Log -message ('{0} :: rdp session detected. awaiting user disconnect.' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
           Sleep 60
         }
-        if ((Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'C:\generic-worker\openpgp-private.key' -ErrorAction SilentlyContinue)) {
-          foreach ($keyAlgorithm in @('ed25519', 'openpgp')) {
-            Start-LoggedProcess -filePath 'icacls' -ArgumentList @(('C:\generic-worker\{0}-private.key' -f $keyAlgorithm), '/grant', 'Administrators:(GA)') -name ('icacls-{0}-grant-admin' -f $keyAlgorithm)
-            Start-LoggedProcess -filePath 'icacls' -ArgumentList @(('C:\generic-worker\{0}-private.key' -f $keyAlgorithm), '/inheritance:r') -name ('icacls-{0}-inheritance-remove' -f $keyAlgorithm)
-          }
+        if (Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) {
+          Start-LoggedProcess -filePath 'icacls' -ArgumentList @('C:\generic-worker\ed25519-private.key', '/grant', 'Administrators:(GA)') -name 'icacls-ed25519-grant-admin'
+          Start-LoggedProcess -filePath 'icacls' -ArgumentList @('C:\generic-worker\ed25519-private.key', '/inheritance:r') -name 'icacls-ed25519-inheritance-remove'
           if ($shutdown) {
-            Write-Log -message ('{0} :: ed25519 and openpgp keys detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+            Write-Log -message ('{0} :: ed25519 key detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
             & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
           } else {
-            Write-Log -message ('{0} :: ed25519 and openpgp keys detected' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+            Write-Log -message ('{0} :: ed25519 key detected' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
           }
         } else {
-          Write-Log -message ('{0} :: ed25519 and/or openpgp key intervention failed. awaiting timeout or cancellation.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+          Write-Log -message ('{0} :: ed25519 key intervention failed. awaiting timeout or cancellation.' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
         }
       }
+      # only different from default because we don't want to shut down the machine when key is detected
       '^gecko-t-win10-(a64-beta|64-(hw|ux)(-b)?)$' {
         $gwConfigPath = 'C:\generic-worker\gw.config'
         $gwExePath = 'C:\generic-worker\generic-worker.exe'
@@ -1709,55 +1708,42 @@ function Set-ChainOfTrustKey {
           $gwConfig = (Get-Content $gwConfigPath -raw | ConvertFrom-Json)
           Write-Log -message ('{0} :: gw config found at {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'DEBUG'
           if (Test-Path -Path $gwExePath -ErrorAction SilentlyContinue) {
-            if (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 10.11.2 *') {
-              Write-Log -message ('{0} :: gw 10.11.2 exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
-              if (($gwConfig.signingKeyLocation) -and ($gwConfig.signingKeyLocation.Length)) {
-                Write-Log -message ('{0} :: gw signingKeyLocation configured as: {1} in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfig.signingKeyLocation, $gwConfigPath) -severity 'DEBUG'
-                if (Test-Path -Path $gwConfig.signingKeyLocation -ErrorAction SilentlyContinue) {
-                  $keyFileSize = (Get-Item -Path $gwConfig.signingKeyLocation).Length
-                  Write-Log -message ('{0} :: gw signing key file {1} detected with a file size of {2:N2}kb' -f $($MyInvocation.MyCommand.Name), $gwConfig.signingKeyLocation, ($keyFileSize / 1kb)) -severity 'DEBUG'
-                } else {
-                  Write-Log -message ('{0} :: gw signing key file {1} not detected' -f $($MyInvocation.MyCommand.Name), $gwConfig.signingKeyLocation) -severity 'WARN'
-                }
+            Write-Log -message ('{0} :: gw exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
+            if (Test-Path -Path 'C:\generic-worker\openpgp-public.key' -ErrorAction SilentlyContinue) {
+              Remove-Item -Path 'C:\generic-worker\openpgp-public.key' -force -ErrorAction SilentlyContinue
+              Write-Log -message ('{0} :: openpgp-public.key deleted.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+            }
+            $privateKeyPath = 'C:\generic-worker\ed25519-private.key'
+            $publicKeyPath = 'C:\generic-worker\ed25519-public.key'
+            if (-not (Test-Path -Path $privateKeyPath -ErrorAction SilentlyContinue)) {
+              Write-Log -message ('{0} :: ed25519 key missing. generating key' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+              Start-LoggedProcess -filePath 'C:\generic-worker\generic-worker.exe' -ArgumentList @('new-ed25519-keypair', '--file', $privateKeyPath) -redirectStandardOutput $publicKeyPath -name 'generic-worker-new-ed25519-keypair'
+              Start-LoggedProcess -filePath 'icacls' -ArgumentList @($privateKeyPath, '/grant', 'Administrators:(GA)') -name 'icacls-ed25519-grant-admin'
+              Start-LoggedProcess -filePath 'icacls' -ArgumentList @($privateKeyPath, '/inheritance:r') -name 'icacls-ed25519-inheritance-remove'
+              if ((Test-Path -Path $privateKeyPath -ErrorAction SilentlyContinue) -and (Test-Path -Path $publicKeyPath -ErrorAction SilentlyContinue)) {
+                Write-Log -message ('{0} :: ed25519 keys generated at: {2}, {3}' -f $($MyInvocation.MyCommand.Name), $privateKeyPath, $publicKeyPath) -severity 'INFO'
               } else {
-                Write-Log -message ('{0} :: gw signingKeyLocation not configured in {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'WARN'
+                Write-Log -message ('{0} :: ed25519 key generation failed' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
               }
-            } elseif (@(& $gwExePath @('--version') 2>&1) -like 'generic-worker 14.1.2 *') {
-              Write-Log -message ('{0} :: gw 14.1.2 exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
-              foreach ($keyAlgorithm in @('ed25519', 'openpgp')) {
-                $privateKeyPath = ('C:\generic-worker\{0}-private.key' -f $keyAlgorithm)
-                $publicKeyPath = ('C:\generic-worker\{0}-public.key' -f $keyAlgorithm)
-                if (-not (Test-Path -Path $privateKeyPath -ErrorAction SilentlyContinue)) {
-                  Write-Log -message ('{0} :: {1} key missing. generating key' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'WARN'
-                  Start-LoggedProcess -filePath 'C:\generic-worker\generic-worker.exe' -ArgumentList @(('new-{0}-keypair' -f $keyAlgorithm), '--file', $privateKeyPath) -redirectStandardOutput $publicKeyPath -name ('generic-worker-new-{0}-keypair' -f $keyAlgorithm)
-                  Start-LoggedProcess -filePath 'icacls' -ArgumentList @($privateKeyPath, '/grant', 'Administrators:(GA)') -name ('icacls-{0}-grant-admin' -f $keyAlgorithm)
-                  Start-LoggedProcess -filePath 'icacls' -ArgumentList @($privateKeyPath, '/inheritance:r') -name ('icacls-{0}-inheritance-remove' -f $keyAlgorithm)
-                  if ((Test-Path -Path $privateKeyPath -ErrorAction SilentlyContinue) -and (Test-Path -Path $publicKeyPath -ErrorAction SilentlyContinue)) {
-                    Write-Log -message ('{0} :: {1} keys generated at: {2}, {3}' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm, $privateKeyPath, $publicKeyPath) -severity 'INFO'
-                  } else {
-                    Write-Log -message ('{0} :: {1} key generation failed' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'ERROR'
-                  }
-                }
-                foreach ($keyPath in @($privateKeyPath, $publicKeyPath)) {
-                  if (Test-Path -Path $keyPath -ErrorAction SilentlyContinue) {
-                    $keyFileSize = (Get-Item -Path $keyPath).Length
-                    Write-Log -message ('{0} :: gw {1} key file {2} detected with a file size of {3:N2}kb' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm, $keyPath, ($keyFileSize / 1kb)) -severity 'DEBUG'
-                  } else {
-                    Write-Log -message ('{0} :: gw {1} key file {2} not detected' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm, $keyPath) -severity 'WARN'
-                  }
-                }
+            }
+            foreach ($keyPath in @($privateKeyPath, $publicKeyPath)) {
+              if (Test-Path -Path $keyPath -ErrorAction SilentlyContinue) {
+                $keyFileSize = (Get-Item -Path $keyPath).Length
+                Write-Log -message ('{0} :: gw ed25519 key file {2} detected with a file size of {3:N2}kb' -f $($MyInvocation.MyCommand.Name), $keyPath, ($keyFileSize / 1kb)) -severity 'DEBUG'
+              } else {
+                Write-Log -message ('{0} :: gw ed25519 key file {2} not detected' -f $($MyInvocation.MyCommand.Name), $keyPath) -severity 'WARN'
+              }
+            }
 
-                $configSigningKeyLocation = ($gwConfig.PsObject.Properties | ? { $_.Name -eq ('{0}SigningKeyLocation' -f $keyAlgorithm) }).Value
-                if (($configSigningKeyLocation) -and ($configSigningKeyLocation.Length)) {
-                  if ($configSigningKeyLocation -eq $privateKeyPath) {
-                    Write-Log -message ('{0} :: {1}SigningKeyLocation configured correctly as: {2} in {3}' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm, $configSigningKeyLocation, $gwConfigPath) -severity 'DEBUG'
-                  } else {
-                    Write-Log -message ('{0} :: {1}SigningKeyLocation configured incorrectly as: {2} in {3}' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm, $configSigningKeyLocation, $gwConfigPath) -severity 'ERROR'
-                  }
-                } else {
-                  Write-Log -message ('{0} :: {1}SigningKeyLocation not configured in {2}' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm, $gwConfigPath) -severity 'ERROR'
-                }
+            $configSigningKeyLocation = ($gwConfig.PsObject.Properties | ? { $_.Name -eq 'ed25519SigningKeyLocation' }).Value
+            if (($configSigningKeyLocation) -and ($configSigningKeyLocation.Length)) {
+              if ($configSigningKeyLocation -eq $privateKeyPath) {
+                Write-Log -message ('{0} :: ed25519SigningKeyLocation configured correctly as: {2} in {3}' -f $($MyInvocation.MyCommand.Name), $configSigningKeyLocation, $gwConfigPath) -severity 'DEBUG'
+              } else {
+                Write-Log -message ('{0} :: ed25519SigningKeyLocation configured incorrectly as: {2} in {3}' -f $($MyInvocation.MyCommand.Name), $configSigningKeyLocation, $gwConfigPath) -severity 'ERROR'
               }
+            } else {
+              Write-Log -message ('{0} :: ed25519SigningKeyLocation not configured in {2}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'ERROR'
             }
           } else {
             Write-Log -message ('{0} :: gw exe not found' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
@@ -1777,26 +1763,24 @@ function Set-ChainOfTrustKey {
         }
       }
       default {
-        foreach ($keyAlgorithm in @('ed25519', 'openpgp')) {
-          if (-not (Test-Path -Path ('C:\generic-worker\{0}-private.key' -f $keyAlgorithm) -ErrorAction SilentlyContinue)) {
-            Write-Log -message ('{0} :: {1} key missing. generating key' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'WARN'
-            Start-LoggedProcess -filePath 'C:\generic-worker\generic-worker.exe' -ArgumentList @(('new-{0}-keypair' -f $keyAlgorithm), '--file', ('C:\generic-worker\{0}-private.key' -f $keyAlgorithm)) -redirectStandardOutput ('C:\generic-worker\{0}-public.key' -f $keyAlgorithm) -name ('generic-worker-new-{0}-keypair' -f $keyAlgorithm)
-            if (Test-Path -Path ('C:\generic-worker\{0}-private.key' -f $keyAlgorithm) -ErrorAction SilentlyContinue) {
-              Write-Log -message ('{0} :: {1} key generated' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'INFO'
-            } else {
-              Write-Log -message ('{0} :: {1} key generation failed' -f $($MyInvocation.MyCommand.Name), $keyAlgorithm) -severity 'ERROR'
-            }
+        if (-not (Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue)) {
+          Write-Log -message ('{0} :: ed25519 key missing. generating key' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+          Start-LoggedProcess -filePath 'C:\generic-worker\generic-worker.exe' -ArgumentList @('new-ed25519-keypair', '--file', 'C:\generic-worker\ed25519-private.key') -redirectStandardOutput 'C:\generic-worker\ed25519-public.key' -name 'generic-worker-new-ed25519-keypair'
+          if (Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) {
+            Write-Log -message ('{0} :: ed25519 key generated' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+          } else {
+            Write-Log -message ('{0} :: ed25519 key generation failed' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
           }
         }
-        if ((Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) -and (Test-Path -Path 'C:\generic-worker\openpgp-private.key' -ErrorAction SilentlyContinue)) {
+        if (Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) {
           if ($shutdown) {
-            Write-Log -message ('{0} :: ed25519 and openpgp keys detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+            Write-Log -message ('{0} :: ed25519 key detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
             & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
           } else {
-            Write-Log -message ('{0} :: ed25519 and openpgp keys detected' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+            Write-Log -message ('{0} :: ed25519 key detected' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
           }
         } else {
-          Write-Log -message ('{0} :: ed25519 and/or openpgp key missing. awaiting timeout or cancellation.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+          Write-Log -message ('{0} :: ed25519 key missing. awaiting timeout or cancellation.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
         }
         if ($shutdown) {
           if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
