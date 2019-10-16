@@ -49,6 +49,7 @@
     {
       "ComponentName": "StackdriverLogging",
       "ComponentType": "ExeInstall",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1588757",
       "Url": "https://dl.google.com/cloudagents/windows/StackdriverLogging-v1-9.exe",
       "Arguments": [
         "/S"
@@ -66,11 +67,11 @@
       }
     },
     {
-      "ComponentName": "fluentd_genericworker",
+      "ComponentName": "fluentd_gw_exe",
       "ComponentType": "ChecksumFileDownload",
-      "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fluentd/generic-worker.conf",
-      "Target": "C:\\Program Files\\Stackdriver\\LoggingAgent\\config.d\\generic-worker.conf",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1588757",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fluentd/gw.exe.conf",
+      "Target": "C:\\Program Files (x86)\\Stackdriver\\LoggingAgent\\config.d\\gw.exe.conf",
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
@@ -79,11 +80,11 @@
       ]
     },
     {
-      "ComponentName": "fluentd_genericworkerservice",
+      "ComponentName": "fluentd_gw_service",
       "ComponentType": "ChecksumFileDownload",
-      "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fluentd/generic-worker-service.conf",
-      "Target": "C:\\Program Files\\Stackdriver\\LoggingAgent\\config.d\\generic-worker-service.conf",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1588757",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fluentd/gw.service.conf",
+      "Target": "C:\\Program Files (x86)\\Stackdriver\\LoggingAgent\\config.d\\gw.service.conf",
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
@@ -92,11 +93,11 @@
       ]
     },
     {
-      "ComponentName": "fluentd_genericworkerwrapper",
+      "ComponentName": "fluentd_gw_wrapper",
       "ComponentType": "ChecksumFileDownload",
-      "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fluentd/generic-worker-wrapper.conf",
-      "Target": "C:\\Program Files\\Stackdriver\\LoggingAgent\\config.d\\generic-worker-wrapper.conf",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1588757",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fluentd/gw.wrapper.conf",
+      "Target": "C:\\Program Files (x86)\\Stackdriver\\LoggingAgent\\config.d\\gw.wrapper.conf",
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
@@ -107,9 +108,22 @@
     {
       "ComponentName": "fluentd_occ",
       "ComponentType": "ChecksumFileDownload",
-      "Comment": "Maintenance Toolchain - not essential for building firefox",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1588757",
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fluentd/occ.conf",
-      "Target": "C:\\Program Files\\Stackdriver\\LoggingAgent\\config.d\\occ.conf",
+      "Target": "C:\\Program Files (x86)\\Stackdriver\\LoggingAgent\\config.d\\occ.conf",
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "StackdriverLogging"
+        }
+      ]
+    },
+    {
+      "ComponentName": "fluentd_redact",
+      "ComponentType": "ChecksumFileDownload",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1588757",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fluentd/redact.conf",
+      "Target": "C:\\Program Files (x86)\\Stackdriver\\LoggingAgent\\config.d\\redact.conf",
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",

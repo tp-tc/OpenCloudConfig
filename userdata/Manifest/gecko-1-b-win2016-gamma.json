@@ -9,6 +9,7 @@
     {
       "ComponentName": "StackdriverLogging",
       "ComponentType": "ExeInstall",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1588757",
       "Url": "https://dl.google.com/cloudagents/windows/StackdriverLogging-v1-9.exe",
       "Arguments": [
         "/S"
