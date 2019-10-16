@@ -1836,6 +1836,7 @@
           "disableReboots": true,
           "downloadsDir": "Z:\\downloads",
           "ed25519SigningKeyLocation": "C:\\generic-worker\\ed25519-private.key",
+          "idleTimeoutSecs": 900,
           "livelogExecutable": "C:\\generic-worker\\livelog.exe",
           "livelogPUTPort": 60022,
           "numberOfTasksToRun": 0,
