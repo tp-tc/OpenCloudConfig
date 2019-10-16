@@ -73,6 +73,8 @@ elif [[ $commit_message == *"deploy: alpha"* ]] && ([[ "${tc_worker_type}" == *"
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deploying ${tc_worker_type} as part of 'deploy: alpha'"
 elif [[ $commit_message == *"deploy: beta"* ]] && ([[ "${tc_worker_type}" == *"-beta" ]] || [[ "${tc_worker_type}" == *"-gpu-b" ]]); then
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deploying ${tc_worker_type} as part of 'deploy: beta'"
+elif [[ $commit_message == *"deploy: mpd" ]] && [[ "${tc_worker_type}" == "mpd"* ]]; then
+  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deploying ${tc_worker_type} as part of 'deploy: mpd'"
 elif [[ $commit_message == *"deploy:"* ]]; then
   deploy_list=$([[ ${commit_message} =~ deploy:\s+?([^;]*) ]] && echo "${BASH_REMATCH[1]}")
   if [[ " ${deploy_list[*]} " != *" ${tc_worker_type} "* ]]; then
