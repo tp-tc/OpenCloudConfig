@@ -1709,9 +1709,11 @@ function Set-ChainOfTrustKey {
           Write-Log -message ('{0} :: gw config found at {1}' -f $($MyInvocation.MyCommand.Name), $gwConfigPath) -severity 'DEBUG'
           if (Test-Path -Path $gwExePath -ErrorAction SilentlyContinue) {
             Write-Log -message ('{0} :: gw exe found at {1}' -f $($MyInvocation.MyCommand.Name), $gwExePath) -severity 'DEBUG'
-            if (Test-Path -Path 'C:\generic-worker\openpgp-public.key' -ErrorAction SilentlyContinue) {
-              Remove-Item -Path 'C:\generic-worker\openpgp-public.key' -force -ErrorAction SilentlyContinue
-              Write-Log -message ('{0} :: openpgp-public.key deleted.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+            foreach ($deprecatedPath in @('C:\generic-worker\openpgp.key', 'C:\generic-worker\openpgp-public.key')) {
+              if (Test-Path -Path $deprecatedPath -ErrorAction SilentlyContinue) {
+                Remove-Item -Path $deprecatedPath -force -ErrorAction SilentlyContinue
+                Write-Log -message ('{0} :: deprecated path: {1} deleted.' -f $($MyInvocation.MyCommand.Name), $deprecatedPath) -severity 'DEBUG'
+              }
             }
             $privateKeyPath = 'C:\generic-worker\ed25519-private.key'
             $publicKeyPath = 'C:\generic-worker\ed25519-public.key'
