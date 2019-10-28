@@ -1192,9 +1192,9 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v16.3.0/generic-worker-multiuser-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v16.5.1/generic-worker-multiuser-windows-amd64.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe",
-      "sha512": "373bc14f9945ff1590b7e5650ad5c5b71bf40759dbe02f22950c86a8dae029273431bfda49f2dffe4a16e6f2edfff3652c4cc3918cf79cd50d1096bab03af5fa"
+      "sha512": "a2c24dcfe113d1fc947eac4b7762aba1f7ffb25fcb39502b5400cfae8dafb8c20f3f129df1bbc0eadaea98d5af62210a88f58c0a00eccc5eaf15c8bf29f454ec"
     },
     {
       "ComponentName": "LiveLogDownload",
@@ -1293,7 +1293,7 @@
             "Arguments": [
               "--version"
             ],
-            "Like": "generic-worker (multiuser engine) 16.3.0 *"
+            "Like": "generic-worker (multiuser engine) 16.5.1 *"
           }
         ]
       }
