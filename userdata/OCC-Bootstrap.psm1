@@ -1532,9 +1532,20 @@ function Set-ComputerName {
     Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
 }
+function Get-PublicKeys {
+  # just a helper function that fails quietly if no public keys are associated with the instance
+  process {
+    try {
+      $publicKeys = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys')
+    } catch {
+      $publicKeys = ''
+    }
+    return $publicKeys
+  }
+}
 function Set-DomainName {
   param (
-    [string] $publicKeys = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys'),
+    [string] $publicKeys = (Get-PublicKeys),
     [string] $workerType = $(if ($publicKeys.StartsWith('0=mozilla-taskcluster-worker-')) { $publicKeys.Replace('0=mozilla-taskcluster-worker-', '') } else { (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/user-data' -UseBasicParsing | ConvertFrom-Json).workerType }),
     [string] $az = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/placement/availability-zone')
   )
@@ -1934,7 +1945,7 @@ function Initialize-Instance {
     }
     if ($rebootReasons.length) {
       # if this is an ami creation instance (not a worker) ...
-      if (($locationType -eq 'AWS') -and (((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys')).StartsWith('0=mozilla-taskcluster-worker-'))) {
+      if (($locationType -eq 'AWS') -and ((Get-PublicKeys).StartsWith('0=mozilla-taskcluster-worker-'))) {
         # ensure that Ec2HandleUserData is enabled before reboot (if the RunDesiredStateConfigurationAtStartup scheduled task doesn't yet exist)
         Set-Ec2ConfigSettings
         # ensure that an up to date nxlog configuration is used as early as possible
@@ -2031,7 +2042,7 @@ function Invoke-OpenCloudConfig {
       } catch {
         $userdata = $null
       }
-      $publicKeys = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys')
+      $publicKeys = (Get-PublicKeys)
 
       if ($publicKeys.StartsWith('0=mozilla-taskcluster-worker-')) {
         # ami creation instance

@@ -78,7 +78,12 @@ Configuration xDynamicConfig {
   }
 
   if ($locationType -eq 'AWS') {
-    $instancekey = (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/meta-data/public-keys' -UseBasicParsing).Content
+    try {
+      $instancekey = (Invoke-WebRequest -Uri 'http://169.254.169.254/latest/meta-data/public-keys' -UseBasicParsing).Content
+    } catch {
+      # handle worker manager instances that are created without keys
+      $instancekey = ''
+    }
     if ($instancekey.StartsWith('0=mozilla-taskcluster-worker-')) {
       # ami creation instance
       $workerType = $instancekey.Replace('0=mozilla-taskcluster-worker-', '')

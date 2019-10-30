@@ -111,7 +111,12 @@ if ($instanceId -ne $dnsHostname) {
   Write-Log -message ('productivity checks skipped. instance id: {0} does not match hostname: {1}.' -f $instanceId, $dnsHostname) -severity 'DEBUG'
   exit
 }
-$publicKeys = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys')
+try {
+  $publicKeys = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys')
+} catch {
+  # handle worker manager instances that are created without keys
+  $publicKeys = ''
+}
 if ($publicKeys.StartsWith('0=mozilla-taskcluster-worker-')) {
   Write-Log -message 'productivity checks skipped. ami creation instance detected.' -severity 'DEBUG'
   exit
