@@ -147,18 +147,29 @@ function Invoke-OccReset {
         }
         if ((Test-Path -Path ('{0}\gnupg\secring.gpg' -f $env:AppData) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\gnupg\secring.gpg' -f $env:AppData)).length -gt 0kb)) {
           Write-Log -message ('{0} :: keyring detected' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
-          $files = (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/releng-secrets.json' -UseBasicParsing | ConvertFrom-Json)
-          foreach ($file in $files) {
-            if (-not (Test-Path -Path ('{0}\builds\{1}' -f $env:SystemDrive, $file) -ErrorAction SilentlyContinue)) {
-              (New-Object Net.WebClient).DownloadFile(('https://github.com/mozilla-releng/OpenCloudConfig/raw/master/userdata/Configuration/FirefoxBuildResources/{0}.gpg' -f $file), ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file))
-              if (Test-Path -Path ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file) -ErrorAction SilentlyContinue) {
-                Write-Log -message ('{0} :: {1} downloaded from {2}' -f $($MyInvocation.MyCommand.Name), ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file), ('https://github.com/mozilla-releng/OpenCloudConfig/raw/master/userdata/Configuration/FirefoxBuildResources/{0}.gpg' -f $file)) -severity 'INFO'
-                Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('-d', ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\builds\{1}' -f $env:SystemDrive, $file) -RedirectStandardError ('{0}\log\{1}.gpg-decrypt-{2}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $file)
-                if (Test-Path -Path ('{0}\builds\{1}' -f $env:SystemDrive, $file) -ErrorAction SilentlyContinue) {
-                  Write-Log -message ('{0} :: decrypted {1} to {2}' -f $($MyInvocation.MyCommand.Name), ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file), ('{0}\builds\{1}' -f $env:SystemDrive, $file)) -severity 'INFO'
+          [hashtable] $resources = @{
+            'C:\builds\taskcluster-worker-ec2@aws-stackdriver-log-1571127027.json' = 'https://s3.amazonaws.com/windows-opencloudconfig-packages/FirefoxBuildResources/taskcluster-worker-ec2@aws-stackdriver-log-1571127027.json.gpg?raw=true';
+            'C:\builds\relengapi.tok' = 'https://s3.amazonaws.com/windows-opencloudconfig-packages/FirefoxBuildResources/relengapi.tok.gpg?raw=true';
+            'C:\builds\occ-installers.tok' = 'https://s3.amazonaws.com/windows-opencloudconfig-packages/FirefoxBuildResources/occ-installers.tok.gpg?raw=true';
+            ('{0}\Mozilla\OpenCloudConfig\project_releng_generic-worker_bitbar-gecko-t-win10-aarch64.txt' -f $env:ProgramData) = 'https://gist.github.com/grenade/dfbf31ef54bb6a0191fc386240bb71e7/raw/project_releng_generic-worker_bitbar-gecko-t-win10-aarch64.gpg'
+          }
+          foreach ($localPath in $resources.Keys) {
+            $downloadUrl = $resources.Item($localPath)
+            if (-not (Test-Path -Path $localPath -ErrorAction SilentlyContinue)) {
+              try {
+                (New-Object Net.WebClient).DownloadFile($downloadUrl, ('{0}.gpg' -f $localPath))
+              } catch {
+                Write-Log -message ('{0} :: error downloading {1} to {2}. {3}' -f $($MyInvocation.MyCommand.Name), $downloadUrl, ('{0}.gpg' -f $localPath), $_.Exception.Message) -severity 'ERROR'
+              }
+              if (Test-Path -Path ('{0}.gpg' -f $localPath) -ErrorAction SilentlyContinue) {
+                Write-Log -message ('{0} :: {1} downloaded from {2}' -f $($MyInvocation.MyCommand.Name), ('{0}.gpg' -f $localPath), $downloadUrl) -severity 'INFO'
+                Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('-d', ('{0}.gpg' -f $localPath)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput $localPath
+                 -RedirectStandardError ('{0}\log\{1}.gpg-decrypt-{2}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $file)
+                if (Test-Path -Path $localPath -ErrorAction SilentlyContinue) {
+                  Write-Log -message ('{0} :: decrypted {1} to {2}' -f $($MyInvocation.MyCommand.Name), ('{0}.gpg' -f $localPath), $localPath) -severity 'INFO'
                 }
-                Remove-Item -Path ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file) -Force
-                Write-Log -message ('{0} :: deleted "{1}"' -f $($MyInvocation.MyCommand.Name), ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file))
+                Remove-Item -Path ('{0}.gpg' -f $localPath) -Force
+                Write-Log -message ('{0} :: deleted "{1}"' -f $($MyInvocation.MyCommand.Name), ('{0}.gpg' -f $localPath))
               }
             }
           }
