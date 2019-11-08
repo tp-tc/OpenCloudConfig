@@ -115,24 +115,31 @@ function Invoke-OccReset {
           $guid = [Guid]::NewGuid()
           $scriptUrl = ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/{3}.ps1?{4}' -f $sourceOrg, $sourceRepo, $sourceRev, $script, $guid)
           $newScriptPath = ('C:\dsc\{0}-{1}.ps1' -f $script, $guid)
-          (New-Object Net.WebClient).DownloadFile($scriptUrl, $newScriptPath)
+          try {
+            (New-Object Net.WebClient).DownloadFile($scriptUrl, $newScriptPath)
+          } catch {
+            Write-Log -message ('{0} :: error downloading {1} to {2}. {3}' -f $($MyInvocation.MyCommand.Name), $scriptUrl, $newScriptPath, $_.Exception.Message) -severity 'ERROR'
+          }
+          if (Test-Path -Path $newScriptPath -ErrorAction SilentlyContinue) {
+            $oldScriptPath = ('C:\dsc\{0}.ps1' -f $script)
+            if (Test-Path -Path $oldScriptPath -ErrorAction SilentlyContinue) {
+              $newSha512Hash = (Get-FileHash -Path $newScriptPath -Algorithm 'SHA512').Hash
+              $oldSha512Hash = (Get-FileHash -Path $oldScriptPath -Algorithm 'SHA512').Hash
 
-          $oldScriptPath = ('C:\dsc\{0}.ps1' -f $script)
-          if (Test-Path -Path $oldScriptPath -ErrorAction SilentlyContinue) {
-            $newSha512Hash = (Get-FileHash -Path $newScriptPath -Algorithm 'SHA512').Hash
-            $oldSha512Hash = (Get-FileHash -Path $oldScriptPath -Algorithm 'SHA512').Hash
-
-            if ($newSha512Hash -ne $oldSha512Hash) {
-              Write-Log -message ('{0} :: {1} hashes do not match (old: {2}, new: {3})' -f $($MyInvocation.MyCommand.Name), $script, ('{0}...{1}' -f $oldSha512Hash.Substring(0, 9), $oldSha512Hash.Substring($oldSha512Hash.length - 9, 9)), ('{0}...{1}' -f $newSha512Hash.Substring(0, 9), $newSha512Hash.Substring($newSha512Hash.length - 9, 9))) -severity 'INFO'
-              Remove-Item -Path $oldScriptPath -force -ErrorAction SilentlyContinue
-              Move-item -LiteralPath $newScriptPath -Destination $oldScriptPath
+              if ($newSha512Hash -ne $oldSha512Hash) {
+                Write-Log -message ('{0} :: {1} hashes do not match (old: {2}, new: {3})' -f $($MyInvocation.MyCommand.Name), $script, ('{0}...{1}' -f $oldSha512Hash.Substring(0, 9), $oldSha512Hash.Substring($oldSha512Hash.length - 9, 9)), ('{0}...{1}' -f $newSha512Hash.Substring(0, 9), $newSha512Hash.Substring($newSha512Hash.length - 9, 9))) -severity 'INFO'
+                Remove-Item -Path $oldScriptPath -force -ErrorAction SilentlyContinue
+                Move-item -LiteralPath $newScriptPath -Destination $oldScriptPath
+              } else {
+                Write-Log -message ('{0} :: {1} hashes match (old: {2}, new: {3})' -f $($MyInvocation.MyCommand.Name), $script, ('{0}...{1}' -f $oldSha512Hash.Substring(0, 9), $oldSha512Hash.Substring($oldSha512Hash.length - 9, 9)), ('{0}...{1}' -f $newSha512Hash.Substring(0, 9), $newSha512Hash.Substring($newSha512Hash.length - 9, 9))) -severity 'DEBUG'
+                Remove-Item -Path $newScriptPath -force -ErrorAction SilentlyContinue
+              }
             } else {
-              Write-Log -message ('{0} :: {1} hashes match (old: {2}, new: {3})' -f $($MyInvocation.MyCommand.Name), $script, ('{0}...{1}' -f $oldSha512Hash.Substring(0, 9), $oldSha512Hash.Substring($oldSha512Hash.length - 9, 9)), ('{0}...{1}' -f $newSha512Hash.Substring(0, 9), $newSha512Hash.Substring($newSha512Hash.length - 9, 9))) -severity 'DEBUG'
-              Remove-Item -Path $newScriptPath -force -ErrorAction SilentlyContinue
+              Move-item -LiteralPath $newScriptPath -Destination $oldScriptPath
+              Write-Log -message ('{0} :: existing {1} not found. downloaded rundsc applied' -f $($MyInvocation.MyCommand.Name), $script) -severity 'INFO'
             }
           } else {
-            Move-item -LiteralPath $newScriptPath -Destination $oldScriptPath
-            Write-Log -message ('{0} :: existing {1} not found. downloaded rundsc applied' -f $($MyInvocation.MyCommand.Name), $script) -severity 'INFO'
+            Write-Log -message ('{0} :: comparison skipped for {1}' -f $($MyInvocation.MyCommand.Name), $script) -severity 'INFO'
           }
         }
       }
@@ -147,6 +154,8 @@ function Invoke-OccReset {
         }
         if ((Test-Path -Path ('{0}\gnupg\secring.gpg' -f $env:AppData) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\gnupg\secring.gpg' -f $env:AppData)).length -gt 0kb)) {
           Write-Log -message ('{0} :: keyring detected' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+          New-Item -Path 'C:\builds' -ItemType Directory -ErrorAction SilentlyContinue
+          New-Item -Path ('{0}\Mozilla\OpenCloudConfig' -f $env:ProgramData) -ItemType Directory -ErrorAction SilentlyContinue
           [hashtable] $resources = @{
             'C:\builds\taskcluster-worker-ec2@aws-stackdriver-log-1571127027.json' = 'https://s3.amazonaws.com/windows-opencloudconfig-packages/FirefoxBuildResources/taskcluster-worker-ec2@aws-stackdriver-log-1571127027.json.gpg?raw=true';
             'C:\builds\relengapi.tok' = 'https://s3.amazonaws.com/windows-opencloudconfig-packages/FirefoxBuildResources/relengapi.tok.gpg?raw=true';
