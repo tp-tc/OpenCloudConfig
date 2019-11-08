@@ -141,12 +141,28 @@ function Invoke-OccReset {
         if ((Test-Path -Path 'C:\generic-worker\generic-worker.config' -ErrorAction SilentlyContinue) -and (-not (Test-Path -Path 'C:\generic-worker\master-generic-worker.json' -ErrorAction SilentlyContinue))) {
           Copy-Item -Path 'C:\generic-worker\generic-worker.config' -Destination 'C:\generic-worker\master-generic-worker.json'
         }
-
-        #if (${env:COMPUTERNAME}.ToLower().StartsWith('yoga-') -and (Test-Path -Path 'C:\generic-worker\master-generic-worker.json' -ErrorAction SilentlyContinue)) {
-        #  $gwMasterConfig = (Get-Content -Path 'C:\generic-worker\master-generic-worker.json' -raw | ConvertFrom-Json)
-        #  $gwMasterConfig.workerId = ('t-lenovoyogac630-{0}' -f ${env:COMPUTERNAME}.ToLower().Replace('yoga-', ''))
-        #  $gwMasterConfig | ConvertTo-Json -depth 32 | Set-Content -Path 'C:\generic-worker\master-generic-worker.json'
-        #}
+        if ((Test-Path -Path ('{0}\Mozilla\OpenCloudConfig\OpenCloudConfig.private.key' -f $env:ProgramData) -ErrorAction SilentlyContinue) -and (-not ((Test-Path -Path ('{0}\gnupg\secring.gpg' -f $env:AppData) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\gnupg\secring.gpg' -f $env:AppData)).length -gt 0kb)))) {
+          Start-Process 'diskperf.exe' -ArgumentList '-y' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.diskperf.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.diskperf.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+          Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--allow-secret-key-import', '--import', ('{0}\Mozilla\OpenCloudConfig\OpenCloudConfig.private.key' -f $env:ProgramData)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-import-key.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-import-key.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+        }
+        if ((Test-Path -Path ('{0}\gnupg\secring.gpg' -f $env:AppData) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\gnupg\secring.gpg' -f $env:AppData)).length -gt 0kb)) {
+          Write-Log -message ('{0} :: keyring detected' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+          $files = (Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Manifest/releng-secrets.json' -UseBasicParsing | ConvertFrom-Json)
+          foreach ($file in $files) {
+            if (-not (Test-Path -Path ('{0}\builds\{1}' -f $env:SystemDrive, $file) -ErrorAction SilentlyContinue)) {
+              (New-Object Net.WebClient).DownloadFile(('https://github.com/mozilla-releng/OpenCloudConfig/raw/master/userdata/Configuration/FirefoxBuildResources/{0}.gpg' -f $file), ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file))
+              if (Test-Path -Path ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file) -ErrorAction SilentlyContinue) {
+                Write-Log -message ('{0} :: {1} downloaded from {2}' -f $($MyInvocation.MyCommand.Name), ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file), ('https://github.com/mozilla-releng/OpenCloudConfig/raw/master/userdata/Configuration/FirefoxBuildResources/{0}.gpg' -f $file)) -severity 'INFO'
+                Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('-d', ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\builds\{1}' -f $env:SystemDrive, $file) -RedirectStandardError ('{0}\log\{1}.gpg-decrypt-{2}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $file)
+                if (Test-Path -Path ('{0}\builds\{1}' -f $env:SystemDrive, $file) -ErrorAction SilentlyContinue) {
+                  Write-Log -message ('{0} :: decrypted {1} to {2}' -f $($MyInvocation.MyCommand.Name), ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file), ('{0}\builds\{1}' -f $env:SystemDrive, $file)) -severity 'INFO'
+                }
+                Remove-Item -Path ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file) -Force
+                Write-Log -message ('{0} :: deleted "{1}"' -f $($MyInvocation.MyCommand.Name), ('{0}\builds\{1}.gpg' -f $env:SystemDrive, $file))
+              }
+            }
+          }
+        }
       }
       if ((${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') -and (-not (Test-ScheduledTaskExists -TaskName 'RunDesiredStateConfigurationAtStartup'))) {
         New-PowershellScheduledTask -taskName 'RunDesiredStateConfigurationAtStartup' -scriptUrl ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/rundsc.ps1?{3}' -f $sourceOrg, $sourceRepo, $sourceRev, [Guid]::NewGuid()) -scriptPath 'C:\dsc\rundsc.ps1' -sc 'onstart'
