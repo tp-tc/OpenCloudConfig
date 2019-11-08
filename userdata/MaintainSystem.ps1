@@ -205,10 +205,9 @@ function Invoke-OccReset {
           ), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
           if (Test-Path -Path $gpgKeyGenConfigPath -ErrorAction SilentlyContinue) {
             Write-Log -message ('{0} :: {1} created' -f $($MyInvocation.MyCommand.Name), $gpgKeyGenConfigPath) -severity 'DEBUG'
-
             $gpgBatchGenerateKeyStdOutPath = ('{0}\log\{1}.gpg-batch-generate-key.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
             $gpgBatchGenerateKeyStdErrPath = ('{0}\log\{1}.gpg-batch-generate-key.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-            Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--batch', '--full-gen-key', ('{0}\Mozilla\OpenCloudConfig\gpg-keygen-config.txt' -f $env:ProgramData)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput $gpgBatchGenerateKeyStdOutPath -RedirectStandardError $gpgBatchGenerateKeyStdErrPath
+            Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--batch', '--gen-key', ('{0}\Mozilla\OpenCloudConfig\gpg-keygen-config.txt' -f $env:ProgramData)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput $gpgBatchGenerateKeyStdOutPath -RedirectStandardError $gpgBatchGenerateKeyStdErrPath
             if ((Get-Item -Path $gpgBatchGenerateKeyStdErrPath).Length -gt 0kb) {
               Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgBatchGenerateKeyStdErrPath -Raw)) -severity 'ERROR'
             } else {
