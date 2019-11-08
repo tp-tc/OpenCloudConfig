@@ -186,15 +186,25 @@ function Invoke-OccReset {
         } else {
           Write-Log -message ('{0} :: gpg keyring not found' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
         }
+
+        $gpgVersionStdOutPath = ('{0}\log\{1}.gpg-version.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+        $gpgVersionStdErrPath = ('{0}\log\{1}.gpg-version.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+        Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--version') -Wait -NoNewWindow -PassThru -RedirectStandardOutput $gpgVersionStdOutPath -RedirectStandardError $gpgVersionStdErrPath
+        if ((Get-Item -Path $gpgVersionStdErrPath).Length -gt 0kb) {
+          Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgVersionStdErrPath -Raw)) -severity 'ERROR'
+        } else {
+          Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgVersionStdOutPath -Raw)) -severity 'INFO'
+        }
+
         if (-not (Test-Path -Path ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData) -ErrorAction SilentlyContinue)) {
           New-Item -Path ('{0}\Mozilla\OpenCloudConfig' -f $env:ProgramData) -ItemType Directory -ErrorAction SilentlyContinue
           $gpgKeyGenConfigPath = ('{0}\Mozilla\OpenCloudConfig\gpg-keygen-config.txt' -f $env:ProgramData)
           [IO.File]::WriteAllLines($gpgKeyGenConfigPath, @(
-            'Key-Type: RSA',
-            'Key-Length: 4096',
+            'Key-Type: eddsa',
+            'Key-Curve: Ed25519',
             'Key-Usage: cert',
-            'Subkey-Type: RSA',
-            'Subkey-Length: 4096',
+            'Subkey-Type: ecdh',
+            'Subkey-Curve: Curve25519',
             'Subkey-Usage: encrypt',
             'Expire-Date: 0',
             ('Name-Real: {0} {1}' -f $env:USERNAME, [System.Net.Dns]::GetHostName()),
@@ -209,6 +219,7 @@ function Invoke-OccReset {
             $gpgBatchGenerateKeyStdErrPath = ('{0}\log\{1}.gpg-batch-generate-key.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
             Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--batch', '--gen-key', ('{0}\Mozilla\OpenCloudConfig\gpg-keygen-config.txt' -f $env:ProgramData)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput $gpgBatchGenerateKeyStdOutPath -RedirectStandardError $gpgBatchGenerateKeyStdErrPath
             if ((Get-Item -Path $gpgBatchGenerateKeyStdErrPath).Length -gt 0kb) {
+              Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgKeyGenConfigPath -Raw)) -severity 'ERROR'
               Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgBatchGenerateKeyStdErrPath -Raw)) -severity 'ERROR'
             } else {
               Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgBatchGenerateKeyStdOutPath -Raw)) -severity 'INFO'
