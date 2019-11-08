@@ -151,7 +151,7 @@ function Invoke-OccReset {
             'C:\builds\taskcluster-worker-ec2@aws-stackdriver-log-1571127027.json' = 'https://s3.amazonaws.com/windows-opencloudconfig-packages/FirefoxBuildResources/taskcluster-worker-ec2@aws-stackdriver-log-1571127027.json.gpg?raw=true';
             'C:\builds\relengapi.tok' = 'https://s3.amazonaws.com/windows-opencloudconfig-packages/FirefoxBuildResources/relengapi.tok.gpg?raw=true';
             'C:\builds\occ-installers.tok' = 'https://s3.amazonaws.com/windows-opencloudconfig-packages/FirefoxBuildResources/occ-installers.tok.gpg?raw=true';
-            ('{0}\Mozilla\OpenCloudConfig\project_releng_generic-worker_bitbar-gecko-t-win10-aarch64.txt' -f $env:ProgramData) = 'https://gist.github.com/grenade/dfbf31ef54bb6a0191fc386240bb71e7/raw/project_releng_generic-worker_bitbar-gecko-t-win10-aarch64.gpg'
+            ('{0}\Mozilla\OpenCloudConfig\project_releng_generic-worker_bitbar-gecko-t-win10-aarch64.txt' -f $env:ProgramData) = 'https://gist.github.com/grenade/dfbf31ef54bb6a0191fc386240bb71e7/raw/project_releng_generic-worker_bitbar-gecko-t-win10-aarch64.txt.gpg'
           }
           foreach ($localPath in $resources.Keys) {
             $downloadUrl = $resources.Item($localPath)
@@ -172,7 +172,27 @@ function Invoke-OccReset {
               }
             }
           }
+        } else {
+          New-Item -Path ('{0}\Mozilla\OpenCloudConfig' -f $env:ProgramData) -ItemType Directory -ErrorAction SilentlyContinue
+          #$gpgKeyGenConfigPath = ('{0}\Mozilla\OpenCloudConfig\gpg-keygen-config.txt' -f $env:ProgramData)
+          #[IO.File]::WriteAllLines($gpgKeyGenConfigPath, @(
+          #  'Key-Type: eddsa',
+          #  'Key-Curve: Ed25519',
+          #  'Key-Usage: cert',
+          #  'Subkey-Type: eddsa',
+          #  'Subkey-Curve: Ed25519',
+          #  'Subkey-Usage: sign,auth',
+          #  'Expire-Date: 0',
+          #  ('Name-Real: {0}' -f [System.Net.Dns]::GetHostName()),
+          #  ('Name-Email: {0}@{1}' -f $env:USERNAME, [System.Net.Dns]::GetHostName()),
+          #  '%pubring C:\ProgramData\Mozilla\OpenCloudConfig\occ-public.key',
+          #  '%no-protection',
+          #  '%commit',
+          #  '%echo done'
+          #), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
+          #Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--batch', '--generate-key', ('{0}\Mozilla\OpenCloudConfig\gpg-keygen-config.txt' -f $env:ProgramData)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput $localPath -RedirectStandardError ('{0}\log\{1}.gpg-decrypt-{2}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), [IO.Path]::GetFileNameWithoutExtension($localPath))
         }
+        # todo: generate C:\generic-worker\ed25519-private.key and C:\generic-worker\ed25519-public.key
       }
       if ((${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') -and (-not (Test-ScheduledTaskExists -TaskName 'RunDesiredStateConfigurationAtStartup'))) {
         New-PowershellScheduledTask -taskName 'RunDesiredStateConfigurationAtStartup' -scriptUrl ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/rundsc.ps1?{3}' -f $sourceOrg, $sourceRepo, $sourceRev, [Guid]::NewGuid()) -scriptPath 'C:\dsc\rundsc.ps1' -sc 'onstart'
