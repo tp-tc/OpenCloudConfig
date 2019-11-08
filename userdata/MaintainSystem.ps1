@@ -153,7 +153,7 @@ function Invoke-OccReset {
           Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--allow-secret-key-import', '--import', ('{0}\Mozilla\OpenCloudConfig\OpenCloudConfig.private.key' -f $env:ProgramData)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-import-key.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-import-key.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
         }
         if ((Test-Path -Path ('{0}\gnupg\secring.gpg' -f $env:AppData) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\gnupg\secring.gpg' -f $env:AppData)).length -gt 0kb)) {
-          Write-Log -message ('{0} :: keyring detected' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+          Write-Log -message ('{0} :: gpg keyring detected' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
           New-Item -Path 'C:\builds' -ItemType Directory -ErrorAction SilentlyContinue
           New-Item -Path ('{0}\Mozilla\OpenCloudConfig' -f $env:ProgramData) -ItemType Directory -ErrorAction SilentlyContinue
           [hashtable] $resources = @{
@@ -182,7 +182,7 @@ function Invoke-OccReset {
             }
           }
         } else {
-          Write-Log -message ('{0} :: keyring not found' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+          Write-Log -message ('{0} :: gpg keyring not found' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
         }
         if (-not (Test-Path -Path ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData) -ErrorAction SilentlyContinue)) {
           New-Item -Path ('{0}\Mozilla\OpenCloudConfig' -f $env:ProgramData) -ItemType Directory -ErrorAction SilentlyContinue
@@ -210,6 +210,7 @@ function Invoke-OccReset {
           }
         }
         if (Test-Path -Path ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData) -ErrorAction SilentlyContinue) {
+          Write-Log -message ('{0} :: public key found at: {1}' -f $($MyInvocation.MyCommand.Name), ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData)) -severity 'DEBUG'
           $publicKey = (Get-Content -Path ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData) -Raw)
           Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), $publicKey) -severity 'DEBUG'
         }
