@@ -163,8 +163,7 @@ function Invoke-OccReset {
               }
               if (Test-Path -Path ('{0}.gpg' -f $localPath) -ErrorAction SilentlyContinue) {
                 Write-Log -message ('{0} :: {1} downloaded from {2}' -f $($MyInvocation.MyCommand.Name), ('{0}.gpg' -f $localPath), $downloadUrl) -severity 'INFO'
-                Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('-d', ('{0}.gpg' -f $localPath)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput $localPath
-                 -RedirectStandardError ('{0}\log\{1}.gpg-decrypt-{2}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), $file)
+                Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('-d', ('{0}.gpg' -f $localPath)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput $localPath -RedirectStandardError ('{0}\log\{1}.gpg-decrypt-{2}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), [IO.Path]::GetFileNameWithoutExtension($localPath))
                 if (Test-Path -Path $localPath -ErrorAction SilentlyContinue) {
                   Write-Log -message ('{0} :: decrypted {1} to {2}' -f $($MyInvocation.MyCommand.Name), ('{0}.gpg' -f $localPath), $localPath) -severity 'INFO'
                 }
