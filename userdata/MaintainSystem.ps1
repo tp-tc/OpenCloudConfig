@@ -187,13 +187,20 @@ function Invoke-OccReset {
           Write-Log -message ('{0} :: gpg keyring not found' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
         }
 
-        $gpgVersionStdOutPath = ('{0}\log\{1}.gpg-version.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-        $gpgVersionStdErrPath = ('{0}\log\{1}.gpg-version.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-        Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--version') -Wait -NoNewWindow -PassThru -RedirectStandardOutput $gpgVersionStdOutPath -RedirectStandardError $gpgVersionStdErrPath
-        if ((Get-Item -Path $gpgVersionStdErrPath).Length -gt 0kb) {
-          Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgVersionStdErrPath -Raw)) -severity 'ERROR'
-        } else {
-          Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgVersionStdOutPath -Raw)) -severity 'INFO'
+        foreach ($gpgExePath in @(('{0}\GnuPG\bin\gpg.exe' -f ${env:ProgramFiles(x86)}), ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}), ('{0}\Git\usr\bin\gpg.exe' -f ${env:ProgramFiles(x86)}))) {
+          if (Test-Path -Path $gpgExePath -ErrorAction SilentlyContinue) {
+            Write-Log -message ('{0} :: {1} --version' -f $($MyInvocation.MyCommand.Name), $gpgExePath) -severity 'DEBUG'
+            $gpgVersionStdOutPath = ('{0}\log\{1}.gpg-version.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+            $gpgVersionStdErrPath = ('{0}\log\{1}.gpg-version.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+            Start-Process $gpgExePath -ArgumentList @('--version') -Wait -NoNewWindow -PassThru -RedirectStandardOutput $gpgVersionStdOutPath -RedirectStandardError $gpgVersionStdErrPath
+            if ((Get-Item -Path $gpgVersionStdErrPath).Length -gt 0kb) {
+              Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgVersionStdErrPath -Raw)) -severity 'ERROR'
+            } else {
+              Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgVersionStdOutPath -Raw)) -severity 'INFO'
+            }
+          } else {
+            Write-Log -message ('{0} :: {1} not found' -f $($MyInvocation.MyCommand.Name), $gpgExePath) -severity 'DEBUG'
+          }
         }
 
         if (-not (Test-Path -Path ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData) -ErrorAction SilentlyContinue)) {
