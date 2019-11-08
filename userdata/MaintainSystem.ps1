@@ -190,11 +190,11 @@ function Invoke-OccReset {
           New-Item -Path ('{0}\Mozilla\OpenCloudConfig' -f $env:ProgramData) -ItemType Directory -ErrorAction SilentlyContinue
           $gpgKeyGenConfigPath = ('{0}\Mozilla\OpenCloudConfig\gpg-keygen-config.txt' -f $env:ProgramData)
           [IO.File]::WriteAllLines($gpgKeyGenConfigPath, @(
-            'Key-Type: eddsa',
-            'Key-Curve: Ed25519',
+            'Key-Type: RSA',
+            'Key-Length: 4096',
             'Key-Usage: cert',
-            'Subkey-Type: ecdh',
-            'Subkey-Curve: Curve25519',
+            'Subkey-Type: RSA',
+            'Subkey-Length: 4096',
             'Subkey-Usage: encrypt',
             'Expire-Date: 0',
             ('Name-Real: {0} {1}' -f $env:USERNAME, [System.Net.Dns]::GetHostName()),
