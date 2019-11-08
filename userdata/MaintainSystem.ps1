@@ -136,7 +136,7 @@ function Invoke-OccReset {
               }
             } else {
               Move-item -LiteralPath $newScriptPath -Destination $oldScriptPath
-              Write-Log -message ('{0} :: existing {1} not found. downloaded rundsc applied' -f $($MyInvocation.MyCommand.Name), $script) -severity 'INFO'
+              Write-Log -message ('{0} :: existing {1} not found. downloaded {1} applied' -f $($MyInvocation.MyCommand.Name), $script) -severity 'INFO'
             }
           } else {
             Write-Log -message ('{0} :: comparison skipped for {1}' -f $($MyInvocation.MyCommand.Name), $script) -severity 'INFO'
@@ -203,8 +203,23 @@ function Invoke-OccReset {
           ), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
           if (Test-Path -Path $gpgKeyGenConfigPath -ErrorAction SilentlyContinue) {
             Write-Log -message ('{0} :: {1} created' -f $($MyInvocation.MyCommand.Name), $gpgKeyGenConfigPath) -severity 'DEBUG'
-            Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--batch', '--full-gen-key', ('{0}\Mozilla\OpenCloudConfig\gpg-keygen-config.txt' -f $env:ProgramData)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-batch-generate-key.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-batch-generate-key.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-            Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--armor', '--output', ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData), '--export', ('{0}@{1}' -f $env:USERNAME, [System.Net.Dns]::GetHostName())) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-armor-export-public-key.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-armor-export-public-key.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+
+            $gpgBatchGenerateKeyStdOutPath = ('{0}\log\{1}.gpg-batch-generate-key.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+            $gpgBatchGenerateKeyStdErrPath = ('{0}\log\{1}.gpg-batch-generate-key.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+            Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--batch', '--full-gen-key', ('{0}\Mozilla\OpenCloudConfig\gpg-keygen-config.txt' -f $env:ProgramData)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput $gpgBatchGenerateKeyStdOutPath -RedirectStandardError $gpgBatchGenerateKeyStdErrPath
+            if ((Get-Item -Path $gpgBatchGenerateKeyStdErrPath).Length -gt 0kb) {
+              Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgBatchGenerateKeyStdErrPath -Raw)) -severity 'ERROR'
+            } else {
+              Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgBatchGenerateKeyStdOutPath -Raw)) -severity 'INFO'
+              $gpgArmorExportPubKeyStdOutPath = ('{0}\log\{1}.gpg-armor-export-public-key.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+              $gpgArmorExportPubKeyStdErrPath = ('{0}\log\{1}.gpg-armor-export-public-key.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+              Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--armor', '--output', ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData), '--export', ('{0}@{1}' -f $env:USERNAME, [System.Net.Dns]::GetHostName())) -Wait -NoNewWindow -PassThru -RedirectStandardOutput $gpgArmorExportPubKeyStdOutPath -RedirectStandardError $gpgArmorExportPubKeyStdErrPath
+              if ((Get-Item -Path $gpgArmorExportPubKeyStdErrPath).Length -gt 0kb) {
+                Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgArmorExportPubKeyStdErrPath -Raw)) -severity 'ERROR'
+              } else {
+                Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgArmorExportPubKeyStdOutPath -Raw)) -severity 'INFO'
+              }
+            }
           } else {
             Write-Log -message ('{0} :: error: {1} not created' -f $($MyInvocation.MyCommand.Name), $gpgKeyGenConfigPath) -severity 'ERROR'
           }
