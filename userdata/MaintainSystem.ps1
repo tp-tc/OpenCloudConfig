@@ -172,25 +172,30 @@ function Invoke-OccReset {
               }
             }
           }
-        } else {
+        }
+        if (-not (Test-Path -Path ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData) -ErrorAction SilentlyContinue)) {
           New-Item -Path ('{0}\Mozilla\OpenCloudConfig' -f $env:ProgramData) -ItemType Directory -ErrorAction SilentlyContinue
-          #$gpgKeyGenConfigPath = ('{0}\Mozilla\OpenCloudConfig\gpg-keygen-config.txt' -f $env:ProgramData)
-          #[IO.File]::WriteAllLines($gpgKeyGenConfigPath, @(
-          #  'Key-Type: eddsa',
-          #  'Key-Curve: Ed25519',
-          #  'Key-Usage: cert',
-          #  'Subkey-Type: eddsa',
-          #  'Subkey-Curve: Ed25519',
-          #  'Subkey-Usage: sign,auth',
-          #  'Expire-Date: 0',
-          #  ('Name-Real: {0}' -f [System.Net.Dns]::GetHostName()),
-          #  ('Name-Email: {0}@{1}' -f $env:USERNAME, [System.Net.Dns]::GetHostName()),
-          #  '%pubring C:\ProgramData\Mozilla\OpenCloudConfig\occ-public.key',
-          #  '%no-protection',
-          #  '%commit',
-          #  '%echo done'
-          #), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
-          #Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--batch', '--generate-key', ('{0}\Mozilla\OpenCloudConfig\gpg-keygen-config.txt' -f $env:ProgramData)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput $localPath -RedirectStandardError ('{0}\log\{1}.gpg-decrypt-{2}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), [IO.Path]::GetFileNameWithoutExtension($localPath))
+          $gpgKeyGenConfigPath = ('{0}\Mozilla\OpenCloudConfig\gpg-keygen-config.txt' -f $env:ProgramData)
+          [IO.File]::WriteAllLines($gpgKeyGenConfigPath, @(
+            'Key-Type: eddsa',
+            'Key-Curve: Ed25519',
+            'Key-Usage: cert',
+            'Subkey-Type: ecdh',
+            'Subkey-Curve: Curve25519',
+            'Subkey-Usage: encrypt',
+            'Expire-Date: 0',
+            ('Name-Real: {0} {1}' -f $env:USERNAME, [System.Net.Dns]::GetHostName()),
+            ('Name-Email: {0}@{1}' -f $env:USERNAME, [System.Net.Dns]::GetHostName()),
+            '%no-protection',
+            '%commit',
+            '%echo done'
+          ), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
+          Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--batch', '--full-gen-key', ('{0}\Mozilla\OpenCloudConfig\gpg-keygen-config.txt' -f $env:ProgramData)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-batch-generate-key.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-batch-generate-key.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+          Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--armor', '--output', ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData), '--export', ('{0}@{1}' -f $env:USERNAME, [System.Net.Dns]::GetHostName())) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-armor-export-public-key.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-armor-export-public-key.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+        }
+        if (Test-Path -Path ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData) -ErrorAction SilentlyContinue) {
+          $publicKey = (Get-Content -Path ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData) -Raw)
+          Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), $publicKey) -severity 'DEBUG'
         }
         # todo: generate C:\generic-worker\ed25519-private.key and C:\generic-worker\ed25519-public.key
       }
