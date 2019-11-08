@@ -179,6 +179,8 @@ function Invoke-OccReset {
                 Remove-Item -Path ('{0}.gpg' -f $localPath) -Force
                 Write-Log -message ('{0} :: deleted "{1}"' -f $($MyInvocation.MyCommand.Name), ('{0}.gpg' -f $localPath))
               }
+            } else {
+              Write-Log -message ('{0} :: detected {1}. skipping download from {2}' -f $($MyInvocation.MyCommand.Name), $localPath, $downloadUrl) -severity 'DEBUG'
             }
           }
         } else {
