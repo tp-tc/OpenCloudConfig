@@ -7,7 +7,6 @@ current_script_name=$(basename ${0##*/} .sh)
 echo ${temp_dir}
 
 #rm -f ${current_script_dir}/../cfg/generic-worker/*.json.gpg
-#rm -f ${current_script_dir}/../cfg/generic-worker/*.json
 
 mkdir -p ${temp_dir}/gnupg
 chmod 700 ${temp_dir}/gnupg
@@ -22,20 +21,24 @@ taskDrive=C
 
 for pub_key_path in ${current_script_dir}/../keys/*; do
   workerId=$(basename ${pub_key_path})
+  workerNumberPadded=${workerId/t-lenovoyogac630-/}
+  workerNumber=$((10#$workerNumberPadded))
+  publicIP=10.7.204.$(( 20 + workerNumber ))
   gpg2 --homedir ${temp_dir}/gnupg --import ${pub_key_path}
   jq --sort-keys \
     --arg accessToken ${accessToken} \
     --arg clientId ${clientId} \
     --arg provisionerId ${provisionerId} \
+    --arg publicIP ${publicIP} \
     --arg rootURL ${rootURL} \
     --arg taskDrive ${taskDrive} \
     --arg workerGroup ${workerGroup} \
     --arg workerId ${workerId} \
     --arg workerType ${workerType} \
-    '. | .accessToken = $accessToken | .clientId = $clientId | .provisionerId = $provisionerId | .rootURL = $rootURL | .workerGroup = $workerGroup | .workerId = $workerId | .workerType = $workerType | .cachesDir = $taskDrive + ":\\caches" | .downloadsDir = $taskDrive + ":\\downloads" | .tasksDir = $taskDrive + ":\\tasks"' \
+    '. | .accessToken = $accessToken | .clientId = $clientId | .provisionerId = $provisionerId | .publicIP = $publicIP | .rootURL = $rootURL | .workerGroup = $workerGroup | .workerId = $workerId | .workerType = $workerType | .cachesDir = $taskDrive + ":\\caches" | .downloadsDir = $taskDrive + ":\\downloads" | .tasksDir = $taskDrive + ":\\tasks"' \
     ${current_script_dir}/../userdata/Configuration/GenericWorker/generic-worker.config > ${current_script_dir}/../cfg/generic-worker/${workerId}.json
   if [ ! -f ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg ]; then
-    gpg2 --homedir ${temp_dir}/gnupg --batch --output ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg --encrypt --recipient yoga-${workerId/t-lenovoyogac630-/} --trust-model always ${current_script_dir}/../cfg/generic-worker/${workerId}.json
+    gpg2 --homedir ${temp_dir}/gnupg --batch --output ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg --encrypt --recipient yoga-${workerNumberPadded} --trust-model always ${current_script_dir}/../cfg/generic-worker/${workerId}.json
   else
     gpg2 --list-only -v -d ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg
   fi
