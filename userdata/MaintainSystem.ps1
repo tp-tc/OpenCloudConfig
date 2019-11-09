@@ -154,7 +154,9 @@ function Invoke-OccReset {
       )
       foreach ($remotePatch in $remotePatches) {
         try {
+          Write-Log -message ('{0} :: executing remote patch {1}' -f $($MyInvocation.MyCommand.Name), $remotePatch) -severity 'DEBUG'
           Invoke-Expression (New-Object Net.WebClient).DownloadString(('{0}?{1}' -f $remotePatch, [Guid]::NewGuid()))
+          Write-Log -message ('{0} :: remote patch executed {1}' -f $($MyInvocation.MyCommand.Name), $remotePatch) -severity 'DEBUG'
         } catch {
           Write-Log -message ('{0} :: error executing remote patch script {1}. {2}' -f $($MyInvocation.MyCommand.Name), $remotePatch, $_.Exception.Message) -severity 'ERROR'
         }
