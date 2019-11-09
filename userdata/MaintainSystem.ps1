@@ -187,16 +187,18 @@ function Invoke-OccReset {
           Write-Log -message ('{0} :: gpg keyring not found' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
         }
 
-        foreach ($gpgExePath in @(('{0}\GnuPG\bin\gpg.exe' -f ${env:ProgramFiles(x86)}), ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}), ('{0}\Git\usr\bin\gpg.exe' -f ${env:ProgramFiles(x86)}))) {
+        $gpgExePath = ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)})
+
+        foreach ($argumentList in @(@('--version'), @('--list-keys'))) {
           if (Test-Path -Path $gpgExePath -ErrorAction SilentlyContinue) {
-            Write-Log -message ('{0} :: {1} --version' -f $($MyInvocation.MyCommand.Name), $gpgExePath) -severity 'DEBUG'
-            $gpgVersionStdOutPath = ('{0}\log\{1}.gpg-version.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-            $gpgVersionStdErrPath = ('{0}\log\{1}.gpg-version.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-            Start-Process $gpgExePath -ArgumentList @('--version') -Wait -NoNewWindow -PassThru -RedirectStandardOutput $gpgVersionStdOutPath -RedirectStandardError $gpgVersionStdErrPath
-            if ((Get-Item -Path $gpgVersionStdErrPath).Length -gt 0kb) {
-              Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgVersionStdErrPath -Raw)) -severity 'ERROR'
+            Write-Log -message ('{0} :: {1} {2}' -f $($MyInvocation.MyCommand.Name), $gpgExePath, [string]::Join(' ', $argumentList)) -severity 'DEBUG'
+            $gpgCommandStdOutPath = ('{0}\log\{1}.gpg-version.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+            $gpgCommandStdErrPath = ('{0}\log\{1}.gpg-version.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+            Start-Process $gpgExePath -ArgumentList @('--version') -Wait -NoNewWindow -PassThru -RedirectStandardOutput $gpgCommandStdOutPath -RedirectStandardError $gpgCommandStdErrPath
+            if ((Get-Item -Path $gpgCommandStdErrPath).Length -gt 0kb) {
+              Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgCommandStdErrPath -Raw)) -severity 'ERROR'
             } else {
-              Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgVersionStdOutPath -Raw)) -severity 'INFO'
+              Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgCommandStdOutPath -Raw)) -severity 'INFO'
             }
           } else {
             Write-Log -message ('{0} :: {1} not found' -f $($MyInvocation.MyCommand.Name), $gpgExePath) -severity 'DEBUG'
