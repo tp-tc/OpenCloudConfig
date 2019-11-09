@@ -189,7 +189,7 @@ function Invoke-OccReset {
 
         $gpgExePath = ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)})
 
-        foreach ($argumentList in @(@('--version'), @('--list-keys'))) {
+        foreach ($argumentList in @(@('--version'), @('--list-keys'), @('--list-keys', ('{0}@{1}' -f $env:USERNAME, [System.Net.Dns]::GetHostName())))) {
           if (Test-Path -Path $gpgExePath -ErrorAction SilentlyContinue) {
             Write-Log -message ('{0} :: {1} {2}' -f $($MyInvocation.MyCommand.Name), $gpgExePath, [string]::Join(' ', $argumentList)) -severity 'DEBUG'
             $gpgCommandStdOutPath = ('{0}\log\{1}.gpg-version.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
