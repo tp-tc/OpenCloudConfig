@@ -33,8 +33,12 @@ for pub_key_path in ${current_script_dir}/../keys/*; do
     --arg workerType ${workerType} \
     '. | .accessToken = $accessToken | .clientId = $clientId | .provisionerId = $provisionerId | .requiredDiskSpaceMegabytes = $requiredDiskSpaceMegabytes | .rootURL = $rootURL | .workerGroup = $workerGroup | .workerId = $workerId | .workerType = $workerType | .cachesDir = $taskDrive + ":\\caches" | .downloadsDir = $taskDrive + ":\\downloads" | .tasksDir = $taskDrive + ":\\tasks"' \
     ${current_script_dir}/../userdata/Configuration/GenericWorker/generic-worker.config > ${current_script_dir}/../cfg/generic-worker/${workerId}.json
+  if [ ! -f ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg ]; then
     gpg2 --homedir ${temp_dir}/gnupg --batch --output ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg --encrypt --recipient yoga-${workerId/t-lenovoyogac630-/} --trust-model always ${current_script_dir}/../cfg/generic-worker/${workerId}.json
+  fi
 done
-#gpg2 --homedir ${temp_dir}/gnupg --list-keys
-
+recipientList=$(gpg2 --homedir ${temp_dir}/gnupg --list-keys --with-colons --fast-list-mode | awk -F: '/^pub/{printf "-r %s ", $5}')
+if [ ! -f ${current_script_dir}/../cfg/OpenCloudConfig.private.key.gpg ]; then
+  gpg2 --homedir ${temp_dir}/gnupg --batch --output ${current_script_dir}/../cfg/OpenCloudConfig.private.key.gpg --encrypt ${recipientList} --trust-model always ${current_script_dir}/../cfg/OpenCloudConfig.private.key
+fi
 rm -rf ${temp_dir}
