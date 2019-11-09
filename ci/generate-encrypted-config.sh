@@ -35,10 +35,14 @@ for pub_key_path in ${current_script_dir}/../keys/*; do
     ${current_script_dir}/../userdata/Configuration/GenericWorker/generic-worker.config > ${current_script_dir}/../cfg/generic-worker/${workerId}.json
   if [ ! -f ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg ]; then
     gpg2 --homedir ${temp_dir}/gnupg --batch --output ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg --encrypt --recipient yoga-${workerId/t-lenovoyogac630-/} --trust-model always ${current_script_dir}/../cfg/generic-worker/${workerId}.json
+  else
+    gpg2 --list-only -v -d ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg
   fi
 done
 recipientList=$(gpg2 --homedir ${temp_dir}/gnupg --list-keys --with-colons --fast-list-mode | awk -F: '/^pub/{printf "-r %s ", $5}')
 if [ ! -f ${current_script_dir}/../cfg/OpenCloudConfig.private.key.gpg ]; then
   gpg2 --homedir ${temp_dir}/gnupg --batch --output ${current_script_dir}/../cfg/OpenCloudConfig.private.key.gpg --encrypt ${recipientList} --trust-model always ${current_script_dir}/../cfg/OpenCloudConfig.private.key
+else
+  gpg2 --list-only -v -d ${current_script_dir}/../cfg/OpenCloudConfig.private.key.gpg
 fi
 rm -rf ${temp_dir}
