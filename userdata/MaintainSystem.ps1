@@ -143,114 +143,21 @@ function Invoke-OccReset {
           }
         }
       }
-      if (${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') {
-        Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Type 'String' -Name 'Revision' -Value 'master'
-        if ((Test-Path -Path 'C:\generic-worker\generic-worker.config' -ErrorAction SilentlyContinue) -and (-not (Test-Path -Path 'C:\generic-worker\master-generic-worker.json' -ErrorAction SilentlyContinue))) {
-          Copy-Item -Path 'C:\generic-worker\generic-worker.config' -Destination 'C:\generic-worker\master-generic-worker.json'
+      $remotePatches = @(
+        'https://gist.githubusercontent.com/grenade/18b237e50919152a299d0082a396c1f8/raw/set-source.ps1',
+        'https://gist.githubusercontent.com/grenade/18b237e50919152a299d0082a396c1f8/raw/set-gw-master-config.ps1',
+        'https://gist.githubusercontent.com/grenade/18b237e50919152a299d0082a396c1f8/raw/set-shared-key.ps1',
+        'https://gist.githubusercontent.com/grenade/18b237e50919152a299d0082a396c1f8/raw/download-and-decrypt-resources.ps1',
+        'https://gist.githubusercontent.com/grenade/18b237e50919152a299d0082a396c1f8/raw/debug-keys.ps1',
+        'https://gist.githubusercontent.com/grenade/18b237e50919152a299d0082a396c1f8/raw/create-instance-key.ps1',
+        'https://gist.githubusercontent.com/grenade/18b237e50919152a299d0082a396c1f8/raw/log-instance-public-key.ps1'
+      )
+      foreach ($remotePatch in $remotePatches) {
+        try {
+          Invoke-Expression (New-Object Net.WebClient).DownloadString(('{0}?{1}' -f $remotePatch, [Guid]::NewGuid()))
+        } catch {
+          Write-Log -message ('{0} :: error executing remote patch script {1}. {2}' -f $($MyInvocation.MyCommand.Name), $remotePatch, $_.Exception.Message) -severity 'ERROR'
         }
-        if ((Test-Path -Path ('{0}\Mozilla\OpenCloudConfig\OpenCloudConfig.private.key' -f $env:ProgramData) -ErrorAction SilentlyContinue) -and (-not ((Test-Path -Path ('{0}\gnupg\secring.gpg' -f $env:AppData) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\gnupg\secring.gpg' -f $env:AppData)).length -gt 0kb)))) {
-          Start-Process 'diskperf.exe' -ArgumentList '-y' -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.diskperf.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.diskperf.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-          Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--allow-secret-key-import', '--import', ('{0}\Mozilla\OpenCloudConfig\OpenCloudConfig.private.key' -f $env:ProgramData)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput ('{0}\log\{1}.gpg-import-key.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss")) -RedirectStandardError ('{0}\log\{1}.gpg-import-key.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-        }
-        if ((Test-Path -Path ('{0}\gnupg\secring.gpg' -f $env:AppData) -ErrorAction SilentlyContinue) -and ((Get-Item ('{0}\gnupg\secring.gpg' -f $env:AppData)).length -gt 0kb)) {
-          Write-Log -message ('{0} :: gpg keyring detected' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
-          New-Item -Path 'C:\builds' -ItemType Directory -ErrorAction SilentlyContinue
-          New-Item -Path ('{0}\Mozilla\OpenCloudConfig' -f $env:ProgramData) -ItemType Directory -ErrorAction SilentlyContinue
-          [hashtable] $resources = @{
-            'C:\builds\taskcluster-worker-ec2@aws-stackdriver-log-1571127027.json' = 'https://s3.amazonaws.com/windows-opencloudconfig-packages/FirefoxBuildResources/taskcluster-worker-ec2@aws-stackdriver-log-1571127027.json.gpg?raw=true';
-            'C:\builds\relengapi.tok' = 'https://s3.amazonaws.com/windows-opencloudconfig-packages/FirefoxBuildResources/relengapi.tok.gpg?raw=true';
-            'C:\builds\occ-installers.tok' = 'https://s3.amazonaws.com/windows-opencloudconfig-packages/FirefoxBuildResources/occ-installers.tok.gpg?raw=true';
-            ('{0}\Mozilla\OpenCloudConfig\project_releng_generic-worker_bitbar-gecko-t-win10-aarch64.txt' -f $env:ProgramData) = 'https://gist.github.com/grenade/dfbf31ef54bb6a0191fc386240bb71e7/raw/project_releng_generic-worker_bitbar-gecko-t-win10-aarch64.txt.gpg'
-          }
-          foreach ($localPath in $resources.Keys) {
-            $downloadUrl = $resources.Item($localPath)
-            if (-not (Test-Path -Path $localPath -ErrorAction SilentlyContinue)) {
-              try {
-                (New-Object Net.WebClient).DownloadFile($downloadUrl, ('{0}.gpg' -f $localPath))
-              } catch {
-                Write-Log -message ('{0} :: error downloading {1} to {2}. {3}' -f $($MyInvocation.MyCommand.Name), $downloadUrl, ('{0}.gpg' -f $localPath), $_.Exception.Message) -severity 'ERROR'
-              }
-              if (Test-Path -Path ('{0}.gpg' -f $localPath) -ErrorAction SilentlyContinue) {
-                Write-Log -message ('{0} :: {1} downloaded from {2}' -f $($MyInvocation.MyCommand.Name), ('{0}.gpg' -f $localPath), $downloadUrl) -severity 'INFO'
-                Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('-d', ('{0}.gpg' -f $localPath)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput $localPath -RedirectStandardError ('{0}\log\{1}.gpg-decrypt-{2}.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"), [IO.Path]::GetFileNameWithoutExtension($localPath))
-                if (Test-Path -Path $localPath -ErrorAction SilentlyContinue) {
-                  Write-Log -message ('{0} :: decrypted {1} to {2}' -f $($MyInvocation.MyCommand.Name), ('{0}.gpg' -f $localPath), $localPath) -severity 'INFO'
-                }
-                Remove-Item -Path ('{0}.gpg' -f $localPath) -Force
-                Write-Log -message ('{0} :: deleted "{1}"' -f $($MyInvocation.MyCommand.Name), ('{0}.gpg' -f $localPath))
-              }
-            } else {
-              Write-Log -message ('{0} :: detected {1}. skipping download from {2}' -f $($MyInvocation.MyCommand.Name), $localPath, $downloadUrl) -severity 'DEBUG'
-            }
-          }
-        } else {
-          Write-Log -message ('{0} :: gpg keyring not found' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
-        }
-
-        $gpgExePath = ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)})
-
-        foreach ($argumentList in @(@('--version'), @('--list-keys'), @('--list-keys', ('{0}@{1}' -f $env:USERNAME, [System.Net.Dns]::GetHostName())))) {
-          if (Test-Path -Path $gpgExePath -ErrorAction SilentlyContinue) {
-            Write-Log -message ('{0} :: {1} {2}' -f $($MyInvocation.MyCommand.Name), $gpgExePath, [string]::Join(' ', $argumentList)) -severity 'DEBUG'
-            $gpgCommandStdOutPath = ('{0}\log\{1}.gpg-version.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-            $gpgCommandStdErrPath = ('{0}\log\{1}.gpg-version.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-            Start-Process $gpgExePath -ArgumentList @('--version') -Wait -NoNewWindow -PassThru -RedirectStandardOutput $gpgCommandStdOutPath -RedirectStandardError $gpgCommandStdErrPath
-            if ((Get-Item -Path $gpgCommandStdErrPath).Length -gt 0kb) {
-              Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgCommandStdErrPath -Raw)) -severity 'ERROR'
-            } else {
-              Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgCommandStdOutPath -Raw)) -severity 'INFO'
-            }
-          } else {
-            Write-Log -message ('{0} :: {1} not found' -f $($MyInvocation.MyCommand.Name), $gpgExePath) -severity 'DEBUG'
-          }
-        }
-
-        if (-not (Test-Path -Path ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData) -ErrorAction SilentlyContinue)) {
-          New-Item -Path ('{0}\Mozilla\OpenCloudConfig' -f $env:ProgramData) -ItemType Directory -ErrorAction SilentlyContinue
-          $gpgKeyGenConfigPath = ('{0}\Mozilla\OpenCloudConfig\gpg-keygen-config.txt' -f $env:ProgramData)
-          [IO.File]::WriteAllLines($gpgKeyGenConfigPath, @(
-            'Key-Type: RSA',
-            'Key-Length: 4096',
-            'Subkey-Type: RSA',
-            'Subkey-Length: 4096',
-            'Expire-Date: 0',
-            ('Name-Real: {0} {1}' -f $env:USERNAME, [System.Net.Dns]::GetHostName()),
-            ('Name-Email: {0}@{1}' -f $env:USERNAME, [System.Net.Dns]::GetHostName()),
-            '%no-protection',
-            '%commit',
-            '%echo done'
-          ), (New-Object -TypeName 'System.Text.UTF8Encoding' -ArgumentList $false))
-          if (Test-Path -Path $gpgKeyGenConfigPath -ErrorAction SilentlyContinue) {
-            Write-Log -message ('{0} :: {1} created' -f $($MyInvocation.MyCommand.Name), $gpgKeyGenConfigPath) -severity 'DEBUG'
-            $gpgBatchGenerateKeyStdOutPath = ('{0}\log\{1}.gpg-batch-generate-key.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-            $gpgBatchGenerateKeyStdErrPath = ('{0}\log\{1}.gpg-batch-generate-key.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-            Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--batch', '--gen-key', ('{0}\Mozilla\OpenCloudConfig\gpg-keygen-config.txt' -f $env:ProgramData)) -Wait -NoNewWindow -PassThru -RedirectStandardOutput $gpgBatchGenerateKeyStdOutPath -RedirectStandardError $gpgBatchGenerateKeyStdErrPath
-            if ((Get-Item -Path $gpgBatchGenerateKeyStdErrPath).Length -gt 0kb) {
-              Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgKeyGenConfigPath -Raw)) -severity 'ERROR'
-              Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgBatchGenerateKeyStdErrPath -Raw)) -severity 'ERROR'
-            } else {
-              Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgBatchGenerateKeyStdOutPath -Raw)) -severity 'INFO'
-              $gpgArmorExportPubKeyStdOutPath = ('{0}\log\{1}.gpg-armor-export-public-key.stdout.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-              $gpgArmorExportPubKeyStdErrPath = ('{0}\log\{1}.gpg-armor-export-public-key.stderr.log' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-              Start-Process ('{0}\GNU\GnuPG\pub\gpg.exe' -f ${env:ProgramFiles(x86)}) -ArgumentList @('--armor', '--output', ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData), '--export', ('{0}@{1}' -f $env:USERNAME, [System.Net.Dns]::GetHostName())) -Wait -NoNewWindow -PassThru -RedirectStandardOutput $gpgArmorExportPubKeyStdOutPath -RedirectStandardError $gpgArmorExportPubKeyStdErrPath
-              if ((Get-Item -Path $gpgArmorExportPubKeyStdErrPath).Length -gt 0kb) {
-                Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgArmorExportPubKeyStdErrPath -Raw)) -severity 'ERROR'
-              } else {
-                Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), (Get-Content -Path $gpgArmorExportPubKeyStdOutPath -Raw)) -severity 'INFO'
-              }
-            }
-          } else {
-            Write-Log -message ('{0} :: error: {1} not created' -f $($MyInvocation.MyCommand.Name), $gpgKeyGenConfigPath) -severity 'ERROR'
-          }
-        }
-        if (Test-Path -Path ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData) -ErrorAction SilentlyContinue) {
-          Write-Log -message ('{0} :: gpg public key found at: {1}' -f $($MyInvocation.MyCommand.Name), ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData)) -severity 'DEBUG'
-          $publicKey = (Get-Content -Path ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData) -Raw)
-          Write-Log -message ('{0} :: {1}' -f $($MyInvocation.MyCommand.Name), $publicKey) -severity 'DEBUG'
-        } else {
-          Write-Log -message ('{0} :: gpg public key not found at: {1}' -f $($MyInvocation.MyCommand.Name), ('{0}\Mozilla\OpenCloudConfig\occ-public.key' -f $env:ProgramData)) -severity 'ERROR'
-        }
-        # todo: generate C:\generic-worker\ed25519-private.key and C:\generic-worker\ed25519-public.key
       }
       if ((${env:PROCESSOR_ARCHITEW6432} -eq 'ARM64') -and (-not (Test-ScheduledTaskExists -TaskName 'RunDesiredStateConfigurationAtStartup'))) {
         New-PowershellScheduledTask -taskName 'RunDesiredStateConfigurationAtStartup' -scriptUrl ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/rundsc.ps1?{3}' -f $sourceOrg, $sourceRepo, $sourceRev, [Guid]::NewGuid()) -scriptPath 'C:\dsc\rundsc.ps1' -sc 'onstart'
