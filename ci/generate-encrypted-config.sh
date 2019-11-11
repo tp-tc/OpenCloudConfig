@@ -7,6 +7,7 @@ current_script_name=$(basename ${0##*/} .sh)
 echo ${temp_dir}
 
 #rm -f ${current_script_dir}/../cfg/generic-worker/*.json.gpg
+#rm -f ${current_script_dir}/../cfg/OpenCloudConfig.private.key.gpg
 
 mkdir -p ${temp_dir}/gnupg
 chmod 700 ${temp_dir}/gnupg
