@@ -61,7 +61,7 @@ function Run-MaintainSystem {
 }
 function Remove-OldTaskDirectories {
   param (
-    [string[]] $targets = @('Z:\task_*', 'C:\Users\task_*')
+    [string[]] $targets = @('Z:\task_*', 'C:\Users\task_*', 'C:\tasks\task_*')
   )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
