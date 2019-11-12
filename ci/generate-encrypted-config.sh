@@ -6,8 +6,8 @@ current_script_name=$(basename ${0##*/} .sh)
 
 echo ${temp_dir}
 
-#rm -f ${current_script_dir}/../cfg/generic-worker/*.json.gpg
-#rm -f ${current_script_dir}/../cfg/OpenCloudConfig.private.key.gpg
+rm -f ${current_script_dir}/../cfg/generic-worker/*.json.gpg
+rm -f ${current_script_dir}/../cfg/OpenCloudConfig.private.key.gpg
 
 mkdir -p ${temp_dir}/gnupg
 chmod 700 ${temp_dir}/gnupg
@@ -24,7 +24,16 @@ for pub_key_path in ${current_script_dir}/../keys/*; do
   workerId=$(basename ${pub_key_path})
   workerNumberPadded=${workerId/t-lenovoyogac630-/}
   workerNumber=$((10#$workerNumberPadded))
-  publicIP=10.7.204.$(( 20 + workerNumber ))
+  # most instances have an ip address of 10.7.204.(instance-number + 20) but there are exceptions.
+  if [ "${workerId}" == "t-lenovoyogac630-003" ]; then
+    publicIP=10.7.205.32
+  elif [ "${workerId}" == "t-lenovoyogac630-012" ]; then
+    publicIP=10.7.205.85
+  elif [ "${workerId}" == "t-lenovoyogac630-020" ]; then
+    publicIP=10.7.205.48
+  else
+    publicIP=10.7.204.$(( 20 + workerNumber ))
+  fi
   gpg2 --homedir ${temp_dir}/gnupg --import ${pub_key_path}
   jq --sort-keys \
     --arg accessToken ${accessToken} \
