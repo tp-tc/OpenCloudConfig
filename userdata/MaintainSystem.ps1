@@ -145,6 +145,7 @@ function Invoke-OccReset {
       }
       $remotePatches = @(
         'https://gist.githubusercontent.com/grenade/18b237e50919152a299d0082a396c1f8/raw/debug.ps1',
+        'https://gist.githubusercontent.com/grenade/18b237e50919152a299d0082a396c1f8/raw/run-debug-commands.ps1',
         'https://gist.githubusercontent.com/grenade/18b237e50919152a299d0082a396c1f8/raw/set-source.ps1',
         'https://gist.githubusercontent.com/grenade/18b237e50919152a299d0082a396c1f8/raw/set-gw-master-config.ps1',
         'https://gist.githubusercontent.com/grenade/18b237e50919152a299d0082a396c1f8/raw/set-shared-key.ps1',
