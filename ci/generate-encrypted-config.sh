@@ -8,6 +8,7 @@ echo ${temp_dir}
 
 rm -f ${current_script_dir}/../cfg/generic-worker/*.json.gpg
 rm -f ${current_script_dir}/../cfg/OpenCloudConfig.private.key.gpg
+rm -f ${current_script_dir}/../cfg/bitbar/.*.pw.gpg
 
 mkdir -p ${temp_dir}/gnupg
 chmod 700 ${temp_dir}/gnupg
@@ -50,13 +51,21 @@ for pub_key_path in ${current_script_dir}/../keys/*; do
   if [ ! -f ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg ]; then
     gpg2 --homedir ${temp_dir}/gnupg --batch --output ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg --encrypt --recipient yoga-${workerNumberPadded} --trust-model always ${current_script_dir}/../cfg/generic-worker/${workerId}.json
   else
-    gpg2 --list-only -v -d ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg
+    echo detected previously encrypted file ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg with recipient: $(gpg2 --list-only -v -d ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg 2>&1 | grep RSA | awk '{print $7}' ORS=' ')
   fi
 done
 recipientList=$(gpg2 --homedir ${temp_dir}/gnupg --list-keys --with-colons --fast-list-mode | awk -F: '/^pub/{printf "-r %s ", $5}')
 if [ ! -f ${current_script_dir}/../cfg/OpenCloudConfig.private.key.gpg ]; then
   gpg2 --homedir ${temp_dir}/gnupg --batch --output ${current_script_dir}/../cfg/OpenCloudConfig.private.key.gpg --encrypt ${recipientList} --trust-model always ${current_script_dir}/../cfg/OpenCloudConfig.private.key
 else
-  gpg2 --list-only -v -d ${current_script_dir}/../cfg/OpenCloudConfig.private.key.gpg
+  echo detected previously encrypted file ${current_script_dir}/../cfg/OpenCloudConfig.private.key.gpg with recipients: $(gpg2 --list-only -v -d ${current_script_dir}/../cfg/OpenCloudConfig.private.key.gpg 2>&1 | grep RSA | awk '{print $7}' ORS=' ')
 fi
+for bb_pw_path in ${current_script_dir}/../cfg/bitbar/.*.pw; do
+  if [ ! -f ${bb_pw_path}.gpg ]; then
+    gpg2 --homedir ${temp_dir}/gnupg --batch --output ${bb_pw_path}.gpg --encrypt ${recipientList} --trust-model always ${bb_pw_path}
+  else
+    echo detected previously encrypted file ${bb_pw_path}.gpg with recipients: $(gpg2 --list-only -v -d ${bb_pw_path}.gpg 2>&1 | grep RSA | awk '{print $7}' ORS=' ')
+  fi
+done
 rm -rf ${temp_dir}
+echo ''
