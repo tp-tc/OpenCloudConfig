@@ -41,10 +41,10 @@ cat C:\generic-worker\master-generic-worker.json | jq ".  | .workerId=\"%_worker
 echo Checking config file contents >> C:\generic-worker\generic-worker-wrapper.log
 type C:\generic-worker\gw.config  >> C:\generic-worker\generic-worker-wrapper.log
 if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-worker\disable-desktop-interrupt.reg
-
-:CheckForStateFlag
 rem yoga testing
 reg add "hklm\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" /v DefaultUserName /t REG_SZ /d "" /f  >> C:\generic-worker\generic-worker-wrapper.log
+
+:CheckForStateFlag
 echo Checking for C:\dsc\task-claim-state.valid file... >> C:\generic-worker\generic-worker-wrapper.log
 if exist C:\dsc\task-claim-state.valid goto RunWorker
 tasklist /FI "IMAGENAME eq powershell.exe" | findstr "powershell.exe" >nul
