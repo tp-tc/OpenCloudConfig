@@ -23,17 +23,24 @@ taskDrive=C
 
 for pub_key_path in ${current_script_dir}/../keys/*; do
   workerId=$(basename ${pub_key_path})
-  workerNumberPadded=${workerId/t-lenovoyogac630-/}
-  workerNumber=$((10#$workerNumberPadded))
   # most instances have an ip address of 10.7.204.(instance-number + 20) but there are exceptions.
-  if [ "${workerId}" == "t-lenovoyogac630-003" ]; then
-    publicIP=10.7.205.32
-  elif [ "${workerId}" == "t-lenovoyogac630-012" ]; then
-    publicIP=10.7.205.85
-  elif [ "${workerId}" == "t-lenovoyogac630-020" ]; then
-    publicIP=10.7.205.48
+  echo ${workerId}
+  if [[ "${workerId}" == "desktop-"* ]]; then
+    recipient=${workerId}
+    publicIP=0.0.0.0
   else
-    publicIP=10.7.204.$(( 20 + workerNumber ))
+    workerNumberPadded=${workerId/t-lenovoyogac630-/}
+    workerNumber=$((10#$workerNumberPadded))
+    recipient=yoga-${workerNumberPadded}
+    if [ "${workerId}" == "t-lenovoyogac630-003" ]; then
+      publicIP=10.7.205.32
+    elif [ "${workerId}" == "t-lenovoyogac630-012" ]; then
+      publicIP=10.7.205.85
+    elif [ "${workerId}" == "t-lenovoyogac630-020" ]; then
+      publicIP=10.7.205.48
+    else
+      publicIP=10.7.204.$(( 20 + workerNumber ))
+    fi
   fi
   gpg2 --homedir ${temp_dir}/gnupg --import ${pub_key_path}
   jq --sort-keys \
@@ -49,7 +56,7 @@ for pub_key_path in ${current_script_dir}/../keys/*; do
     '. | .accessToken = $accessToken | .clientId = $clientId | .provisionerId = $provisionerId | .publicIP = $publicIP | .rootURL = $rootURL | .workerGroup = $workerGroup | .workerId = $workerId | .workerType = $workerType | .cachesDir = $taskDrive + ":\\caches" | .downloadsDir = $taskDrive + ":\\downloads" | .tasksDir = $taskDrive + ":\\tasks"' \
     ${current_script_dir}/../userdata/Configuration/GenericWorker/generic-worker.config > ${current_script_dir}/../cfg/generic-worker/${workerId}.json
   if [ ! -f ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg ]; then
-    gpg2 --homedir ${temp_dir}/gnupg --batch --output ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg --encrypt --recipient yoga-${workerNumberPadded} --trust-model always ${current_script_dir}/../cfg/generic-worker/${workerId}.json
+    gpg2 --homedir ${temp_dir}/gnupg --batch --output ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg --encrypt --recipient ${recipient} --trust-model always ${current_script_dir}/../cfg/generic-worker/${workerId}.json
   else
     echo detected previously encrypted file ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg with recipient: $(gpg2 --list-only -v -d ${current_script_dir}/../cfg/generic-worker/${workerId}.json.gpg 2>&1 | grep RSA | awk '{print $7}' ORS=' ')
   fi
