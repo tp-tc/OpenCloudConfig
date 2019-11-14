@@ -41,10 +41,7 @@ cat C:\generic-worker\master-generic-worker.json | jq ".  | .workerId=\"%_worker
 echo Checking config file contents >> C:\generic-worker\generic-worker-wrapper.log
 type C:\generic-worker\gw.config  >> C:\generic-worker\generic-worker-wrapper.log
 if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-worker\disable-desktop-interrupt.reg
-rem yoga testing
-reg add "hklm\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" /v DefaultUserName /t REG_SZ /d "" /f  >> C:\generic-worker\generic-worker-wrapper.log
-reg add "hklm\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" /v AutoAdminLogon /t REG_SZ /d "" /f  >> C:\generic-worker\generic-worker-wrapper.log
-reg add "hklm\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" /v DefaultUserName /t REG_SZ /d "" /f  >> C:\generic-worker\generic-worker-wrapper.log
+
 
 :CheckForStateFlag
 echo Checking for C:\dsc\task-claim-state.valid file... >> C:\generic-worker\generic-worker-wrapper.log
@@ -59,7 +56,6 @@ ping -n 2 127.0.0.1 1>/nul
 goto CheckForStateFlag
 
 :RunWorker
-
 echo File C:\dsc\task-claim-state.valid found >> C:\generic-worker\generic-worker-wrapper.log
 echo Deleting C:\dsc\task-claim-state.valid file >> C:\generic-worker\generic-worker-wrapper.log
 del /Q /F C:\dsc\task-claim-state.valid >> C:\generic-worker\generic-worker-wrapper.log 
@@ -67,8 +63,6 @@ pushd %~dp0
 set errorlevel=
 C:\generic-worker\generic-worker.exe run --config C:\generic-worker\gw.config >> C:\generic-worker\generic-worker-wrapper.log
 set GW_EXIT_CODE=%errorlevel%
-
-reg query "hklm\Software\Microsoft\Windows NT\CurrentVersion\Winlogon"  >> C:\generic-worker\generic-worker-wrapper.log
 
 if %GW_EXIT_CODE% EQU 69 goto ErrorReboot
 
