@@ -68,6 +68,8 @@ set errorlevel=
 C:\generic-worker\generic-worker.exe run --config C:\generic-worker\gw.config >> C:\generic-worker\generic-worker-wrapper.log
 set GW_EXIT_CODE=%errorlevel%
 
+reg query "hklm\Software\Microsoft\Windows NT\CurrentVersion\Winlogon"  >> C:\generic-worker\generic-worker-wrapper.log
+
 if %GW_EXIT_CODE% EQU 69 goto ErrorReboot
 
 <nul (set/p z=) >C:\dsc\task-claim-state.valid
