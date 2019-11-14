@@ -43,6 +43,8 @@ type C:\generic-worker\gw.config  >> C:\generic-worker\generic-worker-wrapper.lo
 if exist C:\generic-worker\disable-desktop-interrupt.reg reg import C:\generic-worker\disable-desktop-interrupt.reg
 rem yoga testing
 reg add "hklm\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" /v DefaultUserName /t REG_SZ /d "" /f  >> C:\generic-worker\generic-worker-wrapper.log
+reg add "hklm\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" /v AutoAdminLogon /t REG_SZ /d "" /f  >> C:\generic-worker\generic-worker-wrapper.log
+reg add "hklm\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" /v DefaultUserName /t REG_SZ /d "" /f  >> C:\generic-worker\generic-worker-wrapper.log
 
 :CheckForStateFlag
 echo Checking for C:\dsc\task-claim-state.valid file... >> C:\generic-worker\generic-worker-wrapper.log
