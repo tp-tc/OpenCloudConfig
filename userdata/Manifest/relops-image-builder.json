@@ -711,6 +711,20 @@
           "ComponentName": "programdata_google_auth"
         }
       ]
+    },
+    {
+      "ComponentName": "Ec2Config",
+      "ComponentType": "ExeInstall",
+      "Comment": "required for metadata lookups on ec2",
+      "Url": "https://windows-opencloudconfig-packages.s3.amazonaws.com/Ec2Install.exe",
+      "Arguments": [
+        "/S"
+      ],
+      "Validate": {
+        "PathsExist": [
+          "C:\\Program Files\\Amazon\\Ec2ConfigService\\Ec2Config.exe"
+        ]
+      }
     }
   ],
   "ProvisionerConfiguration": {
