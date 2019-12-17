@@ -8,7 +8,7 @@ tasks:
     - provisionerId: '{{taskcluster.docker.provisionerId}}'
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.validation'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-1/linux
       extra:
           github:
               env: true
@@ -43,7 +43,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.updatetooltoolrepo'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -94,7 +94,7 @@ tasks:
           - aws-provisioner:manage-worker-type:relops*
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.rollback'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -133,7 +133,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-1-b-win2012-beta
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-1-b-win2012-beta'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -190,7 +190,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-1-b-win2012-xlarge
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-1-b-win2012-xlarge'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -247,7 +247,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-1-b-win2012
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-1-b-win2012'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -303,7 +303,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-2-b-win2012
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-2-b-win2012'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -359,7 +359,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-3-b-win2012
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-3-b-win2012'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -415,7 +415,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-3-b-win2012-c4
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-3-b-win2012-c4'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -471,7 +471,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-3-b-win2012-c5
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-3-b-win2012-c5'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -526,7 +526,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-t-win7-32-cu
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win7-32-cu'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -581,7 +581,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-t-win7-32-gpu-b
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win7-32-gpu-b'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -637,7 +637,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-t-win7-32-beta
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win7-32-beta'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -693,7 +693,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-t-win7-32
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win7-32'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -748,7 +748,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-t-win7-32-gpu
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win7-32-gpu'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -803,7 +803,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-t-win10-64-cu
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-cu'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -858,7 +858,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-t-win10-64-alpha
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-alpha'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -914,7 +914,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-t-win10-64-beta
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-beta'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -970,7 +970,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-t-win10-64
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -1025,7 +1025,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu-a
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-gpu-a'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -1081,7 +1081,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu-b
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-gpu-b'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -1137,7 +1137,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu-s
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-gpu-s'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -1193,7 +1193,7 @@ tasks:
           - aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-gpu'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -1249,7 +1249,7 @@ tasks:
           - aws-provisioner:manage-worker-type:mpd001-1-b-win2012
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.mpd001-1-b-win2012'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -1305,7 +1305,7 @@ tasks:
           - aws-provisioner:manage-worker-type:mpd001-3-b-win2012
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.mpd001-3-b-win2012'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
@@ -1360,7 +1360,7 @@ tasks:
           - aws-provisioner:manage-worker-type:relops-image-builder
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.relops-image-builder'
-      workerType: '{{taskcluster.docker.workerType}}'
+      workerType: releng-3/linux
       extra:
           github:
               env: true
