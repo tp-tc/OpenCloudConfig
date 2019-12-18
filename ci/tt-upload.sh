@@ -17,7 +17,7 @@ reset=`tput sgr0`
 
 cd ${tmp_dir}
 if [ ! -f "${tmp_dir}/tooltool.py" ]; then
-  curl -s -o ${tmp_dir}/tooltool.py https://raw.githubusercontent.com/mozilla/release-services/master/src/tooltool/client/tooltool.py
+  curl -s -o ${tmp_dir}/tooltool.py https://raw.githubusercontent.com/mozilla/release-services/2959e48/src/tooltool/client/tooltool.py
   echo "$(tput dim)[${current_script_name} $(date --utc +"%F %T.%3NZ")]${reset} tooltool client downloaded to ${tmp_dir}/tooltool.py"
 fi
 
