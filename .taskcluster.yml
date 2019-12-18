@@ -5,7 +5,7 @@ metadata:
     owner: '{{event.head.user.email}}'
     source: '{{event.head.repo.url}}'
 tasks:
-    - provisionerId: releng-1
+    - provisionerId: releng-3
       workerType: linux
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.validation'
