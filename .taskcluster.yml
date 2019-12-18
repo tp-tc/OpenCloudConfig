@@ -85,53 +85,12 @@ tasks:
     - provisionerId: releng-3
       workerType: linux
       scopes:
-          - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
-          - aws-provisioner:manage-worker-type:gecko-1-b-win*
-          - aws-provisioner:manage-worker-type:gecko-2-b-win*
-          - aws-provisioner:manage-worker-type:gecko-3-b-win*
-          - aws-provisioner:manage-worker-type:gecko-t-win*
-          - aws-provisioner:manage-worker-type:mpd001-1-b-win*
-          - aws-provisioner:manage-worker-type:mpd001-3-b-win*
-          - aws-provisioner:manage-worker-type:relops*
-      routes:
-          - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.rollback'
-      extra:
-          github:
-              env: true
-              events:
-                  - push
-              branches:
-                - master
-          data:
-              head:
-                  sha: '{{event.head.sha}}'
-                  user:
-                      email: '{{event.head.user.email}}'
-      payload:
-          maxRunTime: 1200
-          image: 'grenade/opencloudconfig'
-          features:
-              taskclusterProxy: true
-          command:
-              - '/bin/bash'
-              - '--login'
-              - '-c'
-              - 'git clone --quiet {{event.head.repo.url}} && python ./OpenCloudConfig/ci/rollback.py'
-      metadata:
-          name: 'Rollback'
-          description: 'Roll back AMIs and TaskCluster AWS Provisoner config for a given worker type when requested in commit syntax'
-          owner: '{{event.head.user.email}}'
-          source: '{{event.head.repo.url}}'
-
-    - provisionerId: releng-3
-      workerType: linux
-      scopes:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-gecko-1-b-win2012-beta
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-b-win2012-beta
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-b-win2012-beta
-          - aws-provisioner:manage-worker-type:gecko-1-b-win2012-beta
+          #- aws-provisioner:manage-worker-type:gecko-1-b-win2012-beta
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-1-b-win2012-beta'
       extra:
@@ -188,7 +147,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-gecko-1-b-win2012-xlarge
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-b-win2012-xlarge
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-b-win2012-xlarge
-          - aws-provisioner:manage-worker-type:gecko-1-b-win2012-xlarge
+          #- aws-provisioner:manage-worker-type:gecko-1-b-win2012-xlarge
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-1-b-win2012-xlarge'
       extra:
@@ -245,7 +204,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-gecko-1-b-win2012
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-b-win2012
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-1-b-win2012
-          - aws-provisioner:manage-worker-type:gecko-1-b-win2012
+          #- aws-provisioner:manage-worker-type:gecko-1-b-win2012
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-1-b-win2012'
       extra:
@@ -301,7 +260,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-gecko-2-b-win2012
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-2-b-win2012
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-2-b-win2012
-          - aws-provisioner:manage-worker-type:gecko-2-b-win2012
+          #- aws-provisioner:manage-worker-type:gecko-2-b-win2012
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-2-b-win2012'
       extra:
@@ -357,7 +316,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-gecko-3-b-win2012
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-3-b-win2012
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-3-b-win2012
-          - aws-provisioner:manage-worker-type:gecko-3-b-win2012
+          #- aws-provisioner:manage-worker-type:gecko-3-b-win2012
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-3-b-win2012'
       extra:
@@ -413,7 +372,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-gecko-3-b-win2012-c4
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-3-b-win2012-c4
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-3-b-win2012-c4
-          - aws-provisioner:manage-worker-type:gecko-3-b-win2012-c4
+          #- aws-provisioner:manage-worker-type:gecko-3-b-win2012-c4
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-3-b-win2012-c4'
       extra:
@@ -469,7 +428,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-gecko-3-b-win2012-c5
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-3-b-win2012-c5
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-3-b-win2012-c5
-          - aws-provisioner:manage-worker-type:gecko-3-b-win2012-c5
+          #- aws-provisioner:manage-worker-type:gecko-3-b-win2012-c5
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-3-b-win2012-c5'
       extra:
@@ -524,7 +483,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32-cu
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32-cu
-          - aws-provisioner:manage-worker-type:gecko-t-win7-32-cu
+          #- aws-provisioner:manage-worker-type:gecko-t-win7-32-cu
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win7-32-cu'
       extra:
@@ -579,7 +538,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32-gpu-b
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32-gpu-b
-          - aws-provisioner:manage-worker-type:gecko-t-win7-32-gpu-b
+          #- aws-provisioner:manage-worker-type:gecko-t-win7-32-gpu-b
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win7-32-gpu-b'
       extra:
@@ -635,7 +594,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32-beta
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32-beta
-          - aws-provisioner:manage-worker-type:gecko-t-win7-32-beta
+          #- aws-provisioner:manage-worker-type:gecko-t-win7-32-beta
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win7-32-beta'
       extra:
@@ -691,7 +650,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32
-          - aws-provisioner:manage-worker-type:gecko-t-win7-32
+          #- aws-provisioner:manage-worker-type:gecko-t-win7-32
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win7-32'
       extra:
@@ -746,7 +705,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32-gpu
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win7-32-gpu
-          - aws-provisioner:manage-worker-type:gecko-t-win7-32-gpu
+          #- aws-provisioner:manage-worker-type:gecko-t-win7-32-gpu
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win7-32-gpu'
       extra:
@@ -801,7 +760,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-cu
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-cu
-          - aws-provisioner:manage-worker-type:gecko-t-win10-64-cu
+          #- aws-provisioner:manage-worker-type:gecko-t-win10-64-cu
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-cu'
       extra:
@@ -856,7 +815,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-alpha
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-alpha
-          - aws-provisioner:manage-worker-type:gecko-t-win10-64-alpha
+          #- aws-provisioner:manage-worker-type:gecko-t-win10-64-alpha
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-alpha'
       extra:
@@ -912,7 +871,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-beta
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-beta
-          - aws-provisioner:manage-worker-type:gecko-t-win10-64-beta
+          #- aws-provisioner:manage-worker-type:gecko-t-win10-64-beta
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-beta'
       extra:
@@ -968,7 +927,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64
-          - aws-provisioner:manage-worker-type:gecko-t-win10-64
+          #- aws-provisioner:manage-worker-type:gecko-t-win10-64
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64'
       extra:
@@ -1023,7 +982,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-gpu-a
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-gpu-a
-          - aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu-a
+          #- aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu-a
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-gpu-a'
       extra:
@@ -1079,7 +1038,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-gpu-b
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-gpu-b
-          - aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu-b
+          #- aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu-b
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-gpu-b'
       extra:
@@ -1135,7 +1094,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-gpu-s
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-gpu-s
-          - aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu-s
+          #- aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu-s
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-gpu-s'
       extra:
@@ -1191,7 +1150,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-gpu
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:gecko-t-win10-64-gpu
-          - aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu
+          #- aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-gpu'
       extra:
@@ -1247,7 +1206,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-mpd001-1-b-win2012
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:mpd001-1-b-win2012
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:mpd001-1-b-win2012
-          - aws-provisioner:manage-worker-type:mpd001-1-b-win2012
+          #- aws-provisioner:manage-worker-type:mpd001-1-b-win2012
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.mpd001-1-b-win2012'
       extra:
@@ -1303,7 +1262,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:cot-mpd001-3-b-win2012
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:mpd001-3-b-win2012
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:mpd001-3-b-win2012
-          - aws-provisioner:manage-worker-type:mpd001-3-b-win2012
+          #- aws-provisioner:manage-worker-type:mpd001-3-b-win2012
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.mpd001-3-b-win2012'
       extra:
@@ -1358,7 +1317,7 @@ tasks:
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:updateworkertype
           - secrets:get:repo:github.com/mozilla-releng/OpenCloudConfig:relops-image-builder
           - secrets:set:repo:github.com/mozilla-releng/OpenCloudConfig:relops-image-builder
-          - aws-provisioner:manage-worker-type:relops-image-builder
+          #- aws-provisioner:manage-worker-type:relops-image-builder
       routes:
           - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.relops-image-builder'
       extra:
