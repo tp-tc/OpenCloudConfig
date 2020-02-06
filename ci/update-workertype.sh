@@ -121,6 +121,7 @@ if [ -z "${aws_base_ami_id}" ]; then
   echo "ERROR: failed to find a suitable base ami matching: '${aws_base_ami_search_term}'"
   exit 69
 fi
+echo "INFO: selected: ${aws_base_ami_id}, for: ${tc_worker_type}, using search term: ${aws_base_ami_search_term}"
 
 SOURCE_ORG_REPO=${GITHUB_HEAD_REPO_URL:19}
 SOURCE_ORG_REPO=${SOURCE_ORG_REPO/.git/}
