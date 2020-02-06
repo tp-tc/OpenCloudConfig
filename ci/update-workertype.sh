@@ -77,6 +77,8 @@ fi
 
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] git sha: ${short_sha} used for aws client token"
 
+aws ec2 describe-regions --debug
+
 case "${tc_worker_type}" in
   gecko-t-win7-32*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win7-32-kb4499175-20190516082500'}
