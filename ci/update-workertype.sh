@@ -42,6 +42,7 @@ export AWS_ACCESS_KEY_ID=${TASKCLUSTER_AWS_ACCESS_KEY}
 export AWS_SECRET_ACCESS_KEY=${TASKCLUSTER_AWS_SECRET_KEY}
 
 aws_region=${aws_region:='us-west-2'}
+AWS_DEFAULT_REGION=${aws_region}
 
 aws_key_name="mozilla-taskcluster-worker-${tc_worker_type}"
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] aws_key_name: ${aws_key_name}"
