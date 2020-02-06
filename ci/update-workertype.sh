@@ -78,7 +78,7 @@ fi
 
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] git sha: ${short_sha} used for aws client token"
 
-aws ec2 describe-regions --debug
+aws ec2 describe-regions --region ${aws_region} --debug
 
 case "${tc_worker_type}" in
   gecko-t-win7-32*)
