@@ -1,10 +1,10 @@
 #!/bin/bash -e
 
 secrets_url="taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo"
-curl -s -N ${secrets_url} | jq -r '.secret.tooltool.upload.internal' > ./.tooltool.token
+curl -s -N ${secrets_url} | jq '.secret.tooltool | del(.upload)' > ./.tooltool.token
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] tooltool token downloaded"
 
-curl -O https://raw.githubusercontent.com/mozilla/release-services/2959e48/src/tooltool/client/tooltool.py
+curl -O https://raw.githubusercontent.com/mozilla-releng/tooltool/master/client/tooltool.py
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] tooltool client downloaded"
 
 mkdir ./tooltool
@@ -51,9 +51,12 @@ for manifest in $(ls ./OpenCloudConfig/userdata/Manifest/gecko-*.json); do
         echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${filename} downloaded from ${www_url}"
         sha512=$(sha512sum ${filename} | { read sha _; echo $sha; })
         tt_url="https://tooltool.mozilla-releng.net/sha512/${sha512}"
-        if curl --header "Authorization: Bearer $(cat ./.tooltool.token)" --output /dev/null --silent --head --fail ${tt_url}; then
-          echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} found in tooltool: ${tt_url}"
-        elif grep -q ${sha512} ./manifest.tt; then
+
+        # todo: find a way to validate if something is already in tooltool (now that hawk headers are required, this is a pita)
+        #if curl --header "Authorization: Bearer $(cat ./.tooltool.token)" --output /dev/null --silent --head --fail ${tt_url}; then
+        #  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} found in tooltool: ${tt_url}"
+        #el
+        if grep -q ${sha512} ./manifest.tt; then
           echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ${ComponentName} found in manifest: ${tt} (SHA 512: ${sha512})"
         else
           python ./tooltool.py add --visibility internal ${filename} -m ${tt}
