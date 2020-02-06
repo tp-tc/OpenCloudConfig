@@ -32,26 +32,14 @@ tc_worker_type="${1}"
 
 # get some secrets from tc
 secrets_url=taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig
-if [[ $tc_worker_type == *"-b-win"* ]]; then
-  cot_private_key="$(curl -s -N ${secrets_url}:cot-${tc_worker_type} | jq -r '.secret.cot_private_key')"
-  if [ -z "${cot_private_key}" ]; then
-    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] cot private key retrieval failed."
-  else
-    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] cot private key retrieval suceeeded."
-  fi
-else
-  echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] cot private key retrieval skipped."
-fi
-read TASKCLUSTER_AWS_ACCESS_KEY TASKCLUSTER_AWS_SECRET_KEY aws_tc_account_id userdata<<EOF
-$(curl -s -N ${secrets_url}:updateworkertype | jq ". | .secret.cotGpgKey=\"${cot_private_key}\"" | python -c 'import json, sys; a = json.load(sys.stdin)["secret"]; print a["TASKCLUSTER_AWS_ACCESS_KEY"], a["TASKCLUSTER_AWS_SECRET_KEY"], a["aws_tc_account_id"], ("<powershell>\nInvoke-Expression (New-Object Net.WebClient).DownloadString(('\''https://raw.githubusercontent.com/SOURCE_ORG_TOKEN/SOURCE_REPO_TOKEN/SOURCE_REV_TOKEN/userdata/rundsc.ps1?{0}'\'' -f [Guid]::NewGuid()))\n</powershell>\n<persist>true</persist>\n<secrets>\n  <rootPassword>ROOT_PASSWORD_TOKEN</rootPassword>\n  <rootGpgKey>\n%s\n</rootGpgKey>\n  <workerPassword>WORKER_PASSWORD_TOKEN</workerPassword>\n  <cotGpgKey>\n%s\n</cotGpgKey>\n</secrets>\n<SourceOrganisation>SOURCE_ORG_TOKEN</SourceOrganisation>\n<SourceRepository>SOURCE_REPO_TOKEN</SourceRepository>\n<SourceRevision>SOURCE_REV_TOKEN</SourceRevision>" % (a["rootGpgKey"], a["cotGpgKey"])).replace("\n", "\\\\n");' 2> /dev/null)
+read TASKCLUSTER_AWS_ACCESS_KEY TASKCLUSTER_AWS_SECRET_KEY userdata<<EOF
+$(curl -s -N ${secrets_url}:updateworkertype | jq '.' | python -c 'import json, sys; a = json.load(sys.stdin)["secret"]; print a["aws"]["access"], a["aws"]["secret"], ("<powershell>\nInvoke-Expression (New-Object Net.WebClient).DownloadString(('\''https://raw.githubusercontent.com/SOURCE_ORG_TOKEN/SOURCE_REPO_TOKEN/SOURCE_REV_TOKEN/userdata/rundsc.ps1?{0}'\'' -f [Guid]::NewGuid()))\n</powershell>\n<persist>true</persist>\n<secrets>\n  <rootPassword>ROOT_PASSWORD_TOKEN</rootPassword>\n  <rootGpgKey>\n%s\n</rootGpgKey>\n  <workerPassword>WORKER_PASSWORD_TOKEN</workerPassword>\n</secrets>\n<SourceOrganisation>SOURCE_ORG_TOKEN</SourceOrganisation>\n<SourceRepository>SOURCE_REPO_TOKEN</SourceRepository>\n<SourceRevision>SOURCE_REV_TOKEN</SourceRevision>" % (a["rootGpgKey"])).replace("\n", "\\\\n");' 2> /dev/null)
 EOF
 
 : ${TASKCLUSTER_AWS_ACCESS_KEY:?"TASKCLUSTER_AWS_ACCESS_KEY is not set"}
 : ${TASKCLUSTER_AWS_SECRET_KEY:?"TASKCLUSTER_AWS_SECRET_KEY is not set"}
 export AWS_ACCESS_KEY_ID=${TASKCLUSTER_AWS_ACCESS_KEY}
 export AWS_SECRET_ACCESS_KEY=${TASKCLUSTER_AWS_SECRET_KEY}
-
-: ${aws_tc_account_id:?"aws_tc_account_id is not set"}
 
 aws_region=${aws_region:='us-west-2'}
 
