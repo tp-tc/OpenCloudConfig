@@ -122,7 +122,7 @@ if [ -z "${aws_base_ami_id}" ]; then
   exit 69
 fi
 echo "INFO: selected: ${aws_base_ami_id}, for: ${tc_worker_type}, using search term: ${aws_base_ami_search_term}"
-aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=ImageId,Values=${aws_base_ami_id}" --output text
+aws ec2 describe-images --region ${aws_region} --owners self --image-ids ${aws_base_ami_id} --output text
 
 echo "DEBUG: parsing provisioner configuration..."
 provisioner_configuration_instance_types=$(jq -c '.ProvisionerConfiguration.instanceTypes' ${manifest})
