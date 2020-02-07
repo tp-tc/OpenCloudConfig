@@ -79,7 +79,9 @@ fi
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] git sha: ${short_sha} used for aws client token"
 
 aws ec2 describe-regions --region ${aws_region} --debug
+aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=*win*" --query 'Images[*].{ id: ImageId, name: Name, created: CreationDate }' --output text
 
+echo "DEBUG: searching for latest base ami for: ${tc_worker_type}"
 case "${tc_worker_type}" in
   gecko-t-win7-32*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win7-32-kb4499175-20190516082500'}
