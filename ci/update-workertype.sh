@@ -47,10 +47,10 @@ AWS_DEFAULT_REGION=${aws_region}
 aws_key_name="mozilla-taskcluster-worker-${tc_worker_type}"
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] aws_key_name: ${aws_key_name}"
 
-short_sha=${GITHUB_HEAD_SHA:0:12}
 echo "{\"secret\":{\"latest\":{\"timestamp\":\"\",\"git-sha\":\"${GITHUB_HEAD_SHA:0:12}\"}}}" | jq '.' > ./workertype-secrets.json
 
 commit_message=$(curl --silent https://api.github.com/repos/mozilla-releng/OpenCloudConfig/git/commits/${GITHUB_HEAD_SHA} | jq -r '.message')
+echo "DEBUG: parsing commit message for deployment instructions..."
 if [[ $commit_message == *"nodeploy:"* ]]; then
   no_deploy_list=$([[ ${commit_message} =~ nodeploy:\s+?([^;]*) ]] && echo "${BASH_REMATCH[1]}")
   if [[ " ${no_deploy_list[*]} " == *" ${tc_worker_type} "* ]]; then
@@ -75,11 +75,6 @@ else
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deployment skipped due to absent deploy instruction in commit message (${commit_message})"
   exit
 fi
-
-echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] git sha: ${short_sha} used for aws client token"
-
-aws ec2 describe-regions --region ${aws_region} --debug
-aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=*win*" --query 'Images[*].{ id: ImageId, name: Name, created: CreationDate }' --output text
 
 case "${tc_worker_type}" in
   gecko-t-win7-32*)
@@ -127,16 +122,20 @@ if [ -z "${aws_base_ami_id}" ]; then
   exit 69
 fi
 echo "INFO: selected: ${aws_base_ami_id}, for: ${tc_worker_type}, using search term: ${aws_base_ami_search_term}"
+aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=ImageId,Values=${aws_base_ami_id}" --output text
 
+echo "DEBUG: parsing provisioner configuration..."
 provisioner_configuration_instance_types=$(jq -c '.ProvisionerConfiguration.instanceTypes' ${manifest})
 provisioner_configuration_userdata=$(jq -c '.ProvisionerConfiguration.userData' ${manifest})
 snapshot_block_device_mappings=$(jq -c '.ProvisionerConfiguration.instanceTypes[0].launchSpec.BlockDeviceMappings' ${manifest})
 snapshot_aws_instance_type=$(jq -c -r '.ProvisionerConfiguration.instanceTypes[0].instanceType' ${manifest})
 
+echo "DEBUG: constructing userdata..."
 SOURCE_ORG_REPO=${GITHUB_HEAD_REPO_URL:19}
 SOURCE_ORG_REPO=${SOURCE_ORG_REPO/.git/}
 SOURCE_ORG=${SOURCE_ORG_REPO/\/$GITHUB_HEAD_REPO_NAME/}
 
+echo "DEBUG: generating instance passwords..."
 root_password="$(pwgen -1sBync 16)"
 root_password="${root_password//[<>\"\'\`\\\/]/_}"
 worker_password="$(pwgen -1sBync 16)"
@@ -147,6 +146,7 @@ userdata=${userdata/WORKER_PASSWORD_TOKEN/$worker_password}
 # if commit message includes a line like: "(alpha-source|beta-source): custom-gh-username-or-org custom-gh-repo custom-gh-ref-or-rev"
 # and worker type is an alpha or beta, inject userdata with custom org, repo and ref data so that beta amis are built with
 # OCC urls like: github.com/custom-gh-username-or-org/custom-gh-repo/custom-gh-ref-or-rev/...
+echo "DEBUG: parsing commit message for source instructions..."
 if [[ $commit_message == *"alpha-source:"* ]] && ([[ "$tc_worker_type" == *"-gpu-a" ]] || [[ "$tc_worker_type" == *"-alpha" ]]); then
   alpha_source=( $([[ ${commit_message} =~ alpha-source:\s+?([^;]*) ]] && echo "${BASH_REMATCH[1]}") )
   userdata=${userdata//SOURCE_ORG_TOKEN/${alpha_source[0]}}
@@ -169,6 +169,9 @@ else
   occ_manifest="https://github.com/${SOURCE_ORG}/${GITHUB_HEAD_REPO_NAME}/blob/${GITHUB_HEAD_SHA}/userdata/Manifest/${tc_worker_type}.json"
 fi
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] occ manifest set to: ${occ_manifest}"
+
+short_sha=${GITHUB_HEAD_SHA:0:12}
+echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] git sha: ${short_sha} used for aws client token"
 
 curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq '.' > ./${tc_worker_type}-pre.json
 cat ./${tc_worker_type}-pre.json | jq --arg occmanifest $occ_manifest --arg deploydate "$(date --utc +"%F %T.%3NZ")" --arg deploymentId ${short_sha} --argjson instanceTypes ${provisioner_configuration_instance_types} --argjson userData $provisioner_configuration_userdata -c 'del(.workerType, .lastModified, .userData, .secrets.files, .secrets."generic-worker") | .instanceTypes = $instanceTypes | .userData = $userData | .userData.genericWorker.config.deploymentId = $deploymentId | .userData.genericWorker.config.workerTypeMetadata."machine-setup".manifest = $occmanifest | .userData.genericWorker.config.workerTypeMetadata."machine-setup"."ami-created" = $deploydate' > ./${tc_worker_type}.json
