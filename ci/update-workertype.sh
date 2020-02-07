@@ -81,52 +81,57 @@ echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] git sha: ${short_sha} used f
 aws ec2 describe-regions --region ${aws_region} --debug
 aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=*win*" --query 'Images[*].{ id: ImageId, name: Name, created: CreationDate }' --output text
 
-echo "DEBUG: searching for latest base ami for: ${tc_worker_type}"
 case "${tc_worker_type}" in
   gecko-t-win7-32*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-t-win7-32-kb4499175-20190516082500'}
+    echo "DEBUG: searching for latest base ami for: ${tc_worker_type}, using search term: ${aws_base_ami_search_term}"
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko test worker for Windows 7 32 bit; worker-type: ${tc_worker_type}, source: ${GITHUB_HEAD_REPO_URL::-4}/commit/${GITHUB_HEAD_SHA:0:7}, deploy: https://tools.taskcluster.net/tasks/${TASK_ID}"
     root_username=root
     ;;
   gecko-t-win10-64-alpha|gecko-t-win10-64-gpu-a)
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_10_Professional_1903_18362_239_en-US_x64-VAC-*'}
+    echo "DEBUG: searching for latest base ami for: ${tc_worker_type}, using search term: ${aws_base_ami_search_term}"
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko tester for Windows 10 64 bit; worker-type: ${tc_worker_type}, source: ${GITHUB_HEAD_REPO_URL::-4}/commit/${GITHUB_HEAD_SHA:0:7}, deploy: https://tools.taskcluster.net/tasks/${TASK_ID}"
     root_username=Administrator
     ;;
   gecko-t-win10-64*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_10_Enterprise_1803_17134_285_en-US_x64_MBR-VAC-*'}
+    echo "DEBUG: searching for latest base ami for: ${tc_worker_type}, using search term: ${aws_base_ami_search_term}"
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko tester for Windows 10 64 bit; worker-type: ${tc_worker_type}, source: ${GITHUB_HEAD_REPO_URL::-4}/commit/${GITHUB_HEAD_SHA:0:7}, deploy: https://tools.taskcluster.net/tasks/${TASK_ID}"
     root_username=Administrator
     ;;
   mpd001-[13]-b-win2012|gecko-[123]-b-win2012*)
     aws_base_ami_search_term=${aws_base_ami_search_term:='gecko-b-win2012-ena-base-*'}
+    echo "DEBUG: searching for latest base ami for: ${tc_worker_type}, using search term: ${aws_base_ami_search_term}"
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners self --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="Gecko builder for Windows; worker-type: ${tc_worker_type}, source: ${GITHUB_HEAD_REPO_URL::-4}/commit/${GITHUB_HEAD_SHA:0:7}, deploy: https://tools.taskcluster.net/tasks/${TASK_ID}"
     root_username=Administrator
     ;;
   relops-image-builder)
     aws_base_ami_search_term=${aws_base_ami_search_term:='Windows_Server-2016-English-Full-Base-*'}
+    echo "DEBUG: searching for latest base ami for: ${tc_worker_type}, using search term: ${aws_base_ami_search_term}"
     aws_base_ami_id="$(aws ec2 describe-images --region ${aws_region} --owners amazon --filters "Name=state,Values=available" "Name=name,Values=${aws_base_ami_search_term}" --query 'Images[*].{A:CreationDate,B:ImageId}' --output text | sort -u | tail -1 | cut -f2)"
     ami_description="RelOps image builder for Windows; worker-type: ${tc_worker_type}, source: ${GITHUB_HEAD_REPO_URL::-4}/commit/${GITHUB_HEAD_SHA:0:7}, deploy: https://tools.taskcluster.net/tasks/${TASK_ID}"
     root_username=Administrator
     ;;
   *)
-    echo "ERROR: unknown worker type: '${tc_worker_type}'"
+    echo "ERROR: no base ami search term configured for: ${tc_worker_type}"
     exit 67
     ;;
 esac
-provisioner_configuration_instance_types=$(jq -c '.ProvisionerConfiguration.instanceTypes' ${manifest})
-provisioner_configuration_userdata=$(jq -c '.ProvisionerConfiguration.userData' ${manifest})
-snapshot_block_device_mappings=$(jq -c '.ProvisionerConfiguration.instanceTypes[0].launchSpec.BlockDeviceMappings' ${manifest})
-snapshot_aws_instance_type=$(jq -c -r '.ProvisionerConfiguration.instanceTypes[0].instanceType' ${manifest})
 if [ -z "${aws_base_ami_id}" ]; then
   echo "ERROR: failed to find a suitable base ami matching: '${aws_base_ami_search_term}'"
   exit 69
 fi
 echo "INFO: selected: ${aws_base_ami_id}, for: ${tc_worker_type}, using search term: ${aws_base_ami_search_term}"
+
+provisioner_configuration_instance_types=$(jq -c '.ProvisionerConfiguration.instanceTypes' ${manifest})
+provisioner_configuration_userdata=$(jq -c '.ProvisionerConfiguration.userData' ${manifest})
+snapshot_block_device_mappings=$(jq -c '.ProvisionerConfiguration.instanceTypes[0].launchSpec.BlockDeviceMappings' ${manifest})
+snapshot_aws_instance_type=$(jq -c -r '.ProvisionerConfiguration.instanceTypes[0].instanceType' ${manifest})
 
 SOURCE_ORG_REPO=${GITHUB_HEAD_REPO_URL:19}
 SOURCE_ORG_REPO=${SOURCE_ORG_REPO/.git/}
