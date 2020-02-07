@@ -174,11 +174,10 @@ echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] occ manifest set to: ${occ_m
 short_sha=${GITHUB_HEAD_SHA:0:12}
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] git sha: ${short_sha} used for aws client token"
 
-curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq '.' > ./${tc_worker_type}-pre.json
-cat ./${tc_worker_type}-pre.json | jq --arg occmanifest $occ_manifest --arg deploydate "$(date --utc +"%F %T.%3NZ")" --arg deploymentId ${short_sha} --argjson instanceTypes ${provisioner_configuration_instance_types} --argjson userData $provisioner_configuration_userdata -c 'del(.workerType, .lastModified, .userData, .secrets.files, .secrets."generic-worker") | .instanceTypes = $instanceTypes | .userData = $userData | .userData.genericWorker.config.deploymentId = $deploymentId | .userData.genericWorker.config.workerTypeMetadata."machine-setup".manifest = $occmanifest | .userData.genericWorker.config.workerTypeMetadata."machine-setup"."ami-created" = $deploydate' > ./${tc_worker_type}.json
-echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] active amis (pre-update): $(cat ./${tc_worker_type}.json | jq -c '[.regions[] | {region: .region, ami: .launchSpec.ImageId}]')"
-
-echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] latest base ami for: ${aws_base_ami_search_term}, in region: ${aws_region}, is: ${aws_base_ami_id} (https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Images:visibility=owned-by-me;imageId=${aws_base_ami_id})"
+#curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq '.' > ./${tc_worker_type}-pre.json
+#cat ./${tc_worker_type}-pre.json | jq --arg occmanifest $occ_manifest --arg deploydate "$(date --utc +"%F %T.%3NZ")" --arg deploymentId ${short_sha} --argjson instanceTypes ${provisioner_configuration_instance_types} --argjson userData $provisioner_configuration_userdata -c 'del(.workerType, .lastModified, .userData, .secrets.files, .secrets."generic-worker") | .instanceTypes = $instanceTypes | .userData = $userData | .userData.genericWorker.config.deploymentId = $deploymentId | .userData.genericWorker.config.workerTypeMetadata."machine-setup".manifest = $occmanifest | .userData.genericWorker.config.workerTypeMetadata."machine-setup"."ami-created" = $deploydate' > ./${tc_worker_type}.json
+#echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] active amis (pre-update): $(cat ./${tc_worker_type}.json | jq -c '[.regions[] | {region: .region, ami: .launchSpec.ImageId}]')"
+#echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] latest base ami for: ${aws_base_ami_search_term}, in region: ${aws_region}, is: ${aws_base_ami_id} (https://${aws_region}.console.aws.amazon.com/ec2/v2/home?region=${aws_region}#Images:visibility=owned-by-me;imageId=${aws_base_ami_id})"
 
 # create instance, apply user-data, filter output, get instance id, tag instance, wait for shutdown
 while [ -z "$aws_instance_id" ]; do
@@ -300,16 +299,15 @@ jq -c '[.regions[].region] | .[]' ./${tc_worker_type}.json | sed 's/"//g' | grep
   done
 done
 
-cat ./${tc_worker_type}.json | curl -D ./update-response-headers.txt --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ./update-response.json
-if ! grep -q "HTTP/1.1 200 OK" ./update-response-headers.txt; then
-  echo "ERROR: failed to update provisioner configuration"
-  exit 70
-fi
-echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] worker type updated: https://tools.taskcluster.net/aws-provisioner/#${tc_worker_type}/view"
-echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] active amis (post-update): $(curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq -c '[.regions[] | {region: .region, ami: .launchSpec.ImageId}]')"
-
-cat ./update-response.json | jq '.' > ./${tc_worker_type}-post.json
-git diff --no-index -- ./${tc_worker_type}-pre.json ./${tc_worker_type}-post.json > ./${tc_worker_type}.diff || true
+#cat ./${tc_worker_type}.json | curl -D ./update-response-headers.txt --silent --header 'Content-Type: application/json' --request POST --data @- http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type}/update > ./update-response.json
+#if ! grep -q "HTTP/1.1 200 OK" ./update-response-headers.txt; then
+#  echo "ERROR: failed to update provisioner configuration"
+#  exit 70
+#fi
+#echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] worker type updated: https://tools.taskcluster.net/aws-provisioner/#${tc_worker_type}/view"
+#echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] active amis (post-update): $(curl --silent http://taskcluster/aws-provisioner/v1/worker-type/${tc_worker_type} | jq -c '[.regions[] | {region: .region, ami: .launchSpec.ImageId}]')"
+#cat ./update-response.json | jq '.' > ./${tc_worker_type}-post.json
+#git diff --no-index -- ./${tc_worker_type}-pre.json ./${tc_worker_type}-post.json > ./${tc_worker_type}.diff || true
 
 # set latest timestamp and new credentials
 cat ./workertype-secrets.json | jq --arg timestamp $(date -u +"%Y-%m-%dT%H:%M:%SZ") --arg rootusername $root_username --arg rootpassword "$root_password" -c '.secret.latest.timestamp = $timestamp | .secret.latest.users.root.username = $rootusername | .secret.latest.users.root.password = $rootpassword' > ./.workertype-secrets.json && rm ./workertype-secrets.json && mv ./.workertype-secrets.json ./workertype-secrets.json
