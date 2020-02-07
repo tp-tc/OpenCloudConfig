@@ -124,10 +124,13 @@ fi
 echo "INFO: selected: ${aws_base_ami_id}, for: ${tc_worker_type}, using search term: ${aws_base_ami_search_term}"
 aws ec2 describe-images --region ${aws_region} --owners self --image-ids ${aws_base_ami_id} --output text
 
-echo "DEBUG: parsing provisioner configuration..."
+echo "DEBUG: parsing provisioner configuration (instance types) from ${manifest}..."
 provisioner_configuration_instance_types=$(jq -c '.ProvisionerConfiguration.instanceTypes' ${manifest})
+echo "DEBUG: parsing provisioner configuration (user data) from ${manifest}..."
 provisioner_configuration_userdata=$(jq -c '.ProvisionerConfiguration.userData' ${manifest})
+echo "DEBUG: parsing provisioner configuration (launch spec / block device mappings) from ${manifest}..."
 snapshot_block_device_mappings=$(jq -c '.ProvisionerConfiguration.instanceTypes[0].launchSpec.BlockDeviceMappings' ${manifest})
+echo "DEBUG: parsing provisioner configuration (first instance type) from ${manifest}..."
 snapshot_aws_instance_type=$(jq -c -r '.ProvisionerConfiguration.instanceTypes[0].instanceType' ${manifest})
 
 echo "DEBUG: constructing userdata..."
