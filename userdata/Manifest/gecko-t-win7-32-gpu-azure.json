@@ -1,6 +1,46 @@
 {
   "Components": [
     {
+      "ComponentName": "KillXenDPriv.exe",
+      "ComponentType": "CommandRun",
+      "Comment": "See https://bugzilla.mozilla.org/show_bug.cgi?id=1399401#c43 and https://bugzilla.mozilla.org/show_bug.cgi?id=1394757",
+      "Command": "taskkill",
+      "Arguments": [
+        "/im",
+        "XenDPriv.exe",
+        "/f"
+      ],
+      "Validate": {
+        "PathsNotExist": [
+          "C:\\Program Files\\Citrix\\XenTools\\XenDPriv.exe"
+        ]
+      }
+    },
+    {
+      "ComponentName": "DeleteXenDPriv.exe",
+      "ComponentType": "CommandRun",
+      "Comment": "See https://bugzilla.mozilla.org/show_bug.cgi?id=1399401#c43 and https://bugzilla.mozilla.org/show_bug.cgi?id=1394757",
+      "Command": "cmd.exe",
+      "Arguments": [
+        "/c",
+        "del",
+        "/f",
+        "/q",
+        "\"C:\\Program Files\\Citrix\\XenTools\\XenDPriv.exe\""
+      ],
+      "Validate": {
+        "PathsNotExist": [
+          "C:\\Program Files\\Citrix\\XenTools\\XenDPriv.exe"
+        ]
+      },
+      "DependsOn": [
+        {
+          "ComponentType": "CommandRun",
+          "ComponentName": "KillXenDPriv.exe"
+        }
+      ]
+    },
+    {
       "ComponentName": "LogDirectory",
       "ComponentType": "DirectoryCreate",
       "Comment": "Required by OpenCloudConfig for DSC logging",
@@ -16,7 +56,7 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\Program Files (x86)\\Stackdriver\\LoggingAgent\\config.d"
+          "C:\\Program Files\\Stackdriver\\LoggingAgent\\config.d"
         ],
         "ServiceStatus": [
           {
@@ -31,7 +71,7 @@
       "ComponentType": "ChecksumFileDownload",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1588757",
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fluentd/gw.exe.conf",
-      "Target": "C:\\Program Files (x86)\\Stackdriver\\LoggingAgent\\config.d\\gw.exe.conf",
+      "Target": "C:\\Program Files\\Stackdriver\\LoggingAgent\\config.d\\gw.exe.conf",
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
@@ -44,7 +84,7 @@
       "ComponentType": "ChecksumFileDownload",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1588757",
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fluentd/gw.service.conf",
-      "Target": "C:\\Program Files (x86)\\Stackdriver\\LoggingAgent\\config.d\\gw.service.conf",
+      "Target": "C:\\Program Files\\Stackdriver\\LoggingAgent\\config.d\\gw.service.conf",
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
@@ -57,7 +97,7 @@
       "ComponentType": "ChecksumFileDownload",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1588757",
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fluentd/gw.wrapper.conf",
-      "Target": "C:\\Program Files (x86)\\Stackdriver\\LoggingAgent\\config.d\\gw.wrapper.conf",
+      "Target": "C:\\Program Files\\Stackdriver\\LoggingAgent\\config.d\\gw.wrapper.conf",
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
@@ -70,7 +110,7 @@
       "ComponentType": "ChecksumFileDownload",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1588757",
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fluentd/occ.conf",
-      "Target": "C:\\Program Files (x86)\\Stackdriver\\LoggingAgent\\config.d\\occ.conf",
+      "Target": "C:\\Program Files\\Stackdriver\\LoggingAgent\\config.d\\occ.conf",
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
@@ -83,7 +123,7 @@
       "ComponentType": "ChecksumFileDownload",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1588757",
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/fluentd/redact.conf",
-      "Target": "C:\\Program Files (x86)\\Stackdriver\\LoggingAgent\\config.d\\redact.conf",
+      "Target": "C:\\Program Files\\Stackdriver\\LoggingAgent\\config.d\\redact.conf",
       "DependsOn": [
         {
           "ComponentType": "ExeInstall",
@@ -105,7 +145,7 @@
       "ComponentType": "ChecksumFileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
       "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/papertrail-bundle.pem",
-      "Target": "C:\\Program Files (x86)\\nxlog\\cert\\papertrail-bundle.pem",
+      "Target": "C:\\Program Files\\nxlog\\cert\\papertrail-bundle.pem",
       "DependsOn": [
         {
           "ComponentType": "MsiInstall",
@@ -117,8 +157,8 @@
       "ComponentName": "NxLogPaperTrailConfiguration",
       "ComponentType": "ChecksumFileDownload",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win10.conf",
-      "Target": "C:\\Program Files (x86)\\nxlog\\conf\\nxlog.conf",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/nxlog/win7.conf",
+      "Target": "C:\\Program Files\\nxlog\\conf\\nxlog.conf",
       "DependsOn": [
         {
           "ComponentType": "ChecksumFileDownload",
@@ -164,11 +204,10 @@
       "Arguments": [
         "/S"
       ],
-      "Timeout": 120,
       "Validate": {
         "PathsExist": [
-          "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg.exe",
-          "C:\\Program Files (x86)\\GNU\\GnuPG\\pub\\gpg2.exe"
+          "C:\\Program Files\\GNU\\GnuPG\\pub\\gpg.exe",
+          "C:\\Program Files\\GNU\\GnuPG\\pub\\gpg2.exe"
         ],
         "ServiceStatus": [
           {
@@ -183,7 +222,7 @@
       "ComponentName": "SevenZip",
       "ComponentType": "ExeInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Url": "http://7-zip.org/a/7z1514-x64.exe",
+      "Url": "http://7-zip.org/a/7z1602.exe",
       "Arguments": [
         "/S"
       ],
@@ -193,13 +232,13 @@
           "C:\\Program Files\\7-Zip\\7z.dll"
         ]
       },
-      "sha512": "4df02ab139b087c8d6e689a99afb58e1ab3d4c0722daa11f6a070cddb2506d079a7d9ff55341baa5b7fd1dc7593225eb9d7fdbfb9ac91e0d8db61f9fda85cbb3"
+      "sha512": "ad8298ae7d170c9a3e7f66a6098dd017adcd7912ba3938237db88dca141b6606b095a1c7c7fff0a2d4b47405ffbd25d65e5d8d98a55a8abaf3ced12854c18c4c"
     },
     {
       "ComponentName": "SublimeText3",
       "ComponentType": "ExeInstall",
       "Comment": "Maintenance Toolchain - not essential for building firefox",
-      "Url": "https://download.sublimetext.com/Sublime%20Text%20Build%203114%20x64%20Setup.exe",
+      "Url": "https://download.sublimetext.com/Sublime%20Text%20Build%203114%20Setup.exe",
       "Arguments": [
         "/VERYSILENT",
         "/NORESTART",
@@ -211,7 +250,7 @@
           "C:\\Program Files\\Sublime Text 3\\sublime_text.exe"
         ]
       },
-      "sha512": "d3e71b28567ddd1b486aa3dcc9814818d91c322bc20ec203018d74bc465835f9ddd34d78f674172d00e66b39443070eb45e9799e3801b0ac410c958b2cf21098"
+      "sha512": "99bb189e112a67358095554711c208fb9ec1bd35d3a333c0f4a157f1715bd0b852140231ab41fc161c262531340f954ccb8bfe792a35849f73596aa757ef3249"
     },
     {
       "ComponentName": "SublimeText3_PackagesFolder",
@@ -303,54 +342,31 @@
     {
       "ComponentName": "MozillaBuildSetup",
       "ComponentType": "ExeInstall",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1461340",
+      "Comment": "Base Firefox on Windows build requirement",
       "Arguments": [
         "/S",
         "/D=C:\\mozilla-build"
       ],
-      "Url": "http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-3.2.exe",
+      "Url": "http://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-2.2.0.exe",
       "Validate": {
         "PathsExist": [
-          "C:\\mozilla-build\\bin\\unzip.exe",
-          "C:\\mozilla-build\\bin\\upx.exe",
-          "C:\\mozilla-build\\bin\\yasm.exe",
-          "C:\\mozilla-build\\bin\\zip.exe",
+          "C:\\mozilla-build\\info-zip\\unzip.exe",
+          "C:\\mozilla-build\\info-zip\\zip.exe",
           "C:\\mozilla-build\\msys\\bin\\sh.exe",
-          "C:\\mozilla-build\\msys\\local\\bin\\autoconf-2.13",
           "C:\\mozilla-build\\msys\\local\\bin\\make.exe",
-          "C:\\mozilla-build\\python\\python.exe"
+          "C:\\mozilla-build\\msys\\local\\bin\\autoconf-2.13",
+          "C:\\mozilla-build\\python\\python.exe",
+          "C:\\mozilla-build\\upx391w\\upx.exe",
+          "C:\\mozilla-build\\yasm\\yasm.exe"
         ],
         "FilesContain": [
           {
             "Path": "C:\\mozilla-build\\VERSION",
-            "Match": "3.2"
+            "Match": "2.2.0"
           }
         ]
       },
-      "sha512": "db77e882de30f5050489852353d6c171c09b3e70bfd3285d7cda4ea3fc8e7b8df9537ba6430f605c68a1a8c3f33e4763a03d353f915fd755df2a7e26409974c2"
-    },
-    {
-      "ComponentName": "DeleteMozillaBuildPython3PythonExe",
-      "ComponentType": "CommandRun",
-      "DependsOn": [
-        {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
-        }
-      ],
-      "Command": "cmd.exe",
-      "Arguments": [
-        "/c",
-        "del",
-        "/F",
-        "/Q",
-        "C:\\mozilla-build\\python3\\python.exe"
-      ],
-      "Validate": {
-        "PathsNotExist": [
-          "C:\\mozilla-build\\python3\\python.exe"
-        ]
-      }
+      "sha512": "b593aa4ed9ff34bd4a20860fec478b3638ff1f916a60dc79ebcff46cee279fdb59dd53a36579378f0e11f4be201114578a429bfbfc11eda195a0b1db7aa9831e"
     },
     {
       "ComponentName": "msys_home",
@@ -364,6 +380,252 @@
           "ComponentName": "MozillaBuildSetup"
         }
       ]
+    },
+    {
+      "ComponentName": "reg_PythonInstallPath",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\InstallPath",
+      "ValueName": "(Default)",
+      "ValueType": "String",
+      "ValueData": "C:\\mozilla-build\\python",
+      "Hex": false,
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        }
+      ]
+    },
+    {
+      "ComponentName": "reg_PythonPath",
+      "ComponentType": "RegistryValueSet",
+      "Comment": "",
+      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\PythonPath",
+      "ValueName": "(Default)",
+      "ValueType": "String",
+      "ValueData": "C:\\mozilla-build\\python\\Lib;C:\\mozilla-build\\python\\DLLs;C:\\mozilla-build\\python\\Lib\\lib-tk",
+      "Hex": false,
+      "DependsOn": [
+        {
+          "ComponentType": "ExeInstall",
+          "ComponentName": "MozillaBuildSetup"
+        }
+      ]
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_core",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/core.msi",
+      "Name": "Python 3.7.3 Core Interpreter (32-bit)",
+      "ProductId": "33AB9CEA-621E-4064-9FB0-7048E79DB5B5",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "ca302c7a272371e4a9f504c238ad42d63133f23f7f19679067047183d2ab3716579f22d9525d23b48216d3ebdf07562ced65f2cc2abcc8a35f1278f8400a342a"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_core_d",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/core_d.msi",
+      "Name": "Python 3.7.3 Core Interpreter (32-bit debug)",
+      "ProductId": "781EB95F-B4AF-40FA-9F54-00F94309BDE1",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "da79add5628f4062c5a7928268bff7de4fd3b1e52a63af0a4d0a607b53428ddc08e3a9a26f6171d52dc6cc4dea073bdabbf55a4e20a6b1ebd0c1f8e4a08ab352"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_core_pdb",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/core_pdb.msi",
+      "Name": "Python 3.7.3 Core Interpreter (32-bit symbols)",
+      "ProductId": "4953149C-FF53-47F0-AE87-BA0D10C5042F",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "ff322af7cf75a33812244e81239e0cbd2359c5f8e27e91215e504f494f70bd0a5949dddbb989d2a39dc768a87974f10a3f3a8aaad4d2a16d0910139e7182632b"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_dev",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/dev.msi",
+      "Name": "Python 3.7.3 Development Libraries (32-bit)",
+      "ProductId": "52DDE5D8-B45C-4C1D-81DD-D72317DE8B08",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "bd6c987cdfe4f97250a14330a3f77f0d4971ff87eb2650b653ddaa1714d3382d937f9cf33c1b9af1a0cbe4ac69ea17701789dcd1ee513f24c6a4553b42ba06bf"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_dev_d",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/dev_d.msi",
+      "Name": "Python 3.7.3 Development Libraries (32-bit debug)",
+      "ProductId": "5F6E2AD7-0231-4C17-B7CA-208BDD81E14B",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "5f14fc1a71a6496e1016ed1b989b516e8b32f96e86982863d00d7b0ccc85a2dea47be4e887a6cb937ba33bf572f8aed5c8bd74e668d82d3a8cb8aedc8383631d"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_doc",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/doc.msi",
+      "Name": "Python 3.7.3 Documentation (32-bit)",
+      "ProductId": "2BC067C0-B392-49C0-988B-C839C62D8B65",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "34cbb471a1278d1370c85e6d796cbb8b6d44f78b49db50791a61270f1b9c68f62e886a91ca1878af5bc896daafe07489fdd7be51ed3bd8cea9f4796549fbf356"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_exe",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/exe.msi",
+      "Name": "Python 3.7.3 Executables (32-bit)",
+      "ProductId": "E3E61712-C062-45E7-8348-D7DBF66FACFD",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "6c0622940c7774f2527ad3b61fa41f6f32d77cabc646df2648eec14b7ace52bd6f25a39f9f06d7bced34c90f51c337b83d97bb81e9072b1e4379d5f19900f5cd"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_exe_d",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/exe_d.msi",
+      "Name": "Python 3.7.3 Executables (32-bit debug)",
+      "ProductId": "A37BCC61-603A-461B-AB57-A69245AA845C",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "f13548f9b918314e7aeaa51660a1f88b9c268a6af5a5844e67e6570b4f21d2de3562a462f1ad03505e4c6e8bca3bb9ab9b1e183f2ef7a7970dc7fa03efa4ec66"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_exe_pdb",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/exe_pdb.msi",
+      "Name": "Python 3.7.3 Executables (32-bit symbols)",
+      "ProductId": "E354575A-53D7-4BC2-8192-FC61BF4D8869",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "705bff84fa579e24c5c4de92925789c49855e55c424dc963c990b715007eb4640fae14a6c447b4b5a48dbd0bb3a6bafdc9a6dec2cf2b89c1ebd52d555b9787ee"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_launcher",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/launcher.msi",
+      "Name": "Python Launcher",
+      "ProductId": "A28C27E4-A725-482A-9C65-61EDC0E4D583",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "b7374b675ee61c53569e556a3b20ea7190d14810f23fa645a035ee6a7b7a6c2fcdbffab255d167bd5650cad735e4470d2764782ce812cf1eba09f35b059a6358"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_lib",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/lib.msi",
+      "Name": "Python 3.7.3 Standard Library (32-bit)",
+      "ProductId": "DC6190E7-D05E-465A-9FB6-7418BC901991",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "9ab3714ace50f87ca760ce31ccbcbab24004118f8dfda2c1395b6aac7703a6b9b208c830d85362e4029421faaf3525f7b56cb2cb248cea0650cd22426d7b7f6d"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_lib_d",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/lib_d.msi",
+      "Name": "Python 3.7.3 Standard Library (32-bit debug)",
+      "ProductId": "8C9C7C76-D74A-4DD1-ABC4-77861CD51331",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "3f276d6b270b3ecdf3a2741fa8704bec6a8a884eb42624220c557692bce0f0ea76f007234e213071a196d34070bcb6fb2061e7b0536b8321db6c25f887d12631"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_lib_pdb",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/lib_pdb.msi",
+      "Name": "Python 3.7.3 Standard Library (32-bit symbols)",
+      "ProductId": "433F0D39-FE8E-4183-B032-D99E33ADB098",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "e54dc2f9bd85b857157d4259eb989bc4a8ae99252128964b53f29ce628d6f0bd9fdf310f75c7346c306e5d5e3edbfda92e438dd05b409eddc0f3ee140afd1a67"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_path",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/path.msi",
+      "Name": "Python 3.7.3 Add to Path (32-bit)",
+      "ProductId": "2DB1318D-E51C-419B-99D5-D15F7120BD09",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "00897709f7e5095885169431f74316541f39665024d238fe1f5b97dd1a02f2be0405c5bd5fc65766e83e8bb328b3b02dfc744a9ea668485764411023a5c28a45"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_pip",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/pip.msi",
+      "Name": "Python 3.7.3 pip Bootstrap (32-bit)",
+      "ProductId": "9846DC93-4A39-496F-8AE3-0E3AB4EF4385",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "b22a5882a51102b5e524374e8f0ef84488b44dc52968a89a6ad295e39647622e665ae3f8b8869b29e2c48c61257ef39b3b523fe7cff195b1700accf7a5104d11"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_tcltk",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/tcltk.msi",
+      "Name": "Python 3.7.3 Tcl/Tk Support (32-bit)",
+      "ProductId": "1341418F-C713-4943-ACB2-9F4D4743D193",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "fec31b3ebc070e3d334d882bf010795173a0fa3d7fc4178c94aa5eee5ddad6d8cce66e0c07ba50c183760280f969063f6dd120ebc8c2970e61b12c8acc0e739c"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_tcltk_d",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/tcltk_d.msi",
+      "Name": "Python 3.7.3 Tcl/Tk Support (32-bit debug)",
+      "ProductId": "9F10336E-63ED-4379-84A9-C49F608CB052",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "882d87ee7459d62580f237d73d10ea4bcf1e68a4a463ceb5dca70e0b8d51e9d12f2c5ef3c10745442dc4599d5a0a05b898779d72f0ec49baec9b01769eba80bf"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_tcltk_pdb",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/tcltk_pdb.msi",
+      "Name": "Python 3.7.3 Tcl/Tk Support (32-bit symbols)",
+      "ProductId": "FCF5A835-ADE6-4AE2-B33F-A38C32FCCED8",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "a1094b0d4beb1732b58cf84ea1870a0d4e1bcbd88746f4f5ed9a6eaacb5716d39253b8dadeb6bd126b41df6331bfa1d00ce68238d2200f5b0d45c88dcef98015"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_test",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/test.msi",
+      "Name": "Python 3.7.3 Test Suite (32-bit)",
+      "ProductId": "FE5E4BF9-7487-4CE8-A2AC-F78C6B4BE487",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "24bb8ebadf0d336533f14cb75b014851dc33ab7db93b810810760d4711c9bee60e5634732dbe2044d2fe1ac1ef87e2030d62044fe2fee695315ff29a3ff119a2"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_test_d",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/test_d.msi",
+      "Name": "Python 3.7.3 Test Suite (32-bit debug)",
+      "ProductId": "5070E86E-3458-4639-81F3-7822D37BC5C8",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "8bddb91560079a870bf7dfa9b111521bb317f3f99b722d75c48aa12bc4fe6cf98066e8a2927884d8da4088be14b055cb2ee3b868bb561a5dc1f2ec9c587a6fa0"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_test_pdb",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/test_pdb.msi",
+      "Name": "Python 3.7.3 Test Suite (32-bit symbols)",
+      "ProductId": "30FD277B-26A7-4879-B6C0-CEFD3F719835",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "d562ae6b1b7f10c2d8c20afff4512a4b926cbc5905c56dbc4f289f6cc65574a7763600fd8124246536f31d212f2681d3f1e96bc978faec0f4e748556c6a0cfea"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_tools",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/tools.msi",
+      "Name": "Python 3.7.3 Utility Scripts (32-bit)",
+      "ProductId": "AE9303AD-EBD0-4C85-A9D0-55B1BA972D11",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "8ea36980ba76714d005143aa7496aa6b6d4496907d10410ebb0e49ae1ca1b5107fa91c3ed7c73ba11f0ea62a3d41729550a7efd182e6a8c1301fccd5e3ee4085"
+    },
+    {
+      "ComponentName": "python_3_7_3_win32_ucrt",
+      "ComponentType": "MsiInstall",
+      "Url": "https://www.python.org/ftp/python/3.7.3/win32/ucrt.msi",
+      "Name": "Python 3.7.3 C Runtime Library (32-bit)",
+      "ProductId": "3518E76D-1BC1-4540-9EB7-2B699EF97463",
+      "Arguments": "InstallAllUsers=1 TargetDir=C:\\mozilla-build\\python3",
+      "sha512": "3a0f2595bc7f486432208328e56fb56b4c1dd4ee73979546f761176e8aac72641a5142dfb11599a6dbad1917be19c4422f9795fe7986eadd8b96eeea0d1a4071"
+    },
+    {
+      "ComponentName": "Python3",
+      "ComponentType": "SymbolicLink",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1545339",
+      "Target": "C:\\mozilla-build\\python3\\python.exe",
+      "Link": "C:\\mozilla-build\\python3\\python3.exe"
     },
     {
       "ComponentName": "DeleteMozillaBuildMercurial",
@@ -391,10 +653,10 @@
       "ComponentName": "Mercurial",
       "ComponentType": "MsiInstall",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1490703",
-      "Url": "https://www.mercurial-scm.org/release/windows/mercurial-4.7.1-x64.msi",
-      "Name": "Mercurial 4.7.1 (x64)",
-      "ProductId": "68FA175A-0F28-49AF-9E65-30CE6B60AE1C",
-      "sha512": "b3c957860855840c54d7407e13eb129c408c6ee9d5bf6547b5fb598321bc016c53d991cccbc5a63a78963057738aef43efd1da358b2ec41f66389d6be2fdc1cf"
+      "Url": "https://www.mercurial-scm.org/release/windows/mercurial-4.7.1-x86.msi",
+      "Name": "Mercurial 4.7.1 (x86)",
+      "ProductId": "2190A397-656F-4D0B-AAF6-1BBE030F7BE2",
+      "sha512": "e255574fa70ac820ccd9046387b203262ed4bde07588359ae94c94cb13684f55c835e8c55ef6c1c2594a3769148057498a281b2c4753539a7a0ea12f36b999da"
     },
     {
       "ComponentName": "MercurialConfig",
@@ -461,23 +723,28 @@
           "ComponentName": "Mercurial"
         },
         {
-          "ComponentType": "CommandRun",
-          "ComponentName": "DeleteMozillaBuildPython3PythonExe"
+          "ComponentType": "MsiInstall",
+          "ComponentName": "python_3_7_3_win32_exe"
         }
       ],
       "Name": "PATH",
       "Values": [
         "C:\\Program Files\\Mercurial",
-        "C:\\mozilla-build\\bin",
+        "C:\\mozilla-build\\7zip",
+        "C:\\mozilla-build\\info-zip",
         "C:\\mozilla-build\\kdiff3",
         "C:\\mozilla-build\\moztools-x64\\bin",
         "C:\\mozilla-build\\mozmake",
         "C:\\mozilla-build\\msys\\bin",
         "C:\\mozilla-build\\msys\\local\\bin",
-        "C:\\mozilla-build\\nsis-3.01",
+        "C:\\mozilla-build\\nsis-3.0b3",
+        "C:\\mozilla-build\\nsis-2.46u",
         "C:\\mozilla-build\\python",
         "C:\\mozilla-build\\python\\Scripts",
-        "C:\\mozilla-build\\python3"
+        "C:\\mozilla-build\\python3",
+        "C:\\mozilla-build\\upx391w",
+        "C:\\mozilla-build\\wget",
+        "C:\\mozilla-build\\yasm"
       ],
       "Target": "Machine"
     },
@@ -486,8 +753,8 @@
       "ComponentType": "CommandRun",
       "DependsOn": [
         {
-          "ComponentType": "ExeInstall",
-          "ComponentName": "MozillaBuildSetup"
+          "ComponentType": "MsiInstall",
+          "ComponentName": "python_3_7_3_win32_pip"
         }
       ],
       "Command": "C:\\mozilla-build\\python3\\python3.exe",
@@ -598,6 +865,30 @@
       "Path": "C:\\generic-worker"
     },
     {
+      "ComponentName": "WorkerRunnerExeDownload",
+      "ComponentType": "FileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "GenericWorkerDirectory"
+        }
+      ],
+      "Source": "https://github.com/taskcluster/taskcluster-worker-runner/releases/download/v1.0.4/start-worker-windows-386",
+      "Target": "C:\\generic-worker\\taskcluster-worker-runner.exe"
+    },
+    {
+      "ComponentName": "WorkerRunnerConfigDownload",
+      "ComponentType": "FileDownload",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "GenericWorkerDirectory"
+        }
+      ],
+      "Source": "https://github.com/mozilla-releng/OpenCloudConfig/raw/master/userdata/Configuration/GenericWorker/worker-runner-azure.yaml",
+      "Target": "C:\\generic-worker\\taskcluster-worker-runner.yaml"
+    },
+    {
       "ComponentName": "GenericWorkerDownload",
       "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
@@ -606,22 +897,22 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v16.5.5/generic-worker-multiuser-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/generic-worker/releases/download/v16.6.1/generic-worker-multiuser-windows-386.exe",
       "Target": "C:\\generic-worker\\generic-worker.exe",
-      "sha512": "25c88a9195f6a1116d32e4c8cf9d1c59bdabcf5397b5cdca7e46a655a75060f3d2a441b785b7479e640bb0364ff7e8fdf84e0fe72d7bcfd83998c250a895caf9"
+      "sha512": "c736e658d43e6b527c064ee0f187e8060ad6a44f159f77ec9edcbd40eda908be7dd03025bb100091c47d2e0ae0e901f36a38c03f9fc2a3881d93cf6a86da269b"
     },
     {
       "ComponentName": "LiveLogDownload",
-      "ComponentType": "FileDownload",
+      "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
         {
           "ComponentType": "DirectoryCreate",
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/livelog/releases/download/v1.1.0/livelog-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/livelog/releases/download/v1.1.0/livelog-windows-386.exe",
       "Target": "C:\\generic-worker\\livelog.exe",
-      "sha512": "80cc08012a766c1f4c9da82b3d82af1612d6994714e775182d6ffa1e2b61d5fac4eefc2b5031f5d5ff28caa35dd9a5c6ada9147dc80289226b6f8722f0234a95"
+      "sha512": "34cdece120f03e3f6b0ae2576d846c3fc38385fc976a5f20d60a50871e1519fc8a938355a607f6a5a4c658c838089571c435f01731d10600513ea63b3b1be01c"
     },
     {
       "ComponentName": "TaskClusterProxyDownload",
@@ -632,9 +923,9 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/taskcluster-proxy/releases/download/v5.1.0/taskcluster-proxy-windows-amd64.exe",
+      "Source": "https://github.com/taskcluster/taskcluster-proxy/releases/download/v5.1.0/taskcluster-proxy-windows-386.exe",
       "Target": "C:\\generic-worker\\taskcluster-proxy.exe",
-      "sha512": "66dc995d3950f92e4007e0d021ff66d7ce9e9c45e95dd1295b31dc01362f558df893d5db6cec85b2b3832172be454acc0ca079447e7b99fdddb47a58ea84f2f9"
+      "sha512": "83ec125f0fa8b8989e28cefa3b35c560556bf518c446f406a6320f758f6aaecac8b9e43a234cb1f2bdeb8d5126d68182aecfb2824b22668f3119812e2f587b25"
     },
     {
       "ComponentName": "NSSMDownload",
@@ -665,7 +956,7 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe"
+          "C:\\nssm-2.24-103-gdee49fc\\win32\\nssm.exe"
         ]
       }
     },
@@ -677,10 +968,9 @@
         "install",
         "service",
         "--nssm",
-        "C:\\nssm-2.24-103-gdee49fc\\win64\\nssm.exe",
+        "C:\\nssm-2.24-103-gdee49fc\\win32\\nssm.exe",
         "--config",
-        "C:\\generic-worker\\generic-worker.config",
-        "--configure-for-aws"
+        "C:\\generic-worker\\generic-worker.config"
       ],
       "DependsOn": [
         {
@@ -688,7 +978,7 @@
           "ComponentName": "GenericWorkerDownload"
         },
         {
-          "ComponentType": "FileDownload",
+          "ComponentType": "ChecksumFileDownload",
           "ComponentName": "LiveLogDownload"
         },
         {
@@ -707,7 +997,7 @@
             "Arguments": [
               "--version"
             ],
-            "Like": "generic-worker (multiuser engine) 16.5.5 *"
+            "Like": "generic-worker (multiuser engine) 16.6.1 *"
           }
         ]
       }
@@ -725,18 +1015,6 @@
       "Target": "C:\\generic-worker\\disable-desktop-interrupt.reg"
     },
     {
-      "ComponentName": "SetDefaultPrinter",
-      "ComponentType": "ChecksumFileDownload",
-      "DependsOn": [
-        {
-          "ComponentType": "CommandRun",
-          "ComponentName": "GenericWorkerInstall"
-        }
-      ],
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/SetDefaultPrinter.ps1",
-      "Target": "C:\\generic-worker\\SetDefaultPrinter.ps1"
-    },
-    {
       "ComponentName": "GenericWorkerStateWait",
       "ComponentType": "ChecksumFileDownload",
       "DependsOn": [
@@ -749,14 +1027,26 @@
           "ComponentName": "DisableDesktopInterrupt"
         }
       ],
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-generic-worker-and-reboot.bat",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/run-az-generic-worker-and-reboot.bat",
       "Target": "C:\\generic-worker\\run-generic-worker.bat"
+    },
+    {
+      "ComponentName": "GenericWorkerConfig",
+      "ComponentType": "ChecksumFileDownload",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/generic-worker.config",
+      "Target": "C:\\generic-worker\\generic-worker-template.config",
+      "DependsOn": [
+        {
+          "ComponentType": "DirectoryCreate",
+          "ComponentName": "GenericWorkerDirectory"
+        }
+      ]
     },
     {
       "ComponentName": "TaskUserInitScript",
       "ComponentType": "ChecksumFileDownload",
-      "Comment": "Bug 1261188 - initialisation script for new task users",
-      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/task-user-init-win10.cmd",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1433851#c19",
+      "Source": "https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/GenericWorker/task-user-init-win7.cmd",
       "Target": "C:\\generic-worker\\task-user-init.cmd",
       "DependsOn": [
         {
@@ -916,6 +1206,15 @@
       "Target": "Machine"
     },
     {
+      "ComponentName": "ngen_executeQueuedItems",
+      "ComponentType": "CommandRun",
+      "Comment": "https://blogs.msdn.microsoft.com/dotnet/2013/08/06/wondering-why-mscorsvw-exe-has-high-cpu-usage-you-can-speed-it-up",
+      "Command": "c:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\ngen.exe",
+      "Arguments": [
+        "executeQueuedItems"
+      ]
+    },
+    {
       "ComponentName": "CarbonClone",
       "ComponentType": "CommandRun",
       "Comment": "Bug 1316329 - support creation of symlinks by task users",
@@ -1043,8 +1342,8 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\Program Files (x86)\\Mozilla Maintenance Service\\maintenanceservice.exe",
-          "C:\\Program Files (x86)\\Mozilla Maintenance Service\\Uninstall.exe"
+          "C:\\Program Files\\Mozilla Maintenance Service\\maintenanceservice.exe",
+          "C:\\Program Files\\Mozilla Maintenance Service\\Uninstall.exe"
         ]
       }
     },
@@ -1054,7 +1353,7 @@
       "Comment": "See https://bugzilla.mozilla.org/show_bug.cgi?id=1067756#c21",
       "Command": "icacls.exe",
       "Arguments": [
-        "\"C:\\Program Files (x86)\\Mozilla Maintenance Service\"",
+        "\"C:\\Program Files\\Mozilla Maintenance Service\"",
         "/grant",
         "Everyone:(OI)(CI)F"
       ],
@@ -1248,7 +1547,7 @@
     {
       "ComponentName": "GrantEveryoneMozillaRegistryWriteAccess",
       "ComponentType": "CommandRun",
-      "Comment": "Bug 1353889 - Grant Everyone group write access to Mozilla registry key",
+      "Comment": "Bug 1353889 - Grant all users account write access to Mozilla registry key",
       "Command": "powershell",
       "Arguments": [
         "-command",
@@ -1259,19 +1558,6 @@
           "ComponentType": "CommandRun",
           "ComponentName": "CarbonInstall"
         }
-      ]
-    },
-    {
-      "ComponentName": "DisableFirewall",
-      "ComponentType": "CommandRun",
-      "Comment": "Bug 1358301 - Disable Windows Firewall",
-      "Command": "netsh",
-      "Arguments": [
-        "advfirewall",
-        "set",
-        "allprofiles",
-        "state",
-        "off"
       ]
     },
     {
@@ -1305,22 +1591,6 @@
       "sha512": "0ad1ba0df5efdf0354c2ecc9e97be03823636feeda1a4afe7666bdc661cd22b309d0a05e16453b6692c68f0ad5fd05abec480a5cdc13612fab2a3353c8eb1cc6"
     },
     {
-      "ComponentName": "reg_DisableNewAppAlert",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "Bug 1373551 - prevent dialog to confirm file association",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\Explorer",
-      "ValueName": "NoNewAppAlert",
-      "ValueType": "Dword",
-      "ValueData": 1
-    },
-    {
-      "ComponentName": "reg_NewNetworkWindowOff",
-      "ComponentType": "RegistryKeySet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1397201#c58",
-      "Key": "HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Network",
-      "ValueName": "NewNetworkWindowOff"
-    },
-    {
       "ComponentName": "reg_Power_PreferredPlan_HighPerformance",
       "ComponentType": "RegistryValueSet",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1362613",
@@ -1330,156 +1600,20 @@
       "ValueData": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"
     },
     {
-      "ComponentName": "Reg_WinDefend_DisableConfig",
-      "ComponentType": "RegistryValueSet",
+      "ComponentName": "DisableWinDefend",
+      "ComponentType": "ServiceControl",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1365909",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows Defender",
-      "ValueName": "DisableConfig",
-      "ValueType": "Dword",
-      "ValueData": "0x00000001",
-      "Hex": true
-    },
-    {
-      "ComponentName": "Reg_WinDefend_DisableAntiSpyware",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1365909",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows Defender",
-      "ValueName": "DisableAntiSpyware",
-      "ValueType": "Dword",
-      "ValueData": "0x00000001",
-      "Hex": true
-    },
-    {
-      "ComponentName": "RegServiceStartupType_Disabled_wscsvc",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1509722",
-      "Key": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\wscsvc",
-      "SetOwner": "S-1-5-32-544",
-      "ValueName": "Start",
-      "ValueType": "Dword",
-      "ValueData": "0x4",
-      "Hex": true
-    },
-    {
-      "ComponentName": "RegServiceStartupType_Disabled_SecurityHealthService",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1509722",
-      "Key": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\SecurityHealthService",
-      "SetOwner": "S-1-5-32-544",
-      "ValueName": "Start",
-      "ValueType": "Dword",
-      "ValueData": "0x4",
-      "Hex": true,
-      "DependsOn": [
-        {
-          "ComponentType": "RegistryValueSet",
-          "ComponentName": "RegServiceStartupType_Disabled_wscsvc"
-        }
-      ]
-    },
-    {
-      "ComponentName": "RegServiceStartupType_Disabled_Sense",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1509722",
-      "Key": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Sense",
-      "SetOwner": "S-1-5-32-544",
-      "ValueName": "Start",
-      "ValueType": "Dword",
-      "ValueData": "0x4",
-      "Hex": true
-    },
-    {
-      "ComponentName": "RegServiceStartupType_Disabled_WdBoot",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1509722",
-      "Key": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\WdBoot",
-      "SetOwner": "S-1-5-32-544",
-      "ValueName": "Start",
-      "ValueType": "Dword",
-      "ValueData": "0x4",
-      "Hex": true,
-      "DependsOn": [
-        {
-          "ComponentType": "RegistryValueSet",
-          "ComponentName": "RegServiceStartupType_Disabled_Sense"
-        },
-        {
-          "ComponentType": "RegistryValueSet",
-          "ComponentName": "RegServiceStartupType_Disabled_SecurityHealthService"
-        }
-      ]
-    },
-    {
-      "ComponentName": "RegServiceStartupType_Disabled_WdFilter",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1509722",
-      "Key": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\WdFilter",
-      "SetOwner": "S-1-5-32-544",
-      "ValueName": "Start",
-      "ValueType": "Dword",
-      "ValueData": "0x4",
-      "Hex": true,
-      "DependsOn": [
-        {
-          "ComponentType": "RegistryValueSet",
-          "ComponentName": "RegServiceStartupType_Disabled_Sense"
-        },
-        {
-          "ComponentType": "RegistryValueSet",
-          "ComponentName": "RegServiceStartupType_Disabled_SecurityHealthService"
-        }
-      ]
-    },
-    {
-      "ComponentName": "RegServiceStartupType_Disabled_WdNisDrv",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1509722",
-      "Key": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\WdNisDrv",
-      "SetOwner": "S-1-5-32-544",
-      "ValueName": "Start",
-      "ValueType": "Dword",
-      "ValueData": "0x4",
-      "Hex": true
-    },
-    {
-      "ComponentName": "RegServiceStartupType_Disabled_WdNisSvc",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1509722",
-      "Key": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\WdNisSvc",
-      "SetOwner": "S-1-5-32-544",
-      "ValueName": "Start",
-      "ValueType": "Dword",
-      "ValueData": "0x4",
-      "Hex": true
-    },
-    {
-      "ComponentName": "RegServiceStartupType_Disabled_WinDefend",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1509722",
-      "Key": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\WinDefend",
-      "SetOwner": "S-1-5-32-544",
-      "ValueName": "Start",
-      "ValueType": "Dword",
-      "ValueData": "0x4",
-      "Hex": true,
-      "DependsOn": [
-        {
-          "ComponentType": "RegistryValueSet",
-          "ComponentName": "RegServiceStartupType_Disabled_Sense"
-        },
-        {
-          "ComponentType": "RegistryValueSet",
-          "ComponentName": "RegServiceStartupType_Disabled_SecurityHealthService"
-        }
-      ]
+      "Name": "WinDefend",
+      "StartupType": "Disabled",
+      "State": "Stopped"
     },
     {
       "ComponentName": "OpenSshDownload",
       "ComponentType": "FileDownload",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1454578",
-      "Source": "https://github.com/PowerShell/Win32-OpenSSH/releases/download/v7.6.1.0p1-Beta/OpenSSH-Win64.zip",
-      "Target": "C:\\Windows\\Temp\\OpenSSH-Win64.zip",
-      "sha512": "340f2be8bbddf2552a1d2d55b17f06f09bc1bc6ff2bbba6c8653f8fc3b91f5d9e2bd47e57d537f81df69fca776bf6ecbd533a7ac8bcbb6012f03676530e6d9df"
+      "Source": "https://github.com/PowerShell/Win32-OpenSSH/releases/download/v7.6.1.0p1-Beta/OpenSSH-Win32.zip",
+      "Target": "C:\\Windows\\Temp\\OpenSSH-Win32.zip",
+      "sha512": "2a9b3b43e7791c117931c612cb59659abebb0d680f4df24563ec2bf660af6b80d9459a8d07072f7c7ad549fd176a140494605486f7d681c9889ae35440396a4f"
     },
     {
       "ComponentName": "OpenSshUnzip",
@@ -1489,7 +1623,7 @@
       "Arguments": [
         "x",
         "-o\"C:\\Program Files\"",
-        "C:\\Windows\\Temp\\OpenSSH-Win64.zip"
+        "C:\\Windows\\Temp\\OpenSSH-Win32.zip"
       ],
       "DependsOn": [
         {
@@ -1503,9 +1637,9 @@
       ],
       "Validate": {
         "PathsExist": [
-          "C:\\Program Files\\OpenSSH-Win64\\sshd.exe",
-          "C:\\Program Files\\OpenSSH-Win64\\ssh-agent.exe",
-          "C:\\Program Files\\OpenSSH-Win64\\install-sshd.ps1"
+          "C:\\Program Files\\OpenSSH-Win32\\sshd.exe",
+          "C:\\Program Files\\OpenSSH-Win32\\ssh-agent.exe",
+          "C:\\Program Files\\OpenSSH-Win32\\install-sshd.ps1"
         ]
       }
     },
@@ -1526,7 +1660,7 @@
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        "\"C:\\Program Files\\OpenSSH-Win64\\install-sshd.ps1\""
+        "\"C:\\Program Files\\OpenSSH-Win32\\install-sshd.ps1\""
       ],
       "DependsOn": [
         {
@@ -1662,49 +1796,12 @@
       "sha512": "729b1e37aefdf708df6a787b2eecd0e4e186c4e8a6d6f3028b0134f81c4216f889e67645d9279cb0ae60079a8f6f68ac88ec5d1fe27ee54f8de563b5209698f3"
     },
     {
-      "ComponentName": "WindowsPerformanceToolkit",
-      "ComponentType": "MsiInstall",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485757",
-      "Url": "https://s3.amazonaws.com/windows-opencloudconfig-packages/WindowsPerformanceToolkit/WPTx64-x86_en-us.msi",
-      "Name": "WPTx64",
-      "ProductId": "39D259B7-9ECF-65EB-66ED-5344F3E1E7B2",
-      "sha512": "53912e8d6826631ec3def889c7c76a2039d684582986345f1747bac5f09bb17cdf96d68bb15514fb5ce064b41427b3c031a26730f75cbef1079ffae737cd71b0"
-    },
-    {
-      "ComponentName": "mozprofilerprobe",
-      "ComponentType": "ChecksumFileDownload",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485757",
-      "Source": "http://hg.mozilla.org/mozilla-central/raw-file/360ab7771e27/toolkit/components/startup/mozprofilerprobe.mof",
-      "Target": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\mozprofilerprobe.mof",
-      "DependsOn": [
-        {
-          "ComponentType": "MsiInstall",
-          "ComponentName": "WindowsPerformanceToolkit"
-        }
-      ]
-    },
-    {
-      "ComponentName": "mofcomp_mozprofilerprobe",
-      "ComponentType": "CommandRun",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485757",
-      "Command": "mofcomp",
-      "Arguments": [
-        "\"C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\mozprofilerprobe.mof\""
-      ],
-      "DependsOn": [
-        {
-          "ComponentType": "ChecksumFileDownload",
-          "ComponentName": "mozprofilerprobe"
-        }
-      ]
-    },
-    {
       "ComponentName": "ProgramData_Mozilla_AccessRights",
       "ComponentType": "CommandRun",
       "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1494048",
       "Command": "icacls.exe",
       "Arguments": [
-        "C:\\ProgramData\\Mozilla",
+        "c:\\ProgramData\\Mozilla",
         "/grant",
         "Everyone:(OI)(CI)F"
       ],
@@ -1713,19 +1810,7 @@
           "ComponentType": "CommandRun",
           "ComponentName": "maintenanceservice_install"
         }
-      ],
-      "Validate": {
-        "CommandsReturn": [
-          {
-            "Command": "icacls.exe",
-            "Arguments": [
-              "C:\\ProgramData\\Mozilla",
-              "/T"
-            ],
-            "Match": "Everyone:(OI)(CI)(F)"
-          }
-        ]
-      }
+      ]
     },
     {
       "ComponentName": "HostsFile",
@@ -1747,105 +1832,6 @@
           "ComponentName": "HostsFile"
         }
       ]
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_DeferUpgrade",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1510220",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate",
-      "ValueName": "DeferUpgrade",
-      "ValueType": "Dword",
-      "ValueData": 1
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_DeferUpgradePeriod",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1510220",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate",
-      "ValueName": "DeferUpgradePeriod",
-      "ValueType": "Dword",
-      "ValueData": 8
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_DeferUpdatePeriod",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1510220",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate",
-      "ValueName": "DeferUpdatePeriod",
-      "ValueType": "Dword",
-      "ValueData": 4
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_AU_NoAutoRebootWithLoggedOnUsers",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485628",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
-      "ValueName": "NoAutoRebootWithLoggedOnUsers",
-      "ValueType": "Dword",
-      "ValueData": 1
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_AU_NoAutoUpdate",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485628",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
-      "ValueName": "NoAutoUpdate",
-      "ValueType": "Dword",
-      "ValueData": 1
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_AU_AUOptions",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485628",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
-      "ValueName": "AUOptions",
-      "ValueType": "Dword",
-      "ValueData": 1
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_AU_ScheduledInstallDay",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485628",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
-      "ValueName": "ScheduledInstallDay",
-      "ValueType": "Dword",
-      "ValueData": 1
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_AU_ScheduledInstallTime",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485628",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
-      "ValueName": "ScheduledInstallTime",
-      "ValueType": "Dword",
-      "ValueData": 1
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_AU_AutomaticMaintenanceEnabled",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485628",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
-      "ValueName": "AutomaticMaintenanceEnabled",
-      "ValueType": "Dword",
-      "ValueData": 0
-    },
-    {
-      "ComponentName": "reg_WindowsUpdate_AU_AllowMUUpdateService",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485628",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU",
-      "ValueName": "AllowMUUpdateService",
-      "ValueType": "Dword",
-      "ValueData": 0
-    },
-    {
-      "ComponentName": "reg_ScheduleMaintenance_MaintenanceDisabled",
-      "ComponentType": "RegistryValueSet",
-      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1485628",
-      "Key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\Maintenance",
-      "ValueName": "MaintenanceDisabled",
-      "ValueType": "Dword",
-      "ValueData": 1
     },
     {
       "ComponentName": "env_TASKCLUSTER_ROOT_URL",
@@ -1877,63 +1863,14 @@
           "ComponentName": "programdata_google_auth"
         }
       ]
+    },
+    {
+      "ComponentName": "jqInstall",
+      "ComponentType": "FileDownload",
+      "Comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1570148#c23",
+      "Source": "https://github.com/stedolan/jq/releases/download/jq-1.6/jq-win64.exe",
+      "sha512": "58127bae7b27d963cb4ec19779e5ab0938db69190ec66985694320af787e696a8acd490b967255a7fed4c28ec6a2c2bfcd6efbb5b85ec2a950b3e318113d5cde",
+      "Target": "C:\\Windows\\System32\\jq.exe"
     }
-  ],
-  "ProvisionerConfiguration": {
-    "instanceTypes": [
-      {
-        "capacity": 1,
-        "instanceType": "c5.2xlarge",
-        "launchSpec": {
-          "BlockDeviceMappings": [
-            {
-              "DeviceName": "/dev/xvda",
-              "Ebs": {
-                "DeleteOnTermination": true,
-                "VolumeSize": 120,
-                "VolumeType": "gp2"
-              }
-            },
-            {
-              "DeviceName": "xvdf",
-              "Ebs": {
-                "DeleteOnTermination": true,
-                "VolumeSize": 120,
-                "VolumeType": "gp2"
-              }
-            }
-          ]
-        },
-        "scopes": [],
-        "secrets": {},
-        "userData": {},
-        "utility": 1
-      }
-    ],
-    "userData": {
-      "genericWorker": {
-        "config": {
-          "cachesDir": "Z:\\caches",
-          "cleanUpTaskDirs": true,
-          "disableReboots": true,
-          "downloadsDir": "Z:\\downloads",
-          "ed25519SigningKeyLocation": "C:\\generic-worker\\ed25519-private.key",
-          "idleTimeoutSecs": 900,
-          "livelogExecutable": "C:\\generic-worker\\livelog.exe",
-          "livelogPUTPort": 60022,
-          "numberOfTasksToRun": 0,
-          "runAfterUserCreation": "C:\\generic-worker\\task-user-init.cmd",
-          "runTasksAsCurrentUser": true,
-          "sentryProject": "generic-worker",
-          "shutdownMachineOnIdle": false,
-          "shutdownMachineOnInternalError": true,
-          "taskclusterProxyExecutable": "C:\\generic-worker\\taskcluster-proxy.exe",
-          "taskclusterProxyPort": 80,
-          "tasksDir": "Z:\\",
-          "wstAudience": "taskcluster-net",
-          "wstServerURL": "https://websocktunnel.tasks.build"
-        }
-      }
-    }
-  }
+  ]
 }
