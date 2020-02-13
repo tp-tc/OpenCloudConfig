@@ -1618,7 +1618,7 @@ function Set-TaskclusterWorkerLocation {
   }
   process {
     switch ($locationType) {
-      'EC2' {
+      'AWS' {
         $taskclusterWorkerLocation = ('{{"cloud":"aws","region":"{0}","availabilityZone":"{1}"}}' -f $region, $az)
       }
       'GCP' {
@@ -1692,7 +1692,7 @@ function Set-DomainName {
   }
   process {
     switch ($locationType) {
-      'EC2' {
+      'AWS' {
         $dnsRegion = $az.Replace('-', '').Replace('central', 'c').Replace('east', 'e').Replace('west', 'w').SubString(0,4)
       }
       'GCP' {
@@ -1922,7 +1922,7 @@ function Set-ChainOfTrustKey {
         }
         if (Test-Path -Path 'C:\generic-worker\ed25519-private.key' -ErrorAction SilentlyContinue) {
           if ($shutdown) {
-            if ($locationType -eq 'EC2') {
+            if ($locationType -eq 'AWS') {
               Write-Log -message ('{0} :: ed25519 key detected. shutting down.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
               & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
             } else {
@@ -1937,7 +1937,7 @@ function Set-ChainOfTrustKey {
         }
         if ($shutdown) {
           if (@(Get-Process | ? { $_.ProcessName -eq 'rdpclip' }).length -eq 0) {
-            if ($locationType -eq 'EC2') {
+            if ($locationType -eq 'AWS') {
               & shutdown @('-s', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
             } else {
               & shutdown @('-r', '-t', '0', '-c', 'dsc run complete', '-f', '-d', 'p:2:4')
@@ -2499,7 +2499,6 @@ function Invoke-OpenCloudConfig {
       Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
     }
     Write-Log -message ('{0} :: userdata run completed' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
-
   }
   end {
     Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
