@@ -1641,13 +1641,7 @@ function Set-TaskclusterWorkerLocation {
 function Set-DomainName {
   param (
     [string] $locationType,
-    [string] $publicKeys = $(
-      if ($locationType -eq 'AWS') {
-        (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys')
-      } else {
-        $null
-      }
-    ),
+    [string] $publicKeys = (Get-PublicKeys),
     [string] $workerType = $(
       switch ($locationType) {
         'AWS' {
@@ -2094,7 +2088,7 @@ function Initialize-Instance {
     }
     if ($rebootReasons.length) {
       # if this is an ami creation instance (not a worker) ...
-      if (($locationType -eq 'AWS') -and (((New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys')).StartsWith('0=mozilla-taskcluster-worker-'))) {
+      if (($locationType -eq 'AWS') -and ((Get-PublicKeys).StartsWith('0=mozilla-taskcluster-worker-'))) {
         # ensure that Ec2HandleUserData is enabled before reboot (if the RunDesiredStateConfigurationAtStartup scheduled task doesn't yet exist)
         Set-Ec2ConfigSettings
         # ensure that an up to date nxlog configuration is used as early as possible
@@ -2121,7 +2115,7 @@ function Invoke-OpenCloudConfig {
         'AWS'
       } elseif ((Get-Service -Name 'GCEAgent' -ErrorAction 'SilentlyContinue') -or (Test-Path -Path ('{0}\GooGet\googet.exe' -f $env:ProgramData) -ErrorAction 'SilentlyContinue')) {
         'GCP'
-      } elseif ((Get-Service -Name 'WindowsAzureGuestAgent' -ErrorAction 'SilentlyContinue') -or (Get-Service -Name 'WindowsAzureNetAgentSvc' -ErrorAction 'SilentlyContinue')) {
+      } elseif (Get-Service -Name  @('WindowsAzureGuestAgent', 'WindowsAzureNetAgentSvc') -ErrorAction 'SilentlyContinue') {
         'Azure'
       } else {
         'DataCenter'
@@ -2132,6 +2126,8 @@ function Invoke-OpenCloudConfig {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
+    Write-Log -message ('{0} :: locationType: {1}.' -f $($MyInvocation.MyCommand.Name), $locationType) -severity 'INFO'
+    Write-Log -message ('{0} :: sourceOrg: {1}, sourceRepo: {2}, sourceRev: {3}.' -f $($MyInvocation.MyCommand.Name), $sourceOrg, $sourceRepo, $sourceRev) -severity 'INFO'
     # Before doing anything else, make sure we are using TLS 1.2
     # See https://bugzilla.mozilla.org/show_bug.cgi?id=1443595 for context.
     Set-DefaultStrongCryptography
@@ -2205,8 +2201,7 @@ function Invoke-OpenCloudConfig {
         } catch {
           $userdata = $null
         }
-        $publicKeys = (New-Object Net.WebClient).DownloadString('http://169.254.169.254/latest/meta-data/public-keys')
-
+        $publicKeys = (Get-PublicKeys)
         if ($publicKeys.StartsWith('0=mozilla-taskcluster-worker-')) {
           # ami creation instance
           $isWorker = $false
@@ -2228,7 +2223,7 @@ function Invoke-OpenCloudConfig {
         $isWorker = $true
         $workerType = (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'workerType' })[0].value
       }
-      Write-Log -message ('{0} :: isWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $isWorker) -severity 'INFO'
+      Write-Log -message ('{0} :: isWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $(if ($isWorker) { 'true' } else { 'false' }) -severity 'INFO'
       Write-Log -message ('{0} :: workerType: {1}.' -f $($MyInvocation.MyCommand.Name), $workerType) -severity 'INFO'
 
       # if importing releng amis, do a little housekeeping
