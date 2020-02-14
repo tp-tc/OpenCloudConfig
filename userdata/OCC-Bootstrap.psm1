@@ -2223,7 +2223,7 @@ function Invoke-OpenCloudConfig {
         $isWorker = $true
         $workerType = (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'workerType' })[0].value
       }
-      Write-Log -message ('{0} :: isWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $(if ($isWorker) { 'true' } else { 'false' }) -severity 'INFO'
+      Write-Log -message ('{0} :: isWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $(if ($isWorker) { 'true' } else { 'false' })) -severity 'INFO'
       Write-Log -message ('{0} :: workerType: {1}.' -f $($MyInvocation.MyCommand.Name), $workerType) -severity 'INFO'
 
       # if importing releng amis, do a little housekeeping
