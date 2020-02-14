@@ -940,12 +940,12 @@ function Set-DriveLetters {
         Write-Log -message ('{0} :: drive Y: assigned new drive letter: Z:.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
       }
     }
-    $volumes = @(Get-WmiObject -Class Win32_Volume | sort-object { $_.Name })
+    $volumes = @(Get-WmiObject -Class Win32_Volume | Sort-Object { $_.Name })
     Write-Log -message ('{0} :: {1} volumes detected.' -f $($MyInvocation.MyCommand.Name), $volumes.length) -severity 'INFO'
     foreach ($volume in $volumes) {
       Write-Log -message ('{0} :: {1} {2}gb' -f $($MyInvocation.MyCommand.Name), $volume.Name.Trim('\'), [math]::Round($volume.Capacity/1GB,2)) -severity 'DEBUG'
     }
-    $partitions = @(Get-WmiObject -Class Win32_DiskPartition | sort-object { $_.Name })
+    $partitions = @(Get-WmiObject -Class Win32_DiskPartition | Sort-Object { $_.Name })
     Write-Log -message ('{0} :: {1} disk partitions detected.' -f $($MyInvocation.MyCommand.Name), $partitions.length) -severity 'INFO'
     foreach ($partition in $partitions) {
       Write-Log -message ('{0} :: {1}: {2}gb' -f $($MyInvocation.MyCommand.Name), $partition.Name, [math]::Round($partition.Size/1GB,2)) -severity 'DEBUG'
