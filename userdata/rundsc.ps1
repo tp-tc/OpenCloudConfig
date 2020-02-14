@@ -125,7 +125,8 @@ function Set-OpenCloudConfigSource {
           'DataCenter'
         }
       }
-    )
+    ),
+    [string] $regPath = 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source'
   )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
@@ -139,8 +140,8 @@ function Set-OpenCloudConfigSource {
           $userdata = $null
         }
         foreach ($sourceItemName in @('Organisation', 'Repository', 'Revision')) {
-          if (Test-Path -Path ('HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source\{0}' -f $sourceItemName) -ErrorAction 'SilentlyContinue') {
-            Write-Log -message ('{0} :: detected Source/{1} in registry as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name $sourceItemName)."$sourceItemName") -severity 'DEBUG'
+          if ((Test-Path -Path $regPath -ErrorAction 'SilentlyContinue') -and ((Get-Item -LiteralPath $regPath).GetValue($sourceItemName, $null))) {
+            Write-Log -message ('{0} :: detected Source/{1} in registry as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, (Get-ItemProperty -Path $regPath -Name $sourceItemName)."$sourceItemName") -severity 'DEBUG'
           } elseif (($userdata) -and ($userdata.Contains('</SourceOrganisation>') -or $userdata.Contains('</SourceRepository>') -or $userdata.Contains('</SourceRevision>'))) {
             try {
               $sourceItemValue = [regex]::matches($userdata, ('<Source{0}>(.*)<\/Source{0}>' -f $sourceItemName))[0].Groups[1].Value
@@ -151,11 +152,11 @@ function Set-OpenCloudConfigSource {
             if ($sourceItemValue) {
               Write-Log -message ('{0} :: detected Source/{1} in userdata as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $sourceItemValue) -severity 'INFO'
               try {
-                if (-not (Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -ErrorAction 'SilentlyContinue')) {
-                  New-Item -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Force
-                  Write-Log -message ('{0} :: created registry path: HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+                if (-not (Test-Path -Path $regPath -ErrorAction 'SilentlyContinue')) {
+                  New-Item -Path $regPath -Force
+                  Write-Log -message ('{0} :: created registry path: {1}' -f $($MyInvocation.MyCommand.Name), $regPath) -severity 'INFO'
                 }
-                Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Type 'String' -Name $sourceItemName -Value $sourceItemValue
+                Set-ItemProperty -Path $regPath -Type 'String' -Name $sourceItemName -Value $sourceItemValue
                 Write-Log -message ('{0} :: set Source/{1} in registry to: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $sourceItemValue) -severity 'INFO'
               }
               catch {
@@ -169,8 +170,8 @@ function Set-OpenCloudConfigSource {
       }
       'GCP' {
         foreach ($sourceItemName in @('Organisation', 'Repository', 'Revision')) {
-          if (Test-Path -Path ('HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source\{0}' -f $sourceItemName) -ErrorAction 'SilentlyContinue') {
-            Write-Log -message ('{0} :: detected Source/{1} in registry as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name $sourceItemName)."$sourceItemName") -severity 'DEBUG'
+          if ((Test-Path -Path $regPath -ErrorAction 'SilentlyContinue') -and ((Get-Item -LiteralPath $regPath).GetValue($sourceItemName, $null))) {
+            Write-Log -message ('{0} :: detected Source/{1} in registry as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, (Get-ItemProperty -Path $regPath -Name $sourceItemName)."$sourceItemName") -severity 'DEBUG'
           } else {
             $sourceItemValue = (Invoke-WebRequest -Uri 'http://169.254.169.254/computeMetadata/v1beta1/instance/attributes/taskcluster' -UseBasicParsing | ConvertFrom-Json).workerConfig.openCloudConfig.source."$sourceItemName"
             if (-not ($sourceItemValue)) {
@@ -190,11 +191,11 @@ function Set-OpenCloudConfigSource {
             if ($sourceItemValue) {
               Write-Log -message ('{0} :: detected Source/{1} in instance metadata attributes as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $sourceItemValue) -severity 'INFO'
               try {
-                if (-not (Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -ErrorAction 'SilentlyContinue')) {
-                  New-Item -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Force
-                  Write-Log -message ('{0} :: created registry path: HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+                if (-not (Test-Path -Path $regPath -ErrorAction 'SilentlyContinue')) {
+                  New-Item -Path $regPath -Force
+                  Write-Log -message ('{0} :: created registry path: {1}' -f $($MyInvocation.MyCommand.Name), $regPath) -severity 'INFO'
                 }
-                Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Type 'String' -Name $sourceItemName -Value $sourceItemValue
+                Set-ItemProperty -Path $regPath -Type 'String' -Name $sourceItemName -Value $sourceItemValue
                 Write-Log -message ('{0} :: set Source/{1} in registry to: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $sourceItemValue) -severity 'INFO'
               }
               catch {
@@ -208,8 +209,8 @@ function Set-OpenCloudConfigSource {
       }
       'Azure' {
         foreach ($sourceItemName in @('Organisation', 'Repository', 'Revision')) {
-          if (Test-Path -Path ('HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source\{0}' -f $sourceItemName) -ErrorAction 'SilentlyContinue') {
-            Write-Log -message ('{0} :: detected Source/{1} in registry as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name $sourceItemName)."$sourceItemName") -severity 'DEBUG'
+          if ((Test-Path -Path $regPath -ErrorAction 'SilentlyContinue') -and ((Get-Item -LiteralPath $regPath).GetValue($sourceItemName, $null))) {
+            Write-Log -message ('{0} :: detected Source/{1} in registry as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, (Get-ItemProperty -Path $regPath -Name $sourceItemName)."$sourceItemName") -severity 'DEBUG'
           } else {
             try {
               $sourceItemValue = (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq ('source{0}' -f $sourceItemName) })[0].value
@@ -229,11 +230,11 @@ function Set-OpenCloudConfigSource {
             if ($sourceItemValue) {
               Write-Log -message ('{0} :: detected Source/{1} in instance metadata attributes as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $sourceItemValue) -severity 'INFO'
               try {
-                if (-not (Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -ErrorAction 'SilentlyContinue')) {
-                  New-Item -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Force
-                  Write-Log -message ('{0} :: created registry path: HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+                if (-not (Test-Path -Path $regPath -ErrorAction 'SilentlyContinue')) {
+                  New-Item -Path $regPath -Force
+                  Write-Log -message ('{0} :: created registry path: {1}' -f $($MyInvocation.MyCommand.Name), $regPath) -severity 'INFO'
                 }
-                Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Type 'String' -Name $sourceItemName -Value $sourceItemValue
+                Set-ItemProperty -Path $regPath -Type 'String' -Name $sourceItemName -Value $sourceItemValue
                 Write-Log -message ('{0} :: set Source/{1} in registry to: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $sourceItemValue) -severity 'INFO'
               }
               catch {
@@ -247,8 +248,8 @@ function Set-OpenCloudConfigSource {
       }
       default {
         foreach ($sourceItemName in @('Organisation', 'Repository', 'Revision')) {
-          if (Test-Path -Path ('HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source\{0}' -f $sourceItemName) -ErrorAction 'SilentlyContinue') {
-            Write-Log -message ('{0} :: detected Source/{1} in registry as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Name $sourceItemName)."$sourceItemName") -severity 'DEBUG'
+          if ((Test-Path -Path $regPath -ErrorAction 'SilentlyContinue') -and ((Get-Item -LiteralPath $regPath).GetValue($sourceItemName, $null))) {
+            Write-Log -message ('{0} :: detected Source/{1} in registry as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, (Get-ItemProperty -Path $regPath -Name $sourceItemName)."$sourceItemName") -severity 'DEBUG'
           } else {
             switch ($sourceItemName) {
               'Organisation' {
@@ -264,11 +265,11 @@ function Set-OpenCloudConfigSource {
             if ($sourceItemValue) {
               Write-Log -message ('{0} :: determined Source/{1} as: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $sourceItemValue) -severity 'INFO'
               try {
-                if (-not (Test-Path -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -ErrorAction 'SilentlyContinue')) {
-                  New-Item -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Force
-                  Write-Log -message ('{0} :: created registry path: HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
+                if (-not (Test-Path -Path $regPath -ErrorAction 'SilentlyContinue')) {
+                  New-Item -Path $regPath -Force
+                  Write-Log -message ('{0} :: created registry path: {1}' -f $($MyInvocation.MyCommand.Name), $regPath) -severity 'INFO'
                 }
-                Set-ItemProperty -Path 'HKLM:\SOFTWARE\Mozilla\OpenCloudConfig\Source' -Type 'String' -Name $sourceItemName -Value $sourceItemValue
+                Set-ItemProperty -Path $regPath -Type 'String' -Name $sourceItemName -Value $sourceItemValue
                 Write-Log -message ('{0} :: set Source/{1} in registry to: {2}' -f $($MyInvocation.MyCommand.Name), $sourceItemName, $sourceItemValue) -severity 'INFO'
               }
               catch {
