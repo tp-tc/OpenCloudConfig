@@ -2328,9 +2328,16 @@ function Invoke-OpenCloudConfig {
           Write-Log -message ('{0} :: missing task drive. terminating instance...' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
           & shutdown @('-s', '-t', '0', '-c', 'missing task drive', '-f', '-d', '1:1')
         }
-        if (-not (Test-VolumeExists -DriveLetter @('Y'))) {
-          Write-Log -message ('{0} :: missing cache drive. terminating instance...' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
-          & shutdown @('-s', '-t', '0', '-c', 'missing cache drive', '-f', '-d', '1:1')
+        switch -wildcard ($workerType) {
+          'gecko-*' {
+            if (-not (Test-VolumeExists -DriveLetter @('Y'))) {
+              Write-Log -message ('{0} :: missing cache drive. terminating instance...' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+              & shutdown @('-s', '-t', '0', '-c', 'missing cache drive', '-f', '-d', '1:1')
+            }
+          }
+          default {
+            Write-Log -message ('{0} :: missing cache drive. ignoring...' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+          }
         }
       }
       Initialize-NativeImageCache
