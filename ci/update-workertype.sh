@@ -274,8 +274,8 @@ jq '.|keys[]' ./instance-delete-queue-${aws_region}.json | while read i; do
   aws ec2 terminate-instances --region ${aws_region} --instance-ids ${old_instance} || true
 done
 
-# copy ami to each configured region, get copied ami id, tag copied ami, wait for copied ami availability
-jq -c '[.regions[].region] | .[]' ./${tc_worker_type}.json | sed 's/"//g' | grep -Fvx "${aws_region}" | while read region; do
+# copy ami to each region, get copied ami id, tag copied ami, wait for copied ami availability
+for region in us-east-1 us-east-2 us-west-1 eu-central-1; do
   aws_copied_ami_id=`aws ec2 copy-image --region ${region} --source-region ${aws_region} --source-image-id ${aws_ami_id} --name "${tc_worker_type} ${short_sha} ${TASK_ID}/${RUN_ID}" --description "${ami_description}" | sed -n 's/^ *"ImageId": *"\(.*\)" *$/\1/p'`
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ami: ${aws_region} ${aws_ami_id} copy to ${region} ${aws_copied_ami_id} in progress: https://${region}.console.aws.amazon.com/ec2/v2/home?region=${region}#Images:visibility=owned-by-me;search=${aws_copied_ami_id}"
   aws ec2 create-tags --region ${region} --resources "${aws_copied_ami_id}" --tags "Key=WorkerType,Value=${tc_worker_type}" "Key=source,Value=${GITHUB_HEAD_REPO_URL::-4}/commit/${GITHUB_HEAD_SHA:0:7}" "Key=build,Value=https://tools.taskcluster.net/tasks/${TASK_ID}"
