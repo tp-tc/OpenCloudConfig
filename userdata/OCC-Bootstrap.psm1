@@ -2484,11 +2484,25 @@ function Invoke-OpenCloudConfig {
     }
 
     # archive dsc logs
-    Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue }
-    $zipFilePath = ('{0}\log\{1}.userdata-run.zip' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
-    New-ZipFile -ZipFilePath $zipFilePath -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') } | % { $_.FullName })
-    Write-Log -message ('{0} :: log archive {1} created.' -f $($MyInvocation.MyCommand.Name), $zipFilePath) -severity 'INFO'
-    Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and (-not $_.Name.EndsWith('.dsc-run.log')) } | % { Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue }
+    try {
+      Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and $_.Length -eq 0 } | % { Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue }
+      Write-Log -message ('{0} :: deleted empty occ/dsc log files.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    } catch {
+      Write-Log -message ('{0} :: error deleting empty occ/dsc log files. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+    }
+    try {
+      $zipFilePath = ('{0}\log\{1}.userdata-run.zip' -f $env:SystemDrive, [DateTime]::Now.ToString("yyyyMMddHHmmss"))
+      New-ZipFile -ZipFilePath $zipFilePath -Item @(Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') } | % { $_.FullName })
+      Write-Log -message ('{0} :: log archive {1} created.' -f $($MyInvocation.MyCommand.Name), $zipFilePath) -severity 'INFO'
+    } catch {
+      Write-Log -message ('{0} :: error archiving occ/dsc log files. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+    }
+    try {
+      Get-ChildItem -Path ('{0}\log' -f $env:SystemDrive) | ? { !$_.PSIsContainer -and $_.Name.EndsWith('.log') -and (-not $_.Name.EndsWith('.dsc-run.log')) } | % { Remove-Item -Path $_.FullName -Force -ErrorAction SilentlyContinue }
+      Write-Log -message ('{0} :: purged archived occ/dsc log files.' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+    } catch {
+      Write-Log -message ('{0} :: error purging archived occ/dsc log files. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+    }
 
     if ((-not ($isWorker)) -and (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
       Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
