@@ -1969,9 +1969,9 @@ function Wait-GenericWorkerStart {
     if ($locationType -eq 'Azure') {
       foreach ($path in @('C:\AzureData\CustomData.bin', 'C:\generic-worker\taskcluster-worker-runner.exe', 'C:\generic-worker\taskcluster-worker-runner.yaml')) {
         if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
-          Write-Log -message ('{0} :: path: "{1}" detected' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+          Write-Log -message ('{0} :: path: "{1}" detected' -f $($MyInvocation.MyCommand.Name), $path) -severity 'DEBUG'
         } else {
-          Write-Log -message ('{0} :: path: "{1}" not detected' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
+          Write-Log -message ('{0} :: path: "{1}" not detected' -f $($MyInvocation.MyCommand.Name), $path) -severity 'ERROR'
         }
       }
       $gwService = (Get-Service -Name 'GenericWorker')
@@ -2246,38 +2246,44 @@ function Invoke-OpenCloudConfig {
           Set-WindowsActivation -productKeyMapUrl ('https://raw.githubusercontent.com/{0}/{1}/{2}/userdata/Configuration/product-key-map.json' -f $sourceOrg, $sourceRepo, $sourceRev)
         }
       } elseif ($locationType -eq 'Azure') {
-        $isWorker = $true
-        $workerType = (@(((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json).compute.tagsList | ? { $_.name -eq 'workerType' })[0].value
+        $instanceMetadata = (((Invoke-WebRequest -Headers @{'Metadata'=$true} -UseBasicParsing -Uri ('http://169.254.169.254/metadata/instance?api-version={0}' -f '2019-06-04')).Content) | ConvertFrom-Json)
+        $isWorker = $instanceMetadata.compute.resourceGroupName.StartsWith('taskcluster-')
+        $workerType = @($instanceMetadata.compute.tagsList | ? { $_.name -eq 'workerType' })[0].value
       }
       Write-Log -message ('{0} :: isWorker: {1}.' -f $($MyInvocation.MyCommand.Name), $(if ($isWorker) { 'true' } else { 'false' })) -severity 'INFO'
       Write-Log -message ('{0} :: workerType: {1}.' -f $($MyInvocation.MyCommand.Name), $workerType) -severity 'INFO'
 
-      # if importing releng amis, do a little housekeeping
-      try {
-        $rootPassword = [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value
-      }
-      catch {
-        $rootPassword = $null
-      }
-      switch -wildcard ($workerType) {
-        'gecko-t-win7-*' {
-          $runDscOnWorker = $true
-          if (-not ($isWorker)) {
-            Remove-LegacyStuff
-            Set-Credentials -username 'root' -password ('{0}' -f $rootPassword)
-          }
+      if ($locationType -eq 'Azure') {
+        $runDscOnWorker = $true
+      } else {
+        try {
+          $rootPassword = [regex]::matches($userdata, '<rootPassword>(.*)<\/rootPassword>')[0].Groups[1].Value
         }
-        'gecko-t-win10-*' {
-          $runDscOnWorker = $true
-          if (-not ($isWorker)) {
-            Remove-LegacyStuff
-            Set-Credentials -username 'Administrator' -password ('{0}' -f $rootPassword)
-          }
+        catch {
+          $rootPassword = $null
         }
-        default {
-          $runDscOnWorker = $true
-          if (-not ($isWorker)) {
-            Set-Credentials -username 'Administrator' -password ('{0}' -f $rootPassword)
+        switch -wildcard ($workerType) {
+          'gecko-t-win7-*' {
+            $runDscOnWorker = $true
+            if (-not ($isWorker)) {
+              # if importing old releng amis, do a little housekeeping
+              Remove-LegacyStuff
+              Set-Credentials -username 'root' -password ('{0}' -f $rootPassword)
+            }
+          }
+          'gecko-t-win10-*' {
+            $runDscOnWorker = $true
+            if (-not ($isWorker)) {
+              # if importing old releng amis, do a little housekeeping
+              Remove-LegacyStuff
+              Set-Credentials -username 'Administrator' -password ('{0}' -f $rootPassword)
+            }
+          }
+          default {
+            $runDscOnWorker = $true
+            if (-not ($isWorker)) {
+              Set-Credentials -username 'Administrator' -password ('{0}' -f $rootPassword)
+            }
           }
         }
       }
@@ -2290,7 +2296,9 @@ function Invoke-OpenCloudConfig {
         'GCP' {
           $instanceType = ((New-Object Net.WebClient).DownloadString('http://169.254.169.254/computeMetadata/v1beta1/instance/machine-type') -replace '.*\/')
         }
-        # todo: implement instance type discovery for non AWS/GCP
+        'Azure' {
+          $instanceType = $instanceMetadata.compute.vmSize
+        }
       }
       if ($instanceType) {
         Write-Log -message ('{0} :: instanceType: {1}' -f $($MyInvocation.MyCommand.Name), $instanceType) -severity 'INFO'
