@@ -2529,7 +2529,10 @@ function Invoke-OpenCloudConfig {
       Write-Log -message ('{0} :: error purging archived occ/dsc log files. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
     }
 
-    if ((-not ($isWorker)) -and (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
+    if ((-not ($isWorker)) -and ($locationType -eq 'Azure')) {
+      Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
+      Set-ChainOfTrustKey -locationType $locationType -workerType $workerType -shutdown:$false
+    } elseif ((-not ($isWorker)) -and (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue)) {
       Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
       if ($locationType -ne 'DataCenter') {
         Set-ChainOfTrustKey -locationType $locationType -workerType $workerType -shutdown:$true
