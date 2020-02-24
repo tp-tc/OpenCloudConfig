@@ -1967,7 +1967,7 @@ function Wait-GenericWorkerStart {
   }
   process {
     if ($locationType -eq 'Azure') {
-      for ($path in @('C:\AzureData\CustomData.bin', 'C:\generic-worker\taskcluster-worker-runner.exe', 'C:\generic-worker\taskcluster-worker-runner.yaml')) {
+      foreach ($path in @('C:\AzureData\CustomData.bin', 'C:\generic-worker\taskcluster-worker-runner.exe', 'C:\generic-worker\taskcluster-worker-runner.yaml')) {
         if (Test-Path -Path $path -ErrorAction SilentlyContinue) {
           Write-Log -message ('{0} :: path: "{1}" detected' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
         } else {
