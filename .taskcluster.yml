@@ -121,9 +121,9 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-1-b-win2012-beta.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-1-b-win2012-beta.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-1-b-win2012-beta AMIs'
@@ -170,9 +170,9 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-1-b-win2012-xlarge.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-1-b-win2012-xlarge.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-1-b-win2012-xlarge AMIs'
@@ -218,9 +218,9 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-1-b-win2012.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-1-b-win2012.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-1-b-win2012 AMIs'
@@ -266,9 +266,9 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-2-b-win2012.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-2-b-win2012.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-2-b-win2012 AMIs'
@@ -314,9 +314,9 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-3-b-win2012.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-3-b-win2012.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-3-b-win2012 AMIs'
@@ -362,9 +362,9 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-3-b-win2012-c4.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-3-b-win2012-c4.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-3-b-win2012-c4 AMIs'
@@ -410,9 +410,9 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-3-b-win2012-c5.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-3-b-win2012-c5.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-3-b-win2012-c5 AMIs'
@@ -457,9 +457,9 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-t-win7-32-cu.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-t-win7-32-cu.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-t-win7-32-cu AMIs'
@@ -505,9 +505,9 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-t-win7-32-gpu-b.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-t-win7-32-gpu-b.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-t-win7-32-gpu-b AMIs'
@@ -553,9 +553,9 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-t-win7-32-beta.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-t-win7-32-beta.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-t-win7-32-beta AMIs'
@@ -600,9 +600,9 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-t-win7-32.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-t-win7-32.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-t-win7-32 AMIs'
@@ -647,9 +647,9 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-t-win7-32-gpu.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-t-win7-32-gpu.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-t-win7-32-gpu AMIs'
@@ -694,9 +694,9 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-t-win10-64-cu.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-t-win10-64-cu.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-t-win10-64-cu AMIs'
@@ -738,21 +738,13 @@ tasks:
     - '-c'
     - 'git clone --quiet {{event.head.repo.url}} && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig fetch && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig checkout {{ event.head.repo.branch }} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win10-64-alpha'
     artifacts:
-      'project/releng/opencloudconfig/update-request.json':
-        type: file
-        path: './gecko-t-win10-64-alpha.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/update-response.json':
-        type: file
-        path: './update-response.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
       'project/releng/opencloudconfig/secret-update-response.json':
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-t-win10-64-alpha.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-t-win10-64-alpha.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-t-win10-64-alpha AMIs'
@@ -794,21 +786,13 @@ tasks:
     - '-c'
     - 'git clone --quiet {{event.head.repo.url}} && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig fetch && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig checkout {{ event.head.repo.branch }} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win10-64-beta'
     artifacts:
-      'project/releng/opencloudconfig/update-request.json':
-        type: file
-        path: './gecko-t-win10-64-beta.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/update-response.json':
-        type: file
-        path: './update-response.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
       'project/releng/opencloudconfig/secret-update-response.json':
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-t-win10-64-beta.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-t-win10-64-beta.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-t-win10-64-beta AMIs'
@@ -849,21 +833,13 @@ tasks:
     - '-c'
     - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win10-64'
     artifacts:
-      'project/releng/opencloudconfig/update-request.json':
-        type: file
-        path: './gecko-t-win10-64.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/update-response.json':
-        type: file
-        path: './update-response.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
       'project/releng/opencloudconfig/secret-update-response.json':
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-t-win10-64.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-t-win10-64.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-t-win10-64 AMIs'
@@ -905,21 +881,13 @@ tasks:
     - '-c'
     - 'git clone --quiet {{event.head.repo.url}} && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig fetch && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig checkout {{ event.head.repo.branch }} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win10-64-gpu-a'
     artifacts:
-      'project/releng/opencloudconfig/update-request.json':
-        type: file
-        path: './gecko-t-win10-64-gpu-a.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/update-response.json':
-        type: file
-        path: './update-response.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
       'project/releng/opencloudconfig/secret-update-response.json':
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-t-win10-64-gpu-a.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-t-win10-64-gpu-a.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-t-win10-64-gpu-a AMIs'
@@ -961,21 +929,13 @@ tasks:
     - '-c'
     - 'git clone --quiet {{event.head.repo.url}} && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig fetch && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig checkout {{ event.head.repo.branch }} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win10-64-gpu-b'
     artifacts:
-      'project/releng/opencloudconfig/update-request.json':
-        type: file
-        path: './gecko-t-win10-64-gpu-b.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/update-response.json':
-        type: file
-        path: './update-response.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
       'project/releng/opencloudconfig/secret-update-response.json':
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-t-win10-64-gpu-b.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-t-win10-64-gpu-b.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-t-win10-64-gpu-b AMIs'
@@ -1017,21 +977,13 @@ tasks:
     - '-c'
     - 'git clone --quiet {{event.head.repo.url}} && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig fetch && git --git-dir=./OpenCloudConfig/.git --work-tree=./OpenCloudConfig checkout {{ event.head.repo.branch }} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win10-64-gpu-s'
     artifacts:
-      'project/releng/opencloudconfig/update-request.json':
-        type: file
-        path: './gecko-t-win10-64-gpu-s.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/update-response.json':
-        type: file
-        path: './update-response.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
       'project/releng/opencloudconfig/secret-update-response.json':
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-t-win10-64-gpu-s.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-t-win10-64-gpu-s.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-t-win10-64-gpu-s AMIs'
@@ -1072,21 +1024,13 @@ tasks:
     - '-c'
     - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh gecko-t-win10-64-gpu'
     artifacts:
-      'project/releng/opencloudconfig/update-request.json':
-        type: file
-        path: './gecko-t-win10-64-gpu.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/update-response.json':
-        type: file
-        path: './update-response.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
       'project/releng/opencloudconfig/secret-update-response.json':
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/gecko-t-win10-64-gpu.diff':
+      'public/ami-list.yml':
         type: file
-        path: './gecko-t-win10-64-gpu.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update gecko-t-win10-64-gpu AMIs'
@@ -1128,21 +1072,13 @@ tasks:
     - '-c'
     - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh mpd001-1-b-win2012'
     artifacts:
-      'project/releng/opencloudconfig/update-request.json':
-        type: file
-        path: './mpd001-1-b-win2012.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/update-response.json':
-        type: file
-        path: './update-response.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
       'project/releng/opencloudconfig/secret-update-response.json':
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/mpd001-1-b-win2012.diff':
+      'public/ami-list.yml':
         type: file
-        path: './mpd001-1-b-win2012.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update mpd001-1-b-win2012 AMIs'
@@ -1184,21 +1120,13 @@ tasks:
     - '-c'
     - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh mpd001-3-b-win2012'
     artifacts:
-      'project/releng/opencloudconfig/update-request.json':
-        type: file
-        path: './mpd001-3-b-win2012.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/update-response.json':
-        type: file
-        path: './update-response.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
       'project/releng/opencloudconfig/secret-update-response.json':
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/mpd001-3-b-win2012.diff':
+      'public/ami-list.yml':
         type: file
-        path: './mpd001-3-b-win2012.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update mpd001-3-b-win2012 AMIs'
@@ -1239,21 +1167,13 @@ tasks:
     - '-c'
     - 'git clone --quiet {{event.head.repo.url}} && ./OpenCloudConfig/ci/update-workertype.sh relops-image-builder'
     artifacts:
-      'project/releng/opencloudconfig/update-request.json':
-        type: file
-        path: './relops-image-builder.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/update-response.json':
-        type: file
-        path: './update-response.json'
-        expires: "{{ '4 weeks' | $fromNow }}"
       'project/releng/opencloudconfig/secret-update-response.json':
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
-      'project/releng/opencloudconfig/relops-image-builder.diff':
+      'public/ami-list.yml':
         type: file
-        path: './relops-image-builder.diff'
+        path: './ami-list.yml'
         expires: "{{ '1 year' | $fromNow }}"
   metadata:
     name: 'Update relops-image-builder AMIs'
