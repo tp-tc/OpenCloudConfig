@@ -76,12 +76,14 @@ elif [[ $commit_message == *"deploy:"* ]]; then
           _jq_decode() {
             echo ${item} | base64 --decode | jq -r ${1}
           }
-          echo "  - id: $(_jq_decode '.ImageId')" | tee -a ./ami-list.yml
-          echo "    name: $(_jq_decode '.Name')" | tee -a ./ami-list.yml
-          echo "    description: $(_jq_decode '.Description')" | tee -a ./ami-list.yml
-          echo "    created: $(_jq_decode '.CreationDate')" | tee -a ./ami-list.yml
-          echo "    revision: $(_jq_decode '.OccRevision')" | tee -a ./ami-list.yml
-          echo "    build: $(_jq_decode '.BuildTask')" | tee -a ./ami-list.yml
+          if [[ "$(_jq_decode '.WorkerType')" == "${tc_worker_type}" ]]; then
+            echo "  - id: $(_jq_decode '.ImageId')" | tee -a ./ami-list.yml
+            echo "    name: $(_jq_decode '.Name')" | tee -a ./ami-list.yml
+            echo "    description: $(_jq_decode '.Description')" | tee -a ./ami-list.yml
+            echo "    created: $(_jq_decode '.CreationDate')" | tee -a ./ami-list.yml
+            echo "    revision: $(_jq_decode '.OccRevision')" | tee -a ./ami-list.yml
+            echo "    build: $(_jq_decode '.BuildTask')" | tee -a ./ami-list.yml
+          fi
       done
     done
     exit
@@ -96,12 +98,14 @@ else
         _jq_decode() {
           echo ${item} | base64 --decode | jq -r ${1}
         }
-        echo "  - id: $(_jq_decode '.ImageId')" | tee -a ./ami-list.yml
-        echo "    name: $(_jq_decode '.Name')" | tee -a ./ami-list.yml
-        echo "    description: $(_jq_decode '.Description')" | tee -a ./ami-list.yml
-        echo "    created: $(_jq_decode '.CreationDate')" | tee -a ./ami-list.yml
-        echo "    revision: $(_jq_decode '.OccRevision')" | tee -a ./ami-list.yml
-        echo "    build: $(_jq_decode '.BuildTask')" | tee -a ./ami-list.yml
+        if [[ "$(_jq_decode '.WorkerType')" == "${tc_worker_type}" ]]; then
+          echo "  - id: $(_jq_decode '.ImageId')" | tee -a ./ami-list.yml
+          echo "    name: $(_jq_decode '.Name')" | tee -a ./ami-list.yml
+          echo "    description: $(_jq_decode '.Description')" | tee -a ./ami-list.yml
+          echo "    created: $(_jq_decode '.CreationDate')" | tee -a ./ami-list.yml
+          echo "    revision: $(_jq_decode '.OccRevision')" | tee -a ./ami-list.yml
+          echo "    build: $(_jq_decode '.BuildTask')" | tee -a ./ami-list.yml
+        fi
     done
   done
   exit
@@ -366,11 +370,13 @@ for region in ${ami_copy_regions[@]} ${aws_region}; do
       _jq_decode() {
         echo ${item} | base64 --decode | jq -r ${1}
       }
-      echo "  - id: $(_jq_decode '.ImageId')" | tee -a ./ami-list.yml
-      echo "    name: $(_jq_decode '.Name')" | tee -a ./ami-list.yml
-      echo "    description: $(_jq_decode '.Description')" | tee -a ./ami-list.yml
-      echo "    created: $(_jq_decode '.CreationDate')" | tee -a ./ami-list.yml
-      echo "    revision: $(_jq_decode '.OccRevision')" | tee -a ./ami-list.yml
-      echo "    build: $(_jq_decode '.BuildTask')" | tee -a ./ami-list.yml
+      if [[ "$(_jq_decode '.WorkerType')" == "${tc_worker_type}" ]]; then
+        echo "  - id: $(_jq_decode '.ImageId')" | tee -a ./ami-list.yml
+        echo "    name: $(_jq_decode '.Name')" | tee -a ./ami-list.yml
+        echo "    description: $(_jq_decode '.Description')" | tee -a ./ami-list.yml
+        echo "    created: $(_jq_decode '.CreationDate')" | tee -a ./ami-list.yml
+        echo "    revision: $(_jq_decode '.OccRevision')" | tee -a ./ami-list.yml
+        echo "    build: $(_jq_decode '.BuildTask')" | tee -a ./ami-list.yml
+      fi
   done
 done
