@@ -9,7 +9,7 @@ fi
 tc_worker_type="${1}"
 
 manifest=./OpenCloudConfig/userdata/Manifest/${tc_worker_type}.json
-# todo: find a way to validate if something is already in tooltool (now that hawk headers are required, this is a pita)
+# todo: find a way to validate if something is already in tooltool (now that hawk headers are required)
 # validate that manifest components, which contain a sha512 hash, have a corresponding tooltool artifact
 #secrets_url="taskcluster/secrets/v1/secret/repo:github.com/mozilla-releng/OpenCloudConfig:updatetooltoolrepo"
 #curl -s -N ${secrets_url} | jq '.secret.tooltool | del(.upload)' > ./.tooltool.token
@@ -318,3 +318,16 @@ jq --arg expires $(date -u +"%Y-%m-%dT%H:%M:%SZ" -d "+1 year") -c -s '{secret:{l
 # clean up
 shred -u ./workertype-secrets.json
 shred -u ./old-workertype-secrets.json
+
+for region in us-east-1 us-east-2 us-west-1 us-west-2 eu-central-1; do
+  aws ec2 describe-images --region ${region} --owners self --filters "Name=name,Values=${tc_worker_type} *" | jq -r '[ .Images[] | { ImageId, CreationDate, WorkerType: (.Name | split(" "))[0], OccRevision: (.Name | sub(" version "; " ") | split(" "))[1], BuildTask: (.Name | sub(" version "; " ") | split(" "))[2] } ] | sort_by(.CreationDate) | .[-1] | @base64' | while read item; do
+    _jq_decode() {
+      echo ${item} | base64 --decode | jq -r ${1}
+    }
+    echo "- ${region}:"
+    echo "  - ami: $(_jq_decode '.ImageId')"
+    echo "  - created: $(_jq_decode '.CreationDate')"
+    echo "  - revision: $(_jq_decode '.OccRevision')"
+    echo "  - build: $(_jq_decode '.BuildTask')"
+  done
+done
