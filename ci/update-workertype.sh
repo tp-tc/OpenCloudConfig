@@ -93,6 +93,8 @@ elif [[ $commit_message == *"deploy:"* ]]; then
           fi
       done
     done
+    yq '.' ./ami-list.yml > ./ami-list.json
+    yq '.' ./ami-latest.yml > ./ami-latest.json
     exit
   fi
 else
@@ -122,6 +124,8 @@ else
         fi
     done
   done
+  yq '.' ./ami-list.yml > ./ami-list.json
+  yq '.' ./ami-latest.yml > ./ami-latest.json
   exit
 fi
 
