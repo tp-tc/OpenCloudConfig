@@ -93,7 +93,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-1-b-win2012-beta
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-1-b-win2012-beta'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-1-b-win2012-beta'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-1-b-win2012-beta'
   extra:
     github:
       env: true
@@ -143,7 +143,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-1-b-win2012-xlarge
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-1-b-win2012-xlarge'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-1-b-win2012-xlarge'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-1-b-win2012-xlarge'
   extra:
     github:
       env: true
@@ -193,7 +193,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-1-b-win2012
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-1-b-win2012'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-1-b-win2012'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-1-b-win2012'
   extra:
     github:
       env: true
@@ -242,7 +242,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-2-b-win2012
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-2-b-win2012'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-2-b-win2012'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-2-b-win2012'
   extra:
     github:
       env: true
@@ -291,7 +291,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-3-b-win2012
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-3-b-win2012'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-3-b-win2012'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-3-b-win2012'
   extra:
     github:
       env: true
@@ -340,7 +340,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-3-b-win2012-c4
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-3-b-win2012-c4'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-3-b-win2012-c4'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-3-b-win2012-c4'
   extra:
     github:
       env: true
@@ -389,7 +389,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-3-b-win2012-c5
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-3-b-win2012-c5'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-3-b-win2012-c5'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-3-b-win2012-c5'
   extra:
     github:
       env: true
@@ -437,7 +437,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-t-win7-32-cu
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win7-32-cu'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-t-win7-32-cu'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-t-win7-32-cu'
   extra:
     github:
       env: true
@@ -485,7 +485,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-t-win7-32-gpu-b
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win7-32-gpu-b'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-t-win7-32-gpu-b'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-t-win7-32-gpu-b'
   extra:
     github:
       env: true
@@ -534,7 +534,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-t-win7-32-beta
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win7-32-beta'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-t-win7-32-beta'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-t-win7-32-beta'
   extra:
     github:
       env: true
@@ -583,7 +583,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-t-win7-32
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win7-32'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-t-win7-32'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-t-win7-32'
   extra:
     github:
       env: true
@@ -631,7 +631,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-t-win7-32-gpu
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win7-32-gpu'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-t-win7-32-gpu'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-t-win7-32-gpu'
   extra:
     github:
       env: true
@@ -679,7 +679,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-t-win10-64-cu
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-cu'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-t-win10-64-cu'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-t-win10-64-cu'
   extra:
     github:
       env: true
@@ -727,7 +727,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-t-win10-64-alpha
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-alpha'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-t-win10-64-alpha'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-t-win10-64-alpha'
   extra:
     github:
       env: true
@@ -776,7 +776,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-t-win10-64-beta
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-beta'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-t-win10-64-beta'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-t-win10-64-beta'
   extra:
     github:
       env: true
@@ -825,7 +825,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-t-win10-64
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-t-win10-64'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-t-win10-64'
   extra:
     github:
       env: true
@@ -873,7 +873,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu-a
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-gpu-a'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-t-win10-64-gpu-a'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-t-win10-64-gpu-a'
   extra:
     github:
       env: true
@@ -922,7 +922,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu-b
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-gpu-b'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-t-win10-64-gpu-b'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-t-win10-64-gpu-b'
   extra:
     github:
       env: true
@@ -971,7 +971,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu-s
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-gpu-s'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-t-win10-64-gpu-s'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-t-win10-64-gpu-s'
   extra:
     github:
       env: true
@@ -1020,7 +1020,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:gecko-t-win10-64-gpu
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.gecko-t-win10-64-gpu'
-  - 'index.project.releng.opencloudconfig.v1.latest.gecko-t-win10-64-gpu'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.gecko-t-win10-64-gpu'
   extra:
     github:
       env: true
@@ -1069,7 +1069,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:mpd001-1-b-win2012
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.mpd001-1-b-win2012'
-  - 'index.project.releng.opencloudconfig.v1.latest.mpd001-1-b-win2012'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.mpd001-1-b-win2012'
   extra:
     github:
       env: true
@@ -1118,7 +1118,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:mpd001-3-b-win2012
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.mpd001-3-b-win2012'
-  - 'index.project.releng.opencloudconfig.v1.latest.mpd001-3-b-win2012'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.mpd001-3-b-win2012'
   extra:
     github:
       env: true
@@ -1166,7 +1166,7 @@ tasks:
     #- aws-provisioner:manage-worker-type:relops-image-builder
   routes:
   - 'index.project.releng.opencloudconfig.v1.revision.{{event.head.sha}}.relops-image-builder'
-  - 'index.project.releng.opencloudconfig.v1.latest.relops-image-builder'
+  - 'index.project.releng.opencloudconfig.v1.revision.latest.relops-image-builder'
   extra:
     github:
       env: true
