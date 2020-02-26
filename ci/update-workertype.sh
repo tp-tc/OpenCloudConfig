@@ -79,7 +79,7 @@ elif [[ $commit_message == *"deploy:"* ]]; then
           if [[ "$(_jq_decode '.WorkerType')" == "${tc_worker_type}" ]]; then
             echo "  - id: $(_jq_decode '.ImageId')" | tee -a ./ami-list.yml
             echo "    name: $(_jq_decode '.Name')" | tee -a ./ami-list.yml
-            echo "    description: $(_jq_decode '.Description')" | tee -a ./ami-list.yml
+            echo "    description: \"$(_jq_decode '.Description')\"" | tee -a ./ami-list.yml
             echo "    created: $(_jq_decode '.CreationDate')" | tee -a ./ami-list.yml
             echo "    revision: $(_jq_decode '.OccRevision')" | tee -a ./ami-list.yml
             echo "    build: $(_jq_decode '.BuildTask')" | tee -a ./ami-list.yml
@@ -101,7 +101,7 @@ else
         if [[ "$(_jq_decode '.WorkerType')" == "${tc_worker_type}" ]]; then
           echo "  - id: $(_jq_decode '.ImageId')" | tee -a ./ami-list.yml
           echo "    name: $(_jq_decode '.Name')" | tee -a ./ami-list.yml
-          echo "    description: $(_jq_decode '.Description')" | tee -a ./ami-list.yml
+          echo "    description: \"$(_jq_decode '.Description')\"" | tee -a ./ami-list.yml
           echo "    created: $(_jq_decode '.CreationDate')" | tee -a ./ami-list.yml
           echo "    revision: $(_jq_decode '.OccRevision')" | tee -a ./ami-list.yml
           echo "    build: $(_jq_decode '.BuildTask')" | tee -a ./ami-list.yml
@@ -373,7 +373,7 @@ for region in ${ami_copy_regions[@]} ${aws_region}; do
       if [[ "$(_jq_decode '.WorkerType')" == "${tc_worker_type}" ]]; then
         echo "  - id: $(_jq_decode '.ImageId')" | tee -a ./ami-list.yml
         echo "    name: $(_jq_decode '.Name')" | tee -a ./ami-list.yml
-        echo "    description: $(_jq_decode '.Description')" | tee -a ./ami-list.yml
+        echo "    description: \"$(_jq_decode '.Description')\"" | tee -a ./ami-list.yml
         echo "    created: $(_jq_decode '.CreationDate')" | tee -a ./ami-list.yml
         echo "    revision: $(_jq_decode '.OccRevision')" | tee -a ./ami-list.yml
         echo "    build: $(_jq_decode '.BuildTask')" | tee -a ./ami-list.yml
