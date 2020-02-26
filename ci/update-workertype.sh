@@ -79,7 +79,8 @@ elif [[ $commit_message == *"deploy:"* ]]; then
             echo ${item} | base64 --decode | jq -r ${1}
           }
           if [[ "$(_jq_decode '.WorkerType')" == "${tc_worker_type}" ]]; then
-            echo "  - id: $(_jq_decode '.ImageId')" | tee -a ./ami-list.yml
+            ami_id=$(_jq_decode '.ImageId')
+            echo "  - id: ${ami_id}" | tee -a ./ami-list.yml
             echo "    name: $(_jq_decode '.Name')" | tee -a ./ami-list.yml
             echo "    description: \"$(_jq_decode '.Description')\"" | tee -a ./ami-list.yml
             echo "    created: $(_jq_decode '.CreationDate')" | tee -a ./ami-list.yml
@@ -107,7 +108,8 @@ else
           echo ${item} | base64 --decode | jq -r ${1}
         }
         if [[ "$(_jq_decode '.WorkerType')" == "${tc_worker_type}" ]]; then
-          echo "  - id: $(_jq_decode '.ImageId')" | tee -a ./ami-list.yml
+          ami_id=$(_jq_decode '.ImageId')
+          echo "  - id: ${ami_id}" | tee -a ./ami-list.yml
           echo "    name: $(_jq_decode '.Name')" | tee -a ./ami-list.yml
           echo "    description: \"$(_jq_decode '.Description')\"" | tee -a ./ami-list.yml
           echo "    created: $(_jq_decode '.CreationDate')" | tee -a ./ami-list.yml
