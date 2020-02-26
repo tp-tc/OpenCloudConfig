@@ -122,6 +122,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -172,6 +184,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -221,6 +245,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -270,6 +306,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -319,6 +367,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -368,6 +428,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -417,6 +489,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -465,6 +549,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -514,6 +610,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -563,6 +671,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -611,6 +731,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -659,6 +791,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -707,6 +851,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -756,6 +912,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -805,6 +973,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -853,6 +1033,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -902,6 +1094,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -951,6 +1155,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -1000,6 +1216,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -1048,6 +1276,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -1097,6 +1337,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -1146,6 +1398,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
@@ -1194,6 +1458,18 @@ tasks:
         type: file
         path: './secret-update-response.json'
         expires: "{{ '4 weeks' | $fromNow }}"
+      'public/ami-latest.json':
+        type: file
+        path: './ami-latest.json'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-latest.yml':
+        type: file
+        path: './ami-latest.yml'
+        expires: "{{ '1 year' | $fromNow }}"
+      'public/ami-list.json':
+        type: file
+        path: './ami-list.json'
+        expires: "{{ '1 year' | $fromNow }}"
       'public/ami-list.yml':
         type: file
         path: './ami-list.yml'
