@@ -41,6 +41,7 @@ export AWS_SECRET_ACCESS_KEY=${TASKCLUSTER_AWS_SECRET_KEY}
 
 aws_region=${aws_region:='us-west-2'}
 AWS_DEFAULT_REGION=${aws_region}
+ami_copy_regions=('us-east-1' 'us-east-2' 'us-west-1' 'eu-central-1')
 
 aws_key_name="mozilla-taskcluster-worker-${tc_worker_type}"
 echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] aws_key_name: ${aws_key_name}"
@@ -67,10 +68,34 @@ elif [[ $commit_message == *"deploy:"* ]]; then
   deploy_list=$([[ ${commit_message} =~ deploy:\s+?([^;]*) ]] && echo "${BASH_REMATCH[1]}")
   if [[ " ${deploy_list[*]} " != *" ${tc_worker_type} "* ]]; then
     echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deployment skipped due to absence of ${tc_worker_type} in commit message deploy list (${deploy_list[*]})"
+    for region in ${aws_region} ${ami_copy_regions[@]}; do
+      echo "- ${region}:"
+        aws ec2 describe-images --region ${region} --owners self --filters "Name=name,Values=${workerType} *" | jq -r '[ .Images[] | { ImageId, CreationDate, WorkerType: (.Name | split(" "))[0], OccRevision: (.Name | sub(" version "; " ") | split(" "))[1], BuildTask: (.Name | sub(" version "; " ") | split(" "))[2] } ] | sort_by(.CreationDate) | reverse | .[0:3] | .[] | @base64' | while read item; do
+          _jq_decode() {
+            echo ${item} | base64 --decode | jq -r ${1}
+          }
+          echo "  - ami: $(_jq_decode '.ImageId')"
+          echo "    created: $(_jq_decode '.CreationDate')"
+          echo "    revision: $(_jq_decode '.OccRevision')"
+          echo "    build: $(_jq_decode '.BuildTask')"
+      done
+    done
     exit
   fi
 else
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] deployment skipped due to absent deploy instruction in commit message (${commit_message})"
+  for region in ${aws_region} ${ami_copy_regions[@]}; do
+    echo "- ${region}:"
+      aws ec2 describe-images --region ${region} --owners self --filters "Name=name,Values=${workerType} *" | jq -r '[ .Images[] | { ImageId, CreationDate, WorkerType: (.Name | split(" "))[0], OccRevision: (.Name | sub(" version "; " ") | split(" "))[1], BuildTask: (.Name | sub(" version "; " ") | split(" "))[2] } ] | sort_by(.CreationDate) | reverse | .[0:3] | .[] | @base64' | while read item; do
+        _jq_decode() {
+          echo ${item} | base64 --decode | jq -r ${1}
+        }
+        echo "  - ami: $(_jq_decode '.ImageId')"
+        echo "    created: $(_jq_decode '.CreationDate')"
+        echo "    revision: $(_jq_decode '.OccRevision')"
+        echo "    build: $(_jq_decode '.BuildTask')"
+    done
+  done
   exit
 fi
 
@@ -250,7 +275,7 @@ sleep 30
 until `aws ec2 wait image-available --region ${aws_region} --image-ids "${aws_ami_id}" >/dev/null 2>&1`; do
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for ami availability (${aws_region} ${aws_ami_id})"
 done
-cat ./${tc_worker_type}.json | jq --arg ec2region $aws_region --arg amiid $aws_ami_id -c '(.regions[] | select(.region == $ec2region) | .launchSpec.ImageId) = $amiid' > ./.${tc_worker_type}.json && rm ./${tc_worker_type}.json && mv ./.${tc_worker_type}.json ./${tc_worker_type}.json
+#cat ./${tc_worker_type}.json | jq --arg ec2region $aws_region --arg amiid $aws_ami_id -c '(.regions[] | select(.region == $ec2region) | .launchSpec.ImageId) = $amiid' > ./.${tc_worker_type}.json && rm ./${tc_worker_type}.json && mv ./.${tc_worker_type}.json ./${tc_worker_type}.json
 cat ./workertype-secrets.json | jq --arg ec2region $aws_region --arg amiid $aws_ami_id -c '.secret.latest.amis |= . + [{region:$ec2region,"ami-id":$amiid}]' > ./.workertype-secrets.json && rm ./workertype-secrets.json && mv ./.workertype-secrets.json ./workertype-secrets.json
 
 # purge all but 10 newest workertype amis in region
@@ -274,16 +299,12 @@ jq '.|keys[]' ./instance-delete-queue-${aws_region}.json | while read i; do
   aws ec2 terminate-instances --region ${aws_region} --instance-ids ${old_instance} || true
 done
 
-# copy ami to each region, get copied ami id, tag copied ami, wait for copied ami availability
-for region in us-east-1 us-east-2 us-west-1 eu-central-1; do
+# copy ami to each region, get copied ami id, tag copied ami
+for region in ${ami_copy_regions[@]}; do
   aws_copied_ami_id=`aws ec2 copy-image --region ${region} --source-region ${aws_region} --source-image-id ${aws_ami_id} --name "${tc_worker_type} ${short_sha} ${TASK_ID}/${RUN_ID}" --description "${ami_description}" | sed -n 's/^ *"ImageId": *"\(.*\)" *$/\1/p'`
   echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] ami: ${aws_region} ${aws_ami_id} copy to ${region} ${aws_copied_ami_id} in progress: https://${region}.console.aws.amazon.com/ec2/v2/home?region=${region}#Images:visibility=owned-by-me;search=${aws_copied_ami_id}"
   aws ec2 create-tags --region ${region} --resources "${aws_copied_ami_id}" --tags "Key=WorkerType,Value=${tc_worker_type}" "Key=source,Value=${GITHUB_HEAD_REPO_URL::-4}/commit/${GITHUB_HEAD_SHA:0:7}" "Key=build,Value=https://tools.taskcluster.net/tasks/${TASK_ID}"
-  sleep 30
-  until `aws ec2 wait image-available --region ${region} --image-ids "${aws_copied_ami_id}" >/dev/null 2>&1`; do
-    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for ami availability (${region} ${aws_copied_ami_id})"
-  done
-  cat ./${tc_worker_type}.json | jq --arg ec2region $region --arg amiid $aws_copied_ami_id -c '(.regions[] | select(.region == $ec2region) | .launchSpec.ImageId) = $amiid' > ./.${tc_worker_type}.json && rm ./${tc_worker_type}.json && mv ./.${tc_worker_type}.json ./${tc_worker_type}.json
+  #cat ./${tc_worker_type}.json | jq --arg ec2region $region --arg amiid $aws_copied_ami_id -c '(.regions[] | select(.region == $ec2region) | .launchSpec.ImageId) = $amiid' > ./.${tc_worker_type}.json && rm ./${tc_worker_type}.json && mv ./.${tc_worker_type}.json ./${tc_worker_type}.json
   cat ./workertype-secrets.json | jq --arg ec2region $region --arg amiid $aws_copied_ami_id -c '.secret.latest.amis |= . + [{region:$ec2region,"ami-id":$amiid}]' > ./.workertype-secrets.json && rm ./workertype-secrets.json && mv ./.workertype-secrets.json ./workertype-secrets.json
 
   # purge all but 10 newest workertype amis in region
@@ -319,15 +340,22 @@ jq --arg expires $(date -u +"%Y-%m-%dT%H:%M:%SZ" -d "+1 year") -c -s '{secret:{l
 shred -u ./workertype-secrets.json
 shred -u ./old-workertype-secrets.json
 
-for region in us-east-1 us-east-2 us-west-1 us-west-2 eu-central-1; do
-  aws ec2 describe-images --region ${region} --owners self --filters "Name=name,Values=${tc_worker_type} *" | jq -r '[ .Images[] | { ImageId, CreationDate, WorkerType: (.Name | split(" "))[0], OccRevision: (.Name | sub(" version "; " ") | split(" "))[1], BuildTask: (.Name | sub(" version "; " ") | split(" "))[2] } ] | sort_by(.CreationDate) | .[-1] | @base64' | while read item; do
-    _jq_decode() {
-      echo ${item} | base64 --decode | jq -r ${1}
-    }
-    echo "- ${region}:"
-    echo "  - ami: $(_jq_decode '.ImageId')"
-    echo "  - created: $(_jq_decode '.CreationDate')"
-    echo "  - revision: $(_jq_decode '.OccRevision')"
-    echo "  - build: $(_jq_decode '.BuildTask')"
+# wait for copied ami availability in each region
+for region in ${ami_copy_regions[@]}; do
+  until `aws ec2 wait image-available --region ${region} --image-ids "${aws_copied_ami_id}" >/dev/null 2>&1`; do
+    echo "[opencloudconfig $(date --utc +"%F %T.%3NZ")] waiting for ami availability (${region} ${aws_copied_ami_id})"
+  done
+done
+
+for region in ${aws_region} ${ami_copy_regions[@]}; do
+  echo "- ${region}:"
+    aws ec2 describe-images --region ${region} --owners self --filters "Name=name,Values=${workerType} *" | jq -r '[ .Images[] | { ImageId, CreationDate, WorkerType: (.Name | split(" "))[0], OccRevision: (.Name | sub(" version "; " ") | split(" "))[1], BuildTask: (.Name | sub(" version "; " ") | split(" "))[2] } ] | sort_by(.CreationDate) | reverse | .[0:3] | .[] | @base64' | while read item; do
+      _jq_decode() {
+        echo ${item} | base64 --decode | jq -r ${1}
+      }
+      echo "  - ami: $(_jq_decode '.ImageId')"
+      echo "    created: $(_jq_decode '.CreationDate')"
+      echo "    revision: $(_jq_decode '.OccRevision')"
+      echo "    build: $(_jq_decode '.BuildTask')"
   done
 done
