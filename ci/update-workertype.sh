@@ -73,19 +73,19 @@ elif [[ $commit_message == *"deploy:"* ]]; then
     echo "---" | tee ./ami-list.yml
     for region in ${ami_copy_regions[@]} ${aws_region}; do
       regional_ami_index=0
-      echo "- ${region}:" | tee -a ./ami-list.yml
+      echo "${region}:" | tee -a ./ami-list.yml
         aws ec2 describe-images --region ${region} --owners self --filters "Name=name,Values=${workerType} *" | jq -r '[ .Images[] | { ImageId, Name, Description, CreationDate, WorkerType: (.Name | split(" "))[0], OccRevision: (.Name | sub(" version "; " ") | split(" "))[1], BuildTask: (.Name | sub(" version "; " ") | split(" "))[2] } ] | sort_by(.CreationDate) | reverse | .[] | @base64' | while read item; do
           _jq_decode() {
             echo ${item} | base64 --decode | jq -r ${1}
           }
           if [[ "$(_jq_decode '.WorkerType')" == "${tc_worker_type}" ]]; then
             ami_id=$(_jq_decode '.ImageId')
-            echo "  - id: ${ami_id}" | tee -a ./ami-list.yml
-            echo "    name: $(_jq_decode '.Name')" | tee -a ./ami-list.yml
-            echo "    description: \"$(_jq_decode '.Description')\"" | tee -a ./ami-list.yml
-            echo "    created: $(_jq_decode '.CreationDate')" | tee -a ./ami-list.yml
-            echo "    revision: $(_jq_decode '.OccRevision')" | tee -a ./ami-list.yml
-            echo "    build: $(_jq_decode '.BuildTask')" | tee -a ./ami-list.yml
+            echo "- id: ${ami_id}" | tee -a ./ami-list.yml
+            echo "  name: $(_jq_decode '.Name')" | tee -a ./ami-list.yml
+            echo "  description: \"$(_jq_decode '.Description')\"" | tee -a ./ami-list.yml
+            echo "  created: $(_jq_decode '.CreationDate')" | tee -a ./ami-list.yml
+            echo "  revision: $(_jq_decode '.OccRevision')" | tee -a ./ami-list.yml
+            echo "  build: $(_jq_decode '.BuildTask')" | tee -a ./ami-list.yml
             if (( regional_ami_index == 0 )); then
               echo "${region}: ${ami_id}" >> ./ami-latest.yml
             fi
@@ -104,19 +104,19 @@ else
   echo "---" | tee ./ami-list.yml
   for region in ${ami_copy_regions[@]} ${aws_region}; do
     regional_ami_index=0
-    echo "- ${region}:" | tee -a ./ami-list.yml
+    echo "${region}:" | tee -a ./ami-list.yml
       aws ec2 describe-images --region ${region} --owners self --filters "Name=name,Values=${workerType} *" | jq -r '[ .Images[] | { ImageId, Name, Description, CreationDate, WorkerType: (.Name | split(" "))[0], OccRevision: (.Name | sub(" version "; " ") | split(" "))[1], BuildTask: (.Name | sub(" version "; " ") | split(" "))[2] } ] | sort_by(.CreationDate) | reverse | .[] | @base64' | while read item; do
         _jq_decode() {
           echo ${item} | base64 --decode | jq -r ${1}
         }
         if [[ "$(_jq_decode '.WorkerType')" == "${tc_worker_type}" ]]; then
           ami_id=$(_jq_decode '.ImageId')
-          echo "  - id: ${ami_id}" | tee -a ./ami-list.yml
-          echo "    name: $(_jq_decode '.Name')" | tee -a ./ami-list.yml
-          echo "    description: \"$(_jq_decode '.Description')\"" | tee -a ./ami-list.yml
-          echo "    created: $(_jq_decode '.CreationDate')" | tee -a ./ami-list.yml
-          echo "    revision: $(_jq_decode '.OccRevision')" | tee -a ./ami-list.yml
-          echo "    build: $(_jq_decode '.BuildTask')" | tee -a ./ami-list.yml
+          echo "- id: ${ami_id}" | tee -a ./ami-list.yml
+          echo "  name: $(_jq_decode '.Name')" | tee -a ./ami-list.yml
+          echo "  description: \"$(_jq_decode '.Description')\"" | tee -a ./ami-list.yml
+          echo "  created: $(_jq_decode '.CreationDate')" | tee -a ./ami-list.yml
+          echo "  revision: $(_jq_decode '.OccRevision')" | tee -a ./ami-list.yml
+          echo "  build: $(_jq_decode '.BuildTask')" | tee -a ./ami-list.yml
           if (( regional_ami_index == 0 )); then
             echo "${region}: ${ami_id}" >> ./ami-latest.yml
           fi
