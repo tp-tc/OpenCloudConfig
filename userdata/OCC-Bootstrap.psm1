@@ -2144,9 +2144,9 @@ function Initialize-Instance {
       }
     }
     foreach ($driveLetter in $volumeLabels.Keys) {
+      $label = $volumeLabels.Item($driveLetter)
       if ((Get-Command 'Get-Volume' -ErrorAction 'SilentlyContinue') -and (Get-Command 'Set-Volume' -ErrorAction 'SilentlyContinue')) {
         $volume = (Get-Volume -DriveLetter $driveLetter -ErrorAction 'SilentlyContinue')
-        $label = $volumeLabels.Item($driveLetter)
         if ($volume) {
           if ($volume.FileSystemLabel -ne $label) {
             try {
