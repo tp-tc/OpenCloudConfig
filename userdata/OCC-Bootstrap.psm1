@@ -2117,7 +2117,14 @@ function Initialize-Instance {
       default {
         @()
       }
-    })
+    }),
+    [hashtable] $volumeLabels = @{
+      'C' = 'os';
+      'D' = 'cache';
+      'E' = 'task';
+      'Y' = 'cache';
+      'Z' = 'task'
+    }
   )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
@@ -2136,6 +2143,19 @@ function Initialize-Instance {
         Write-Log -message ('{0} :: failed to download {1} from {2}. {3}' -f $($MyInvocation.MyCommand.Name), $dl.Target, $dl.Source, $_.Exception.Message) -severity 'ERROR'
       }
     }
+    foreach ($driveLetter in $volumeLabels.Keys) {
+      $volume = (Get-Volume -DriveLetter $driveLetter -ErrorAction SilentlyContinue)
+      $label = $volumeLabels.Item($driveLetter)
+      if (($volume) -and ($volume.FileSystemLabel -ne $label)) {
+        try {
+          Set-Volume -DriveLetter $driveLetter -NewFileSystemLabel $label
+          Write-Log -message ('{0} :: volume label for drive {1}: changed to "{2}" from "{3}"' -f $($MyInvocation.MyCommand.Name), $driveLetter, $label, $volume.FileSystemLabel) -severity 'INFO'
+        } catch {
+          Write-Log -message ('{0} :: failed to change volume label for drive {1}: to "{2}" from "{3}". {4}' -f $($MyInvocation.MyCommand.Name), $driveLetter, $label, $volume.FileSystemLabel, $_.Exception.Message) -severity 'ERROR'
+        }
+      }
+    }
+
     if ($locationType -eq 'AWS') {
       Set-TaskclusterWorkerLocation
       $rebootReasons = (Set-ComputerName -locationType $locationType)
