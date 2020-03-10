@@ -2144,14 +2144,35 @@ function Initialize-Instance {
       }
     }
     foreach ($driveLetter in $volumeLabels.Keys) {
-      $volume = (Get-Volume -DriveLetter $driveLetter -ErrorAction SilentlyContinue)
-      $label = $volumeLabels.Item($driveLetter)
-      if (($volume) -and ($volume.FileSystemLabel -ne $label)) {
-        try {
-          Set-Volume -DriveLetter $driveLetter -NewFileSystemLabel $label
-          Write-Log -message ('{0} :: volume label for drive {1}: changed to "{2}" from "{3}"' -f $($MyInvocation.MyCommand.Name), $driveLetter, $label, $volume.FileSystemLabel) -severity 'INFO'
-        } catch {
-          Write-Log -message ('{0} :: failed to change volume label for drive {1}: to "{2}" from "{3}". {4}' -f $($MyInvocation.MyCommand.Name), $driveLetter, $label, $volume.FileSystemLabel, $_.Exception.Message) -severity 'ERROR'
+      if ((Get-Command 'Get-Volume' -ErrorAction 'SilentlyContinue') -and (Get-Command 'Set-Volume' -ErrorAction 'SilentlyContinue')) {
+        $volume = (Get-Volume -DriveLetter $driveLetter -ErrorAction 'SilentlyContinue')
+        $label = $volumeLabels.Item($driveLetter)
+        if ($volume) {
+          if ($volume.FileSystemLabel -ne $label) {
+            try {
+              Set-Volume -DriveLetter $driveLetter -NewFileSystemLabel $label
+              Write-Log -message ('{0} :: volume label for drive {1}: changed to "{2}" from "{3}"' -f $($MyInvocation.MyCommand.Name), $driveLetter, $label, $volume.FileSystemLabel) -severity 'INFO'
+            } catch {
+              Write-Log -message ('{0} :: failed to change volume label for drive {1}: to "{2}" from "{3}". {4}' -f $($MyInvocation.MyCommand.Name), $driveLetter, $label, $volume.FileSystemLabel, $_.Exception.Message) -severity 'ERROR'
+            }
+          } else {
+            Write-Log -message ('{0} :: volume label for drive {1}: observed as "{2}"' -f $($MyInvocation.MyCommand.Name), $driveLetter, $volume.FileSystemLabel) -severity 'DEBUG'
+          }
+        }
+      } else {
+        # handle older os's without Get-Volume/Set-Volume support
+        $volume = (Get-WmiObject -Class Win32_Volume -Filter ('DriveLetter=''{0}:''' -f $driveLetter) -ErrorAction 'SilentlyContinue')
+        if ($volume) {
+          if ($volume.Label -ne $label) {
+            try {
+              & label ('{0}:{1}' -f $driveLetter, $label)
+              Write-Log -message ('{0} :: volume label for drive {1}: changed to "{2}" from "{3}"' -f $($MyInvocation.MyCommand.Name), $driveLetter, $label, $volume.Label) -severity 'INFO'
+            } catch {
+              Write-Log -message ('{0} :: failed to change volume label for drive {1}: to "{2}" from "{3}". {4}' -f $($MyInvocation.MyCommand.Name), $driveLetter, $label, $volume.Label, $_.Exception.Message) -severity 'ERROR'
+            }
+          } else {
+            Write-Log -message ('{0} :: volume label for drive {1}: observed as "{2}"' -f $($MyInvocation.MyCommand.Name), $driveLetter, $volume.Label) -severity 'DEBUG'
+          }
         }
       }
     }
