@@ -654,14 +654,15 @@ function Set-Ec2ConfigSettings {
       'Ec2ConfigureRDP' = 'Disabled';
       'Ec2DynamicBootVolumeSize' = 'Disabled';
       'AWS.EC2.Windows.CloudWatch.PlugIn' = 'Disabled'
-    }
+    },
+    [string] $ec2DriveLetterConfigPath = ('{0}\Amazon\Ec2ConfigService\Settings\DriveLetterConfig.xml' -f $env:ProgramFiles)
   )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
     $ec2ConfigSettingsFileModified = $false;
-    [xml]$xml = (Get-Content $ec2ConfigSettingsFile)
+    [xml]$xml = [xml](Get-Content -Path $ec2ConfigSettingsFile)
     foreach ($plugin in $xml.DocumentElement.Plugins.Plugin) {
       if ($ec2ConfigSettings.ContainsKey($plugin.Name)) {
         if ($plugin.State -ne $ec2ConfigSettings[$plugin.Name]) {
@@ -683,6 +684,11 @@ function Set-Ec2ConfigSettings {
         Write-Log -message ('{0} :: failed to save Ec2Config settings file: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $ec2ConfigSettingsFile, $_.Exception.Message) -severity 'ERROR'
       }
     }
+
+    [xml]$ec2DriveLetterConfigXml = [xml](Get-Content -Path $ec2DriveLetterConfigPath)
+    ($ec2DriveLetterConfigXml.DriveLetterMapping.Mapping.VolumeName).state = 'Temporary Storage 0'
+    ($ec2DriveLetterConfigXml.DriveLetterMapping.Mapping.DriveLetter).state = 'D:'
+    $ec2DriveLetterConfigXml.Save($ec2DriveLetterConfigPath)
   }
   end {
     Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
@@ -2093,12 +2099,48 @@ function Initialize-Instance {
     [string] $sourceOrg = 'mozilla-releng',
     [string] $sourceRepo = 'OpenCloudConfig',
     [string] $sourceRev = 'master',
-    [string] $locationType
+    [string] $locationType = $(
+      if (Get-Service @('Ec2Config', 'AmazonSSMAgent', 'AWSLiteAgent') -ErrorAction SilentlyContinue) {
+        'AWS'
+      } elseif ((Get-Service -Name 'GCEAgent' -ErrorAction 'SilentlyContinue') -or (Test-Path -Path ('{0}\GooGet\googet.exe' -f $env:ProgramData) -ErrorAction 'SilentlyContinue')) {
+        'GCP'
+      } elseif (Get-Service -Name  @('WindowsAzureGuestAgent', 'WindowsAzureNetAgentSvc') -ErrorAction 'SilentlyContinue') {
+        'Azure'
+      } else {
+        'DataCenter'
+      }
+    ),
+    [hashtable[]] $downloads = $(switch ($locationType) {
+      'AWS' {
+        @(
+          @{
+            'Source' = 'https://raw.githubusercontent.com/mozilla-releng/OpenCloudConfig/master/userdata/Configuration/DriveLetterConfig.xml';
+            'Target' = 'C:\Program Files\Amazon\Ec2ConfigService\Settings\DriveLetterConfig.xml'
+          }
+        )
+      }
+      default {
+        @()
+      }
+    })
   )
   begin {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
+    foreach ($dl in $downloads) {
+      if (Test-Path -Path $dl.Target -ErrorAction SilentlyContinue) {
+        Remove-Item -Path $dl.Target -confirm:$false -force
+        Write-Log -message ('{0} :: {1} deleted' -f $($MyInvocation.MyCommand.Name), $dl.Target) -severity 'INFO'
+      }
+      try {
+        (New-Object Net.WebClient).DownloadFile($dl.Source, $dl.Target)
+        Write-Log -message ('{0} :: {1} downloaded from {2}' -f $($MyInvocation.MyCommand.Name), $dl.Target, $dl.Source) -severity 'INFO'
+      }
+      catch {
+        Write-Log -message ('{0} :: failed to download {1} from {2}. {3}' -f $($MyInvocation.MyCommand.Name), $dl.Target, $dl.Source, $_.Exception.Message) -severity 'ERROR'
+      }
+    }
     if ($locationType -eq 'AWS') {
       Set-TaskclusterWorkerLocation
       $rebootReasons = (Set-ComputerName -locationType $locationType)

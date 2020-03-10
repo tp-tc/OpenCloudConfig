@@ -1,0 +1,11 @@
+<?xml version="1.0" standalone="yes"?>
+<DriveLetterMapping>
+  <Mapping>
+    <VolumeName>xvdy</VolumeName>
+    <DriveLetter>Y:</DriveLetter>
+  </Mapping>
+  <Mapping>
+    <VolumeName>xvdz</VolumeName>
+    <DriveLetter>Z:</DriveLetter>
+  </Mapping>
+</DriveLetterMapping>

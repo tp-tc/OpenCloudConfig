@@ -1900,12 +1900,20 @@
               "DeviceName": "/dev/xvda",
               "Ebs": {
                 "DeleteOnTermination": true,
+                "VolumeSize": 60,
+                "VolumeType": "gp2"
+              }
+            },
+            {
+              "DeviceName": "xvdy",
+              "Ebs": {
+                "DeleteOnTermination": true,
                 "VolumeSize": 120,
                 "VolumeType": "gp2"
               }
             },
             {
-              "DeviceName": "xvdf",
+              "DeviceName": "xvdz",
               "Ebs": {
                 "DeleteOnTermination": true,
                 "VolumeSize": 120,
