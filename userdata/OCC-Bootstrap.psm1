@@ -684,11 +684,6 @@ function Set-Ec2ConfigSettings {
         Write-Log -message ('{0} :: failed to save Ec2Config settings file: {1}. {2}' -f $($MyInvocation.MyCommand.Name), $ec2ConfigSettingsFile, $_.Exception.Message) -severity 'ERROR'
       }
     }
-
-    [xml]$ec2DriveLetterConfigXml = [xml](Get-Content -Path $ec2DriveLetterConfigPath)
-    ($ec2DriveLetterConfigXml.DriveLetterMapping.Mapping.VolumeName).state = 'Temporary Storage 0'
-    ($ec2DriveLetterConfigXml.DriveLetterMapping.Mapping.DriveLetter).state = 'D:'
-    $ec2DriveLetterConfigXml.Save($ec2DriveLetterConfigPath)
   }
   end {
     Write-Log -message ('{0} :: end - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
@@ -2368,28 +2363,28 @@ function Invoke-OpenCloudConfig {
       #  }
       #}
 
-      Mount-DiskOne -lock $lock
+      #Mount-DiskOne -lock $lock
       if ($isWorker) {
         Resize-DiskZero
       }
       Set-Pagefile -isWorker:$isWorker -lock $lock -workerType $workerType
       # reattempt drive mapping for up to 10 minutes
-      $driveMapTimeout = (Get-Date).AddMinutes(10)
-      $driveMapAttempt = 0
-      Write-Log -message ('{0} :: drive map timeout set to {1}' -f $($MyInvocation.MyCommand.Name), $driveMapTimeout) -severity 'DEBUG'
-      while (($locationType -ne 'Azure') -and ((Get-Date) -lt $driveMapTimeout) -and (-not (Test-VolumeExists -DriveLetter @('Z', 'Y')))) {
-        if (((Get-WmiObject -class Win32_OperatingSystem).Caption.Contains('Windows 10')) -and (($instanceType.StartsWith('c5.')) -or ($instanceType.StartsWith('g3.'))) -and (Test-VolumeExists -DriveLetter @('Z')) -and (-not (Test-VolumeExists -DriveLetter @('Y'))) -and ((Get-WmiObject Win32_LogicalDisk | ? { $_.DeviceID -ne 'C:' }).Size -ge 119GB)) {
-          Resize-DiskOne
-        }
-        Set-DriveLetters
-        $driveMapAttempt ++
-        if (Test-VolumeExists -DriveLetter @('Z', 'Y')) {
-          Write-Log -message ('{0} :: drive map attempt {1} succeeded' -f $($MyInvocation.MyCommand.Name), $driveMapAttempt) -severity 'INFO'
-        } else {
-          Write-Log -message ('{0} :: drive map attempt {1} failed' -f $($MyInvocation.MyCommand.Name), $driveMapAttempt) -severity 'WARN'
-          Sleep 60
-        }
-      }
+      #$driveMapTimeout = (Get-Date).AddMinutes(10)
+      #$driveMapAttempt = 0
+      #Write-Log -message ('{0} :: drive map timeout set to {1}' -f $($MyInvocation.MyCommand.Name), $driveMapTimeout) -severity 'DEBUG'
+      #while (($locationType -ne 'Azure') -and ((Get-Date) -lt $driveMapTimeout) -and (-not (Test-VolumeExists -DriveLetter @('Z', 'Y')))) {
+      #  if (((Get-WmiObject -class Win32_OperatingSystem).Caption.Contains('Windows 10')) -and (($instanceType.StartsWith('c5.')) -or ($instanceType.StartsWith('g3.'))) -and (Test-VolumeExists -DriveLetter @('Z')) -and (-not (Test-VolumeExists -DriveLetter @('Y'))) -and ((Get-WmiObject Win32_LogicalDisk | ? { $_.DeviceID -ne 'C:' }).Size -ge 119GB)) {
+      #    Resize-DiskOne
+      #  }
+      #  Set-DriveLetters
+      #  $driveMapAttempt ++
+      #  if (Test-VolumeExists -DriveLetter @('Z', 'Y')) {
+      #    Write-Log -message ('{0} :: drive map attempt {1} succeeded' -f $($MyInvocation.MyCommand.Name), $driveMapAttempt) -severity 'INFO'
+      #  } else {
+      #    Write-Log -message ('{0} :: drive map attempt {1} failed' -f $($MyInvocation.MyCommand.Name), $driveMapAttempt) -severity 'WARN'
+      #    Sleep 60
+      #  }
+      #}
       if ($isWorker) {
         if (-not (Test-VolumeExists -DriveLetter @('Z'))) {
           Write-Log -message ('{0} :: missing task drive. terminating instance...' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
@@ -2581,11 +2576,10 @@ function Invoke-OpenCloudConfig {
       }
     } elseif ($isWorker) {
       if ($locationType -ne 'DataCenter') {
-        if (-not (Test-VolumeExists -DriveLetter 'Z')) { # if the Z: drive isn't mapped, map it.
-          Set-DriveLetters
-        }
+        #if (-not (Test-VolumeExists -DriveLetter 'Z')) { # if the Z: drive isn't mapped, map it.
+        #  Set-DriveLetters
+        #}
       } else {
-        # todo: generate config file if it does not exist or is invalid (eg: created for an older version of gw)
         Set-ChainOfTrustKey -locationType $locationType -workerType $workerType -shutdown:$false
       }
       Wait-GenericWorkerStart -locationType $locationType -lock $lock
