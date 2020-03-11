@@ -2161,7 +2161,7 @@ function Initialize-Instance {
             Write-Log -message ('{0} :: failed to assign drive letter Y to disk {1}. {2}' -f $($MyInvocation.MyCommand.Name), $disk.Number, $_.Exception.Message) -severity 'ERROR'
           }
         } else {
-          Write-Log -message ('{0} :: no drive letter assigned to {1} disk {1}' -f $($MyInvocation.MyCommand.Name), $disk.Number, $_.Exception.Message) -severity 'INFO'
+          Write-Log -message ('{0} :: no drive letter assigned to disk {1}' -f $($MyInvocation.MyCommand.Name), $disk.Number) -severity 'INFO'
         }
       }
     } else {
