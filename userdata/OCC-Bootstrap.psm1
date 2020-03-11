@@ -2143,6 +2143,30 @@ function Initialize-Instance {
         Write-Log -message ('{0} :: failed to download {1} from {2}. {3}' -f $($MyInvocation.MyCommand.Name), $dl.Target, $dl.Source, $_.Exception.Message) -severity 'ERROR'
       }
     }
+    if ((Get-Command 'Get-Disk' -ErrorAction 'SilentlyContinue') -and (Get-Command 'Initialize-Disk' -ErrorAction 'SilentlyContinue') -and (Get-Command 'New-Partition' -ErrorAction 'SilentlyContinue') -and (Get-Command 'Format-Volume' -ErrorAction 'SilentlyContinue')) {
+      $uninitialisedDisks = @(Get-Disk | Where-Object -Property 'PartitionStyle' -eq 'RAW' | Sort-Object -Property 'Number' -Descending)
+      foreach ($disk in $uninitialisedDisks) {
+        if (-not (Test-VolumeExists -DriveLetter @('Z'))) {
+          try {
+            $disk | Initialize-Disk -PartitionStyle MBR -PassThru | New-Partition -UseMaximumSize -DriveLetter 'Z' | Format-Volume -FileSystem 'NTFS' -NewFileSystemLabel $volumeLabels.Item('Z') -Confirm:$false -Force
+            Write-Log -message ('{0} :: drive letter Z assigned to disk {1}' -f $($MyInvocation.MyCommand.Name), $disk.Number, $_.Exception.Message) -severity 'INFO'
+          } catch {
+            Write-Log -message ('{0} :: failed to assign drive letter Z to disk {1}. {2}' -f $($MyInvocation.MyCommand.Name), $disk.Number, $_.Exception.Message) -severity 'ERROR'
+          }
+        } elseif (-not (Test-VolumeExists -DriveLetter @('Y'))) {
+          try {
+            $disk | Initialize-Disk -PartitionStyle MBR -PassThru | New-Partition -UseMaximumSize -DriveLetter 'Y' | Format-Volume -FileSystem 'NTFS' -NewFileSystemLabel $volumeLabels.Item('Y') -Confirm:$false -Force
+            Write-Log -message ('{0} :: drive letter Y assigned to disk {1}' -f $($MyInvocation.MyCommand.Name), $disk.Number, $_.Exception.Message) -severity 'INFO'
+          } catch {
+            Write-Log -message ('{0} :: failed to assign drive letter Y to disk {1}. {2}' -f $($MyInvocation.MyCommand.Name), $disk.Number, $_.Exception.Message) -severity 'ERROR'
+          }
+        } else {
+          Write-Log -message ('{0} :: no drive letter assigned to {1} disk {1}' -f $($MyInvocation.MyCommand.Name), $disk.Number, $_.Exception.Message) -severity 'INFO'
+        }
+      }
+    } else {
+      Write-Log -message ('{0} :: drive letter assignment skipped due to missing powershell commandlets' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+    }
     foreach ($driveLetter in $volumeLabels.Keys) {
       $label = $volumeLabels.Item($driveLetter)
       if ((Get-Command 'Get-Volume' -ErrorAction 'SilentlyContinue') -and (Get-Command 'Set-Volume' -ErrorAction 'SilentlyContinue')) {
