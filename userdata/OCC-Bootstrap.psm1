@@ -129,7 +129,7 @@ function Install-Dependencies {
   }
   process {
     # install windows management framework if it isn't installed
-    if (-not (Get-Command 'Get-PackageProvider' -errorAction SilentlyContinue)) {
+    if (-not (Get-Command -Name 'Get-PackageProvider' -errorAction SilentlyContinue)) {
       Write-Log -message ('{0} :: missing windows management framework detected' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
       switch -wildcard ($osCaption) {
         'Microsoft Windows Server 2012*' {
@@ -180,7 +180,7 @@ function Install-Dependencies {
         }
         try {
           # AllowClobber was introduced in powershell 6
-          if (((Get-Command 'Install-Module').ParameterSets | Select-Object -ExpandProperty 'Parameters' | Where-Object { $_.Name -eq 'AllowClobber' })) {
+          if (((Get-Command -Name 'Install-Module').ParameterSets | Select-Object -ExpandProperty 'Parameters' | Where-Object { $_.Name -eq 'AllowClobber' })) {
             Install-Module -Name $module['ModuleName'] -RequiredVersion $module['ModuleVersion'] -Repository $module['Repository'] -Force -AllowClobber
           } else {
             Install-Module -Name $module['ModuleName'] -RequiredVersion $module['ModuleVersion'] -Repository $module['Repository'] -Force
@@ -715,7 +715,7 @@ function Mount-DiskOne {
         Remove-Item -Path $lock -force -ErrorAction SilentlyContinue
         & shutdown @('-r', '-t', '0', '-c', ('page file {0} removed' -f $pagefileName), '-f', '-d', 'p:2:4')
       }
-      if (Get-Command 'Clear-Disk' -errorAction SilentlyContinue) {
+      if (Get-Command -Name 'Clear-Disk' -errorAction SilentlyContinue) {
         try {
           Clear-Disk -Number 1 -RemoveData -Confirm:$false
           Write-Log -message ('{0} :: disk 1 partition table cleared.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
@@ -726,7 +726,7 @@ function Mount-DiskOne {
       } else {
         Write-Log -message ('{0} :: partition table clearing skipped on unsupported os' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
       }
-      if (Get-Command 'Initialize-Disk' -errorAction SilentlyContinue) {
+      if (Get-Command -Name 'Initialize-Disk' -errorAction SilentlyContinue) {
         try {
           Initialize-Disk -Number 1 -PartitionStyle MBR
           Write-Log -message ('{0} :: disk 1 initialized.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
@@ -737,7 +737,7 @@ function Mount-DiskOne {
       } else {
         Write-Log -message ('{0} :: disk initialisation skipped on unsupported os' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
       }
-      if (Get-Command 'New-Partition' -errorAction SilentlyContinue) {
+      if (Get-Command -Name 'New-Partition' -errorAction SilentlyContinue) {
         try {
           New-Partition -DiskNumber 1 -Size 20GB -DriveLetter Y
           Format-Volume -FileSystem NTFS -NewFileSystemLabel cache -DriveLetter Y -Confirm:$false
@@ -771,7 +771,7 @@ function Resize-DiskZero {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
-    if ((Get-Command 'Resize-Partition' -errorAction SilentlyContinue) -and (Get-Command 'Get-PartitionSupportedSize' -errorAction SilentlyContinue)) {
+    if ((Get-Command -Name 'Resize-Partition' -errorAction SilentlyContinue) -and (Get-Command -Name 'Get-PartitionSupportedSize' -errorAction SilentlyContinue)) {
       $oldSize = (Get-WmiObject Win32_LogicalDisk | ? { $_.DeviceID -eq ('{0}:' -f $drive)}).Size
       $maxSize = (Get-PartitionSupportedSize -DriveLetter $drive).SizeMax
       # if at least 1gb can be gained from a resize, perform a resize
@@ -804,7 +804,7 @@ function Resize-DiskOne {
     Write-Log -message ('{0} :: begin - {1:o}' -f $($MyInvocation.MyCommand.Name), (Get-Date).ToUniversalTime()) -severity 'DEBUG'
   }
   process {
-    if ((Get-Command 'Resize-Partition' -errorAction SilentlyContinue) -and (Get-Command 'New-Partition' -errorAction SilentlyContinue) -and (Get-Command 'Format-Volume' -errorAction SilentlyContinue)) {
+    if ((Get-Command -Name 'Resize-Partition' -errorAction SilentlyContinue) -and (Get-Command -Name 'New-Partition' -errorAction SilentlyContinue) -and (Get-Command -Name 'Format-Volume' -errorAction SilentlyContinue)) {
       $oldSize = (Get-WmiObject Win32_LogicalDisk | ? { $_.DeviceID -eq ('{0}:' -f $drive)}).Size
       # if the current partition size is larger than expected
       if ($oldSize -gt ($newSize + 2GB)) {
@@ -1017,7 +1017,7 @@ function Test-ScheduledTaskExists {
   param (
     [string] $taskName
   )
-  if (Get-Command 'Get-ScheduledTask' -ErrorAction 'SilentlyContinue') {
+  if (Get-Command -Name 'Get-ScheduledTask' -ErrorAction 'SilentlyContinue') {
     return [bool](Get-ScheduledTask -TaskName $taskName -ErrorAction 'SilentlyContinue')
   }
   # sceduled task commandlets are unavailable on windows 7, so we use com to access sceduled tasks here.
@@ -1029,7 +1029,7 @@ function Test-VolumeExists {
   param (
     [char[]] $driveLetter
   )
-  if (Get-Command 'Get-Volume' -ErrorAction 'SilentlyContinue') {
+  if (Get-Command -Name 'Get-Volume' -ErrorAction 'SilentlyContinue') {
     return (@(Get-Volume -DriveLetter $driveLetter -ErrorAction 'SilentlyContinue').Length -eq $driveLetter.Length)
   }
   # volume commandlets are unavailable on windows 7, so we use wmi to access volumes here.
@@ -2143,20 +2143,20 @@ function Initialize-Instance {
         Write-Log -message ('{0} :: failed to download {1} from {2}. {3}' -f $($MyInvocation.MyCommand.Name), $dl.Target, $dl.Source, $_.Exception.Message) -severity 'ERROR'
       }
     }
-    if ((Get-Command 'Get-Disk' -ErrorAction 'SilentlyContinue') -and (Get-Command 'Initialize-Disk' -ErrorAction 'SilentlyContinue') -and (Get-Command 'New-Partition' -ErrorAction 'SilentlyContinue') -and (Get-Command 'Format-Volume' -ErrorAction 'SilentlyContinue')) {
+    if ((Get-Command -Name 'Get-Disk' -ErrorAction 'SilentlyContinue') -and (Get-Command -Name 'Initialize-Disk' -ErrorAction 'SilentlyContinue') -and (Get-Command -Name 'New-Partition' -ErrorAction 'SilentlyContinue') -and (Get-Command -Name 'Format-Volume' -ErrorAction 'SilentlyContinue')) {
       $uninitialisedDisks = @(Get-Disk | Where-Object -Property 'PartitionStyle' -eq 'RAW' | Sort-Object -Property 'Number' -Descending)
       foreach ($disk in $uninitialisedDisks) {
         if (-not (Test-VolumeExists -DriveLetter @('Z'))) {
           try {
             $disk | Initialize-Disk -PartitionStyle MBR -PassThru | New-Partition -UseMaximumSize -DriveLetter 'Z' | Format-Volume -FileSystem 'NTFS' -NewFileSystemLabel $volumeLabels.Item('Z') -Confirm:$false -Force
-            Write-Log -message ('{0} :: drive letter Z assigned to disk {1}' -f $($MyInvocation.MyCommand.Name), $disk.Number, $_.Exception.Message) -severity 'INFO'
+            Write-Log -message ('{0} :: drive letter Z assigned to disk {1}' -f $($MyInvocation.MyCommand.Name), $disk.Number) -severity 'INFO'
           } catch {
             Write-Log -message ('{0} :: failed to assign drive letter Z to disk {1}. {2}' -f $($MyInvocation.MyCommand.Name), $disk.Number, $_.Exception.Message) -severity 'ERROR'
           }
         } elseif (-not (Test-VolumeExists -DriveLetter @('Y'))) {
           try {
             $disk | Initialize-Disk -PartitionStyle MBR -PassThru | New-Partition -UseMaximumSize -DriveLetter 'Y' | Format-Volume -FileSystem 'NTFS' -NewFileSystemLabel $volumeLabels.Item('Y') -Confirm:$false -Force
-            Write-Log -message ('{0} :: drive letter Y assigned to disk {1}' -f $($MyInvocation.MyCommand.Name), $disk.Number, $_.Exception.Message) -severity 'INFO'
+            Write-Log -message ('{0} :: drive letter Y assigned to disk {1}' -f $($MyInvocation.MyCommand.Name), $disk.Number) -severity 'INFO'
           } catch {
             Write-Log -message ('{0} :: failed to assign drive letter Y to disk {1}. {2}' -f $($MyInvocation.MyCommand.Name), $disk.Number, $_.Exception.Message) -severity 'ERROR'
           }
@@ -2166,10 +2166,13 @@ function Initialize-Instance {
       }
     } else {
       Write-Log -message ('{0} :: drive letter assignment skipped due to missing powershell commandlets' -f $($MyInvocation.MyCommand.Name)) -severity 'WARN'
+      foreach ($command in @('Get-Disk', 'Initialize-Disk', 'New-Partition', 'Format-Volume')) {
+        Write-Log -message ('{0} :: command: "{1}" {2} available' -f $($MyInvocation.MyCommand.Name), $command, $(if (Get-Command -Name $command -ErrorAction 'SilentlyContinue') { 'is' } else { 'is not' })) -severity 'DEBUG'
+      }
     }
     foreach ($driveLetter in $volumeLabels.Keys) {
       $label = $volumeLabels.Item($driveLetter)
-      if ((Get-Command 'Get-Volume' -ErrorAction 'SilentlyContinue') -and (Get-Command 'Set-Volume' -ErrorAction 'SilentlyContinue')) {
+      if ((Get-Command -Name 'Get-Volume' -ErrorAction 'SilentlyContinue') -and (Get-Command -Name 'Set-Volume' -ErrorAction 'SilentlyContinue')) {
         $volume = (Get-Volume -DriveLetter $driveLetter -ErrorAction 'SilentlyContinue')
         if ($volume) {
           if ($volume.FileSystemLabel -ne $label) {
