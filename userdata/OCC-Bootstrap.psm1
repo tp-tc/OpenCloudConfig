@@ -2643,10 +2643,10 @@ function Invoke-OpenCloudConfig {
         Set-ChainOfTrustKey -locationType $locationType -workerType $workerType -shutdown:$true
       }
     } elseif ($isWorker) {
-      if ($locationType -ne 'DataCenter') {
-        #if (-not (Test-VolumeExists -DriveLetter 'Z')) { # if the Z: drive isn't mapped, map it.
-        #  Set-DriveLetters
-        #}
+      if ($locationType -eq 'Azure') {
+        if (-not (Test-VolumeExists -DriveLetter 'Z')) { # if the Z: drive isn't mapped and we're on Azure, map it.
+          Set-DriveLetters
+        }
       } else {
         Set-ChainOfTrustKey -locationType $locationType -workerType $workerType -shutdown:$false
       }
