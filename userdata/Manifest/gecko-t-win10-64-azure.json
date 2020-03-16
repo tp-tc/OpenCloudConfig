@@ -606,7 +606,7 @@
           "ComponentName": "GenericWorkerDirectory"
         }
       ],
-      "Source": "https://github.com/taskcluster/taskcluster-worker-runner/releases/download/v1.1.0/start-worker-windows-amd64",
+      "Source": "https://github.com/taskcluster/taskcluster/releases/download/v28.0.0/start-worker-windows-amd64",
       "Target": "C:\\generic-worker\\taskcluster-worker-runner.exe"
     },
     {
