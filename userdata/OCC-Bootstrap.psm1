@@ -1981,7 +1981,12 @@ function Wait-GenericWorkerStart {
       } else {
         Write-Log -message ('{0} :: GenericWorker service not detected' -f $($MyInvocation.MyCommand.Name)) -severity 'ERROR'
       }
-      Start-LoggedProcess -filePath 'C:\generic-worker\taskcluster-worker-runner.exe' -ArgumentList @('C:\generic-worker\taskcluster-worker-runner.yaml')
+      try {
+        Start-Process -FilePath 'C:\generic-worker\taskcluster-worker-runner.exe' -ArgumentList @('C:\generic-worker\taskcluster-worker-runner.yaml') -NoNewWindow -RedirectStandardOutput 'C:\generic-worker\taskcluster-worker-runner.log' -RedirectStandardError 'C:\generic-worker\taskcluster-worker-runner.log'
+        Write-Log -message ('{0} :: taskcluster worker runner triggered' -f $($MyInvocation.MyCommand.Name)) -severity 'DEBUG'
+      } catch {
+        Write-Log -message ('{0} :: error triggering taskcluster worker runner. {1}' -f $($MyInvocation.MyCommand.Name), $_.Exception.Message) -severity 'ERROR'
+      }
     } else {
       if (Test-Path -Path 'C:\generic-worker\run-generic-worker.bat' -ErrorAction SilentlyContinue) {
         Write-Log -message ('{0} :: generic-worker installation detected.' -f $($MyInvocation.MyCommand.Name)) -severity 'INFO'
