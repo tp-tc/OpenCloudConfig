@@ -100,7 +100,7 @@ if (Is-Terminating) {
 }
 if (Test-Path -Path 'Z:\' -ErrorAction SilentlyContinue) {
   $z = (Get-PSDrive -Name 'Z')
-  Write-Log -message ('drive z: exists with {0}gb used and {1}gb free' -f $z.Used, $z.Free) -severity 'DEBUG'
+  Write-Log -message ('drive z: exists with {0}gb used and {1}gb free' -f ($z.Used / 1Gb), ($z.Free / 1Gb)) -severity 'DEBUG'
 } else {
   Write-Log -message 'drive z: does not exist' -severity 'DEBUG'
 }
