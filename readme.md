@@ -1,7 +1,7 @@
 # Open Cloud Config (OCC)
 
 [![Docker pulls](https://img.shields.io/docker/pulls/grenade/opencloudconfig.svg?style=plastic)](https://hub.docker.com/r/grenade/opencloudconfig/)
-[![Deploy status](https://github.taskcluster.net/v1/repository/mozilla-releng/OpenCloudConfig/master/badge.svg)](https://github.taskcluster.net/v1/repository/mozilla-releng/OpenCloudConfig/master/latest)
+[![Deploy status](https://firefox-ci-tc.services.mozilla.com/api/github/v1/repository/mozilla-releng/OpenCloudConfig/master/badge.svg)](https://firefox-ci-tc.services.mozilla.com/api/github/v1/repository/mozilla-releng/OpenCloudConfig/master/latest)
 
 ## Issues
 To file bugs, raise issues or request features, please use: [b.m.o/infra-ops/occ](https://bugzilla.mozilla.org/enter_bug.cgi?product=Infrastructure%20%26%20Operations&component=Relops%3A%20OpenCloudConfig).
